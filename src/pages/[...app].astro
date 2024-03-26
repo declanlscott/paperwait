@@ -1,0 +1,9 @@
+---
+import { App } from "~/app/index";
+
+export const prerender = false;
+---
+
+<div id="app-loading-indicator">Loading...</div>
+
+<App client:only="react" />
