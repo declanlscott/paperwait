@@ -1,7 +1,21 @@
+// TODO: Implement client side routing for `react-aria-components` once the next release finally lands (April ~9th?)
+// NOTE: Waiting for https://github.com/adobe/react-spectrum/pull/5864 to merge
 import { lazy, Suspense } from "react";
-import { createRootRoute, ScrollRestoration } from "@tanstack/react-router";
+// import { RouterProvider } from "react-aria-components";
+import {
+  createRootRoute,
+  ScrollRestoration,
+  // useNavigate,
+} from "@tanstack/react-router";
 
 import { BaseLayout } from "../layouts/base-layout";
+
+// import type {
+//   NavigateOptions,
+//   RegisteredRouter,
+//   ToOptions,
+//   ToPathOption,
+// } from "@tanstack/react-router";
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null // Render nothing in production
@@ -13,7 +27,24 @@ const TanStackRouterDevtools = import.meta.env.PROD
     );
 
 export const Route = createRootRoute({
-  component: () => (
+  component: () => <Component />,
+});
+
+// declare module "react-aria-components" {
+//   interface RouterConfig {
+//     href: ToPathOption<RegisteredRouter["routeTree"]>;
+//     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
+//   }
+// }
+
+function Component() {
+  // const navigate = useNavigate();
+
+  return (
+    // <RouterProvider
+    //   navigate={(to, options) => router.navigate({ to, ...options })}
+    //   useHref={(to) => router.buildLocation(to).href}
+    // >
     <>
       <BaseLayout />
 
@@ -23,5 +54,6 @@ export const Route = createRootRoute({
         <TanStackRouterDevtools position="bottom-right" />
       </Suspense>
     </>
-  ),
-});
+    // </RouterProvider>
+  );
+}
