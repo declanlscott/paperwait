@@ -1,9 +1,5 @@
-import { useState } from "react";
-import {
-  createRouter,
-  RouterProvider,
-  useLayoutEffect,
-} from "@tanstack/react-router";
+import { useLayoutEffect, useState } from "react";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 
 import { SstResourceContext } from "~/app/lib/context";
 import { routeTree } from "~/app/routeTree.gen";
