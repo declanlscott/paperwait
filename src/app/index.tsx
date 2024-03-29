@@ -5,7 +5,10 @@ import {
   useLayoutEffect,
 } from "@tanstack/react-router";
 
+import { SstResourceContext } from "~/app/lib/context";
 import { routeTree } from "~/app/routeTree.gen";
+
+import type { ClientResource } from "~/lib/client-resource";
 
 const router = createRouter({ routeTree });
 
@@ -15,25 +18,36 @@ declare module "@tanstack/react-router" {
   }
 }
 
-type AppProps = { debounceMs?: number };
+type AppProps = {
+  debounceMs?: number;
+  sstResource: ClientResource;
+};
 
 export function App(props: AppProps) {
-  const { debounceMs = 500 } = props;
+  const { debounceMs = 500, sstResource } = props;
 
   const [isVisible, setIsVisible] = useState(false);
 
   // Debounce the app loading indicator to prevent flickering
   useLayoutEffect(() => {
-    const timeout = setTimeout(() => {
-      document
-        .getElementById("app-loading-indicator")
-        ?.style.setProperty("display", "none");
+    const timeout = setTimeout(
+      () =>
+        setIsVisible(() => {
+          document
+            .getElementById("app-loading-indicator")
+            ?.style.setProperty("display", "none");
 
-      setIsVisible(true);
-    }, debounceMs);
+          return true;
+        }),
+      debounceMs,
+    );
 
     return () => clearTimeout(timeout);
   }, [debounceMs]);
 
-  return <>{isVisible && <RouterProvider router={router} />}</>;
+  return (
+    <SstResourceContext.Provider value={sstResource}>
+      {isVisible && <RouterProvider router={router} />}
+    </SstResourceContext.Provider>
+  );
 }
