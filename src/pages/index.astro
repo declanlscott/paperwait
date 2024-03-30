@@ -1,12 +1,10 @@
 ---
-import stylex from "@stylexjs/stylex";
-
 import Layout from "~/layouts/Layout.astro";
-import styles from "~/styles/index";
+import { css } from "~/styled-system/css";
 ---
 
 <Layout title="Paperwait">
   <nav><a href="/dashboard">Dashboard</a></nav>
 
-  <h1 {...stylex.attrs(styles.text)}>Paperwait Landing Page</h1>
+  <h1 class={css({ color: "emerald.500" })}>Paperwait Landing Page</h1>
 </Layout>

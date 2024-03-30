@@ -4,13 +4,13 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "~/app/*": ["app/*"],
-      "~/components/*": ["components/*"],
-      "~/layouts/*": ["layouts/*"],
-      "~/lib/*": ["lib/*"],
-      "~/styles/*": ["styles/*"]
+      "~/app/*": ["src/app/*"],
+      "~/components/*": ["src/components/*"],
+      "~/layouts/*": ["src/layouts/*"],
+      "~/lib/*": ["src/lib/*"],
+      "~/styled-system/*": ["styled-system/*"]
     }
   }
 }

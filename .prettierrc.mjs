@@ -1,6 +1,10 @@
 /** @type {import("@ianvs/prettier-plugin-sort-imports")} */
 export default {
-  plugins: ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-astro"],
+  plugins: [
+    "@ianvs/prettier-plugin-sort-imports",
+    "@pandabox/prettier-plugin",
+    "prettier-plugin-astro",
+  ],
   overrides: [
     {
       files: "*.astro",
