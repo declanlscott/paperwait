@@ -36,6 +36,7 @@
     "@pandabox/prettier-plugin": "^0.1.1",
     "@pandacss/dev": "^0.36.1",
     "@pandacss/eslint-plugin": "^0.1.1",
+    "@pandacss/preset-open-props": "^0.36.1",
     "@types/react": "^18.2.73",
     "@types/react-dom": "^18.2.23",
     "@typescript-eslint/eslint-plugin": "^7.4.0",

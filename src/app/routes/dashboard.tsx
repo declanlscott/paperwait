@@ -13,7 +13,7 @@ function Component() {
 
   return (
     <>
-      <p className={css({ color: "red.500" })}>Hello /dashboard!</p>
+      <p className={css({ color: "red8" })}>Hello /dashboard!</p>
       <p>{sstResource?.ReplicacheLicenseKey.value} from context!</p>
     </>
   );
