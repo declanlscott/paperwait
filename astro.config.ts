@@ -1,4 +1,5 @@
 import react from "@astrojs/react";
+import tailwind from "@astrojs/tailwind";
 import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
 import aws from "astro-sst";
 import { defineConfig } from "astro/config";
@@ -7,7 +8,7 @@ import { defineConfig } from "astro/config";
 export default defineConfig({
   output: "hybrid",
   adapter: aws(),
-  integrations: [react()],
+  integrations: [react(), tailwind()],
   vite: {
     plugins: [TanStackRouterVite()],
   },

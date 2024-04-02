@@ -23,6 +23,5 @@ pnpm-debug.log*
 # sst
 .sst
 
-## Panda
-styled-system
-styled-system-studio
+# drizzle
+.drizzle

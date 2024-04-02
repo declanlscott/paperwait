@@ -2,7 +2,7 @@
 export default {
   plugins: [
     "@ianvs/prettier-plugin-sort-imports",
-    "@pandabox/prettier-plugin",
+    "prettier-plugin-tailwindcss",
     "prettier-plugin-astro",
   ],
   overrides: [

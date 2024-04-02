@@ -7,18 +7,13 @@ module.exports = {
     "plugin:@typescript-eslint/stylistic-type-checked",
     "plugin:astro/recommended",
     "plugin:react-hooks/recommended",
-    "plugin:@pandacss/recommended",
+    "prettier",
   ],
   env: {
     browser: true,
     es2020: true,
   },
-  ignorePatterns: [
-    "dist",
-    ".eslintrc.cjs",
-    "postcss.config.cjs",
-    "styled-system",
-  ],
+  ignorePatterns: ["dist", ".eslintrc.cjs"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "./tsconfig.json",

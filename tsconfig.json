@@ -9,8 +9,7 @@
       "~/app/*": ["src/app/*"],
       "~/components/*": ["src/components/*"],
       "~/layouts/*": ["src/layouts/*"],
-      "~/lib/*": ["src/lib/*"],
-      "~/styled-system/*": ["styled-system/*"]
+      "~/lib/*": ["src/lib/*"]
     }
   }
 }
