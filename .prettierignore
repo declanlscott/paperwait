@@ -4,3 +4,4 @@ routeTree.gen.ts
 .astro/
 dist
 .sst
+.drizzle

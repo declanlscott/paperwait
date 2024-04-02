@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${LOCAL_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LOCAL_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${LOCAL_POSTGRES_DB}
+
+    ports:
+      - ${LOCAL_POSTGRES_PORT}:${LOCAL_POSTGRES_PORT}
+    volumes:
+      - db:/var/lib/postgresql
+
+volumes:
+  db:
