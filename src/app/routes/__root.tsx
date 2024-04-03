@@ -1,5 +1,4 @@
-// TODO: Implement client side routing for `react-aria-components` once the next release finally lands (April ~9th?)
-// NOTE: Waiting for https://github.com/adobe/react-spectrum/pull/5864 to merge
+// TODO: Implement client side routing for `react-aria-components` once the next release finally lands (April ~9th?) or a nightly with https://github.com/adobe/react-spectrum/pull/5864
 import { lazy, Suspense } from "react";
 // import { RouterProvider } from "react-aria-components";
 import {

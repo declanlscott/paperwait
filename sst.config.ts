@@ -1,8 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./.sst/platform/config.d.ts" />
 
+import env, { buildLocalDatabaseUrl } from "env";
+
 import { ClientPrefix } from "~/lib/client-resource";
-import env, { buildLocalDatabaseUrl } from "./env";
 
 const { AWS_ORG_NAME, AWS_REGION } = env;
 
@@ -33,6 +34,10 @@ export default $config({
     const replicacheLicenseKey = new sst.Secret(
       `${ClientPrefix}ReplicacheLicenseKey`,
     );
+
+    // new entraId.ApplicationRegistration("PaperwaitAppRegistration", {
+    //   displayName: "Paperwait",
+    // });
 
     new sst.aws.Astro("Paperwait", {
       link: [replicacheLicenseKey, $dev ? localDatabaseUrl : remoteDatabaseUrl],
