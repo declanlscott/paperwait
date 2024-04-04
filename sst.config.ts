@@ -4,6 +4,7 @@ import * as entraId from "@pulumi/azuread";
 import env, { buildLocalDatabaseUrl } from "env";
 
 import { ClientPrefix } from "~/lib/client-resource";
+import { authRedirectPath, domain, localhost } from "~/utils/constants";
 
 const { AWS_ORG_NAME, AWS_REGION } = env;
 
@@ -25,6 +26,7 @@ export default $config({
     };
   },
   async run() {
+    // NOTE: Should be able to import this normally in the future
     const time = await import("@pulumiverse/time");
 
     $linkable(entraId.Application, function () {
@@ -54,6 +56,18 @@ export default $config({
 
     const entraIdApp = new entraId.Application("EntraIdApplication", {
       displayName: "Paperwait",
+      preventDuplicateNames: true,
+      signInAudience: "AzureADMultipleOrgs",
+      web: {
+        redirectUris: [
+          `http://${localhost}${authRedirectPath}`,
+          `https://${domain}${authRedirectPath}`,
+        ],
+      },
+    });
+    new entraId.ApplicationIdentifierUri("EntraIdApplicationIdentifierUri", {
+      applicationId: entraIdApp.id,
+      identifierUri: `api://paperwait`,
     });
 
     const rotationHours = 24 * 7 * 26; // 6 months
@@ -74,7 +88,7 @@ export default $config({
       clientId: entraIdApp.clientId,
     });
 
-    new sst.aws.Astro("Paperwait", {
+    const astro = new sst.aws.Astro("Paperwait", {
       link: [
         replicacheLicenseKey,
         $dev ? localDatabaseUrl : remoteDatabaseUrl,
@@ -82,5 +96,9 @@ export default $config({
         entraIdClientSecret,
       ],
     });
+
+    return {
+      url: astro.url,
+    };
   },
 });
