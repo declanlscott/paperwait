@@ -1,20 +1,19 @@
-// TODO: Implement client side routing for `react-aria-components` once the next release finally lands (April ~9th?) or a nightly with https://github.com/adobe/react-spectrum/pull/5864
 import { lazy, Suspense } from "react";
-// import { RouterProvider } from "react-aria-components";
+import { RouterProvider } from "react-aria-components";
 import {
   createRootRoute,
   ScrollRestoration,
-  // useNavigate,
+  useRouter,
 } from "@tanstack/react-router";
 
-import { BaseLayout } from "../layouts/base-layout";
+import { BaseLayout } from "~/app/layouts/base-layout";
 
-// import type {
-//   NavigateOptions,
-//   RegisteredRouter,
-//   ToOptions,
-//   ToPathOption,
-// } from "@tanstack/react-router";
+import type {
+  NavigateOptions,
+  RegisteredRouter,
+  ToOptions,
+  ToPathOption,
+} from "@tanstack/react-router";
 
 const TanStackRouterDevtools = import.meta.env.PROD
   ? () => null // Render nothing in production
@@ -29,30 +28,30 @@ export const Route = createRootRoute({
   component: () => <Component />,
 });
 
-// declare module "react-aria-components" {
-//   interface RouterConfig {
-//     href: ToPathOption<RegisteredRouter["routeTree"]>;
-//     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
-//   }
-// }
+declare module "react-aria-components" {
+  interface RouterConfig {
+    href: ToPathOption<RegisteredRouter["routeTree"]>;
+    routerOptions: Omit<NavigateOptions, keyof ToOptions>;
+  }
+}
 
 function Component() {
-  // const navigate = useNavigate();
+  const router = useRouter();
 
   return (
-    // <RouterProvider
-    //   navigate={(to, options) => router.navigate({ to, ...options })}
-    //   useHref={(to) => router.buildLocation(to).href}
-    // >
-    <>
-      <BaseLayout />
+    <RouterProvider
+      navigate={(to, options) => router.navigate({ to, ...options })}
+      useHref={(to) => router.buildLocation({ to }).href}
+    >
+      <>
+        <BaseLayout />
 
-      <ScrollRestoration />
+        <ScrollRestoration />
 
-      <Suspense>
-        <TanStackRouterDevtools position="bottom-right" />
-      </Suspense>
-    </>
-    // </RouterProvider>
+        <Suspense>
+          <TanStackRouterDevtools position="bottom-right" />
+        </Suspense>
+      </>
+    </RouterProvider>
   );
 }

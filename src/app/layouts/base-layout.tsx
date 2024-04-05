@@ -1,4 +1,5 @@
-import { Link, Outlet } from "@tanstack/react-router";
+import { Link } from "react-aria-components";
+import { Outlet } from "@tanstack/react-router";
 
 export function BaseLayout() {
   return (
@@ -10,11 +11,11 @@ export function BaseLayout() {
           </li>
 
           <li>
-            <Link to="/dashboard">Dashboard</Link>
+            <Link href="/dashboard">Dashboard</Link>
           </li>
 
           <li>
-            <Link to="/settings">Settings</Link>
+            <Link href="/settings">Settings</Link>
           </li>
         </ul>
       </nav>
