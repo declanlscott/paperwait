@@ -22,6 +22,7 @@ export default {
     "^[~]",
     "^[.]",
     "",
+    "<TYPES>^react",
     "<TYPES>",
     "<TYPES>^[~]",
     "<TYPES>^[.]",

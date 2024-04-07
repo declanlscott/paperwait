@@ -1,19 +1,20 @@
-import { useContext } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { SstResourceContext } from "~/app/lib/context";
+import { useResource } from "~/app/lib/resource";
 
 export const Route = createFileRoute("/dashboard")({
+  beforeLoad: ({ context, location }) =>
+    context.auth.protectRoute(location.href),
   component: () => <Component />,
 });
 
 function Component() {
-  const sstResource = useContext(SstResourceContext);
+  const resource = useResource();
 
   return (
     <>
       <p className="text-red-500">Hello /dashboard!</p>
-      <p>{sstResource?.ReplicacheLicenseKey.value} from context!</p>
+      <p>{resource.ReplicacheLicenseKey.value} from context!</p>
     </>
   );
 }

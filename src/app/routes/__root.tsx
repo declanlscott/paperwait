@@ -1,12 +1,15 @@
 import { lazy, Suspense } from "react";
 import { RouterProvider } from "react-aria-components";
 import {
-  createRootRoute,
+  createRootRouteWithContext,
+  Outlet,
   ScrollRestoration,
   useRouter,
 } from "@tanstack/react-router";
 
 import { BaseLayout } from "~/app/layouts/base-layout";
+import { useAuth } from "~/app/lib/auth";
+import { isDevEnv } from "~/utils/env";
 
 import type {
   NavigateOptions,
@@ -14,17 +17,24 @@ import type {
   ToOptions,
   ToPathOption,
 } from "@tanstack/react-router";
+import type { AuthContext } from "~/app/lib/auth";
+import type { ResourceContext } from "~/app/lib/resource";
 
-const TanStackRouterDevtools = import.meta.env.PROD
-  ? () => null // Render nothing in production
-  : lazy(() =>
+const TanStackRouterDevtools = isDevEnv
+  ? lazy(() =>
       // Lazy load in development
       import("@tanstack/router-devtools").then((res) => ({
         default: res.TanStackRouterDevtools,
       })),
-    );
+    )
+  : () => null;
 
-export const Route = createRootRoute({
+type RouterContext = {
+  resource: ResourceContext;
+  auth: AuthContext;
+};
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => <Component />,
 });
 
@@ -37,6 +47,7 @@ declare module "react-aria-components" {
 
 function Component() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   return (
     <RouterProvider
@@ -44,7 +55,7 @@ function Component() {
       useHref={(to) => router.buildLocation({ to }).href}
     >
       <>
-        <BaseLayout />
+        {isAuthenticated ? <BaseLayout /> : <Outlet />}
 
         <ScrollRestoration />
 

@@ -1,12 +1,12 @@
 import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
-import { Client } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import { Resource } from "sst";
 
-import { session, user } from "~/lib/db/schema";
+import { Session, User } from "~/lib/db/schema";
 
-export const client = new Client(Resource.RemoteDatabaseUrl.value);
+const sql = neon(Resource.RemoteDatabaseUrl.value);
 
-export const db = drizzle(client);
+export const db = drizzle(sql);
 
-export const adapter = new DrizzlePostgreSQLAdapter(db, session, user);
+export const authAdapter = new DrizzlePostgreSQLAdapter(db, Session, User);

@@ -2,23 +2,25 @@ import { MicrosoftEntraId } from "arctic";
 import { Lucia } from "lucia";
 import { Resource } from "sst";
 
-import { adapter as localAdapter } from "~/lib/db/local";
-import { adapter as remoteAdapter } from "~/lib/db/remote";
+import { authAdapter } from "~/lib/db";
 import { authRedirectPath, domain, localhost } from "~/utils/constants";
+import { isDevEnv } from "~/utils/env";
 
-const isProd = import.meta.env.PROD;
-const adapter = isProd ? remoteAdapter : localAdapter;
-export const lucia = new Lucia(adapter, {
-  sessionCookie: {
-    attributes: {
-      secure: isProd,
-    },
-  },
+import type { User } from "~/lib/db/schema";
+
+export const lucia = new Lucia(authAdapter, {
+  sessionCookie: { attributes: { secure: import.meta.env.PROD } },
+  getUserAttributes: ({ providerId, orgId, name }) => ({
+    providerId,
+    orgId,
+    name,
+  }),
 });
 
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
+    DatabaseUserAttributes: Omit<typeof User.$inferSelect, "id">;
   }
 }
 
@@ -26,7 +28,7 @@ export const entraId = new MicrosoftEntraId(
   "organizations",
   Resource.EntraIdApplication.clientId,
   Resource.EntraIdClientSecret.value,
-  isProd
-    ? `https://${domain}${authRedirectPath}`
-    : `http://${localhost}${authRedirectPath}`,
+  isDevEnv
+    ? `http://${localhost}${authRedirectPath}`
+    : `https://${domain}${authRedirectPath}`,
 );

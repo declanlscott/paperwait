@@ -1,7 +1,20 @@
 import { Link } from "react-aria-components";
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useRouter } from "@tanstack/react-router";
+
+import { useAuth } from "~/app/lib/auth";
 
 export function BaseLayout() {
+  const auth = useAuth();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+
+    auth.reset();
+    await router.invalidate();
+    await router.navigate({ to: "/login" });
+  }
+
   return (
     <>
       <nav>
@@ -16,6 +29,10 @@ export function BaseLayout() {
 
           <li>
             <Link href="/settings">Settings</Link>
+          </li>
+
+          <li>
+            <Link onPress={handleLogout}>Logout</Link>
           </li>
         </ul>
       </nav>

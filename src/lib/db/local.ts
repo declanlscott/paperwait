@@ -1,14 +1,17 @@
 import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Client } from "pg";
+import pg from "pg";
 import { Resource } from "sst";
 
-import { session, user } from "~/lib/db/schema";
+import { Session, User } from "~/lib/db/schema";
 
-export const client = new Client({
+const { Client } = pg;
+
+const client = new Client({
   connectionString: Resource.LocalDatabaseUrl.value,
 });
 
+await client.connect();
 export const db = drizzle(client);
 
-export const adapter = new DrizzlePostgreSQLAdapter(db, session, user);
+export const authAdapter = new DrizzlePostgreSQLAdapter(db, Session, User);
