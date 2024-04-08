@@ -23,7 +23,7 @@ declare module "@tanstack/react-router" {
   }
 }
 
-type AppProps = {
+export type AppProps = {
   debounceMs?: number;
   clientResource: ClientResource;
 } & Auth;

@@ -1,9 +1,17 @@
 ---
 import { App } from "~/app/index";
+import { ClientResource } from "~/lib/client-resource";
+
+import type { AppProps } from "~/app/index";
 
 export const prerender = false;
+
+const appProps = {
+  ...Astro.locals,
+  clientResource: ClientResource,
+} satisfies AppProps;
 ---
 
 <div id="app-loading-indicator">Loading...</div>
 
-<App client:only="react" {...Astro.locals} />
+<App client:only="react" {...appProps} />
