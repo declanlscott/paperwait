@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./.sst/platform/config.d.ts" />
 import * as entraId from "@pulumi/azuread";
-import env, { buildLocalDatabaseUrl } from "env";
+import env from "env";
 
 import { ClientPrefix } from "~/lib/client-resource";
 import { authRedirectPath, domain, localhost } from "~/utils/constants";
@@ -26,7 +26,7 @@ export default $config({
     };
   },
   async run() {
-    // NOTE: Should be able to import this normally in the future
+    // TODO: Should be able to import this normally in the future
     const time = await import("@pulumiverse/time");
 
     $linkable(entraId.Application, function () {
@@ -44,11 +44,7 @@ export default $config({
       };
     });
 
-    const localDatabaseUrl = new sst.Secret(
-      "LocalDatabaseUrl",
-      buildLocalDatabaseUrl(),
-    );
-    const remoteDatabaseUrl = new sst.Secret("RemoteDatabaseUrl");
+    const databaseUrl = new sst.Secret("DatabaseUrl");
 
     const replicacheLicenseKey = new sst.Secret(
       `${ClientPrefix}ReplicacheLicenseKey`,
@@ -91,7 +87,7 @@ export default $config({
     const astro = new sst.aws.Astro("Paperwait", {
       link: [
         replicacheLicenseKey,
-        $dev ? localDatabaseUrl : remoteDatabaseUrl,
+        databaseUrl,
         entraIdApp,
         entraIdClientSecret,
       ],

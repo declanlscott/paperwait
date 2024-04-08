@@ -21,21 +21,3 @@ export default z
     ),
   })
   .parse(process.env);
-
-export const localPostgres = z.object({
-  LOCAL_POSTGRES_USER: z.string(),
-  LOCAL_POSTGRES_PASSWORD: z.string(),
-  LOCAL_POSTGRES_DB: z.string(),
-  LOCAL_POSTGRES_PORT: z.coerce.number(),
-});
-
-export function buildLocalDatabaseUrl() {
-  const {
-    LOCAL_POSTGRES_USER,
-    LOCAL_POSTGRES_PASSWORD,
-    LOCAL_POSTGRES_DB,
-    LOCAL_POSTGRES_PORT,
-  } = localPostgres.parse(process.env);
-
-  return `postgresql://${LOCAL_POSTGRES_USER}:${LOCAL_POSTGRES_PASSWORD}@localhost:${LOCAL_POSTGRES_PORT}/${LOCAL_POSTGRES_DB}`;
-}

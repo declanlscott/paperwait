@@ -1,13 +1,12 @@
-import { isDevEnv } from "~/utils/env";
+import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { Resource } from "sst";
 
-import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
+import { Session, User } from "~/lib/db/schema";
 
-const sql = isDevEnv
-  ? await import("~/lib/db/local")
-  : await import("~/lib/db/remote");
+const sql = neon(Resource.DatabaseUrl.value);
 
-// narrow the union type to the remote db type
-const db = sql.db as NeonHttpDatabase<Record<string, never>>;
-const authAdapter = sql.authAdapter;
+export const db = drizzle(sql);
 
-export { db, authAdapter };
+export const authAdapter = new DrizzlePostgreSQLAdapter(db, Session, User);
