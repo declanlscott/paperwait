@@ -1,10 +1,12 @@
 import { relations } from "drizzle-orm";
-import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+import { generateId } from "~/utils/id";
 
 export const User = pgTable("user", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id").$defaultFn(generateId).primaryKey(),
   providerId: text("provider_id").notNull().unique(),
-  orgId: uuid("org_id")
+  orgId: text("org_id")
     .notNull()
     .references(() => Organization.id),
   name: text("name").notNull(),
@@ -13,7 +15,7 @@ export const User = pgTable("user", {
 export const providerEnum = pgEnum("provider", ["entra-id", "google"]);
 
 export const Organization = pgTable("organization", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id").$defaultFn(generateId).primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   provider: providerEnum("provider").notNull(),
@@ -21,7 +23,7 @@ export const Organization = pgTable("organization", {
 
 export const Session = pgTable("session", {
   id: text("id").primaryKey(),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => User.id),
   expiresAt: timestamp("expires_at", {
