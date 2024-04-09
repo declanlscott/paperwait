@@ -1,6 +1,8 @@
 import { createContext, useContext, useState } from "react";
+import { flushSync } from "react-dom";
 import { Navigate, redirect } from "@tanstack/react-router";
 import { z } from "astro/zod";
+import ky from "ky";
 
 import type { ReactNode } from "react";
 import type { Session, User } from "lucia";
@@ -14,6 +16,7 @@ export type AuthContext = {
   data: Auth;
   isAuthenticated: boolean;
   reset: () => void;
+  logout: () => Promise<void>;
   protectRoute: (from: string) => void;
 };
 
@@ -50,6 +53,15 @@ export function AuthProvider(props: AuthProviderProps) {
     }));
   }
 
+  async function logout() {
+    const result = await ky.post("/api/auth/logout");
+
+    if (result.status === 204) {
+      // Ensure the auth context is reset before the router runs
+      flushSync(reset);
+    }
+  }
+
   function protectRoute(from: string) {
     if (!isAuthenticated) {
       throw redirect({
@@ -61,7 +73,7 @@ export function AuthProvider(props: AuthProviderProps) {
 
   return (
     <AuthContext.Provider
-      value={{ data, isAuthenticated, reset, protectRoute }}
+      value={{ data, isAuthenticated, reset, logout, protectRoute }}
     >
       {children}
     </AuthContext.Provider>
@@ -97,5 +109,5 @@ export function ProtectedRoute(props: ProtectedRouteProps) {
     );
   }
 
-  return <>{children}</>;
+  return children;
 }
