@@ -1,0 +1,120 @@
+---
+import PlaceholderImage from "~/components/placeholder-image.astro";
+import Layout from "~/layouts/layout.astro";
+---
+
+<Layout title="Register">
+  <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
+    <form
+      action="/api/register"
+      method="POST"
+      class="flex items-center justify-center py-12"
+    >
+      <div class="mx-auto grid w-[350px] gap-6">
+        <div class="grid gap-2 text-center">
+          <h1 class="text-3xl font-bold">Register</h1>
+          <p class="text-balance text-muted-foreground">
+            Register your organization details below.
+          </p>
+        </div>
+
+        <div class="grid gap-4">
+          <div class="grid gap-2">
+            <label class="label" for="full-name">Full Name</label>
+            <input
+              id="full-name"
+              name="fullName"
+              class="input focus-ring"
+              placeholder="My Organization"
+              required
+            />
+          </div>
+
+          <div class="grid gap-2">
+            <label class="label" for="short-name">Short Name</label>
+            <input
+              id="short-name"
+              name="shortName"
+              class="input focus-ring"
+              placeholder="my-org"
+              required
+            />
+          </div>
+
+          <div class="grid gap-2">
+            <label class="label" for="provider">SSO Provider</label>
+            <select
+              id="provider"
+              name="ssoProvider"
+              class="select border-0 border-r-8 border-transparent outline-input outline-1 outline"
+              required
+            >
+              <option value="entra-id">Microsoft Entra ID</option>
+              <option value="google" disabled>Google</option>
+            </select>
+          </div>
+
+          <div class="grid gap-2">
+            <label class="label" for="tenant-id">Tenant ID</label>
+            <input
+              id="tenant-id"
+              name="tenantId"
+              class="input focus-ring"
+              required
+            />
+          </div>
+
+          <div class="grid gap-2">
+            <label class="label" for="admin-email">Admin Email</label>
+            <input
+              id="admin-email"
+              name="adminEmail"
+              class="input focus-ring"
+              type="email"
+              placeholder="admin@example.com"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="button-base button-variant-default button-size-default focus-ring w-full gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-5 w-5"
+            >
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+              <path d="M10 6h4"></path><path d="M10 10h4"></path>
+              <path d="M10 14h4"></path>
+              <path d="M10 18h4"></path>
+            </svg>
+            Register</button
+          >
+        </div>
+
+        <p class="text-sm">
+          Already have an organization? <a
+            href="/login"
+            class="button-base button-variant-link button-size-default p-0 h-fit"
+            >Login</a
+          >
+        </p>
+      </div>
+    </form>
+
+    <div class="hidden bg-muted lg:block lg:max-h-screen">
+      <PlaceholderImage />
+    </div>
+  </div>
+</Layout>

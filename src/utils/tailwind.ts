@@ -6,7 +6,7 @@ import { tv } from "tailwind-variants";
 import type { ClassValue } from "clsx";
 
 export const focusRing = tv({
-  base: "ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+  base: "focus-ring",
 });
 
 export function composeTwRenderProps<T>(

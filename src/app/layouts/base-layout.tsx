@@ -1,4 +1,5 @@
 import { Link } from "react-aria-components";
+import { flushSync } from "react-dom";
 import { Outlet, useRouter } from "@tanstack/react-router";
 
 import { useAuth } from "~/app/lib/auth";
@@ -10,9 +11,9 @@ export function BaseLayout() {
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
 
-    auth.reset();
+    // Ensures the auth context is reset before the router runs
+    flushSync(auth.reset);
     await router.invalidate();
-    await router.navigate({ to: "/login" });
   }
 
   return (

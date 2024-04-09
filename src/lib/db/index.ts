@@ -7,6 +7,6 @@ import { Session, User } from "~/lib/db/schema";
 
 const sql = neon(Resource.DatabaseUrl.value);
 
-export const db = drizzle(sql);
+export const db = drizzle(sql, { logger: true });
 
 export const authAdapter = new DrizzlePostgreSQLAdapter(db, Session, User);

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import { Navigate, redirect } from "@tanstack/react-router";
+import { z } from "astro/zod";
 
 import type { ReactNode } from "react";
 import type { Session, User } from "lucia";
@@ -18,6 +19,18 @@ export type AuthContext = {
 
 export const AuthContext = createContext<AuthContext | null>(null);
 
+export const baseSearchParams = z.object({
+  redirect: z.string().optional(),
+});
+
+export const loginSearchParams = baseSearchParams.extend({
+  org: z.string().min(1),
+});
+
+export const initialLoginSearchParams = { org: "" } satisfies z.infer<
+  typeof loginSearchParams
+>;
+
 type AuthProviderProps = {
   children: ReactNode;
   initialData: Auth;
@@ -31,17 +44,17 @@ export function AuthProvider(props: AuthProviderProps) {
   const isAuthenticated = !!data.user;
 
   function reset() {
-    setData({
+    setData(() => ({
       user: null,
       session: null,
-    });
+    }));
   }
 
   function protectRoute(from: string) {
     if (!isAuthenticated) {
       throw redirect({
         to: "/login",
-        search: { redirect: from },
+        search: { redirect: from, ...initialLoginSearchParams },
       });
     }
   }
@@ -76,7 +89,12 @@ export function ProtectedRoute(props: ProtectedRouteProps) {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" search={{ redirect: path }} />;
+    return (
+      <Navigate
+        to="/login"
+        search={{ redirect: path, ...initialLoginSearchParams }}
+      />
+    );
   }
 
   return <>{children}</>;

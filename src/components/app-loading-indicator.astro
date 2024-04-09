@@ -1,0 +1,12 @@
+---
+import { Image } from "astro:assets";
+
+import loadingIndicator from "~/images/loading-indicator.svg";
+---
+
+<div
+  id="app-loading-indicator"
+  class="flex h-screen w-screen items-center justify-center"
+>
+  <Image src={loadingIndicator} alt="Loading..." class="w-24" />
+</div>

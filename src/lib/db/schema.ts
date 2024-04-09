@@ -19,6 +19,8 @@ export const Organization = pgTable("organization", {
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   provider: providerEnum("provider").notNull(),
+  tenantId: text("tenant_id").notNull(),
+  adminEmail: text("admin_email").notNull(),
 });
 
 export const Session = pgTable("session", {
