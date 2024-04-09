@@ -4,6 +4,8 @@ import { ClientResource } from "~/lib/client-resource";
 
 import type { AppProps } from "~/app/index";
 
+import "~/styles/globals.css";
+
 export const prerender = false;
 
 const appProps = {
@@ -12,6 +14,18 @@ const appProps = {
 } satisfies AppProps;
 ---
 
-<div id="app-loading-indicator">Loading...</div>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Paperwait</title>
+  </head>
+  <body>
+    <div id="app-loading-indicator">Loading...</div>
 
-<App client:only="react" {...appProps} />
+    <App client:only="react" {...appProps} />
+  </body>
+</html>
