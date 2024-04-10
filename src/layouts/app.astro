@@ -1,7 +1,5 @@
 ---
 import "~/styles/globals.css";
-
-import AppLoadingIndicator from "~/components/app-loading-indicator.astro";
 ---
 
 <!doctype html>
@@ -14,7 +12,12 @@ import AppLoadingIndicator from "~/components/app-loading-indicator.astro";
     <title>Paperwait</title>
   </head>
   <body>
-    <AppLoadingIndicator />
+    <div
+      id="app-loading-indicator"
+      class="flex h-screen w-screen items-center justify-center"
+    >
+      <img src="/loading-indicator.svg" alt="Loading..." class="w-24" />
+    </div>
 
     <slot />
   </body>

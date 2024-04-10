@@ -1,5 +1,4 @@
 ---
-import PlaceholderImage from "~/components/placeholder-image.astro";
 import Layout from "~/layouts/layout.astro";
 ---
 
@@ -114,7 +113,13 @@ import Layout from "~/layouts/layout.astro";
     </form>
 
     <div class="hidden bg-muted lg:block lg:max-h-screen">
-      <PlaceholderImage />
+      <img
+        src="/placeholder.svg"
+        alt="placeholder"
+        width="1920"
+        height="1080"
+        class="w-full h-full object-cover"
+      />
     </div>
   </div>
 </Layout>

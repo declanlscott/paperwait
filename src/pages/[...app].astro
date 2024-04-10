@@ -1,6 +1,5 @@
 ---
 import { App } from "~/app/index";
-import PlaceholderImage from "~/components/placeholder-image.astro";
 import Layout from "~/layouts/app.astro";
 import { ClientResource } from "~/lib/client-resource";
 
@@ -15,7 +14,5 @@ const appProps = {
 ---
 
 <Layout>
-  <App client:only="react" {...appProps}>
-    <PlaceholderImage slot="placeholderImg" />
-  </App>
+  <App client:only="react" {...appProps} />
 </Layout>

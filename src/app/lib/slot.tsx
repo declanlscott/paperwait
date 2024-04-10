@@ -2,9 +2,7 @@ import { createContext, useContext } from "react";
 
 import type { ReactNode } from "react";
 
-export type Slot = {
-  placeholderImg: ReactNode;
-};
+export type Slot = undefined;
 
 export type SlotContext = Slot;
 
