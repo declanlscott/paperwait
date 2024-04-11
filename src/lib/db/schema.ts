@@ -3,24 +3,38 @@ import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { generateId } from "~/utils/id";
 
+export const userRole = pgEnum("user_role", [
+  "admin",
+  "waiter",
+  "manager",
+  "customer",
+]);
+
 export const User = pgTable("user", {
   id: text("id").$defaultFn(generateId).primaryKey(),
   providerId: text("provider_id").notNull().unique(),
   orgId: text("org_id")
     .notNull()
     .references(() => Organization.id),
+  role: userRole("role").notNull().default("customer"),
   name: text("name").notNull(),
+  email: text("email").notNull().unique(),
 });
 
-export const providerEnum = pgEnum("provider", ["entra-id", "google"]);
+export const provider = pgEnum("provider", ["entra-id", "google"]);
+export const orgStatus = pgEnum("org_status", [
+  "initializing",
+  "active",
+  "suspended",
+]);
 
 export const Organization = pgTable("organization", {
   id: text("id").$defaultFn(generateId).primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
-  provider: providerEnum("provider").notNull(),
+  provider: provider("provider").notNull(),
   tenantId: text("tenant_id").notNull(),
-  adminEmail: text("admin_email").notNull(),
+  status: orgStatus("status").notNull().default("initializing"),
 });
 
 export const Session = pgTable("session", {

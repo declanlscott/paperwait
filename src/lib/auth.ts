@@ -10,10 +10,12 @@ import type { User } from "~/lib/db/schema";
 
 export const lucia = new Lucia(authAdapter, {
   sessionCookie: { attributes: { secure: import.meta.env.PROD } },
-  getUserAttributes: ({ providerId, orgId, name }) => ({
+  getUserAttributes: ({ providerId, orgId, name, role, email }) => ({
     providerId,
     orgId,
     name,
+    role,
+    email,
   }),
 });
 
