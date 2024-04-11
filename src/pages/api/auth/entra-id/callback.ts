@@ -5,7 +5,8 @@ import { and, eq, or, sql } from "drizzle-orm";
 import ky from "ky";
 import { parseJWT } from "oslo/jwt";
 
-import { entraId, lucia } from "~/lib/auth";
+import { lucia } from "~/lib/auth";
+import entraId from "~/lib/auth/entra-id";
 import { db } from "~/lib/db";
 import { Organization, User } from "~/lib/db/schema";
 import { MissingParameterError, NotFoundError } from "~/lib/error";

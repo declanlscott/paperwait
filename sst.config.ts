@@ -106,6 +106,18 @@ export default $config({
       ],
     });
 
+    new sst.aws.Cron("DeleteExpiredSessions", {
+      job: {
+        handler: "src/cron/delete-expired-sessions.handler",
+        timeout: "10 seconds",
+        link: [databaseUrl],
+        environment: {
+          PROD: String($app.stage === "production"),
+        },
+      },
+      schedule: "rate(1 day)",
+    });
+
     return {
       url: astro.url,
     };

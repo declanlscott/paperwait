@@ -1,6 +1,6 @@
 import { generateCodeVerifier, generateState } from "arctic";
 
-import { entraId } from "~/lib/auth";
+import entraId from "~/lib/auth/entra-id";
 import { MissingParameterError } from "~/lib/error";
 
 import type { APIContext } from "astro";
