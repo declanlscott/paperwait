@@ -15,6 +15,8 @@ export function BaseLayout() {
   return (
     <>
       <nav>
+        <img src="./logo.svg" className="h-10 w-10" />
+
         <ul>
           <li>
             <a href="/">Home</a>
