@@ -40,8 +40,8 @@ export async function GET(context: APIContext) {
       .object({ tid: z.string() })
       .parse(parsedIdToken.payload);
 
-    const org = await db
-      .select({ id: Organization.id })
+    const [org] = await db
+      .select({ id: Organization.id, status: Organization.status })
       .from(Organization)
       .where(
         and(
@@ -58,19 +58,19 @@ export async function GET(context: APIContext) {
           ),
         ),
       );
-    if (!org.length) {
+    if (!org) {
       throw new NotFoundError(`
         Failed to find organization (${storedOrg.value}) with tenantId: ${tenantId}
       `);
     }
 
-    const existingUser = await db
+    const [existingUser] = await db
       .select({ id: User.id })
       .from(User)
       .where(eq(User.providerId, providerId));
 
-    if (existingUser.length) {
-      const session = await lucia.createSession(existingUser[0].id, {});
+    if (existingUser) {
+      const session = await lucia.createSession(existingUser.id, {});
       const sessionCookie = lucia.createSessionCookie(session.id);
 
       context.cookies.set(
@@ -90,16 +90,26 @@ export async function GET(context: APIContext) {
       })
       .json<EntraIdUserInfo>();
 
-    const newUser = await db
+    // TODO: This should really be a transaction, but there is no transactions support in the neon-http driver
+    const isInitializing = org.status === "initializing";
+    const [newUser] = await db
       .insert(User)
       .values({
         providerId,
-        orgId: org[0].id,
+        orgId: org.id,
         name: userInfo.name,
+        email: userInfo.email,
+        role: isInitializing ? "admin" : "customer",
       })
       .returning({ id: User.id });
+    if (isInitializing) {
+      await db
+        .update(Organization)
+        .set({ status: "active" })
+        .where(eq(Organization.id, org.id));
+    }
 
-    const session = await lucia.createSession(newUser[0].id, {});
+    const session = await lucia.createSession(newUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
 
     context.cookies.set(
@@ -113,13 +123,13 @@ export async function GET(context: APIContext) {
     console.error(e);
 
     if (e instanceof MissingParameterError)
-      return new Response(e.message, { status: 400 });
+      return new Response(e.message, { status: e.statusCode });
     if (e instanceof OAuth2RequestError)
       return new Response(e.message, { status: 400 });
     if (e instanceof z.ZodError)
       return new Response(e.message, { status: 500 });
     if (e instanceof NotFoundError)
-      return new Response(e.message, { status: 404 });
+      return new Response(e.message, { status: e.statusCode });
     if (e instanceof NeonDbError)
       return new Response(e.message, { status: 500 });
 

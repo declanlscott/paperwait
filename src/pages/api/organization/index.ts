@@ -3,6 +3,7 @@ import { z } from "astro/zod";
 
 import { db } from "~/lib/db";
 import { Organization } from "~/lib/db/schema";
+import { NotImplementedError } from "~/lib/error";
 
 import type { APIContext } from "astro";
 
@@ -13,7 +14,6 @@ const registrationSchema = z.object({
   shortName: z.string().min(1),
   ssoProvider: z.union([z.literal("entra-id"), z.literal("google")]),
   tenantId: z.string().uuid(),
-  adminEmail: z.string().email(),
 });
 
 export async function POST(context: APIContext) {
@@ -23,20 +23,30 @@ export async function POST(context: APIContext) {
       Object.fromEntries(formData.entries()),
     );
 
-    await db.insert(Organization).values({
-      name: registration.fullName,
-      slug: registration.shortName,
-      provider: registration.ssoProvider,
-      tenantId: registration.tenantId,
-      adminEmail: registration.adminEmail,
-    });
+    if (registration.ssoProvider === "google") {
+      throw new NotImplementedError("Google SSO is not yet implemented");
+    }
 
-    return context.redirect("/login");
+    const [org] = await db
+      .insert(Organization)
+      .values({
+        name: registration.fullName,
+        slug: registration.shortName,
+        provider: registration.ssoProvider,
+        tenantId: registration.tenantId,
+      })
+      .returning({ slug: Organization.slug });
+
+    return context.redirect(
+      `/api/auth/entra-id/login?org=${encodeURIComponent(org.slug)}`,
+    );
   } catch (e) {
     console.error(e);
 
     if (e instanceof z.ZodError)
       return new Response(e.message, { status: 400 });
+    if (e instanceof NotImplementedError)
+      return new Response(e.message, { status: e.statusCode });
     if (e instanceof NeonDbError)
       return new Response(e.message, { status: 500 });
 

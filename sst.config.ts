@@ -12,12 +12,12 @@ export default $config({
   app(input) {
     return {
       name: "paperwait",
-      removal: input?.stage === "production" ? "retain" : "remove",
+      removal: input.stage === "production" ? "retain" : "remove",
       home: "aws",
       providers: {
         aws: {
           profile:
-            input?.stage === "production"
+            input.stage === "production"
               ? `${AWS_ORG_NAME}-production`
               : `${AWS_ORG_NAME}-dev`,
           region: AWS_REGION,
@@ -43,6 +43,8 @@ export default $config({
         },
       };
     });
+
+    const awsAccountId = aws.getCallerIdentityOutput().accountId;
 
     const databaseUrl = new sst.Secret("DatabaseUrl");
 
@@ -90,6 +92,17 @@ export default $config({
         databaseUrl,
         entraIdApp,
         entraIdClientSecret,
+      ],
+      permissions: [
+        {
+          actions: ["ssm:GetParameter", "ssm:PutParameter"],
+          resources: [
+            $resolve([awsAccountId]).apply(
+              ([accountId]) =>
+                `arn:aws:ssm:${AWS_REGION}:${accountId}:parameter/paperwait/org/*/papercut`,
+            ),
+          ],
+        },
       ],
     });
 
