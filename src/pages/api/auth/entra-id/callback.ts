@@ -9,7 +9,12 @@ import { lucia } from "~/lib/auth";
 import entraId from "~/lib/auth/entra-id";
 import { db } from "~/lib/db";
 import { Organization, User } from "~/lib/db/schema";
-import { MissingParameterError, NotFoundError } from "~/lib/error";
+import { transact } from "~/lib/db/transaction";
+import {
+  MissingParameterError,
+  NotFoundError,
+  TooManyTransactionRetriesError,
+} from "~/lib/error";
 
 import type { APIContext } from "astro";
 
@@ -91,24 +96,29 @@ export async function GET(context: APIContext) {
       })
       .json<EntraIdUserInfo>();
 
-    // TODO: This should really be a transaction, but there is no transactions support in the neon-http driver
-    const isInitializing = org.status === "initializing";
-    const [newUser] = await db
-      .insert(User)
-      .values({
-        providerId,
-        orgId: org.id,
-        name: userInfo.name,
-        email: userInfo.email,
-        role: isInitializing ? "admin" : "customer",
-      })
-      .returning({ id: User.id });
-    if (isInitializing) {
-      await db
-        .update(Organization)
-        .set({ status: "active" })
-        .where(eq(Organization.id, org.id));
-    }
+    const newUser = await transact(async (tx) => {
+      const isInitializing = org.status === "initializing";
+
+      const [newUser] = await tx
+        .insert(User)
+        .values({
+          providerId,
+          orgId: org.id,
+          name: userInfo.name,
+          email: userInfo.email,
+          role: isInitializing ? "admin" : "customer",
+        })
+        .returning({ id: User.id });
+
+      if (isInitializing) {
+        await tx
+          .update(Organization)
+          .set({ status: "active" })
+          .where(eq(Organization.id, org.id));
+      }
+
+      return newUser;
+    });
 
     const session = await lucia.createSession(newUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
@@ -133,6 +143,8 @@ export async function GET(context: APIContext) {
       return new Response(e.message, { status: e.statusCode });
     if (e instanceof NeonDbError)
       return new Response(e.message, { status: 500 });
+    if (e instanceof TooManyTransactionRetriesError)
+      return new Response(e.message, { status: e.statusCode });
 
     return new Response("An unexpected error occurred", { status: 500 });
   }

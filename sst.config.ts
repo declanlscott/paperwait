@@ -4,7 +4,7 @@ import * as entraId from "@pulumi/azuread";
 import env from "env";
 
 import { ClientPrefix } from "~/lib/client-resource";
-import { authRedirectPath, domain, localhost } from "~/utils/constants";
+import { AUTH_REDIRECT_PATH, DOMAIN, LOCALHOST } from "~/utils/constants";
 
 const { AWS_ORG_NAME, AWS_REGION } = env;
 
@@ -58,8 +58,8 @@ export default $config({
       signInAudience: "AzureADMultipleOrgs",
       web: {
         redirectUris: [
-          `http://${localhost}${authRedirectPath}`,
-          `https://${domain}${authRedirectPath}`,
+          `http://${LOCALHOST}${AUTH_REDIRECT_PATH}`,
+          `https://${DOMAIN}${AUTH_REDIRECT_PATH}`,
         ],
       },
     });

@@ -42,3 +42,13 @@ export class ForbiddenError extends HTTPError {
     this.name = "ForbiddenError";
   }
 }
+
+export class TooManyTransactionRetriesError extends HTTPError {
+  constructor(
+    message = "Tried to execute transaction too many times, giving up.",
+    statusCode = 500,
+  ) {
+    super(message, statusCode);
+    this.name = "TooManyTransactionRetriesError";
+  }
+}
