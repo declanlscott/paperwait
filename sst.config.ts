@@ -3,10 +3,10 @@
 import * as entraId from "@pulumi/azuread";
 import env from "env";
 
-import { ClientPrefix } from "~/lib/client-resource";
-import { AUTH_REDIRECT_PATH, DOMAIN, LOCALHOST } from "~/utils/constants";
+import { ClientPrefix } from "~/lib/shared/client-resource";
+import { AUTH_REDIRECT_PATH, LOCALHOST } from "~/utils/constants";
 
-const { AWS_ORG_NAME, AWS_REGION } = env;
+const { AWS_ORG_NAME, AWS_REGION, DOMAIN } = env;
 
 export default $config({
   app(input) {

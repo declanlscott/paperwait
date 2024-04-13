@@ -1,20 +1,20 @@
 import { NeonDbError } from "@neondatabase/serverless";
 import { OAuth2RequestError } from "arctic";
 import { z } from "astro/zod";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import ky from "ky";
 import { parseJWT } from "oslo/jwt";
 
-import { lucia } from "~/lib/auth";
-import entraId from "~/lib/auth/entra-id";
-import { db } from "~/lib/db";
-import { Organization, User } from "~/lib/db/schema";
-import { transact } from "~/lib/db/transaction";
+import { lucia } from "~/lib/server/auth";
+import entraId from "~/lib/server/auth/entra-id";
+import { db } from "~/lib/server/db";
+import { Organization, User } from "~/lib/server/db/schema";
+import { transact } from "~/lib/server/db/transaction";
 import {
   MissingParameterError,
   NotFoundError,
   TooManyTransactionRetriesError,
-} from "~/lib/error";
+} from "~/lib/server/error";
 
 import type { APIContext } from "astro";
 
@@ -26,11 +26,11 @@ export async function GET(context: APIContext) {
 
   const storedState = context.cookies.get("state");
   const storedCodeVerifier = context.cookies.get("code_verifier");
-  const storedOrg = context.cookies.get("org");
+  const storedOrgId = context.cookies.get("org");
 
   const redirect = context.cookies.get("redirect")?.value ?? "/dashboard";
 
-  if (!code || !state || !storedState || !storedCodeVerifier || !storedOrg) {
+  if (!code || !state || !storedState || !storedCodeVerifier || !storedOrgId) {
     throw new MissingParameterError("Missing required parameters");
   }
 
@@ -47,26 +47,17 @@ export async function GET(context: APIContext) {
       .parse(parsedIdToken.payload);
 
     const [org] = await db
-      .select({ id: Organization.id, status: Organization.status })
+      .select({ status: Organization.status })
       .from(Organization)
       .where(
         and(
           eq(Organization.tenantId, tenantId),
-          or(
-            eq(
-              sql`TRIM(LOWER(${Organization.name}))`,
-              sql`TRIM(LOWER(${storedOrg.value}))`,
-            ),
-            eq(
-              sql`TRIM(LOWER(${Organization.slug}))`,
-              sql`TRIM(LOWER(${storedOrg.value}))`,
-            ),
-          ),
+          eq(Organization.id, storedOrgId.value),
         ),
       );
     if (!org) {
       throw new NotFoundError(`
-        Failed to find organization (${storedOrg.value}) with tenantId: ${tenantId}
+        Failed to find organization (${storedOrgId.value}) with tenantId: ${tenantId}
       `);
     }
 
@@ -103,7 +94,7 @@ export async function GET(context: APIContext) {
         .insert(User)
         .values({
           providerId,
-          orgId: org.id,
+          orgId: storedOrgId.value,
           name: userInfo.name,
           email: userInfo.email,
           role: isInitializing ? "admin" : "customer",
@@ -114,7 +105,7 @@ export async function GET(context: APIContext) {
         await tx
           .update(Organization)
           .set({ status: "active" })
-          .where(eq(Organization.id, org.id));
+          .where(eq(Organization.id, storedOrgId.value));
       }
 
       return newUser;

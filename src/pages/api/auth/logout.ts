@@ -1,4 +1,4 @@
-import { lucia } from "~/lib/auth";
+import { lucia } from "~/lib/server/auth";
 
 import type { APIContext } from "astro";
 

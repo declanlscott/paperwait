@@ -4,13 +4,12 @@ import {
   json,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { generateId } from "~/utils/id";
-
-export const version = 1;
+import { generateId } from "~/utils/nanoid";
 
 export const userRole = pgEnum("user_role", [
   "admin",
@@ -18,6 +17,7 @@ export const userRole = pgEnum("user_role", [
   "manager",
   "customer",
 ]);
+export type UserRole = (typeof userRole.enumValues)[number];
 
 export const User = pgTable("user", {
   id: text("id").$defaultFn(generateId).primaryKey(),
@@ -31,11 +31,14 @@ export const User = pgTable("user", {
 });
 
 export const provider = pgEnum("provider", ["entra-id", "google"]);
+export type Provider = (typeof provider.enumValues)[number];
+
 export const orgStatus = pgEnum("org_status", [
   "initializing",
   "active",
   "suspended",
 ]);
+export type OrgStatus = (typeof orgStatus.enumValues)[number];
 
 export const Organization = pgTable("organization", {
   id: text("id").$defaultFn(generateId).primaryKey(),
@@ -80,6 +83,19 @@ export const ReplicacheClient = pgTable("replicache_client", {
   lastModified: timestamp("last_modified").notNull(),
 });
 
+export const ReplicacheClientViewRecord = pgTable(
+  "replicache_cvr",
+  {
+    id: integer("id").notNull(),
+    clientGroupId: text("client_group_id")
+      .notNull()
+      .references(() => ReplicacheClientGroup.id),
+  },
+  (table) => ({
+    primary: primaryKey({ columns: [table.id, table.clientGroupId] }),
+  }),
+);
+
 export const userRelations = relations(User, ({ one, many }) => ({
   organization: one(Organization, {
     fields: [User.orgId],
@@ -115,6 +131,9 @@ export const replicacheClientGroupRelations = relations(
     replicacheClient: many(ReplicacheClient, {
       relationName: "replicacheClientGroup",
     }),
+    replicacheClientViewRecord: many(ReplicacheClientViewRecord, {
+      relationName: "replicacheCvrGroup",
+    }),
   }),
 );
 
@@ -125,6 +144,17 @@ export const replicacheClientRelations = relations(
       fields: [ReplicacheClient.clientGroupId],
       references: [ReplicacheClientGroup.id],
       relationName: "replicacheClientGroup",
+    }),
+  }),
+);
+
+export const replicacheClientViewRecordRelations = relations(
+  ReplicacheClientViewRecord,
+  ({ one }) => ({
+    replicacheClientGroup: one(ReplicacheClientGroup, {
+      fields: [ReplicacheClientViewRecord.clientGroupId],
+      references: [ReplicacheClientGroup.id],
+      relationName: "replicacheCvrGroup",
     }),
   }),
 );

@@ -1,9 +1,10 @@
 import { PutParameterCommand } from "@aws-sdk/client-ssm";
 import { z } from "astro/zod";
 
-import { ForbiddenError, UnauthorizedError } from "~/lib/error";
-import { schema } from "~/lib/papercut";
-import { client as ssmClient } from "~/lib/ssm";
+import { authorize } from "~/lib/server/auth/authorize";
+import { ForbiddenError } from "~/lib/server/error";
+import { client as ssmClient } from "~/lib/server/ssm";
+import { schema } from "~/lib/shared/papercut";
 
 import type { PutParameterCommandInput } from "@aws-sdk/client-ssm";
 import type { APIContext } from "astro";
@@ -12,15 +13,9 @@ export const prerender = false;
 
 export async function POST(context: APIContext) {
   try {
-    if (!context.locals.session || !context.locals.user) {
-      throw new UnauthorizedError();
-    }
+    const { user } = authorize(context, "admin");
 
-    if (context.locals.user.role !== "admin") {
-      throw new ForbiddenError();
-    }
-
-    if (context.params.id! !== context.locals.user.orgId) {
+    if (context.params.id! !== user.orgId) {
       throw new ForbiddenError();
     }
 
@@ -28,7 +23,7 @@ export async function POST(context: APIContext) {
     const data = schema.parse(body);
 
     const input = {
-      Name: `/paperwait/org/${context.locals.user.orgId}/papercut`,
+      Name: `/paperwait/org/${user.orgId}/papercut`,
       Value: JSON.stringify(data),
       Type: "SecureString",
       Overwrite: true,

@@ -1,7 +1,8 @@
 import { MicrosoftEntraId } from "arctic";
+import env from "env";
 import { Resource } from "sst";
 
-import { AUTH_REDIRECT_PATH, DOMAIN, LOCALHOST } from "~/utils/constants";
+import { AUTH_REDIRECT_PATH, LOCALHOST } from "~/utils/constants";
 import { isDevEnv } from "~/utils/env";
 
 export default new MicrosoftEntraId(
@@ -10,5 +11,5 @@ export default new MicrosoftEntraId(
   Resource.EntraIdClientSecret.value,
   isDevEnv
     ? `http://${LOCALHOST}${AUTH_REDIRECT_PATH}`
-    : `https://${DOMAIN}${AUTH_REDIRECT_PATH}`,
+    : `https://${env.DOMAIN}${AUTH_REDIRECT_PATH}`,
 );

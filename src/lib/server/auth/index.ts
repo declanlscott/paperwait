@@ -1,8 +1,8 @@
 import { Lucia } from "lucia";
 
-import { authAdapter } from "~/lib/db";
+import { authAdapter } from "~/lib/server/db";
 
-import type { User } from "~/lib/db/schema";
+import type { User } from "~/lib/server/db/schema";
 
 export const lucia = new Lucia(authAdapter, {
   sessionCookie: {

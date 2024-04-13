@@ -1,5 +1,5 @@
-import { db } from "~/lib/db";
-import { TooManyTransactionRetriesError } from "~/lib/error";
+import { db } from "~/lib/server/db";
+import { TooManyTransactionRetriesError } from "~/lib/server/error";
 import {
   DB_TRANSACTION_MAX_RETRIES,
   POSTGRES_DEADLOCK_DETECTED_ERROR_CODE,

@@ -4,7 +4,7 @@ import ky from "ky";
 import { ProtectedRoute, useAuth } from "~/app/lib/auth";
 
 import type { z } from "astro:content";
-import type { schema } from "~/lib/papercut";
+import type { schema } from "~/lib/shared/papercut";
 
 const path = "/settings";
 

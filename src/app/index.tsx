@@ -6,7 +6,7 @@ import { ResourceProvider } from "~/app/lib/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { Auth } from "~/app/lib/auth";
-import type { ClientResource } from "~/lib/client-resource";
+import type { ClientResourceType } from "~/lib/shared/client-resource";
 
 const router = createRouter({
   routeTree,
@@ -25,7 +25,7 @@ declare module "@tanstack/react-router" {
 
 export type AppProps = {
   debounceMs?: number;
-  clientResource: ClientResource;
+  clientResource: ClientResourceType;
 } & Auth;
 
 export function App(props: AppProps) {

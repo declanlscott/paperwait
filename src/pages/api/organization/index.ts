@@ -1,9 +1,10 @@
 import { NeonDbError } from "@neondatabase/serverless";
 import { z } from "astro/zod";
 
-import { db } from "~/lib/db";
-import { Organization } from "~/lib/db/schema";
-import { NotImplementedError } from "~/lib/error";
+import { db } from "~/lib/server/db";
+import { Organization, provider } from "~/lib/server/db/schema";
+import { NotImplementedError } from "~/lib/server/error";
+import { unionizeCollection } from "~/utils/zod";
 
 import type { APIContext } from "astro";
 
@@ -12,7 +13,7 @@ export const prerender = false;
 const registrationSchema = z.object({
   fullName: z.string().min(1),
   shortName: z.string().min(1),
-  ssoProvider: z.union([z.literal("entra-id"), z.literal("google")]),
+  ssoProvider: unionizeCollection(provider.enumValues),
   tenantId: z.string().uuid(),
 });
 

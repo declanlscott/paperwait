@@ -1,10 +1,11 @@
-import { db } from "~/lib/db";
-import { ReplicacheMeta, version } from "~/lib/db/schema";
+import { db } from "~/lib/server/db";
+import { ReplicacheMeta } from "~/lib/server/db/schema";
+import { DB_SCHEMA_VERSION } from "~/utils/constants";
 
 async function seed() {
   await db.insert(ReplicacheMeta).values({
     key: "schemaVersion",
-    value: version,
+    value: DB_SCHEMA_VERSION,
   });
 }
 
