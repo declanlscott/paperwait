@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 import type { ReactNode } from "react";
 import type { ClientResourceType } from "~/lib/shared/client-resource";
@@ -13,11 +13,11 @@ type ResourceProviderProps = {
 };
 
 export function ResourceProvider(props: ResourceProviderProps) {
-  const { children, resource } = props;
+  const [resource] = useState(() => props.resource);
 
   return (
     <ResourceContext.Provider value={resource}>
-      {children}
+      {props.children}
     </ResourceContext.Provider>
   );
 }

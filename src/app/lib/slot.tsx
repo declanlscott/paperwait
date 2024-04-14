@@ -1,5 +1,5 @@
 // TODO: Remove this if it continues to be unused
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 import type { ReactNode } from "react";
 
@@ -15,9 +15,11 @@ type SlotProviderProps = {
 };
 
 export function SlotProvider(props: SlotProviderProps) {
-  const { children, slot } = props;
+  const [slot] = useState(() => props.slot);
 
-  return <SlotContext.Provider value={slot}>{children}</SlotContext.Provider>;
+  return (
+    <SlotContext.Provider value={slot}>{props.children}</SlotContext.Provider>
+  );
 }
 
 export function useSlot() {

@@ -40,9 +40,7 @@ type AuthProviderProps = {
 };
 
 export function AuthProvider(props: AuthProviderProps) {
-  const { children, initialData } = props;
-
-  const [data, setData] = useState<Auth>(initialData);
+  const [data, setData] = useState<Auth>(() => props.initialData);
 
   const isAuthenticated = !!data.user;
 
@@ -75,7 +73,7 @@ export function AuthProvider(props: AuthProviderProps) {
     <AuthContext.Provider
       value={{ data, isAuthenticated, reset, logout, protectRoute }}
     >
-      {children}
+      {props.children}
     </AuthContext.Provider>
   );
 }
