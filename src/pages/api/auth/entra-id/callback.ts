@@ -15,6 +15,7 @@ import {
   NotFoundError,
   TooManyTransactionRetriesError,
 } from "~/lib/server/error";
+import { generateId } from "~/utils/nanoid";
 
 import type { APIContext } from "astro";
 
@@ -67,7 +68,11 @@ export async function GET(context: APIContext) {
       .where(eq(User.providerId, providerId));
 
     if (existingUser) {
-      const session = await lucia.createSession(existingUser.id, {});
+      const session = await lucia.createSession(
+        existingUser.id,
+        {},
+        { sessionId: generateId() },
+      );
       const sessionCookie = lucia.createSessionCookie(session.id);
 
       context.cookies.set(
@@ -97,7 +102,7 @@ export async function GET(context: APIContext) {
           orgId: storedOrgId.value,
           name: userInfo.name,
           email: userInfo.email,
-          role: isInitializing ? "admin" : "customer",
+          role: isInitializing ? "administrator" : "customer",
         })
         .returning({ id: User.id });
 

@@ -8,20 +8,21 @@ import {
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { NeonQueryResultHKT } from "drizzle-orm/neon-serverless";
-import type { PgTransaction } from "drizzle-orm/pg-core";
+import type { PgTransaction, PgTransactionConfig } from "drizzle-orm/pg-core";
 
-type Transaction = PgTransaction<
+export type Transaction = PgTransaction<
   NeonQueryResultHKT,
   Record<string, never>,
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
-export async function transact<T>(callback: (tx: Transaction) => Promise<T>) {
+export async function transact<Return>(
+  callback: (tx: Transaction) => Promise<Return>,
+  isolationLevel: PgTransactionConfig["isolationLevel"] = "read committed",
+) {
   for (let i = 0; i < DB_TRANSACTION_MAX_RETRIES; i++) {
     try {
-      return db.transaction(callback, {
-        isolationLevel: "serializable",
-      });
+      return db.transaction(callback, { isolationLevel });
     } catch (e) {
       if (shouldRetryTransaction(e)) {
         console.log(

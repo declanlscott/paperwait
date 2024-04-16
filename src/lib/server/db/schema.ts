@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  bigint,
   integer,
   json,
   pgEnum,
@@ -9,10 +10,11 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+import { id, timestamps } from "~/utils/drizzle";
 import { generateId } from "~/utils/nanoid";
 
 export const userRole = pgEnum("user_role", [
-  "admin",
+  "administrator",
   "technician",
   "manager",
   "customer",
@@ -20,14 +22,15 @@ export const userRole = pgEnum("user_role", [
 export type UserRole = (typeof userRole.enumValues)[number];
 
 export const User = pgTable("user", {
-  id: text("id").$defaultFn(generateId).primaryKey(),
+  id: id("id").$defaultFn(generateId).primaryKey(),
   providerId: text("provider_id").notNull().unique(),
-  orgId: text("org_id")
+  orgId: id("org_id")
     .notNull()
     .references(() => Organization.id),
   role: userRole("role").notNull().default("customer"),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  ...timestamps,
 });
 
 export const provider = pgEnum("provider", ["entra-id", "google"]);
@@ -41,17 +44,18 @@ export const orgStatus = pgEnum("org_status", [
 export type OrgStatus = (typeof orgStatus.enumValues)[number];
 
 export const Organization = pgTable("organization", {
-  id: text("id").$defaultFn(generateId).primaryKey(),
+  id: id("id").$defaultFn(generateId).primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   provider: provider("provider").notNull(),
   tenantId: text("tenant_id").notNull(),
   status: orgStatus("status").notNull().default("initializing"),
+  ...timestamps,
 });
 
 export const Session = pgTable("session", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
+  id: id("id").primaryKey(),
+  userId: id("user_id")
     .notNull()
     .references(() => User.id),
   expiresAt: timestamp("expires_at", {
@@ -66,30 +70,32 @@ export const ReplicacheMeta = pgTable("replicache_meta", {
 });
 
 export const ReplicacheClientGroup = pgTable("replicache_client_group", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
+  id: id("id").$defaultFn(generateId).primaryKey(),
+  userId: id("user_id")
     .notNull()
     .references(() => User.id),
   cvrVersion: integer("cvr_version").notNull(),
-  lastModified: timestamp("last_modified").notNull(),
+  ...timestamps,
 });
 
 export const ReplicacheClient = pgTable("replicache_client", {
-  id: text("id").primaryKey(),
-  clientGroupId: text("client_group_id")
+  id: id("id").$defaultFn(generateId).primaryKey(),
+  clientGroupId: id("client_group_id")
     .notNull()
     .references(() => ReplicacheClientGroup.id),
-  lastMutationId: integer("last_mutation_id").notNull(),
-  lastModified: timestamp("last_modified").notNull(),
+  mutationId: bigint("mutation_id", { mode: "number" }).notNull(),
+  ...timestamps,
 });
 
 export const ReplicacheClientViewRecord = pgTable(
   "replicache_cvr",
   {
     id: integer("id").notNull(),
-    clientGroupId: text("client_group_id")
+    clientGroupId: id("client_group_id")
       .notNull()
       .references(() => ReplicacheClientGroup.id),
+    data: json("data").$type<Record<string, number>>().notNull(),
+    ...timestamps,
   },
   (table) => ({
     primary: primaryKey({ columns: [table.id, table.clientGroupId] }),

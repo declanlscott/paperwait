@@ -22,20 +22,19 @@ const pullRequest = z.object({
   ]),
 });
 
-export async function pull(userId: User["id"], requestBody: unknown) {
+export async function pull(user: User, requestBody: unknown) {
   const { clientGroupId, cookie } = pullRequest.parse(requestBody);
 
   await db
     .insert(ReplicacheClientGroup)
     .values({
       id: clientGroupId,
-      userId: userId,
+      userId: user.id,
       cvrVersion: 0,
-      lastModified: new Date(),
     })
     .onConflictDoNothing();
 
-  await transact(async (tx) => {
+  const result = await transact(async (tx) => {
     const [group] = await tx
       .select({
         id: ReplicacheClientGroup.id,
@@ -46,7 +45,7 @@ export async function pull(userId: User["id"], requestBody: unknown) {
       .for("update")
       .where(eq(ReplicacheClientGroup.id, clientGroupId));
 
-    const [prevCvr] = cookie
+    const [oldCvr] = cookie
       ? await tx
           .select()
           .from(ReplicacheClientViewRecord)
@@ -58,10 +57,13 @@ export async function pull(userId: User["id"], requestBody: unknown) {
           )
       : [];
 
-    const baseCvr = prevCvr ?? {};
+    const cvr = oldCvr ?? {
+      data: {},
+      clientVersion: 0,
+    };
 
     return;
-  });
+  }, "serializable");
 
   return;
 }
