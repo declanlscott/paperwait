@@ -1,0 +1,7 @@
+{
+  "name": "@paperwait/functions",
+  "version": "0.0.0",
+  "dependencies": {
+    "@paperwait/core": "workspace:*"
+  }
+}

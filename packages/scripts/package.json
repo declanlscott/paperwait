@@ -1,0 +1,13 @@
+{
+  "name": "@paperwait/scripts",
+  "version": "0.0.0",
+  "scripts": {
+    "shell": "sst shell --verbose tsx"
+  },
+  "dependencies": {
+    "@paperwait/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2"
+  }
+}
