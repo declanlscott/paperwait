@@ -1,6 +1,6 @@
-import { ForbiddenError, UnauthorizedError } from "@paperwait/core/utils/error";
+import { ForbiddenError, UnauthorizedError } from "@paperwait/core/errors";
 
-import type { UserRole } from "@paperwait/core/auth/user.sql";
+import type { UserRole } from "@paperwait/core/user";
 import type { APIContext } from "astro";
 
 export function authorize(context: APIContext, role?: UserRole) {

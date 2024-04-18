@@ -7,9 +7,8 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 
-import { User } from "../auth/user.sql";
-import { id, timestamps } from "../utils/drizzle";
-import { generateId } from "../utils/nanoid";
+import { User } from "../user";
+import { generateId, id, timestamps } from "../utils";
 
 export const ReplicacheMeta = pgTable("replicache_meta", {
   key: text("key").primaryKey(),

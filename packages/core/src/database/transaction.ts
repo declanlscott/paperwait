@@ -4,7 +4,7 @@ import {
   POSTGRES_DEADLOCK_DETECTED_ERROR_CODE,
   POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE,
 } from "../constants";
-import { TooManyTransactionRetriesError } from "../utils/error";
+import { TooManyTransactionRetriesError } from "../errors";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { NeonQueryResultHKT } from "drizzle-orm/neon-serverless";

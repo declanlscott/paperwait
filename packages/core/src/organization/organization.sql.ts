@@ -1,7 +1,6 @@
 import { pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 
-import { id, timestamps } from "../utils/drizzle";
-import { generateId } from "../utils/nanoid";
+import { generateId, id, timestamps } from "../utils";
 
 export const provider = pgEnum("provider", ["entra-id", "google"]);
 export type Provider = (typeof provider.enumValues)[number];

@@ -1,8 +1,7 @@
 import type { Resource } from "sst";
+import type { CLIENT_RESOURCE_PREFIX } from "../constants";
 
-export const ClientPrefix = "Client";
-
-export type ClientPrefixType = typeof ClientPrefix;
+export type ClientPrefixType = typeof CLIENT_RESOURCE_PREFIX;
 export type ClientResourceType = {
   [KeyWithPrefix in keyof Resource as KeyWithPrefix extends `${ClientPrefixType}${string}`
     ? KeyWithPrefix extends `${ClientPrefixType}${infer KeyWithoutPrefix}`

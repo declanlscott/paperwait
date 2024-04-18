@@ -7,18 +7,23 @@
       "./src/*.ts"
     ]
   },
+  "scripts": {
+    "db:push": "drizzle-kit push:pg",
+    "db:studio": "drizzle-kit studio"
+  },
   "dependencies": {
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@neondatabase/serverless": "^0.9.1",
-    "@pulumi/aws": "^6.31.0",
     "drizzle-orm": "^0.30.8",
     "lucia": "^3.1.1",
     "nanoid": "^5.0.7",
+    "replicache": "^14.2.2",
     "valibot": "^0.30.0",
     "ws": "^8.16.0"
   },
   "devDependencies": {
     "@types/ws": "^8.5.10",
-    "drizzle-kit": "^0.20.14"
+    "drizzle-kit": "^0.20.14",
+    "pg": "^8.11.5"
   }
 }

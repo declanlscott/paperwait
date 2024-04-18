@@ -15,6 +15,7 @@ const replicacheLicenseKey = new sst.Secret(
 
 export const astro = new sst.aws.Astro("Paperwait", {
   path: "packages/web",
+  buildCommand: "pnpm build",
   link: [replicacheLicenseKey, databaseUrl, entraIdApp, entraIdClientSecret],
   permissions: [
     {

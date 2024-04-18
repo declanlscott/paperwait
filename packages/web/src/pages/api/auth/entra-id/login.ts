@@ -1,15 +1,15 @@
-import { NeonDbError } from "@neondatabase/serverless";
 import { db } from "@paperwait/core/database";
-import { Organization } from "@paperwait/core/organization/organization.sql";
 import {
+  DatabaseError,
   MissingParameterError,
   NotFoundError,
   NotImplementedError,
-} from "@paperwait/core/utils/error";
+} from "@paperwait/core/errors";
+import { Organization } from "@paperwait/core/organization";
 import { generateCodeVerifier, generateState } from "arctic";
 import { eq, or, sql } from "drizzle-orm";
 
-import entraId from "~/lib/server/auth/entra-id";
+import entraId from "~/lib/auth/entra-id";
 
 import type { APIContext } from "astro";
 
@@ -96,7 +96,7 @@ export async function GET(context: APIContext) {
 
     if (e instanceof MissingParameterError)
       return new Response(e.message, { status: e.statusCode });
-    if (e instanceof NeonDbError)
+    if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
     if (e instanceof NotFoundError)
       return new Response(e.message, { status: e.statusCode });

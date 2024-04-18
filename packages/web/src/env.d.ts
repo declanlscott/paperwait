@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 /// <reference types="astro/client" />
 
 declare namespace App {

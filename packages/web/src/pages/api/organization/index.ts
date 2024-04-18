@@ -1,29 +1,33 @@
-import { NeonDbError } from "@neondatabase/serverless";
 import { db } from "@paperwait/core/database";
+import { DatabaseError, NotImplementedError } from "@paperwait/core/errors";
+import { Organization, provider } from "@paperwait/core/organization";
 import {
-  Organization,
-  provider,
-} from "@paperwait/core/organization/organization.sql";
-import { NotImplementedError } from "@paperwait/core/utils/error";
-import { z } from "astro/zod";
-
-import { unionizeCollection } from "~/utils/zod";
+  literal,
+  minLength,
+  object,
+  parse,
+  string,
+  union,
+  uuid,
+  ValiError,
+} from "valibot";
 
 import type { APIContext } from "astro";
 
 export const prerender = false;
 
-const registrationSchema = z.object({
-  fullName: z.string().min(1),
-  shortName: z.string().min(1),
-  ssoProvider: unionizeCollection(provider.enumValues),
-  tenantId: z.string().uuid(),
+const registrationSchema = object({
+  fullName: string([minLength(1)]),
+  shortName: string([minLength(1)]),
+  ssoProvider: union(provider.enumValues.map((value) => literal(value))),
+  tenantId: string([uuid()]),
 });
 
 export async function POST(context: APIContext) {
   try {
     const formData = await context.request.formData();
-    const registration = registrationSchema.parse(
+    const registration = parse(
+      registrationSchema,
       Object.fromEntries(formData.entries()),
     );
 
@@ -47,11 +51,10 @@ export async function POST(context: APIContext) {
   } catch (e) {
     console.error(e);
 
-    if (e instanceof z.ZodError)
-      return new Response(e.message, { status: 400 });
+    if (e instanceof ValiError) return new Response(e.message, { status: 400 });
     if (e instanceof NotImplementedError)
       return new Response(e.message, { status: e.statusCode });
-    if (e instanceof NeonDbError)
+    if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
 
     return new Response("An unexpected error occurred", { status: 500 });

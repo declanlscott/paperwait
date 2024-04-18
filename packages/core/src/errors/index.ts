@@ -1,3 +1,5 @@
+import { NeonDbError } from "@neondatabase/serverless";
+
 export class HTTPError extends Error {
   statusCode: number;
 
@@ -50,5 +52,11 @@ export class TooManyTransactionRetriesError extends HTTPError {
   ) {
     super(message, statusCode);
     this.name = "TooManyTransactionRetriesError";
+  }
+}
+
+export class DatabaseError extends NeonDbError {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
   }
 }

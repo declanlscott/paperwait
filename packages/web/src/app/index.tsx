@@ -5,8 +5,8 @@ import { AuthProvider, useAuth } from "~/app/lib/auth";
 import { ResourceProvider } from "~/app/lib/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
+import type { ClientResourceType } from "@paperwait/core/types";
 import type { Auth } from "~/app/lib/auth";
-import type { ClientResourceType } from "~/lib/shared/client-resource";
 
 const router = createRouter({
   routeTree,

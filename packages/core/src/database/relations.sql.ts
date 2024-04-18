@@ -1,13 +1,13 @@
 import { relations } from "drizzle-orm";
 
-import { Session } from "../auth/session.sql";
-import { User } from "../auth/user.sql";
-import { Organization } from "../organization/organization.sql";
+import { Session } from "../auth";
+import { Organization } from "../organization";
 import {
   ReplicacheClient,
   ReplicacheClientGroup,
   ReplicacheClientViewRecord,
-} from "../replicache/replicache.sql";
+} from "../replicache";
+import { User } from "../user";
 
 export const userRelations = relations(User, ({ one, many }) => ({
   organization: one(Organization, {

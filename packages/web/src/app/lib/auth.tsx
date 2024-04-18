@@ -1,16 +1,12 @@
 import { createContext, useContext, useState } from "react";
 import { flushSync } from "react-dom";
 import { Navigate, redirect } from "@tanstack/react-router";
-import { z } from "astro/zod";
 import ky from "ky";
+import { merge, minLength, object, optional, string } from "valibot";
 
 import type { ReactNode } from "react";
-import type { LuciaRegister } from "@paperwait/core/auth";
 import type { Session, User } from "lucia";
-
-declare module "lucia" {
-  interface Register extends LuciaRegister {}
-}
+import type { Output } from "valibot";
 
 export type Auth = {
   user: User | null;
@@ -27,15 +23,16 @@ export type AuthContext = {
 
 export const AuthContext = createContext<AuthContext | null>(null);
 
-export const baseSearchParams = z.object({
-  redirect: z.string().optional(),
+export const baseSearchParams = object({
+  redirect: optional(string()),
 });
 
-export const loginSearchParams = baseSearchParams.extend({
-  org: z.string().min(1),
-});
+export const loginSearchParams = merge([
+  baseSearchParams,
+  object({ org: string([minLength(1)]) }),
+]);
 
-export const initialLoginSearchParams = { org: "" } satisfies z.infer<
+export const initialLoginSearchParams = { org: "" } satisfies Output<
   typeof loginSearchParams
 >;
 

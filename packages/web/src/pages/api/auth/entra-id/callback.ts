@@ -1,22 +1,21 @@
-import { NeonDbError } from "@neondatabase/serverless";
 import { lucia } from "@paperwait/core/auth";
-import { User } from "@paperwait/core/auth/user.sql";
-import { db } from "@paperwait/core/database";
-import { transact } from "@paperwait/core/database/transaction";
-import { Organization } from "@paperwait/core/organization/organization.sql";
+import { db, transact } from "@paperwait/core/database";
 import {
+  DatabaseError,
   MissingParameterError,
   NotFoundError,
   TooManyTransactionRetriesError,
-} from "@paperwait/core/utils/error";
-import { generateId } from "@paperwait/core/utils/nanoid";
+} from "@paperwait/core/errors";
+import { Organization } from "@paperwait/core/organization";
+import { User } from "@paperwait/core/user";
+import { generateId } from "@paperwait/core/utils";
 import { OAuth2RequestError } from "arctic";
-import { z } from "astro/zod";
 import { and, eq } from "drizzle-orm";
 import ky from "ky";
 import { parseJWT } from "oslo/jwt";
+import { object, parse, string, ValiError } from "valibot";
 
-import entraId from "~/lib/server/auth/entra-id";
+import entraId from "~/lib/auth/entra-id";
 
 import type { APIContext } from "astro";
 
@@ -44,9 +43,10 @@ export async function GET(context: APIContext) {
 
     const parsedIdToken = parseJWT(tokens.idToken)!;
     const providerId = parsedIdToken.subject!;
-    const { tid: tenantId } = z
-      .object({ tid: z.string() })
-      .parse(parsedIdToken.payload);
+    const { tid: tenantId } = parse(
+      object({ tid: string() }),
+      parsedIdToken.payload,
+    );
 
     const [org] = await db
       .select({ status: Organization.status })
@@ -134,11 +134,10 @@ export async function GET(context: APIContext) {
       return new Response(e.message, { status: e.statusCode });
     if (e instanceof OAuth2RequestError)
       return new Response(e.message, { status: 400 });
-    if (e instanceof z.ZodError)
-      return new Response(e.message, { status: 500 });
+    if (e instanceof ValiError) return new Response(e.message, { status: 400 });
     if (e instanceof NotFoundError)
       return new Response(e.message, { status: e.statusCode });
-    if (e instanceof NeonDbError)
+    if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
     if (e instanceof TooManyTransactionRetriesError)
       return new Response(e.message, { status: e.statusCode });

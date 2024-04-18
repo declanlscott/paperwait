@@ -1,7 +1,8 @@
-import { CLIENT_RESOURCE_PREFIX } from "@paperwait/core/constants";
 import { Resource } from "sst";
 
-import type { ClientResourceType } from "../shared/client-resource";
+import { CLIENT_RESOURCE_PREFIX } from "../constants";
+
+import type { ClientResourceType } from "../types";
 
 const resource: Record<string, unknown> = { ...Resource };
 

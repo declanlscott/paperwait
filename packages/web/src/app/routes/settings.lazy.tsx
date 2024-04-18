@@ -3,8 +3,7 @@ import ky from "ky";
 
 import { ProtectedRoute, useAuth } from "~/app/lib/auth";
 
-import type { z } from "astro:content";
-import type { schema } from "~/lib/shared/papercut";
+import type { Papercut } from "@paperwait/core/papercut";
 
 const path = "/settings";
 
@@ -23,7 +22,7 @@ function Component() {
     const papercut = {
       serverUrl: "https://example.com",
       authToken: "secret-token",
-    } satisfies z.infer<typeof schema>;
+    } satisfies Papercut;
 
     await ky.post(`/api/organization/${auth.data.user?.orgId}/papercut`, {
       headers: {

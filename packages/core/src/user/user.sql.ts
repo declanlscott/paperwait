@@ -1,8 +1,7 @@
 import { pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 
-import { Organization } from "../organization/organization.sql";
-import { id, timestamps } from "../utils/drizzle";
-import { generateId } from "../utils/nanoid";
+import { Organization } from "../organization";
+import { generateId, id, timestamps } from "../utils";
 
 export const userRole = pgEnum("user_role", [
   "administrator",

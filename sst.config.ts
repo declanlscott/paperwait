@@ -26,8 +26,8 @@ export default $config({
   async run() {
     const infra = await import("./infra");
 
-    // return {
-    //   url: infra.astro.url,
-    // };
+    return {
+      url: infra.astro.url,
+    };
   },
 });

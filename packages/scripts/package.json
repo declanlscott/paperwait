@@ -2,7 +2,7 @@
   "name": "@paperwait/scripts",
   "version": "0.0.0",
   "scripts": {
-    "shell": "sst shell --verbose tsx"
+    "shell": "sst shell tsx"
   },
   "dependencies": {
     "@paperwait/core": "workspace:*"

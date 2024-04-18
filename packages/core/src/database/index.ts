@@ -8,3 +8,6 @@ neonConfig.webSocketConstructor = ws;
 const pool = new Pool({ connectionString: Resource.DatabaseUrl.value });
 
 export const db = drizzle(pool, { logger: true });
+
+export * from "./relations.sql";
+export * from "./transaction";

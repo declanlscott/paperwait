@@ -1,10 +1,10 @@
 import { PutParameterCommand } from "@aws-sdk/client-ssm";
-import { ForbiddenError } from "@paperwait/core/utils/error";
-import { z } from "astro/zod";
+import { ForbiddenError } from "@paperwait/core/errors";
+import { schema } from "@paperwait/core/papercut";
+import { parse, ValiError } from "valibot";
 
-import { authorize } from "~/lib/server/auth/authorize";
-import { client as ssmClient } from "~/lib/server/ssm";
-import { schema } from "~/lib/shared/papercut";
+import { authorize } from "~/lib/auth/authorize";
+import { client as ssmClient } from "~/lib/ssm";
 
 import type { PutParameterCommandInput } from "@aws-sdk/client-ssm";
 import type { APIContext } from "astro";
@@ -19,8 +19,8 @@ export async function POST(context: APIContext) {
       throw new ForbiddenError();
     }
 
-    const body = (await context.request.json()) as unknown;
-    const data = schema.parse(body);
+    const body = await context.request.json();
+    const data = parse(schema, body);
 
     const input = {
       Name: `/paperwait/org/${user.orgId}/papercut`,
@@ -37,8 +37,7 @@ export async function POST(context: APIContext) {
   } catch (e) {
     console.error(e);
 
-    if (e instanceof z.ZodError)
-      return new Response(e.message, { status: 400 });
+    if (e instanceof ValiError) return new Response(e.message, { status: 400 });
 
     return new Response("An unexpected error occurred", { status: 500 });
   }

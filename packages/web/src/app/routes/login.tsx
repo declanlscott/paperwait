@@ -1,15 +1,16 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
+import { fallback, parse, safeParse } from "valibot";
 
 import { Button, buttonVariants } from "~/app/components/button";
 import { Input } from "~/app/components/input";
 import { Label } from "~/app/components/label";
 import { initialLoginSearchParams, loginSearchParams } from "~/app/lib/auth";
-import { cn } from "~/utils/tailwind";
+import { cn } from "~/styles/utils";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search) =>
-    loginSearchParams.catch(initialLoginSearchParams).parse(search),
+    parse(fallback(loginSearchParams, initialLoginSearchParams), search),
   beforeLoad: ({ context }) => {
     if (context.auth.isAuthenticated) {
       throw redirect({ to: "/dashboard" });
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/login")({
 
 function Component() {
   const search = Route.useSearch();
-  const isValid = loginSearchParams.safeParse(search).success;
+  const isValid = safeParse(loginSearchParams, search).success;
 
   const navigate = Route.useNavigate();
 
