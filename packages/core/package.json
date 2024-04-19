@@ -9,7 +9,8 @@
   },
   "scripts": {
     "db:push": "drizzle-kit push:pg",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@lucia-auth/adapter-drizzle": "^1.0.7",
@@ -22,8 +23,9 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.10",
-    "drizzle-kit": "^0.20.14",
+    "drizzle-kit": "^0.20.15",
     "pg": "^8.11.5"
   }
 }

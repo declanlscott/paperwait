@@ -1,6 +1,6 @@
 import { PutParameterCommand } from "@aws-sdk/client-ssm";
 import { ForbiddenError } from "@paperwait/core/errors";
-import { schema } from "@paperwait/core/papercut";
+import { papercutSchema } from "@paperwait/core/papercut";
 import { parse, ValiError } from "valibot";
 
 import { authorize } from "~/lib/auth/authorize";
@@ -20,7 +20,7 @@ export async function POST(context: APIContext) {
     }
 
     const body = await context.request.json();
-    const data = parse(schema, body);
+    const data = parse(papercutSchema, body);
 
     const input = {
       Name: `/paperwait/org/${user.orgId}/papercut`,

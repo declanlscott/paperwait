@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 
 import type { ReactNode } from "react";
-import type { ClientResourceType } from "~/lib/shared/client-resource";
+import type { ClientResourceType } from "@paperwait/core/types";
 
 export type ResourceContext = ClientResourceType;
 

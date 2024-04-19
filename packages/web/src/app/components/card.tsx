@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 
-import { cn } from "~/utils/tailwind";
+import { cn } from "~/styles/utils";
 
 import type { HTMLAttributes } from "react";
 

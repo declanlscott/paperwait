@@ -1,7 +1,7 @@
 import { Input as AriaInput } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
-import { composeTwRenderProps, focusRing } from "~/utils/tailwind";
+import { composeTwRenderProps, focusRing } from "~/styles/utils";
 
 import type { InputProps as AriaInputProps } from "react-aria-components";
 import type { VariantProps } from "tailwind-variants";

@@ -1,6 +1,6 @@
 import { Label as AriaLabel } from "react-aria-components";
 
-import { cn } from "~/utils/tailwind";
+import { cn } from "~/styles/utils";
 
 import type { LabelProps as AriaLabelProps } from "react-aria-components";
 
