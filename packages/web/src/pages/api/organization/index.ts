@@ -1,5 +1,9 @@
 import { db } from "@paperwait/core/database";
-import { DatabaseError, NotImplementedError } from "@paperwait/core/errors";
+import {
+  DatabaseError,
+  HTTPError,
+  NotImplementedError,
+} from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { parse, ValiError } from "valibot";
 
@@ -38,7 +42,7 @@ export async function POST(context: APIContext) {
     console.error(e);
 
     if (e instanceof ValiError) return new Response(e.message, { status: 400 });
-    if (e instanceof NotImplementedError)
+    if (e instanceof HTTPError)
       return new Response(e.message, { status: e.statusCode });
     if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });

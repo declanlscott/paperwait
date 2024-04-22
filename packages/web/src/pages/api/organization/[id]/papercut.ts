@@ -1,5 +1,5 @@
 import { PutParameterCommand } from "@aws-sdk/client-ssm";
-import { ForbiddenError } from "@paperwait/core/errors";
+import { ForbiddenError, HTTPError } from "@paperwait/core/errors";
 import { papercutSchema } from "@paperwait/core/papercut";
 import { parse, ValiError } from "valibot";
 
@@ -37,6 +37,8 @@ export async function POST(context: APIContext) {
   } catch (e) {
     console.error(e);
 
+    if (e instanceof HTTPError)
+      return new Response(e.message, { status: e.statusCode });
     if (e instanceof ValiError) return new Response(e.message, { status: 400 });
 
     return new Response("An unexpected error occurred", { status: 500 });

@@ -1,6 +1,7 @@
 import { db } from "@paperwait/core/database";
 import {
   DatabaseError,
+  HTTPError,
   MissingParameterError,
   NotFoundError,
   NotImplementedError,
@@ -94,14 +95,10 @@ export async function GET(context: APIContext) {
   } catch (e) {
     console.error(e);
 
-    if (e instanceof MissingParameterError)
+    if (e instanceof HTTPError)
       return new Response(e.message, { status: e.statusCode });
     if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
-    if (e instanceof NotFoundError)
-      return new Response(e.message, { status: e.statusCode });
-    if (e instanceof NotImplementedError)
-      return new Response(e.message, { status: e.statusCode });
 
     return new Response("An unexpected error occurred", { status: 500 });
   }

@@ -1,14 +1,13 @@
-import { lucia } from "@paperwait/core/auth";
+import { createSession } from "@paperwait/core/auth";
 import { db, transact } from "@paperwait/core/database";
 import {
   DatabaseError,
+  HTTPError,
   MissingParameterError,
   NotFoundError,
-  TooManyTransactionRetriesError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { User } from "@paperwait/core/user";
-import { generateId } from "@paperwait/core/utils";
 import { OAuth2RequestError } from "arctic";
 import { and, eq } from "drizzle-orm";
 import ky from "ky";
@@ -69,18 +68,9 @@ export async function GET(context: APIContext) {
       .where(eq(User.providerId, providerId));
 
     if (existingUser) {
-      const session = await lucia.createSession(
-        existingUser.id,
-        {},
-        { sessionId: generateId() },
-      );
-      const sessionCookie = lucia.createSessionCookie(session.id);
+      const { cookie } = await createSession(existingUser.id);
 
-      context.cookies.set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
+      context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
       return context.redirect(redirect);
     }
@@ -117,30 +107,21 @@ export async function GET(context: APIContext) {
       return newUser;
     });
 
-    const session = await lucia.createSession(newUser.id, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
+    const { cookie } = await createSession(newUser.id);
 
-    context.cookies.set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes,
-    );
+    context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
     return context.redirect(redirect);
   } catch (e) {
     console.error(e);
 
-    if (e instanceof MissingParameterError)
+    if (e instanceof HTTPError)
       return new Response(e.message, { status: e.statusCode });
     if (e instanceof OAuth2RequestError)
       return new Response(e.message, { status: 400 });
     if (e instanceof ValiError) return new Response(e.message, { status: 400 });
-    if (e instanceof NotFoundError)
-      return new Response(e.message, { status: e.statusCode });
     if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
-    if (e instanceof TooManyTransactionRetriesError)
-      return new Response(e.message, { status: e.statusCode });
 
     return new Response("An unexpected error occurred", { status: 500 });
   }

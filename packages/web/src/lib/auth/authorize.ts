@@ -4,7 +4,15 @@ import { assertRole } from "@paperwait/core/user";
 import type { UserRole } from "@paperwait/core/user";
 import type { APIContext } from "astro";
 
-export function authorize(context: APIContext, roleSet: Set<UserRole>) {
+export function authorize(
+  context: APIContext,
+  roleSet = new Set<UserRole>([
+    "administrator",
+    "technician",
+    "manager",
+    "customer",
+  ]),
+) {
   if (!context.locals.session || !context.locals.user) {
     throw new UnauthorizedError();
   }
