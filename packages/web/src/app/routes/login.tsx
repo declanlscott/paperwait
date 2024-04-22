@@ -44,7 +44,9 @@ function Component() {
       >
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="flex justify-center">
-            <img src="./logo.svg" className="h-20 w-20" />
+            <a href="/">
+              <img src="./logo.svg" className="h-20 w-20" />
+            </a>
           </div>
 
           <div className="grid gap-2 text-center">
