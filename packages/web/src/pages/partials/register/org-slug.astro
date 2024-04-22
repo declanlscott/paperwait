@@ -1,0 +1,16 @@
+---
+import { parse } from "valibot";
+
+import RegisterOrgSlug from "~/components/register/org-slug.astro";
+import { orgSlugExistenceSchema } from "~/lib/schemas";
+import { POST } from "~/pages/api/organization/slug";
+
+export const prerender = false;
+export const partial = true;
+
+const response = await POST(Astro);
+const data = await response.json();
+const { value, exists } = parse(orgSlugExistenceSchema, data);
+---
+
+<RegisterOrgSlug value={value} exists={exists} />

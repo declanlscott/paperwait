@@ -1,27 +1,13 @@
 import { db } from "@paperwait/core/database";
 import { DatabaseError, NotImplementedError } from "@paperwait/core/errors";
-import { Organization, provider } from "@paperwait/core/organization";
-import {
-  literal,
-  minLength,
-  object,
-  parse,
-  string,
-  union,
-  uuid,
-  ValiError,
-} from "valibot";
+import { Organization } from "@paperwait/core/organization";
+import { parse, ValiError } from "valibot";
+
+import { registrationSchema } from "~/lib/schemas";
 
 import type { APIContext } from "astro";
 
 export const prerender = false;
-
-const registrationSchema = object({
-  fullName: string([minLength(1)]),
-  shortName: string([minLength(1)]),
-  ssoProvider: union(provider.enumValues.map((value) => literal(value))),
-  tenantId: string([uuid()]),
-});
 
 export async function POST(context: APIContext) {
   try {
@@ -38,8 +24,8 @@ export async function POST(context: APIContext) {
     const [org] = await db
       .insert(Organization)
       .values({
-        name: registration.fullName,
-        slug: registration.shortName,
+        name: registration.name,
+        slug: registration.slug,
         provider: registration.ssoProvider,
         tenantId: registration.tenantId,
       })

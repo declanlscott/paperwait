@@ -1,12 +1,12 @@
 import { composeRenderProps } from "react-aria-components";
-import clsx from "clsx";
+import clsx from "clsx/lite";
 import { twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
 
-import type { ClassValue } from "clsx";
+import type { ClassValue } from "clsx/lite";
 
 export const focusRing = tv({
-  base: "focus-ring",
+  base: "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2  ring-offset-background",
 });
 
 export function composeTwRenderProps<T>(

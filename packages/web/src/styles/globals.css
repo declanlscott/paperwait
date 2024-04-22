@@ -51,64 +51,6 @@
   }
 }
 
-@layer components {
-  .card {
-    @apply bg-card text-card-foreground rounded-lg border shadow-sm;
-  }
-
-  .card-header {
-    @apply flex flex-col space-y-1.5 p-6;
-  }
-
-  .card-title {
-    @apply text-2xl font-semibold leading-none tracking-tight;
-  }
-
-  .card-description {
-    @apply text-muted-foreground text-sm;
-  }
-
-  .card-content {
-    @apply p-6 pt-0;
-  }
-
-  .card-footer {
-    @apply flex items-center p-6 pt-0;
-  }
-
-  .label {
-    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
-  }
-
-  .input {
-    @apply border-input bg-background placeholder:text-muted-foreground flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium  disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .select {
-    @apply border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1;
-  }
-
-  .button-base {
-    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50;
-  }
-
-  .button-variant-default {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90;
-  }
-
-  .button-variant-link {
-    @apply text-primary underline-offset-4 hover:underline;
-  }
-
-  .button-size-default {
-    @apply h-10 px-4 py-2;
-  }
-
-  .focus-ring {
-    @apply ring-offset-background focus-visible:ring-ring transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
-  }
-}
-
 @font-face {
   font-family: "Geist";
   src: url("/fonts/Geist-Regular.woff2") format("woff2");

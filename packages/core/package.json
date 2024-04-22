@@ -15,7 +15,7 @@
   "dependencies": {
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@neondatabase/serverless": "^0.9.1",
-    "drizzle-orm": "^0.30.8",
+    "drizzle-orm": "^0.30.9",
     "lucia": "^3.1.1",
     "nanoid": "^5.0.7",
     "replicache": "^14.2.2",
@@ -25,7 +25,7 @@
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.10",
-    "drizzle-kit": "^0.20.15",
+    "drizzle-kit": "^0.20.17",
     "pg": "^8.11.5"
   }
 }

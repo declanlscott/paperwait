@@ -1,14 +1,15 @@
 import { ForbiddenError, UnauthorizedError } from "@paperwait/core/errors";
+import { assertRole } from "@paperwait/core/user";
 
 import type { UserRole } from "@paperwait/core/user";
 import type { APIContext } from "astro";
 
-export function authorize(context: APIContext, role?: UserRole) {
+export function authorize(context: APIContext, roleSet: Set<UserRole>) {
   if (!context.locals.session || !context.locals.user) {
     throw new UnauthorizedError();
   }
 
-  if (role && context.locals.user.role !== role) {
+  if (!assertRole(context.locals.user, roleSet, false)) {
     throw new ForbiddenError();
   }
 

@@ -8,7 +8,10 @@ export const prerender = false;
 
 export async function POST(context: APIContext) {
   try {
-    const { user } = authorize(context);
+    const { user } = authorize(
+      context,
+      new Set(["administrator", "technician", "manager", "customer"]),
+    );
 
     const body: unknown = await context.request.json();
   } catch (e) {

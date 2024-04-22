@@ -3,7 +3,7 @@
 
 declare namespace App {
   interface Locals {
-    session: import("lucia").Session | null;
-    user: import("lucia").User | null;
+    session: import("@paperwait/core/auth").LuciaSession | null;
+    user: import("@paperwait/core/auth").LuciaUser | null;
   }
 }

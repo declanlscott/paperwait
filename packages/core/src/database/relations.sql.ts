@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 
-import { Session } from "../auth";
+import { Session } from "../auth/session.sql";
 import { Organization } from "../organization";
 import {
   ReplicacheClient,

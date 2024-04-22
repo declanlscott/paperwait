@@ -2,11 +2,11 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
 import { fallback, parse, safeParse } from "valibot";
 
-import { Button, buttonVariants } from "~/app/components/button";
+import { Button } from "~/app/components/button";
 import { Input } from "~/app/components/input";
 import { Label } from "~/app/components/label";
 import { initialLoginSearchParams, loginSearchParams } from "~/app/lib/auth";
-import { cn } from "~/styles/utils";
+import { buttonStyles } from "~/styles/components/button";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search) =>
@@ -91,7 +91,10 @@ function Component() {
             Don&apos;t have an organization?{" "}
             <a
               href="/register"
-              className={cn(buttonVariants({ variant: "link" }), "h-fit p-0")}
+              className={buttonStyles({
+                variant: "link",
+                className: "h-fit p-0",
+              })}
             >
               Register
             </a>

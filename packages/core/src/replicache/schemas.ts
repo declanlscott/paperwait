@@ -12,9 +12,20 @@ import {
 
 import { userRole } from "../user";
 import { nanoIdSchema } from "../utils";
-import { mutationMeta } from "./mutations";
 
 import type { Output } from "valibot";
+import type { UserRole } from "../user";
+
+export const mutationMeta = {
+  updateUserRole: {
+    name: "updateUserRole",
+    roleSet: new Set(["administrator"]),
+  },
+  createOrder: {
+    name: "createOrder",
+    roleSet: new Set(["administrator", "technician", "manager", "customer"]),
+  },
+} as const satisfies Record<string, { name: string; roleSet: Set<UserRole> }>;
 
 export const mutationSchema = object({
   id: number(),

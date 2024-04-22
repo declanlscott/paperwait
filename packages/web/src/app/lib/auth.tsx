@@ -5,12 +5,12 @@ import ky from "ky";
 import { merge, minLength, object, optional, string } from "valibot";
 
 import type { ReactNode } from "react";
-import type { Session, User } from "lucia";
+import type { LuciaSession, LuciaUser } from "@paperwait/core/auth";
 import type { Output } from "valibot";
 
 export type Auth = {
-  user: User | null;
-  session: Session | null;
+  user: LuciaUser | null;
+  session: LuciaSession | null;
 };
 
 export type AuthContext = {

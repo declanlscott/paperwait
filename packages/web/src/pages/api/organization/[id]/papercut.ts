@@ -13,7 +13,7 @@ export const prerender = false;
 
 export async function POST(context: APIContext) {
   try {
-    const { user } = authorize(context, "administrator");
+    const { user } = authorize(context, new Set(["administrator"]));
 
     if (context.params.id! !== user.orgId) {
       throw new ForbiddenError();

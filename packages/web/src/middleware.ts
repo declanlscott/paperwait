@@ -1,6 +1,6 @@
 import { lucia } from "@paperwait/core/auth";
 import { defineMiddleware } from "astro:middleware";
-import { verifyRequestOrigin } from "lucia";
+import { verifyRequestOrigin } from "oslo/request";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.request.method !== "GET") {

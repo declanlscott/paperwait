@@ -1,0 +1,80 @@
+---
+import { inputStyles } from "~/styles/components/input";
+import { labelStyles } from "~/styles/components/label";
+
+interface Props {
+  value?: string;
+  exists?: boolean;
+}
+
+const { value, exists } = Astro.props;
+
+const variant = exists ? "error" : "default";
+---
+
+<div class="grid gap-2" hx-target="this" hx-swap="outerHTML">
+  <label class={labelStyles({ variant })} for="slug">Short Name</label>
+
+  <div class="flex gap-2 items-center">
+    <!-- TODO: Prevent htmx from triggering when input is less than 1 character (fails parsing) -->
+    <input
+      id="slug"
+      name="slug"
+      class={inputStyles({ variant })}
+      placeholder="my-org"
+      required
+      hx-post="/partials/register/org-slug"
+      hx-indicator="#spinner"
+      value={value}
+    />
+
+    <div
+      id="spinner"
+      class="htmx-indicator inline-block size-6 animate-spin rounded-full border-4 border-solid border-current border-e-transparent align-[-0.125em] text-muted-foreground"
+      role="status"
+    >
+    </div>
+
+    {
+      exists === false && (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="text-green-500 size-6"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <path d="m9 11 3 3L22 4" />
+        </svg>
+      )
+    }
+  </div>
+
+  {
+    exists && (
+      <p class="text-red-500 text-sm">
+        An organization with this name already exists.
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .htmx-indicator {
+    display: none;
+  }
+
+  .htmx-request .htmx-indicator {
+    display: inline;
+  }
+
+  .htmx-request.htmx-indicator {
+    display: inline;
+  }
+</style>
