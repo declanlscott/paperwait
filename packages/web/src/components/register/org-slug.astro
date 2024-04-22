@@ -4,19 +4,19 @@ import { labelStyles } from "~/styles/components/label";
 
 interface Props {
   value?: string;
-  exists?: boolean;
+  isValid?: boolean;
 }
 
-const { value, exists } = Astro.props;
+const { value, isValid } = Astro.props;
 
-const variant = exists ? "error" : "default";
+const variant =
+  isValid === undefined ? "default" : isValid ? "default" : "error";
 ---
 
 <div class="grid gap-2" hx-target="this" hx-swap="outerHTML">
   <label class={labelStyles({ variant })} for="slug">Short Name</label>
 
   <div class="flex gap-2 items-center">
-    <!-- TODO: Prevent htmx from triggering when input is less than 1 character (fails parsing) -->
     <input
       id="slug"
       name="slug"
@@ -24,20 +24,21 @@ const variant = exists ? "error" : "default";
       placeholder="my-org"
       required
       hx-post="/partials/register/org-slug"
-      hx-indicator="#spinner"
+      hx-indicator="#status-indicator"
       value={value}
     />
 
-    <div
-      id="spinner"
-      class="htmx-indicator inline-block size-6 animate-spin rounded-full border-4 border-solid border-current border-e-transparent align-[-0.125em] text-muted-foreground"
-      role="status"
-    >
-    </div>
+    <img
+      id="status-indicator"
+      src="/loading-indicator.svg"
+      alt="Loading..."
+      class="loading-indicator size-6"
+    />
 
     {
-      exists === false && (
+      isValid && (
         <svg
+          id="status-indicator"
           xmlns="http://www.w3.org/2000/svg"
           width="24"
           height="24"
@@ -47,7 +48,7 @@ const variant = exists ? "error" : "default";
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="text-green-500 size-6"
+          class="success-indicator text-green-500 size-6"
         >
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
           <path d="m9 11 3 3L22 4" />
@@ -57,24 +58,28 @@ const variant = exists ? "error" : "default";
   </div>
 
   {
-    exists && (
+    isValid === false && (
       <p class="text-red-500 text-sm">
-        An organization with this name already exists.
+        This organization name is invalid or already taken.
       </p>
     )
   }
 </div>
 
 <style>
-  .htmx-indicator {
+  .loading-indicator {
     display: none;
   }
 
-  .htmx-request .htmx-indicator {
+  .htmx-request .loading-indicator {
     display: inline;
   }
 
-  .htmx-request.htmx-indicator {
+  .htmx-request.loading-indicator {
     display: inline;
+  }
+
+  .htmx-request.success-indicator {
+    display: none;
   }
 </style>

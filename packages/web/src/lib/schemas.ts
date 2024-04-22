@@ -5,6 +5,7 @@ import {
   minLength,
   object,
   string,
+  toTrimmed,
   union,
   uuid,
 } from "valibot";
@@ -12,15 +13,15 @@ import {
 import type { Output } from "valibot";
 
 export const registrationSchema = object({
-  name: string([minLength(1)]),
-  slug: string([minLength(1)]),
+  name: string([toTrimmed(), minLength(1)]),
+  slug: string([toTrimmed(), minLength(1)]),
   ssoProvider: union(provider.enumValues.map((value) => literal(value))),
   tenantId: string([uuid()]),
 });
 
-export const orgSlugExistenceSchema = object({
-  value: registrationSchema.entries.slug,
-  exists: boolean(),
+export const orgSlugValiditySchema = object({
+  value: string(),
+  isValid: boolean(),
 });
 
-export type OrgSlugExistence = Output<typeof orgSlugExistenceSchema>;
+export type OrgSlugValidity = Output<typeof orgSlugValiditySchema>;

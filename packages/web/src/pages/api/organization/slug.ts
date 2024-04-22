@@ -1,30 +1,40 @@
 import { db } from "@paperwait/core/database";
 import { Organization } from "@paperwait/core/organization";
 import { eq } from "drizzle-orm";
-import { parse, pick } from "valibot";
+import { pick, safeParse } from "valibot";
 
 import { registrationSchema } from "~/lib/schemas";
 
 import type { APIContext } from "astro";
-import type { OrgSlugExistence } from "~/lib/schemas";
+import type { OrgSlugValidity } from "~/lib/schemas";
 
 export const prerender = false;
 
 export async function POST(context: APIContext) {
   const formData = await context.request.formData();
-  const { slug } = parse(
+  const result = safeParse(
     pick(registrationSchema, ["slug"]),
     Object.fromEntries(formData.entries()),
   );
 
-  const [exists] = slug
-    ? await db.select({}).from(Organization).where(eq(Organization.slug, slug))
-    : [undefined];
+  if (!result.success) {
+    return new Response(
+      JSON.stringify({
+        value: formData.get("slug")?.toString() ?? "",
+        isValid: false,
+      } satisfies OrgSlugValidity),
+    );
+  }
 
-  const body = {
-    value: slug,
-    exists: !!exists,
-  } satisfies OrgSlugExistence;
+  const [exists] = await db
+    .select({})
+    .from(Organization)
+    .where(eq(Organization.slug, result.output.slug));
 
-  return new Response(JSON.stringify(body));
+  return new Response(
+    JSON.stringify({
+      value: result.output.slug,
+      isValid: !exists,
+    } satisfies OrgSlugValidity),
+  );
 }
