@@ -2,7 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
 import { AuthProvider, useAuth } from "~/app/lib/auth";
-import { ResourceProvider } from "~/app/lib/resource";
+import { ResourceProvider, useResource } from "~/app/lib/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { ClientResourceType } from "@paperwait/core/types";
@@ -60,7 +60,8 @@ export function App(props: AppProps) {
 }
 
 function InnerApp() {
+  const resource = useResource();
   const auth = useAuth();
 
-  return <RouterProvider router={router} context={{ auth }} />;
+  return <RouterProvider router={router} context={{ resource, auth }} />;
 }
