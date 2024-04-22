@@ -20,12 +20,9 @@ export const lucia = new Lucia(adapter, {
   }),
 });
 
-export interface LuciaRegister {
-  Lucia: typeof lucia;
-  DatabaseUserAttributes: Omit<typeof User.$inferSelect, "id">;
-}
-
 declare module "lucia" {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface Register extends LuciaRegister {}
+  interface Register {
+    Lucia: typeof lucia;
+    DatabaseUserAttributes: Omit<typeof User.$inferSelect, "id">;
+  }
 }
