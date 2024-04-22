@@ -6,7 +6,16 @@ import { tv } from "tailwind-variants";
 import type { ClassValue } from "clsx/lite";
 
 export const focusRing = tv({
-  base: "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2  ring-offset-background",
+  base: "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background",
+  variants: {
+    variant: {
+      default: "focus-visible:ring-ring",
+      error: "focus-visible:ring-red-500",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
 });
 
 export function composeTwRenderProps<T>(
