@@ -1,15 +1,15 @@
 import { Link } from "react-aria-components";
 import { Outlet, useRouter } from "@tanstack/react-router";
 
-import { useAuth } from "~/app/lib/auth";
+import { useAuthActions } from "~/app/lib/auth";
 
 export function BaseLayout() {
-  const auth = useAuth();
-  const router = useRouter();
+  const { logout } = useAuthActions();
+  const { invalidate } = useRouter();
 
   async function handleLogout() {
-    await auth.logout();
-    await router.invalidate();
+    await logout();
+    await invalidate();
   }
 
   return (

@@ -1,5 +1,5 @@
 import { invalidateUserSessions } from "@paperwait/core/auth";
-import { HTTPError, MissingParameterError } from "@paperwait/core/errors";
+import { HttpError, MissingParameterError } from "@paperwait/core/errors";
 
 import { authorize } from "~/lib/auth/authorize";
 
@@ -20,7 +20,7 @@ export async function POST(context: APIContext) {
   } catch (e) {
     console.error(e);
 
-    if (e instanceof HTTPError)
+    if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
 
     return new Response("An unexpected error occurred", { status: 500 });

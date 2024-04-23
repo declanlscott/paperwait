@@ -1,7 +1,7 @@
 import { db } from "@paperwait/core/database";
 import {
   DatabaseError,
-  HTTPError,
+  HttpError,
   MissingParameterError,
   NotFoundError,
   NotImplementedError,
@@ -95,7 +95,7 @@ export async function GET(context: APIContext) {
   } catch (e) {
     console.error(e);
 
-    if (e instanceof HTTPError)
+    if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
     if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });

@@ -4,7 +4,7 @@ import { useResource } from "~/app/lib/resource";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: ({ context, location }) =>
-    context.auth.protectRoute(location.href),
+    context.authStore.actions.protectRoute(location.href),
   component: () => <Component />,
 });
 

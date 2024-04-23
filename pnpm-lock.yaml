@@ -168,6 +168,9 @@ importers:
       drizzle-orm:
         specifier: ^0.30.9
         version: 0.30.9(@neondatabase/serverless@0.9.1)(@opentelemetry/api@1.8.0)(@types/pg@8.6.6)(@types/react@18.2.79)(pg@8.11.5)(react@18.2.0)
+      immer:
+        specifier: ^10.0.4
+        version: 10.0.4
       ky:
         specifier: ^1.2.4
         version: 1.2.4
@@ -204,6 +207,9 @@ importers:
       valibot:
         specifier: ^0.30.0
         version: 0.30.0
+      zustand:
+        specifier: ^4.5.2
+        version: 4.5.2(@types/react@18.2.79)(immer@10.0.4)(react@18.2.0)
     devDependencies:
       '@astrojs/check':
         specifier: ^0.5.10
@@ -4081,6 +4087,9 @@ packages:
     resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
     engines: {node: '>= 4'}
 
+  immer@10.0.4:
+    resolution: {integrity: sha512-cuBuGK40P/sk5IzWa9QPUaAdvPHjkk1c+xYsd9oZw+YQQEV+10G0P5uMpGctZZKnyQ+ibRO08bD25nWLmYi2pw==}
+
   import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
     engines: {node: '>=6'}
@@ -6224,6 +6233,21 @@ packages:
 
   zod@3.23.0:
     resolution: {integrity: sha512-OFLT+LTocvabn6q76BTwVB0hExEBS0IduTr3cqZyMqEDbOnYmcU+y0tUAYbND4uwclpBGi4I4UUBGzylWpjLGA==}
+
+  zustand@4.5.2:
+    resolution: {integrity: sha512-2cN1tPkDVkwCy5ickKrI7vijSjPksFRfqS6237NzT0vqSsztTNnQdHw9mmN7uBdk3gceVXU0a+21jFzFzAc9+g==}
+    engines: {node: '>=12.7.0'}
+    peerDependencies:
+      '@types/react': '>=16.8'
+      immer: '>=9.0.6'
+      react: '>=16.8'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -11523,6 +11547,8 @@ snapshots:
 
   ignore@5.3.1: {}
 
+  immer@10.0.4: {}
+
   import-fresh@3.3.0:
     dependencies:
       parent-module: 1.0.1
@@ -14149,5 +14175,13 @@ snapshots:
       zod: 3.23.0
 
   zod@3.23.0: {}
+
+  zustand@4.5.2(@types/react@18.2.79)(immer@10.0.4)(react@18.2.0):
+    dependencies:
+      use-sync-external-store: 1.2.0(react@18.2.0)
+    optionalDependencies:
+      '@types/react': 18.2.79
+      immer: 10.0.4
+      react: 18.2.0
 
   zwitch@2.0.4: {}

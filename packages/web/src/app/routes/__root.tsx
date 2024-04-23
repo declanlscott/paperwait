@@ -16,7 +16,7 @@ import type {
   ToOptions,
   ToPathOption,
 } from "@tanstack/react-router";
-import type { AuthContext } from "~/app/lib/auth";
+import type { AuthStore } from "~/app/lib/auth";
 import type { ResourceContext } from "~/app/lib/resource";
 
 const TanStackRouterDevtools = import.meta.env.DEV
@@ -30,7 +30,7 @@ const TanStackRouterDevtools = import.meta.env.DEV
 
 type RouterContext = {
   resource: ResourceContext;
-  auth: AuthContext;
+  authStore: AuthStore;
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({

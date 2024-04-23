@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState } from "react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
-import { AuthProvider, useAuth } from "~/app/lib/auth";
+import { AuthProvider, useAuthStore } from "~/app/lib/auth";
 import { ResourceProvider, useResource } from "~/app/lib/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
@@ -13,7 +13,7 @@ const router = createRouter({
   context: {
     // These will be set after we wrap the inner app in providers
     resource: undefined!,
-    auth: undefined!,
+    authStore: undefined!,
   },
 });
 
@@ -61,7 +61,7 @@ export function App(props: AppProps) {
 
 function InnerApp() {
   const resource = useResource();
-  const auth = useAuth();
+  const authStore = useAuthStore((store) => store);
 
-  return <RouterProvider router={router} context={{ resource, auth }} />;
+  return <RouterProvider router={router} context={{ resource, authStore }} />;
 }

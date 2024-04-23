@@ -23,6 +23,7 @@
     "astro-sst": "^2.41.4",
     "clsx": "^2.1.0",
     "drizzle-orm": "^0.30.9",
+    "immer": "^10.0.4",
     "ky": "^1.2.4",
     "lucide-react": "^0.371.0",
     "oslo": "^1.2.0",
@@ -34,7 +35,8 @@
     "tailwind-variants": "^0.2.1",
     "tailwindcss": "^3.4.3",
     "tailwindcss-animate": "^1.0.7",
-    "valibot": "^0.30.0"
+    "valibot": "^0.30.0",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.5.10",

@@ -1,7 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import ky from "ky";
 
-import { ProtectedRoute, useAuth } from "~/app/lib/auth";
+import { ProtectRoute, useAuth } from "~/app/lib/auth";
 
 import type { Papercut } from "@paperwait/core/papercut";
 
@@ -9,14 +9,14 @@ const path = "/settings";
 
 export const Route = createLazyFileRoute(path)({
   component: () => (
-    <ProtectedRoute path={path}>
+    <ProtectRoute path={path}>
       <Component />
-    </ProtectedRoute>
+    </ProtectRoute>
   ),
 });
 
 function Component() {
-  const auth = useAuth();
+  const { user } = useAuth();
 
   async function handlePapercut() {
     const papercut = {
@@ -24,7 +24,7 @@ function Component() {
       authToken: "secret-token",
     } satisfies Papercut;
 
-    await ky.post(`/api/organization/${auth.data.user?.orgId}/papercut`, {
+    await ky.post(`/api/organization/${user?.orgId}/papercut`, {
       headers: {
         "Content-Type": "application/json",
       },

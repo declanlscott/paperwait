@@ -2,7 +2,7 @@ import { createSession } from "@paperwait/core/auth";
 import { db, transact } from "@paperwait/core/database";
 import {
   DatabaseError,
-  HTTPError,
+  HttpError,
   MissingParameterError,
   NotFoundError,
 } from "@paperwait/core/errors";
@@ -115,7 +115,7 @@ export async function GET(context: APIContext) {
   } catch (e) {
     console.error(e);
 
-    if (e instanceof HTTPError)
+    if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
     if (e instanceof OAuth2RequestError)
       return new Response(e.message, { status: 400 });
