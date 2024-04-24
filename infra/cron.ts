@@ -1,4 +1,4 @@
-import { databaseUrl } from "./database";
+import { databaseUrl } from "./secrets";
 
 export const deleteExpiredSessions = new sst.aws.Cron("DeleteExpiredSessions", {
   job: {

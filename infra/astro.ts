@@ -4,8 +4,8 @@ import {
   DOMAIN,
 } from "@paperwait/core/constants";
 
-import { databaseUrl } from "./database";
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
+import { databaseUrl, replicacheLicenseKey } from "./secrets";
 
 const awsAccountId = aws.getCallerIdentityOutput().accountId;
 

@@ -1,0 +1,15 @@
+{
+  "name": "@paperwait/party",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "partykit dev",
+    "deploy": "partykit deploy"
+  },
+  "dependencies": {
+    "@paperwait/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@paperwait/eslint-config": "workspace:*",
+    "partykit": "^0.0.104"
+  }
+}

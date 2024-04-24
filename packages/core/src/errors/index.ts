@@ -55,6 +55,13 @@ export class TooManyTransactionRetriesError extends HttpError {
   }
 }
 
+export class MethodNotAllowedError extends HttpError {
+  constructor(message = "Method not allowed", statusCode = 405) {
+    super(message, statusCode);
+    this.name = "MethodNotAllowedError";
+  }
+}
+
 export class DatabaseError extends NeonDbError {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
