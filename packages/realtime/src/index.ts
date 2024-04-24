@@ -8,6 +8,10 @@ import { Resource } from "sst";
 import type * as Party from "partykit/server";
 
 export default class Server implements Party.Server {
+  options = {
+    hibernate: true,
+  } satisfies Party.ServerOptions;
+
   constructor(readonly room: Party.Room) {}
 
   static async onBeforeConnect(request: Party.Request) {

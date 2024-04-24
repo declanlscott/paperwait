@@ -2,7 +2,11 @@
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "env": ["env.ts"]
+    }
   },
   "exclude": ["./packages/eslint-config/*.cjs"]
 }

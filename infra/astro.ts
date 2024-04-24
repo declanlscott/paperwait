@@ -1,17 +1,9 @@
-import {
-  AWS_REGION,
-  CLIENT_RESOURCE_PREFIX,
-  DOMAIN,
-} from "@paperwait/core/constants";
+import { AWS_REGION } from "@paperwait/core/constants";
 
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
 import { databaseUrl, replicacheLicenseKey } from "./secrets";
 
 const awsAccountId = aws.getCallerIdentityOutput().accountId;
-
-const replicacheLicenseKey = new sst.Secret(
-  `${CLIENT_RESOURCE_PREFIX}ReplicacheLicenseKey`,
-);
 
 export const astro = new sst.aws.Astro("Paperwait", {
   path: "packages/web",

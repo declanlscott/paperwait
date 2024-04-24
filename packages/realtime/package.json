@@ -1,5 +1,5 @@
 {
-  "name": "@paperwait/party",
+  "name": "@paperwait/realtime",
   "version": "0.0.0",
   "scripts": {
     "dev": "partykit dev",
