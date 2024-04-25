@@ -1,5 +1,5 @@
 import { spawn } from "child_process";
-import * as path from "path";
+import { resolve } from "path";
 
 import {
   ENV_RESOURCE_PREFIX,
@@ -71,7 +71,7 @@ function main() {
 
     const process = spawn(command, args, {
       stdio: "inherit",
-      cwd: path.resolve(__dirname, "../../realtime"),
+      cwd: resolve(__dirname, "../../realtime"),
     });
 
     process.on("spawn", () => {
