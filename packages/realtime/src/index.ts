@@ -1,9 +1,9 @@
+import { REALTIME_ENV_KEY } from "@paperwait/core/constants";
 import {
   HttpError,
   MethodNotAllowedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
-import { REALTIME_ENV_KEY } from "packages/core/src/constants";
 
 import type * as Party from "partykit/server";
 
