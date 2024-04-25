@@ -1,8 +1,4 @@
-import {
-  AUTH_REDIRECT_PATH,
-  DOMAIN,
-  LOCALHOST,
-} from "@paperwait/core/constants";
+import { AUTH_REDIRECT_PATH, HOST } from "@paperwait/core/constants";
 import * as entraId from "@pulumi/azuread";
 import * as time from "@pulumiverse/time";
 
@@ -28,8 +24,8 @@ export const entraIdApp = new entraId.Application("EntraIdApplication", {
   signInAudience: "AzureADMultipleOrgs",
   web: {
     redirectUris: [
-      `http://${LOCALHOST}${AUTH_REDIRECT_PATH}`,
-      `https://${DOMAIN}${AUTH_REDIRECT_PATH}`,
+      `http://${HOST.WEB.DEV}${AUTH_REDIRECT_PATH}`,
+      `https://${HOST.WEB.PROD}${AUTH_REDIRECT_PATH}`,
     ],
   },
 });

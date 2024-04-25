@@ -1,5 +1,6 @@
 import { CLIENT_RESOURCE_PREFIX } from "@paperwait/core/constants";
 
+export const isDev = new sst.Secret("IsDev", String($dev));
 export const replicacheLicenseKey = new sst.Secret(
   `${CLIENT_RESOURCE_PREFIX}ReplicacheLicenseKey`,
 );

@@ -14,10 +14,13 @@ export async function updateUserRole(
   mutation: Mutation,
 ) {
   assertRole(user, mutationMeta[mutation.name].roleSet);
+
   const args = parse(updateUserRoleSchema, mutation.args);
 
   await tx
     .update(User)
     .set({ role: args.role })
     .where(eq(User.id, args.userId));
+
+  return [args.userId];
 }

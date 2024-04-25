@@ -4,9 +4,7 @@ import { CLIENT_RESOURCE_PREFIX } from "../constants";
 
 import type { ClientResourceType } from "../types";
 
-const resource: Record<string, unknown> = { ...Resource };
-
-export const ClientResource = Object.entries(resource).reduce(
+export const ClientResource = Object.entries({ ...Resource }).reduce(
   (clientResource, [key, value]) => {
     if (key.startsWith(CLIENT_RESOURCE_PREFIX) && value) {
       clientResource[key.slice(CLIENT_RESOURCE_PREFIX.length)] = value;
@@ -14,5 +12,5 @@ export const ClientResource = Object.entries(resource).reduce(
 
     return clientResource;
   },
-  {} as typeof resource,
+  {} as Record<string, unknown>,
 ) as ClientResourceType;

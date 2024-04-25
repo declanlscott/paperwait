@@ -1,7 +1,15 @@
 export const AWS_REGION = "us-east-2";
 
-export const LOCALHOST = "localhost:4321";
-export const DOMAIN = "paperwait.app";
+export const HOST = {
+  WEB: {
+    DEV: "localhost:4321",
+    PROD: "paperwait.app",
+  },
+  REALTIME: {
+    DEV: "localhost:1999",
+    PROD: "paperwait-realtime.declanlscott.partykit.dev",
+  },
+} as const;
 export const AUTH_REDIRECT_PATH = "/api/auth/entra-id/callback";
 
 export const NANOID_CUSTOM_ALPHABET = "2346789abcdefghijkmnpqrtwxyz";

@@ -16,6 +16,7 @@
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@neondatabase/serverless": "^0.9.1",
     "drizzle-orm": "^0.30.9",
+    "ky": "^1.2.4",
     "lucia": "^3.1.1",
     "nanoid": "^5.0.7",
     "replicache": "^14.2.2",

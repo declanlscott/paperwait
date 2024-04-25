@@ -27,6 +27,7 @@
     "ky": "^1.2.4",
     "lucide-react": "^0.371.0",
     "oslo": "^1.2.0",
+    "partysocket": "^1.0.1",
     "react": "^18.2.0",
     "react-aria-components": "1.1.2-nightly.4552",
     "react-dom": "^18.2.0",
@@ -41,7 +42,6 @@
   "devDependencies": {
     "@astrojs/check": "^0.5.10",
     "@paperwait/eslint-config": "workspace:*",
-    "@total-typescript/ts-reset": "^0.5.1",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
     "tailwindcss-react-aria-components": "^1.1.1",

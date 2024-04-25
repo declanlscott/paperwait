@@ -11,6 +11,6 @@ export default new MicrosoftEntraId(
   Resource.EntraIdApplication.clientId,
   Resource.EntraIdClientSecret.value,
   import.meta.env.DEV
-    ? `http://${LOCALHOST}${AUTH_REDIRECT_PATH}`
-    : `https://${DOMAIN}${AUTH_REDIRECT_PATH}`,
+    ? `http://${LOCALHOST.WEB}${AUTH_REDIRECT_PATH}`
+    : `https://${DOMAIN.WEB}${AUTH_REDIRECT_PATH}`,
 );

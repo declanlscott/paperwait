@@ -1,14 +1,20 @@
 import { AWS_REGION } from "@paperwait/core/constants";
 
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
-import { databaseUrl, replicacheLicenseKey } from "./secrets";
+import { databaseUrl, isDev, replicacheLicenseKey } from "./secrets";
 
 const awsAccountId = aws.getCallerIdentityOutput().accountId;
 
 export const astro = new sst.aws.Astro("Paperwait", {
   path: "packages/web",
   buildCommand: "pnpm build",
-  link: [replicacheLicenseKey, databaseUrl, entraIdApp, entraIdClientSecret],
+  link: [
+    isDev,
+    replicacheLicenseKey,
+    databaseUrl,
+    entraIdApp,
+    entraIdClientSecret,
+  ],
   permissions: [
     {
       actions: ["ssm:GetParameter", "ssm:PutParameter"],

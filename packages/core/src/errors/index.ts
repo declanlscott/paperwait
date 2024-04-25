@@ -62,6 +62,13 @@ export class MethodNotAllowedError extends HttpError {
   }
 }
 
+export class InternalServerError extends HttpError {
+  constructor(message = "Internal Server Error", statusCode = 500) {
+    super(message, statusCode);
+    this.name = "InternalServerError";
+  }
+}
+
 export class DatabaseError extends NeonDbError {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);

@@ -1,29 +1,48 @@
 import { eq } from "drizzle-orm";
 import { parse } from "valibot";
 
-import { ReplicacheClient, ReplicacheClientGroup, updateUserRole } from ".";
+import {
+  poke,
+  ReplicacheClient,
+  ReplicacheClientGroup,
+  updateUserRole,
+} from ".";
 import { transact } from "../database";
-import { type OmitTimestamps } from "../utils";
 import { pushRequestSchema } from "./schemas";
 
 import type { User } from "lucia";
 import type { ReadonlyJSONValue } from "replicache";
 import type { Transaction } from "../database";
+import type { OmitTimestamps } from "../utils";
 import type { Mutation } from "./schemas";
 
 export async function push(user: User, requestBody: ReadonlyJSONValue) {
   const push = parse(pushRequestSchema, requestBody);
 
+  let entities = new Set<string>();
   for (const mutation of push.mutations) {
     try {
-      await processMutation(user, push.clientGroupId, mutation);
+      entities = await processMutation(user, push.clientGroupId, mutation);
     } catch (e) {
       // retry in error mode
-      await processMutation(user, push.clientGroupId, mutation, true);
+      entities = await processMutation(
+        user,
+        push.clientGroupId,
+        mutation,
+        true,
+      );
     }
   }
 
-  return;
+  const results = await Promise.allSettled(
+    Array.from(entities).map((entity) => poke(entity)),
+  );
+
+  results
+    .filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    )
+    .forEach(console.error);
 }
 
 // Implements push algorithm from Replicache docs
@@ -38,6 +57,8 @@ async function processMutation(
 ) {
   // 2: Begin transaction
   return await transact(async (tx) => {
+    let entities: string[] = [];
+
     // 3: Get client group
     const [clientGroup] = (await tx
       .select({
@@ -93,7 +114,7 @@ async function processMutation(
     if (mutation.id < nextMutationId) {
       console.log(`Mutation ${mutation.id} already processed - skipping`);
 
-      return;
+      return new Set(entities);
     }
 
     // 9: Rollback and throw if mutation is from the future
@@ -108,7 +129,7 @@ async function processMutation(
       try {
         // 10(i): Business logic
         // 10(i)(a): xmin column is automatically updated by Postgres on any affected rows
-        await mutate(tx, user, mutation);
+        entities = await mutate(tx, user, mutation);
       } catch (e) {
         // 10(ii)(a-c): Log, abort, and retry
         console.error(`Error processing mutation ${mutation.id}:`, e);
@@ -144,14 +165,20 @@ async function processMutation(
 
     const end = Date.now();
     console.log(`Processed mutation ${mutation.id} in ${end - start}ms`);
+
+    return new Set(entities);
   }, "serializable");
 }
 
-async function mutate(tx: Transaction, user: User, mutation: Mutation) {
+async function mutate(
+  tx: Transaction,
+  user: User,
+  mutation: Mutation,
+): Promise<string[]> {
   switch (mutation.name) {
     case "updateUserRole":
       return await updateUserRole(tx, user, mutation);
     default:
-      return;
+      return [];
   }
 }
