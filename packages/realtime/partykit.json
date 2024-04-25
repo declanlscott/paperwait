@@ -1,4 +1,5 @@
 {
-  "name": "paperwait-partykit",
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "paperwait-realtime",
   "main": "src/index.ts"
 }

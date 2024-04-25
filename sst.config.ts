@@ -1,6 +1,10 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 import { AWS_REGION } from "@paperwait/core/constants";
-import env from "env";
+
+const AWS_ORG_NAME = process.env.AWS_ORG_NAME;
+if (!AWS_ORG_NAME) {
+  throw new Error("AWS_ORG_NAME is not set");
+}
 
 export default $config({
   app(input) {
@@ -12,8 +16,8 @@ export default $config({
         aws: {
           profile:
             input.stage === "production"
-              ? `${env.AWS_ORG_NAME}-production`
-              : `${env.AWS_ORG_NAME}-dev`,
+              ? `${AWS_ORG_NAME}-production`
+              : `${AWS_ORG_NAME}-dev`,
           region: AWS_REGION,
         },
       },
