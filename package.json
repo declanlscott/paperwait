@@ -10,8 +10,7 @@
     "@paperwait/core": "workspace:*",
     "@pulumi/azuread": "^5.48.0",
     "@pulumiverse/time": "^0.0.17",
-    "sst": "^3.0.13",
-    "valibot": "^0.30.0"
+    "sst": "^3.0.13"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.2.1",

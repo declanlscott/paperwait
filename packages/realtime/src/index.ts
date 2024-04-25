@@ -3,7 +3,7 @@ import {
   MethodNotAllowedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
-import { Resource } from "sst";
+import { REALTIME_ENV_KEY } from "packages/core/src/constants";
 
 import type * as Party from "partykit/server";
 
@@ -14,11 +14,11 @@ export default class Server implements Party.Server {
 
   constructor(readonly room: Party.Room) {}
 
-  static async onBeforeConnect(request: Party.Request) {
+  static onBeforeConnect(request: Party.Request, lobby: Party.Lobby) {
     try {
       if (
-        request.headers.get("Authorization") !==
-        Resource.ClientReplicacheLicenseKey.value
+        request.headers.get("x-replicache-license-key") !==
+        lobby.env[REALTIME_ENV_KEY.REPLICACHE_LICENSE_KEY]
       )
         throw new UnauthorizedError();
 
@@ -33,12 +33,12 @@ export default class Server implements Party.Server {
     }
   }
 
-  static async onBeforeRequest(request: Party.Request) {
+  static onBeforeRequest(request: Party.Request, lobby: Party.Lobby) {
     try {
       if (request.method !== "POST") throw new MethodNotAllowedError();
 
       if (
-        request.headers.get("Authorization") !== Resource.PartyKitApiKey.value
+        request.headers.get("x-api-key") !== lobby.env[REALTIME_ENV_KEY.API_KEY]
       )
         throw new UnauthorizedError();
 
@@ -53,7 +53,7 @@ export default class Server implements Party.Server {
     }
   }
 
-  async onRequest() {
+  onRequest() {
     this.room.broadcast("poke");
 
     return new Response(null, { status: 204 });
