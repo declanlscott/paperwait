@@ -13,6 +13,7 @@ import { useAuth } from "~/app/lib/auth";
 import type {
   NavigateOptions,
   RegisteredRouter,
+  RoutePaths,
   ToOptions,
   ToPathOption,
 } from "@tanstack/react-router";
@@ -39,7 +40,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 declare module "react-aria-components" {
   interface RouterConfig {
-    href: ToPathOption<RegisteredRouter["routeTree"]>;
+    href: ToPathOption<
+      RegisteredRouter,
+      RoutePaths<RegisteredRouter["routeTree"]>,
+      ""
+    >;
     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
   }
 }
