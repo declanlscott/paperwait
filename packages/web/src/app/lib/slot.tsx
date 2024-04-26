@@ -1,7 +1,8 @@
-// TODO: Remove this if it continues to be unused
 import { createContext, useContext, useState } from "react";
 
-import type { ReactNode } from "react";
+import type { PropsWithChildren } from "react";
+
+// TODO: Remove this if it continues to be unused
 
 export type Slot = undefined;
 
@@ -9,10 +10,9 @@ export type SlotContext = Slot;
 
 export const SlotContext = createContext<SlotContext | null>(null);
 
-type SlotProviderProps = {
-  children: ReactNode;
+interface SlotProviderProps extends PropsWithChildren {
   slot: Slot;
-};
+}
 
 export function SlotProvider(props: SlotProviderProps) {
   const [slot] = useState(() => props.slot);

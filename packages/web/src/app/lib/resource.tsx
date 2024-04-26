@@ -1,16 +1,15 @@
 import { createContext, useContext, useState } from "react";
 
-import type { ReactNode } from "react";
+import type { PropsWithChildren } from "react";
 import type { ClientResourceType } from "@paperwait/core/types";
 
 export type ResourceContext = ClientResourceType;
 
 export const ResourceContext = createContext<ClientResourceType | null>(null);
 
-type ResourceProviderProps = {
-  children: ReactNode;
+interface ResourceProviderProps extends PropsWithChildren {
   resource: ClientResourceType;
-};
+}
 
 export function ResourceProvider(props: ResourceProviderProps) {
   const [resource] = useState(() => props.resource);

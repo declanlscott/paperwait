@@ -7,7 +7,7 @@ import { merge, minLength, object, optional, string } from "valibot";
 import { createStore, useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
-import type { ReactNode } from "react";
+import type { PropsWithChildren } from "react";
 import type { LuciaSession, LuciaUser } from "@paperwait/core/auth";
 import type { UserRole } from "@paperwait/core/user";
 import type { Output } from "valibot";
@@ -44,10 +44,9 @@ export const initialLoginSearchParams = { org: "" } satisfies Output<
   typeof loginSearchParams
 >;
 
-type AuthProviderProps = {
-  children: ReactNode;
+interface AuthProviderProps extends PropsWithChildren {
   initialData: Auth;
-};
+}
 
 export function AuthProvider(props: AuthProviderProps) {
   const [store] = useState(() =>
@@ -130,11 +129,7 @@ export const useAuthActions = () =>
 
 export const AuthenticatedContext = createContext<Authenticated | null>(null);
 
-type AuthenticatedProviderProps = {
-  children: ReactNode;
-};
-
-export function AuthenticatedProvider(props: AuthenticatedProviderProps) {
+export function AuthenticatedProvider(props: PropsWithChildren) {
   const auth = useAuthContext();
 
   // Render the login page if the user is not authenticated
