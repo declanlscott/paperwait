@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { flushSync } from "react-dom";
 import { Navigate, redirect } from "@tanstack/react-router";
 import { produce } from "immer";
 import ky from "ky";
@@ -59,16 +60,16 @@ export function AuthProvider(props: AuthProviderProps) {
           const result = await ky.post("/api/auth/logout");
 
           if (result.status === 204) {
-            get().actions.reset();
+            // Flush sync to ensure the reset finishes before the router runs
+            flushSync(get().actions.reset);
           }
         },
         protectRoute: (from) => {
-          if (!get().user) {
+          if (!get().user)
             throw redirect({
               to: "/login",
               search: { redirect: from, ...initialLoginSearchParams },
             });
-          }
         },
         updateRole: (newRole) =>
           set(
@@ -97,35 +98,72 @@ export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
   return useStore(store, selector);
 }
 
-export const useAuth = () =>
-  useAuthStore(
-    useShallow(({ user, session }) => ({
-      user,
-      session,
-      isAuthenticated: !!user,
-    })),
-  );
-
-export const useAuthActions = () => useAuthStore(({ actions }) => actions);
-
-type ProtectRouteProps = {
-  children: ReactNode;
-  path: string;
+export type Authenticated = {
+  isAuthenticated: true;
+  user: LuciaUser;
+  session: LuciaSession;
 };
 
-export function ProtectRoute(props: ProtectRouteProps) {
-  const { children, path } = props;
+export type Unauthenticated = {
+  isAuthenticated: false;
+  user: null;
+  session: null;
+};
 
-  const { isAuthenticated } = useAuth();
+export const useAuthContext = () =>
+  useAuthStore(
+    useShallow(({ user, session }) => {
+      if (!user || !session) {
+        return {
+          isAuthenticated: false,
+          user: null,
+          session: null,
+        } satisfies Unauthenticated;
+      }
 
-  if (!isAuthenticated) {
-    return (
-      <Navigate
-        to="/login"
-        search={{ redirect: path, ...initialLoginSearchParams }}
-      />
+      return { isAuthenticated: true, user, session } satisfies Authenticated;
+    }),
+  );
+
+export const useAuthActions = () =>
+  useAuthStore(useShallow(({ actions }) => actions));
+
+export const AuthenticatedContext = createContext<Authenticated | null>(null);
+
+type AuthenticatedProviderProps = {
+  children: ReactNode;
+};
+
+export function AuthenticatedProvider(props: AuthenticatedProviderProps) {
+  const auth = useAuthContext();
+
+  // Render the login page if the user is not authenticated
+  if (!auth.isAuthenticated) {
+    // Don't redirect if we're already on the login page
+    if (location.href.includes("/login")) {
+      return props.children;
+    }
+
+    // Otherwise redirect there
+    return <Navigate to="/login" search={initialLoginSearchParams} />;
+  }
+
+  // Otherwise render children in the authenticated context
+  return (
+    <AuthenticatedContext.Provider value={auth}>
+      {props.children}
+    </AuthenticatedContext.Provider>
+  );
+}
+
+export function useAuthenticatedContext() {
+  const auth = useContext(AuthenticatedContext);
+
+  if (!auth) {
+    throw new Error(
+      "useAuthenticatedContext must be used within an AuthenticatedProvider",
     );
   }
 
-  return children;
+  return auth;
 }

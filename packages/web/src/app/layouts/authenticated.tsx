@@ -1,9 +1,9 @@
 import { Link } from "react-aria-components";
 import { Outlet, useRouter } from "@tanstack/react-router";
 
-import { useAuthActions } from "~/app/lib/auth";
+import { AuthenticatedProvider, useAuthActions } from "~/app/lib/auth";
 
-export function BaseLayout() {
+export function AuthenticatedLayout() {
   const { logout } = useAuthActions();
   const { invalidate } = useRouter();
 
@@ -13,7 +13,7 @@ export function BaseLayout() {
   }
 
   return (
-    <>
+    <AuthenticatedProvider>
       <nav>
         <img src="./logo.svg" className="h-10 w-10" />
 
@@ -37,6 +37,6 @@ export function BaseLayout() {
       </nav>
 
       <Outlet />
-    </>
+    </AuthenticatedProvider>
   );
 }
