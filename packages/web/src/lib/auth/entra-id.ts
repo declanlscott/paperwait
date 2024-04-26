@@ -1,8 +1,4 @@
-import {
-  AUTH_REDIRECT_PATH,
-  DOMAIN,
-  LOCALHOST,
-} from "@paperwait/core/constants";
+import { AUTH_REDIRECT_PATH, HOST } from "@paperwait/core/constants";
 import { MicrosoftEntraId } from "arctic";
 import { Resource } from "sst";
 
@@ -11,6 +7,6 @@ export default new MicrosoftEntraId(
   Resource.EntraIdApplication.clientId,
   Resource.EntraIdClientSecret.value,
   import.meta.env.DEV
-    ? `http://${LOCALHOST.WEB}${AUTH_REDIRECT_PATH}`
-    : `https://${DOMAIN.WEB}${AUTH_REDIRECT_PATH}`,
+    ? `http://${HOST.WEB.DEV}${AUTH_REDIRECT_PATH}`
+    : `https://${HOST.WEB.PROD}${AUTH_REDIRECT_PATH}`,
 );
