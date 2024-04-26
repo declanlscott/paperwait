@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { parse } from "valibot";
 
 import {
-  poke,
+  pokeMany,
   ReplicacheClient,
   ReplicacheClientGroup,
   updateUserRole,
@@ -34,15 +34,7 @@ export async function push(user: User, requestBody: ReadonlyJSONValue) {
     }
   }
 
-  const results = await Promise.allSettled(
-    Array.from(entities).map((entity) => poke(entity)),
-  );
-
-  results
-    .filter(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    )
-    .forEach(console.error);
+  await pokeMany(Array.from(entities));
 }
 
 // Implements push algorithm from Replicache docs

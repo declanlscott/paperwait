@@ -51,9 +51,15 @@ importers:
       '@neondatabase/serverless':
         specifier: ^0.9.1
         version: 0.9.1
+      '@rocicorp/rails':
+        specifier: ^0.10.0
+        version: 0.10.0
       drizzle-orm:
         specifier: ^0.30.9
         version: 0.30.9(@cloudflare/workers-types@4.20240320.1)(@neondatabase/serverless@0.9.1)(@opentelemetry/api@1.8.0)(@types/pg@8.6.6)(@types/react@18.3.0)(pg@8.11.5)(react@18.3.0)
+      drizzle-valibot:
+        specifier: ^0.2.0
+        version: 0.2.0(drizzle-orm@0.30.9(@cloudflare/workers-types@4.20240320.1)(@neondatabase/serverless@0.9.1)(@opentelemetry/api@1.8.0)(@types/pg@8.6.6)(@types/react@18.3.0)(pg@8.11.5)(react@18.3.0))(valibot@0.30.0)
       ky:
         specifier: ^1.2.4
         version: 1.2.4
@@ -2528,6 +2534,9 @@ packages:
   '@rocicorp/logger@5.2.1':
     resolution: {integrity: sha512-/co4DJq3opjULOHe7hMAho/E2WJuv6rMOJ1QDlCKsPHZ09XkkKHDM8dPu+odmDHWBb5aMnnzC92WQLd05CTxnA==}
 
+  '@rocicorp/rails@0.10.0':
+    resolution: {integrity: sha512-PfMf4z6H8lqQlvCWg8b+HCZKOQKrSQNXoU4br2LFQzBQILiV0cWdBQP7WgTt/LYbM+9EzfWtN581SiSY5sNI3w==}
+
   '@rocicorp/resolver@1.0.1':
     resolution: {integrity: sha512-9+IK9C/du8Nrqn3LaKBxJwV4H2HyIpa7HlTuc4eQ938lL4faxN6TuQV+IpvX6PxQeR14X7yMtz1f9dfiS5fvlw==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -3684,6 +3693,12 @@ packages:
         optional: true
       sqlite3:
         optional: true
+
+  drizzle-valibot@0.2.0:
+    resolution: {integrity: sha512-+JTZZN52fFv20kGTXI1KGpysdCiedaTDpWQ6lqnxX2DD5U5tJfGPB2ROjHFjbLzK4XiH98MOhKZf174orBQAew==}
+    peerDependencies:
+      drizzle-orm: '>=0.23.13'
+      valibot: '>=0.20'
 
   dset@3.1.3:
     resolution: {integrity: sha512-20TuZZHCEZ2O71q9/+8BwKwZ0QtD9D8ObhrihJPr+vLLYlSuAU3/zL4cSlgbfeoGHTjCSJBa7NGcrF9/Bx/WJQ==}
@@ -9541,6 +9556,8 @@ snapshots:
 
   '@rocicorp/logger@5.2.1': {}
 
+  '@rocicorp/rails@0.10.0': {}
+
   '@rocicorp/resolver@1.0.1': {}
 
   '@rollup/rollup-android-arm-eabi@4.16.4':
@@ -10939,6 +10956,11 @@ snapshots:
       '@types/react': 18.3.0
       pg: 8.11.5
       react: 18.3.0
+
+  drizzle-valibot@0.2.0(drizzle-orm@0.30.9(@cloudflare/workers-types@4.20240320.1)(@neondatabase/serverless@0.9.1)(@opentelemetry/api@1.8.0)(@types/pg@8.6.6)(@types/react@18.3.0)(pg@8.11.5)(react@18.3.0))(valibot@0.30.0):
+    dependencies:
+      drizzle-orm: 0.30.9(@cloudflare/workers-types@4.20240320.1)(@neondatabase/serverless@0.9.1)(@opentelemetry/api@1.8.0)(@types/pg@8.6.6)(@types/react@18.3.0)(pg@8.11.5)(react@18.3.0)
+      valibot: 0.30.0
 
   dset@3.1.3: {}
 
