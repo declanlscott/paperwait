@@ -7,6 +7,7 @@ import {
   NotFoundError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
+import { pokeMany } from "@paperwait/core/replicache";
 import { User } from "@paperwait/core/user";
 import { OAuth2RequestError } from "arctic";
 import { and, eq } from "drizzle-orm";
@@ -83,8 +84,13 @@ export async function GET(context: APIContext) {
       })
       .json<EntraIdUserInfo>();
 
-    const newUser = await transact(async (tx) => {
+    const { newUser, admins } = await transact(async (tx) => {
       const isInitializing = org.status === "initializing";
+
+      const admins = await tx
+        .select({ id: User.id })
+        .from(User)
+        .where(eq(User.role, "administrator"));
 
       const [newUser] = await tx
         .insert(User)
@@ -104,8 +110,10 @@ export async function GET(context: APIContext) {
           .where(eq(Organization.id, storedOrgId.value));
       }
 
-      return newUser;
+      return { newUser, admins };
     });
+
+    await pokeMany(admins.map(({ id }) => id));
 
     const { cookie } = await createSession(newUser.id);
 
