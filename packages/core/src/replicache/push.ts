@@ -145,6 +145,7 @@ async function processMutation(
           target: ReplicacheClientGroup.id,
           set: { ...clientGroup, updatedAt: new Date() },
         }),
+
       // 12. Upsert client
       await tx
         .insert(ReplicacheClient)
