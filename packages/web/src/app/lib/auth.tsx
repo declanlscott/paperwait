@@ -97,14 +97,14 @@ export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
   return useStore(store, selector);
 }
 
-export type Authenticated = {
-  isAuthenticated: true;
+export type Authed = {
+  isAuthed: true;
   user: LuciaUser;
   session: LuciaSession;
 };
 
-export type Unauthenticated = {
-  isAuthenticated: false;
+export type UnAuthed = {
+  isAuthed: false;
   user: null;
   session: null;
 };
@@ -114,26 +114,26 @@ export const useAuthContext = () =>
     useShallow(({ user, session }) => {
       if (!user || !session) {
         return {
-          isAuthenticated: false,
+          isAuthed: false,
           user: null,
           session: null,
-        } satisfies Unauthenticated;
+        } satisfies UnAuthed;
       }
 
-      return { isAuthenticated: true, user, session } satisfies Authenticated;
+      return { isAuthed: true, user, session } satisfies Authed;
     }),
   );
 
 export const useAuthActions = () =>
   useAuthStore(useShallow(({ actions }) => actions));
 
-export const AuthenticatedContext = createContext<Authenticated | null>(null);
+export const AuthedContext = createContext<Authed | null>(null);
 
-export function AuthenticatedProvider(props: PropsWithChildren) {
+export function AuthedProvider(props: PropsWithChildren) {
   const auth = useAuthContext();
 
-  // Render the login page if the user is not authenticated
-  if (!auth.isAuthenticated) {
+  // Render the login page if the user is not Authed
+  if (!auth.isAuthed) {
     // Don't redirect if we're already on the login page
     if (location.href.includes("/login")) {
       return props.children;
@@ -143,21 +143,19 @@ export function AuthenticatedProvider(props: PropsWithChildren) {
     return <Navigate to="/login" search={initialLoginSearchParams} />;
   }
 
-  // Otherwise render children in the authenticated context
+  // Otherwise render children in the Authed context
   return (
-    <AuthenticatedContext.Provider value={auth}>
+    <AuthedContext.Provider value={auth}>
       {props.children}
-    </AuthenticatedContext.Provider>
+    </AuthedContext.Provider>
   );
 }
 
-export function useAuthenticatedContext() {
-  const auth = useContext(AuthenticatedContext);
+export function useAuthedContext() {
+  const auth = useContext(AuthedContext);
 
   if (!auth) {
-    throw new Error(
-      "useAuthenticatedContext must be used within an AuthenticatedProvider",
-    );
+    throw new Error("useAuthedContext must be used within an AuthedProvider");
   }
 
   return auth;

@@ -2,9 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { useResource } from "~/app/lib/resource";
 
-export const Route = createFileRoute("/dashboard")({
-  beforeLoad: ({ context, location }) =>
-    context.authStore.actions.protectRoute(location.href),
+export const Route = createFileRoute("/_authed/dashboard")({
   component: () => <Component />,
 });
 

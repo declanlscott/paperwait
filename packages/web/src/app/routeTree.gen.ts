@@ -14,44 +14,56 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
-import { Route as DashboardImport } from './routes/dashboard'
+import { Route as AuthedImport } from './routes/_authed'
+import { Route as AuthedDashboardImport } from './routes/_authed.dashboard'
 
 // Create Virtual Routes
 
-const SettingsLazyImport = createFileRoute('/settings')()
+const AuthedSettingsLazyImport = createFileRoute('/_authed/settings')()
 
 // Create/Update Routes
-
-const SettingsLazyRoute = SettingsLazyImport.update({
-  path: '/settings',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/settings.lazy').then((d) => d.Route))
 
 const LoginRoute = LoginImport.update({
   path: '/login',
   getParentRoute: () => rootRoute,
 } as any)
 
-const DashboardRoute = DashboardImport.update({
-  path: '/dashboard',
+const AuthedRoute = AuthedImport.update({
+  id: '/_authed',
   getParentRoute: () => rootRoute,
+} as any)
+
+const AuthedSettingsLazyRoute = AuthedSettingsLazyImport.update({
+  path: '/settings',
+  getParentRoute: () => AuthedRoute,
+} as any).lazy(() =>
+  import('./routes/_authed.settings.lazy').then((d) => d.Route),
+)
+
+const AuthedDashboardRoute = AuthedDashboardImport.update({
+  path: '/dashboard',
+  getParentRoute: () => AuthedRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/dashboard': {
-      preLoaderRoute: typeof DashboardImport
+    '/_authed': {
+      preLoaderRoute: typeof AuthedImport
       parentRoute: typeof rootRoute
     }
     '/login': {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
-    '/settings': {
-      preLoaderRoute: typeof SettingsLazyImport
-      parentRoute: typeof rootRoute
+    '/_authed/dashboard': {
+      preLoaderRoute: typeof AuthedDashboardImport
+      parentRoute: typeof AuthedImport
+    }
+    '/_authed/settings': {
+      preLoaderRoute: typeof AuthedSettingsLazyImport
+      parentRoute: typeof AuthedImport
     }
   }
 }
@@ -59,9 +71,8 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export const routeTree = rootRoute.addChildren([
-  DashboardRoute,
+  AuthedRoute.addChildren([AuthedDashboardRoute, AuthedSettingsLazyRoute]),
   LoginRoute,
-  SettingsLazyRoute,
 ])
 
 /* prettier-ignore-end */

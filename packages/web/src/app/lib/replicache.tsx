@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { Replicache } from "replicache";
 
-import { useAuthenticatedContext } from "~/app/lib/auth";
+import { useAuthedContext } from "~/app/lib/auth";
 import { useResource } from "~/app/lib/resource";
 
 import type { PropsWithChildren } from "react";
@@ -13,7 +13,7 @@ const ReplicacheContext = createContext<Replicache | null>(null);
 export function ReplicacheProvider(props: PropsWithChildren) {
   const [replicache, setReplicache] = useState<Replicache | null>(null);
 
-  const { user } = useAuthenticatedContext();
+  const { user } = useAuthedContext();
 
   const { ReplicacheLicenseKey, IsDev } = useResource();
 

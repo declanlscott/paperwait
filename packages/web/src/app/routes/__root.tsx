@@ -7,9 +7,6 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 
-import { AuthenticatedLayout } from "~/app/layouts/authenticated";
-import { useAuthContext } from "~/app/lib/auth";
-
 import type {
   NavigateOptions,
   RegisteredRouter,
@@ -52,15 +49,13 @@ declare module "react-aria-components" {
 function Component() {
   const router = useRouter();
 
-  const { isAuthenticated } = useAuthContext();
-
   return (
     <RouterProvider
       navigate={(to, options) => router.navigate({ to, ...options })}
       useHref={(to) => router.buildLocation({ to }).href}
     >
       <>
-        {isAuthenticated ? <AuthenticatedLayout /> : <Outlet />}
+        <Outlet />
 
         <ScrollRestoration />
 

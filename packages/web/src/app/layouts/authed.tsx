@@ -1,10 +1,10 @@
 import { Link } from "react-aria-components";
 import { Outlet, useRouter } from "@tanstack/react-router";
 
-import { AuthenticatedProvider, useAuthActions } from "~/app/lib/auth";
+import { AuthedProvider, useAuthActions } from "~/app/lib/auth";
 import { ReplicacheProvider } from "~/app/lib/replicache";
 
-export function AuthenticatedLayout() {
+export function AuthedLayout() {
   const { logout } = useAuthActions();
   const { invalidate } = useRouter();
 
@@ -14,7 +14,7 @@ export function AuthenticatedLayout() {
   }
 
   return (
-    <AuthenticatedProvider>
+    <AuthedProvider>
       <ReplicacheProvider>
         <nav>
           <img src="./logo.svg" className="h-10 w-10" />
@@ -40,6 +40,6 @@ export function AuthenticatedLayout() {
 
         <Outlet />
       </ReplicacheProvider>
-    </AuthenticatedProvider>
+    </AuthedProvider>
   );
 }

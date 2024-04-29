@@ -1,16 +1,16 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import ky from "ky";
 
-import { useAuthenticatedContext } from "~/app/lib/auth";
+import { useAuthedContext } from "~/app/lib/auth";
 
 import type { Papercut } from "@paperwait/core/papercut";
 
-export const Route = createLazyFileRoute("/settings")({
+export const Route = createLazyFileRoute("/_authed/settings")({
   component: () => <Component />,
 });
 
 function Component() {
-  const { user } = useAuthenticatedContext();
+  const { user } = useAuthedContext();
 
   async function handlePapercut() {
     const papercut = {
