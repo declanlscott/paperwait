@@ -11,8 +11,6 @@ import { registrationSchema } from "~/lib/schemas";
 
 import type { APIContext } from "astro";
 
-export const prerender = false;
-
 export async function POST(context: APIContext) {
   try {
     const formData = await context.request.formData();

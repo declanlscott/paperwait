@@ -9,8 +9,6 @@ import { client as ssmClient } from "~/lib/ssm";
 import type { PutParameterCommandInput } from "@aws-sdk/client-ssm";
 import type { APIContext } from "astro";
 
-export const prerender = false;
-
 export async function POST(context: APIContext) {
   try {
     const { user } = authorize(context, new Set(["administrator"]));

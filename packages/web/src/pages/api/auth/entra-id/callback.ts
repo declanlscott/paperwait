@@ -19,8 +19,6 @@ import entraId from "~/lib/auth/entra-id";
 
 import type { APIContext } from "astro";
 
-export const prerender = false;
-
 export async function GET(context: APIContext) {
   const code = context.url.searchParams.get("code");
   const state = context.url.searchParams.get("state");

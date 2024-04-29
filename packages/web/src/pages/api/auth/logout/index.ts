@@ -5,8 +5,6 @@ import { authorize } from "~/lib/auth/authorize";
 
 import type { APIContext } from "astro";
 
-export const prerender = false;
-
 export async function POST(context: APIContext) {
   try {
     const { session } = authorize(context);

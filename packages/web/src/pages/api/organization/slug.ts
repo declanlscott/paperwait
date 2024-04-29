@@ -8,8 +8,6 @@ import { registrationSchema } from "~/lib/schemas";
 import type { APIContext } from "astro";
 import type { OrgSlugValidity } from "~/lib/schemas";
 
-export const prerender = false;
-
 export async function POST(context: APIContext) {
   const formData = await context.request.formData();
   const result = safeParse(
