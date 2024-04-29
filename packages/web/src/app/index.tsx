@@ -3,65 +3,72 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 
 import { AuthProvider, useAuthStore } from "~/app/lib/auth";
 import { ResourceProvider, useResource } from "~/app/lib/resource";
+import { SlotProvider } from "~/app/lib/slot";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { ClientResourceType } from "@paperwait/core/types";
 import type { Auth } from "~/app/lib/auth";
+import type { Slot } from "~/app/lib/slot";
 
-const router = createRouter({
-  routeTree,
-  context: {
-    // These will be set after we wrap the inner app in providers
-    resource: undefined!,
-    authStore: undefined!,
-  },
-});
+type AppRouter = ReturnType<
+  typeof createRouter<typeof routeTree, "always" | "never" | "preserve">
+>;
 
 declare module "@tanstack/react-router" {
   interface Register {
-    router: typeof router;
+    router: AppRouter;
   }
 }
 
-export type AppProps = {
-  debounceMs?: number;
+export interface AppProps extends Auth, Partial<Slot> {
   clientResource: ClientResourceType;
-} & Auth;
+}
 
 export function App(props: AppProps) {
-  const { debounceMs = 500, clientResource, user, session } = props;
+  const { clientResource, user, session, loadingIndicator } = props;
 
-  const [isVisible, setIsVisible] = useState(false);
+  const [router] = useState(() =>
+    createRouter({
+      routeTree,
+      context: {
+        // These will be set after we wrap the app router in providers
+        resource: undefined!,
+        authStore: undefined!,
+      },
+      defaultPendingComponent: () => loadingIndicator,
+    }),
+  );
 
-  // Debounce the app loading indicator to prevent flickering
-  useLayoutEffect(() => {
-    const timeout = setTimeout(
-      () =>
-        setIsVisible(() => {
-          document
-            .getElementById("app-loading-indicator")
-            ?.style.setProperty("display", "none");
-
-          return true;
-        }),
-      debounceMs,
-    );
-
-    return () => clearTimeout(timeout);
-  }, [debounceMs]);
+  // Hide initial loading indicator after first render
+  // Router will handle the loading indicator afterwards with `defaultPendingComponent`
+  useLayoutEffect(
+    () =>
+      document
+        .getElementById("app-loading-indicator")
+        ?.style.setProperty("display", "none"),
+    [],
+  );
 
   return (
     <ResourceProvider resource={clientResource}>
       <AuthProvider initialData={{ user, session }}>
-        {isVisible && <InnerApp />}
+        <SlotProvider slot={{ loadingIndicator }}>
+          <AppRouter router={router} />
+        </SlotProvider>
       </AuthProvider>
     </ResourceProvider>
   );
 }
 
-function InnerApp() {
+type AppRouterProps = {
+  router: AppRouter;
+};
+
+function AppRouter(props: AppRouterProps) {
   const resource = useResource();
   const authStore = useAuthStore((store) => store);
 
-  return <RouterProvider router={router} context={{ resource, authStore }} />;
+  return (
+    <RouterProvider router={props.router} context={{ resource, authStore }} />
+  );
 }

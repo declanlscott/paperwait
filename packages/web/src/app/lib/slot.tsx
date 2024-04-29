@@ -1,10 +1,10 @@
 import { createContext, useContext, useState } from "react";
 
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 
-// TODO: Remove this if it continues to be unused
-
-export type Slot = undefined;
+export type Slot = {
+  loadingIndicator: ReactNode;
+};
 
 export type SlotContext = Slot;
 
