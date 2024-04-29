@@ -19,11 +19,11 @@
     "drizzle-orm": "^0.30.9",
     "drizzle-valibot": "^0.2.0",
     "ky": "^1.2.4",
-    "lucia": "^3.1.1",
+    "lucia": "^3.2.0",
     "nanoid": "^5.0.7",
     "replicache": "^14.2.2",
     "valibot": "^0.30.0",
-    "ws": "^8.16.0"
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
