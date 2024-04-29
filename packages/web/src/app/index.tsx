@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useState } from "react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
 import { AuthProvider, useAuthStore } from "~/app/lib/auth";
@@ -42,15 +42,11 @@ export function App(props: AppProps) {
     }),
   );
 
-  // Hide initial loading indicator after first render
+  // Hide the initial loading indicator
   // Router will handle the loading indicator afterwards with `defaultPendingComponent`
-  useLayoutEffect(
-    () =>
-      document
-        .getElementById("app-loading-indicator")
-        ?.style.setProperty("display", "none"),
-    [],
-  );
+  document
+    .getElementById("initial-app-loading-indicator")
+    ?.style.setProperty("display", "none");
 
   return (
     <ResourceProvider resource={clientResource}>
