@@ -7,7 +7,6 @@ import { SlotProvider } from "~/app/lib/slot";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { ClientResourceType } from "@paperwait/core/types";
-import type { Auth } from "~/app/lib/auth";
 import type { Slot } from "~/app/lib/slot";
 
 type AppRouter = ReturnType<
@@ -20,12 +19,16 @@ declare module "@tanstack/react-router" {
   }
 }
 
-export interface AppProps extends Auth, Partial<Slot> {
+export interface AppProps extends Partial<Slot> {
   clientResource: ClientResourceType;
+  initialAuth: {
+    user: App.Locals["user"];
+    session: App.Locals["session"];
+  };
 }
 
 export function App(props: AppProps) {
-  const { clientResource, user, session, loadingIndicator } = props;
+  const { clientResource, initialAuth, loadingIndicator } = props;
 
   const [router] = useState(() =>
     createRouter({
@@ -51,7 +54,7 @@ export function App(props: AppProps) {
 
   return (
     <ResourceProvider resource={clientResource}>
-      <AuthProvider initialData={{ user, session }}>
+      <AuthProvider initialAuth={initialAuth}>
         <SlotProvider slot={{ loadingIndicator }}>
           <AppRouter router={router} />
         </SlotProvider>

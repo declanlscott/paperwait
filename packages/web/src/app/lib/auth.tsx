@@ -45,14 +45,14 @@ export const initialLoginSearchParams = { org: "" } satisfies Output<
 >;
 
 interface AuthProviderProps extends PropsWithChildren {
-  initialData: Auth;
+  initialAuth: Auth;
 }
 
 export function AuthProvider(props: AuthProviderProps) {
   const [store] = useState(() =>
     createStore<AuthStore>((set, get) => ({
-      user: props.initialData.user,
-      session: props.initialData.session,
+      user: props.initialAuth.user,
+      session: props.initialAuth.session,
       actions: {
         reset: () => set(() => ({ user: null, session: null })),
         logout: async () => {
