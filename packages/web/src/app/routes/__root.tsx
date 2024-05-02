@@ -47,22 +47,20 @@ declare module "react-aria-components" {
 }
 
 function Component() {
-  const router = useRouter();
+  const { navigate, buildLocation } = useRouter();
 
   return (
     <RouterProvider
-      navigate={(to, options) => router.navigate({ to, ...options })}
-      useHref={(to) => router.buildLocation({ to }).href}
+      navigate={(to, options) => navigate({ to, ...options })}
+      useHref={(to) => buildLocation({ to }).href}
     >
-      <>
-        <Outlet />
+      <Outlet />
 
-        <ScrollRestoration />
+      <ScrollRestoration />
 
-        <Suspense>
-          <TanStackRouterDevtools position="bottom-right" />
-        </Suspense>
-      </>
+      <Suspense>
+        <TanStackRouterDevtools position="bottom-right" />
+      </Suspense>
     </RouterProvider>
   );
 }

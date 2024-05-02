@@ -10,8 +10,8 @@ declare module "sst" {
       value: string
     }
     DatabaseUrl: {
-      value: string
       type: "sst.sst.Secret"
+      value: string
     }
     EntraIdApplication: {
       clientId: string

@@ -3,6 +3,10 @@ import { defineMiddleware } from "astro:middleware";
 import { verifyRequestOrigin } from "oslo/request";
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  if (context.url.pathname.startsWith("/partials")) {
+    return next();
+  }
+
   if (context.request.method !== "GET") {
     const originHeader = context.request.headers.get("Origin");
     const hostHeader = context.request.headers.get("Host");

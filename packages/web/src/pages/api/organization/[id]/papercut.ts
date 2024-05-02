@@ -20,16 +20,14 @@ export async function POST(context: APIContext) {
     const body = await context.request.json();
     const data = parse(papercutSchema, body);
 
-    const input = {
-      Name: `/paperwait/org/${user.orgId}/papercut`,
-      Value: JSON.stringify(data),
-      Type: "SecureString",
-      Overwrite: true,
-    } satisfies PutParameterCommandInput;
-
-    const command = new PutParameterCommand(input);
-
-    await ssmClient.send(command);
+    await ssmClient.send(
+      new PutParameterCommand({
+        Name: `/paperwait/org/${user.orgId}/papercut`,
+        Value: JSON.stringify(data),
+        Type: "SecureString",
+        Overwrite: true,
+      } satisfies PutParameterCommandInput),
+    );
 
     return new Response(null, { status: 204 });
   } catch (e) {

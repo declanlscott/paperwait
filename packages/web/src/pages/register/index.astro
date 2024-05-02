@@ -1,5 +1,6 @@
 ---
-import RegisterOrgSlug from "~/components/register/org-slug.astro";
+import RegisterOrgPapercutAuthToken from "~/components/register-org/papercut-auth-token.astro";
+import RegisterOrgSlug from "~/components/register-org/slug.astro";
 import Layout from "~/layouts/layout.astro";
 import { buttonStyles } from "~/styles/components/button";
 import { inputStyles } from "~/styles/components/input";
@@ -67,6 +68,21 @@ import { selectStyles } from "~/styles/components/select";
               required
             />
           </div>
+
+          <div class="grid gap-2">
+            <label class={labelStyles()} for="server-url"
+              >Papercut Web Services API URL</label
+            >
+            <input
+              id="server-url"
+              name="serverUrl"
+              class={inputStyles()}
+              placeholder="https://[server_name]:9192/rpc/api/xmlrpc"
+              required
+            />
+          </div>
+
+          <RegisterOrgPapercutAuthToken />
 
           <button type="submit" class={buttonStyles({ class: "w-full gap-2" })}>
             <svg
