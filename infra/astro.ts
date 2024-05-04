@@ -1,9 +1,7 @@
-import { AWS_REGION } from "@paperwait/core/constants";
-
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
 import { databaseUrl, isDev, replicacheLicenseKey } from "./secrets";
-
-const awsAccountId = aws.getCallerIdentityOutput().accountId;
+import { permission } from "./utils";
+import { xmlRpcApi } from "./xml-rpc-api";
 
 export const astro = new sst.aws.Astro("Paperwait", {
   path: "packages/web",
@@ -14,18 +12,9 @@ export const astro = new sst.aws.Astro("Paperwait", {
     databaseUrl,
     entraIdApp,
     entraIdClientSecret,
+    xmlRpcApi,
   ],
-  permissions: [
-    {
-      actions: ["ssm:GetParameter", "ssm:PutParameter"],
-      resources: [
-        $resolve([awsAccountId]).apply(
-          ([accountId]) =>
-            `arn:aws:ssm:${AWS_REGION}:${accountId}:parameter/paperwait/org/*/papercut`,
-        ),
-      ],
-    },
-  ],
+  permissions: [permission.papercutParameter],
   environment: {
     PROD: String($app.stage === "production"),
   },

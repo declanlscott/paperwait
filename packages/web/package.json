@@ -10,16 +10,15 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/react": "^3.3.1",
+    "@astrojs/react": "^3.3.2",
     "@astrojs/starlight": "^0.21.5",
     "@astrojs/tailwind": "^5.1.0",
-    "@aws-sdk/client-ssm": "^3.565.0",
     "@paperwait/core": "workspace:*",
-    "@tanstack/react-router": "^1.31.4",
-    "@tanstack/router-devtools": "^1.31.4",
+    "@tanstack/react-router": "^1.31.8",
+    "@tanstack/router-devtools": "^1.31.8",
     "@tanstack/router-vite-plugin": "^1.30.0",
     "arctic": "^1.8.0",
-    "astro": "^4.7.0",
+    "astro": "^4.7.1",
     "astro-sst": "^2.41.5",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.30.10",
@@ -29,7 +28,7 @@
     "oslo": "^1.2.0",
     "partysocket": "^1.0.1",
     "react": "^18.3.1",
-    "react-aria-components": "1.1.2-nightly.4552",
+    "react-aria-components": "^1.2.0",
     "react-dom": "^18.3.1",
     "replicache": "^14.2.2",
     "replicache-react": "^5.0.1",
@@ -42,10 +41,12 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.5.10",
+    "@aws-sdk/client-lambda": "^3.569.0",
+    "@aws-sdk/client-ssm": "^3.568.0",
     "@paperwait/eslint-config": "workspace:*",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
-    "tailwindcss-react-aria-components": "^1.1.1",
+    "tailwindcss-react-aria-components": "^1.1.2",
     "typescript": "^5.4.5"
   }
 }

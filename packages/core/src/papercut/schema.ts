@@ -1,9 +1,9 @@
-import { object, string, url } from "valibot";
+import { minLength, object, string, toTrimmed, url } from "valibot";
 
 import type { Output } from "valibot";
 
 export const papercutSchema = object({
   serverUrl: string([url()]),
-  authToken: string(),
+  authToken: string([toTrimmed(), minLength(1)]),
 });
 export type Papercut = Output<typeof papercutSchema>;
