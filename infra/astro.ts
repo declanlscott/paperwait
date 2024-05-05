@@ -1,5 +1,11 @@
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
-import { databaseUrl, isDev, replicacheLicenseKey } from "./secrets";
+import {
+  databaseUrl,
+  googleClientId,
+  googleClientSecret,
+  isDev,
+  replicacheLicenseKey,
+} from "./secrets";
 import { permission } from "./utils";
 import { xmlRpcApi } from "./xml-rpc-api";
 
@@ -12,6 +18,8 @@ export const astro = new sst.aws.Astro("Paperwait", {
     databaseUrl,
     entraIdApp,
     entraIdClientSecret,
+    googleClientId,
+    googleClientSecret,
     xmlRpcApi,
   ],
   permissions: [permission.papercutParameter],

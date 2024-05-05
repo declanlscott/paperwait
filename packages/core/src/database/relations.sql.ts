@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 
 import { Session } from "../auth";
-import { Order } from "../order/order.sql";
+import { Order } from "../order";
 import { Organization } from "../organization";
 import {
   ReplicacheClient,

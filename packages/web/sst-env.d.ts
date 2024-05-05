@@ -21,6 +21,14 @@ declare module "sst" {
       type: "azuread.index/applicationPassword.ApplicationPassword"
       value: string
     }
+    GoogleClientId: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    GoogleClientSecret: {
+      type: "sst.sst.Secret"
+      value: string
+    }
     XmlRpcApi: {
       name: string
       type: "sst.aws.Function"
