@@ -10,7 +10,8 @@ export const HOST = {
     PROD: "paperwait-realtime.declanlscott.partykit.dev",
   },
 } as const;
-export const AUTH_REDIRECT_PATH = "/api/auth/entra-id/callback";
+
+export const AUTH_CALLBACK_PATH = "/api/auth/callback";
 
 export const NANOID_CUSTOM_ALPHABET = "2346789abcdefghijkmnpqrtwxyz";
 export const NANOID_LENGTH = 20;
