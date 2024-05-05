@@ -1,12 +1,14 @@
-import { PutParameterCommand } from "@aws-sdk/client-ssm";
-import { ForbiddenError, HttpError } from "@paperwait/core/errors";
+import { putParameter } from "@paperwait/core/aws";
+import {
+  BadRequestError,
+  ForbiddenError,
+  HttpError,
+} from "@paperwait/core/errors";
 import { papercutSchema } from "@paperwait/core/papercut";
-import { parse, ValiError } from "valibot";
+import { parseSchema } from "@paperwait/core/utils";
 
 import { authorize } from "~/lib/auth/authorize";
-import { client as ssmClient } from "~/lib/ssm";
 
-import type { PutParameterCommandInput } from "@aws-sdk/client-ssm";
 import type { APIContext } from "astro";
 
 export async function POST(context: APIContext) {
@@ -18,16 +20,17 @@ export async function POST(context: APIContext) {
     }
 
     const body = await context.request.json();
-    const data = parse(papercutSchema, body);
+    const data = parseSchema(papercutSchema, body, {
+      className: BadRequestError,
+      message: "Failed to parse papercut config",
+    });
 
-    await ssmClient.send(
-      new PutParameterCommand({
-        Name: `/paperwait/org/${user.orgId}/papercut`,
-        Value: JSON.stringify(data),
-        Type: "SecureString",
-        Overwrite: true,
-      } satisfies PutParameterCommandInput),
-    );
+    await putParameter({
+      Name: `/paperwait/org/${user.orgId}/papercut`,
+      Value: JSON.stringify(data),
+      Type: "SecureString",
+      Overwrite: true,
+    });
 
     return new Response(null, { status: 204 });
   } catch (e) {
@@ -35,7 +38,6 @@ export async function POST(context: APIContext) {
 
     if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
-    if (e instanceof ValiError) return new Response(e.message, { status: 400 });
 
     return new Response("An unexpected error occurred", { status: 500 });
   }
