@@ -1,5 +1,3 @@
-import { NeonDbError } from "@neondatabase/serverless";
-
 export class HttpError extends Error {
   statusCode: number;
 
@@ -10,24 +8,10 @@ export class HttpError extends Error {
   }
 }
 
-export class MissingParameterError extends HttpError {
-  constructor(message: string, statusCode = 400) {
+export class BadRequestError extends HttpError {
+  constructor(message = "Bad request", statusCode = 400) {
     super(message, statusCode);
-    this.name = "MissingParameterError";
-  }
-}
-
-export class NotFoundError extends HttpError {
-  constructor(message: string, statusCode = 404) {
-    super(message, statusCode);
-    this.name = "NotFoundError";
-  }
-}
-
-export class NotImplementedError extends HttpError {
-  constructor(message: string, statusCode = 501) {
-    super(message, statusCode);
-    this.name = "NotImplementedError";
+    this.name = "BadRequestError";
   }
 }
 
@@ -45,13 +29,10 @@ export class ForbiddenError extends HttpError {
   }
 }
 
-export class TooManyTransactionRetriesError extends HttpError {
-  constructor(
-    message = "Tried to execute transaction too many times, giving up.",
-    statusCode = 500,
-  ) {
+export class NotFoundError extends HttpError {
+  constructor(message = "Not found", statusCode = 404) {
     super(message, statusCode);
-    this.name = "TooManyTransactionRetriesError";
+    this.name = "NotFoundError";
   }
 }
 
@@ -62,15 +43,25 @@ export class MethodNotAllowedError extends HttpError {
   }
 }
 
+export class ConflictError extends HttpError {
+  constructor(message = "Conflict", statusCode = 409) {
+    super(message, statusCode);
+    this.name = "ConflictError";
+  }
+}
+
 export class InternalServerError extends HttpError {
-  constructor(message = "Internal Server Error", statusCode = 500) {
+  constructor(message = "Internal server error", statusCode = 500) {
     super(message, statusCode);
     this.name = "InternalServerError";
   }
 }
 
-export class DatabaseError extends NeonDbError {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
+export class NotImplementedError extends HttpError {
+  constructor(message = "Not implemented", statusCode = 501) {
+    super(message, statusCode);
+    this.name = "NotImplementedError";
   }
 }
+
+export { NeonDbError as DatabaseError } from "@neondatabase/serverless";

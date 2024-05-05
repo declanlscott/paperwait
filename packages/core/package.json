@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.569.0",
-    "@aws-sdk/client-ssm": "^3.568.0",
+    "@aws-sdk/client-ssm": "^3.569.0",
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@neondatabase/serverless": "^0.9.1",
     "@rocicorp/rails": "^0.10.0",

@@ -4,7 +4,7 @@ import {
   POSTGRES_DEADLOCK_DETECTED_ERROR_CODE,
   POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE,
 } from "../constants";
-import { TooManyTransactionRetriesError } from "../errors";
+import { InternalServerError } from "../errors";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { NeonQueryResultHKT } from "drizzle-orm/neon-serverless";
@@ -37,7 +37,9 @@ export async function transact<Return>(
     }
   }
 
-  throw new TooManyTransactionRetriesError();
+  throw new InternalServerError(
+    "Tried to execute transaction too many times, giving up.",
+  );
 }
 
 /**

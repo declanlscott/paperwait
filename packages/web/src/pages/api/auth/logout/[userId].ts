@@ -1,5 +1,5 @@
 import { invalidateUserSessions } from "@paperwait/core/auth";
-import { HttpError, MissingParameterError } from "@paperwait/core/errors";
+import { BadRequestError, HttpError } from "@paperwait/core/errors";
 
 import { authorize } from "~/lib/auth/authorize";
 
@@ -10,7 +10,7 @@ export async function POST(context: APIContext) {
     authorize(context, new Set(["administrator"]));
 
     if (!context.params.userId)
-      throw new MissingParameterError("missing userId parameter");
+      throw new BadRequestError("missing userId parameter");
 
     await invalidateUserSessions(context.params.userId);
 
