@@ -1,7 +1,9 @@
 import { provider } from "@paperwait/core/organization";
+import { papercutSchema } from "@paperwait/core/papercut";
 import {
   boolean,
   literal,
+  merge,
   minLength,
   object,
   string,
@@ -12,12 +14,15 @@ import {
 
 import type { Output } from "valibot";
 
-export const registrationSchema = object({
-  name: string([toTrimmed(), minLength(1)]),
-  slug: string([toTrimmed(), minLength(1)]),
-  ssoProvider: union(provider.enumValues.map((value) => literal(value))),
-  tenantId: string([uuid()]),
-});
+export const registrationSchema = merge([
+  object({
+    name: string([toTrimmed(), minLength(1)]),
+    slug: string([toTrimmed(), minLength(1)]),
+    authProvider: union(provider.enumValues.map((value) => literal(value))),
+    tenantId: string([uuid()]),
+  }),
+  papercutSchema,
+]);
 
 export const orgSlugValiditySchema = object({
   value: string(),
