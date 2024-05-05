@@ -17,7 +17,7 @@ export const Organization = pgTable("organization", {
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   provider: provider("provider").notNull(),
-  tenantId: text("tenant_id").notNull(),
+  providerId: text("provider_id").notNull(),
   status: orgStatus("status").notNull().default("initializing"),
   ...timestamps,
 });

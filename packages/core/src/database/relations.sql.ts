@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 
-import { Session } from "../auth/session.sql";
+import { Session } from "../auth";
+import { Order } from "../order/order.sql";
 import { Organization } from "../organization";
 import {
   ReplicacheClient,
@@ -19,10 +20,12 @@ export const userRelations = relations(User, ({ one, many }) => ({
   replicacheClientGroup: many(ReplicacheClientGroup, {
     relationName: "userReplicacheClientGroup",
   }),
+  order: many(Order, { relationName: "orderCustomer" }),
 }));
 
 export const organizationRelations = relations(Organization, ({ many }) => ({
   user: many(User, { relationName: "userOrg" }),
+  order: many(Order, { relationName: "orderOrg" }),
 }));
 
 export const sessionRelations = relations(Session, ({ one }) => ({
