@@ -29,5 +29,7 @@ module.exports = {
         checksVoidReturn: { attributes: false },
       },
     ],
+    // Removes eslint errors in `sst-env.d.ts`
+    "@typescript-eslint/ban-tslint-comment": "off",
   },
 };

@@ -1,4 +1,4 @@
-import "sst"
+/* tslint:disable *//* eslint-disable */import "sst"
 declare module "sst" {
   export interface Resource {
     ClientIsDev: {
@@ -20,6 +20,10 @@ declare module "sst" {
     EntraIdClientSecret: {
       type: "azuread.index/applicationPassword.ApplicationPassword"
       value: string
+    }
+    XmlRpcApi: {
+      name: string
+      type: "sst.aws.Function"
     }
   }
 }
