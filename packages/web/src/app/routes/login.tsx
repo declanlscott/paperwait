@@ -38,14 +38,14 @@ function Component() {
       </div>
 
       <form
-        action="/api/auth/entra-id/login"
+        action="/api/auth/login"
         method="GET"
         className="flex items-center justify-center pb-12"
       >
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="flex justify-center">
             <a href="/">
-              <img src="./logo.svg" className="h-20 w-20" />
+              <img src="./logo.svg" className="size-20" />
             </a>
           </div>
 
@@ -84,7 +84,7 @@ function Component() {
               type="submit"
               isDisabled={!isValid}
             >
-              <LogIn className="h-5 w-5" />
+              <LogIn className="size-5" />
               Continue
             </Button>
           </div>

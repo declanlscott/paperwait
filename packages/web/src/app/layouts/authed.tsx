@@ -17,7 +17,7 @@ export function AuthedLayout() {
     <AuthedProvider>
       <ReplicacheProvider>
         <nav>
-          <img src="./logo.svg" className="h-10 w-10" />
+          <img src="./logo.svg" className="size-10" />
 
           <ul>
             <li>
