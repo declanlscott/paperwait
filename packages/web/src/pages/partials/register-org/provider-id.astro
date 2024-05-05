@@ -1,0 +1,18 @@
+---
+import { provider as authProvider } from "@paperwait/core/organization";
+import { fallback, literal, parse, union } from "valibot";
+
+import RegisterOrgProviderId from "~/components/register-org/provider-id.astro";
+
+export const partial = true;
+
+const provider = parse(
+  fallback(
+    union(authProvider.enumValues.map((value) => literal(value))),
+    "entra-id",
+  ),
+  Astro.url.searchParams.get("authProvider"),
+);
+---
+
+<RegisterOrgProviderId {provider} />

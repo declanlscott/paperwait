@@ -1,16 +1,17 @@
 import { db } from "@paperwait/core/database";
 import {
+  BadRequestError,
   DatabaseError,
   HttpError,
-  MissingParameterError,
+  InternalServerError,
   NotFoundError,
-  NotImplementedError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { generateCodeVerifier, generateState } from "arctic";
 import { eq, or, sql } from "drizzle-orm";
 
 import entraId from "~/lib/auth/entra-id";
+import google from "~/lib/auth/google";
 
 import type { APIContext } from "astro";
 
@@ -18,14 +19,15 @@ export async function GET(context: APIContext) {
   try {
     const orgParam = context.url.searchParams.get("org");
     if (!orgParam) {
-      throw new MissingParameterError("No org provided");
+      throw new BadRequestError("No org provided");
     }
 
-    const state = generateState();
-    const codeVerifier = generateCodeVerifier();
-
     const [org] = await db
-      .select({ id: Organization.id, provider: Organization.provider })
+      .select({
+        id: Organization.id,
+        provider: Organization.provider,
+        providerId: Organization.providerId,
+      })
       .from(Organization)
       .where(
         or(
@@ -42,12 +44,39 @@ export async function GET(context: APIContext) {
     if (!org) {
       throw new NotFoundError("Organization not found");
     }
-    if (org.provider === "google") {
-      throw new NotImplementedError("Google SSO is not yet implemented");
+
+    const state = generateState();
+    const codeVerifier = generateCodeVerifier();
+
+    let url: URL;
+    switch (org.provider) {
+      case "entra-id": {
+        url = await entraId.createAuthorizationURL(state, codeVerifier, {
+          scopes: ["profile", "email"],
+        });
+        break;
+      }
+      case "google": {
+        url = await google.createAuthorizationURL(state, codeVerifier, {
+          scopes: ["profile", "email"],
+        });
+        url.searchParams.set("hd", org.providerId);
+        break;
+      }
+      default: {
+        org.provider satisfies never;
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        throw new InternalServerError(`Unknown provider: ${org.provider}`);
+      }
     }
 
-    const url = await entraId.createAuthorizationURL(state, codeVerifier, {
-      scopes: ["profile", "email"],
+    // store the provider as a cookie
+    context.cookies.set("provider", org.provider, {
+      path: "/",
+      secure: import.meta.env.PROD,
+      httpOnly: true,
+      maxAge: 60 * 10, // 10 minutes
+      sameSite: "lax",
     });
 
     // store state verifier as cookie

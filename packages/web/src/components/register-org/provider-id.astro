@@ -1,0 +1,40 @@
+---
+import { inputStyles } from "~/styles/components/input";
+import { labelStyles } from "~/styles/components/label";
+
+import type { Provider } from "@paperwait/core/organization";
+
+type Props = {
+  provider?: Provider;
+};
+
+const { provider = "entra-id" } = Astro.props;
+
+type ProviderIdData = {
+  inputId: string;
+  label: string;
+};
+
+let data = {} as ProviderIdData;
+switch (provider) {
+  case "entra-id":
+    data = {
+      inputId: "tenant-id",
+      label: "Tenant ID",
+    };
+    break;
+  case "google":
+    data = {
+      inputId: "workspace-domain",
+      label: "Workspace Domain",
+    };
+    break;
+  default:
+    provider satisfies never;
+}
+---
+
+<div id="provider-id" class="grid gap-2">
+  <label class={labelStyles()} for={data.inputId}>{data.label}</label>
+  <input id={data.inputId} name="providerId" class={inputStyles()} required />
+</div>

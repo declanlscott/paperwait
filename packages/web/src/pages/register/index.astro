@@ -1,5 +1,6 @@
 ---
 import RegisterOrgPapercutAuthToken from "~/components/register-org/papercut-auth-token.astro";
+import RegisterOrgProviderId from "~/components/register-org/provider-id.astro";
 import RegisterOrgSlug from "~/components/register-org/slug.astro";
 import Layout from "~/layouts/layout.astro";
 import { buttonStyles } from "~/styles/components/button";
@@ -44,34 +45,31 @@ import { selectStyles } from "~/styles/components/select";
           <RegisterOrgSlug />
 
           <div class="grid gap-2">
-            <label class={labelStyles()} for="provider">SSO Provider</label>
+            <label class={labelStyles()} for="auth-provider"
+              >Auth Provider</label
+            >
             <select
-              id="provider"
-              name="ssoProvider"
+              id="auth-provider"
+              name="authProvider"
               class={selectStyles({
                 class:
                   "border-0 border-r-8 border-transparent outline-input outline-1 outline",
               })}
               required
+              hx-get="/partials/register-org/provider-id"
+              hx-target="#provider-id"
+              hx-swap-oob="outerHTML"
             >
               <option value="entra-id">Microsoft Entra ID</option>
-              <option value="google" disabled>Google</option>
+              <option value="google">Google</option>
             </select>
           </div>
 
-          <div class="grid gap-2">
-            <label class={labelStyles()} for="tenant-id">Tenant ID</label>
-            <input
-              id="tenant-id"
-              name="tenantId"
-              class={inputStyles()}
-              required
-            />
-          </div>
+          <RegisterOrgProviderId />
 
           <div class="grid gap-2">
             <label class={labelStyles()} for="server-url"
-              >Papercut Web Services API URL</label
+              >PaperCut Web Services API URL</label
             >
             <input
               id="server-url"
