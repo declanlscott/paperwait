@@ -1,19 +1,28 @@
 import { array, boolean, literal, object, string, variant } from "valibot";
 
-import { method } from ".";
+import { xmlRpcMethod } from ".";
 
-import type { Output as ValiOutput } from "valibot";
+import type { Output } from "valibot";
 
-export const outputSchema = variant("methodName", [
-  object({ methodName: literal(method.isUserExists), value: boolean() }),
-  object({
-    methodName: literal(method.listUserSharedAccounts),
-    value: array(string()),
-  }),
-  object({
-    methodName: literal(method.adjustSharedAccountAccountBalance),
-    value: boolean(),
-  }),
+export const isUserExistsOutputSchema = object({
+  methodName: literal(xmlRpcMethod.isUserExists),
+  value: boolean(),
+});
+
+export const listUserSharedAccountsOutputSchema = object({
+  methodName: literal(xmlRpcMethod.listUserSharedAccounts),
+  value: array(string()),
+});
+
+export const adjustSharedAccountAccountBalanceOutputSchema = object({
+  methodName: literal(xmlRpcMethod.adjustSharedAccountAccountBalance),
+  value: boolean(),
+});
+
+export const xmlRpcOutputSchema = variant("methodName", [
+  isUserExistsOutputSchema,
+  listUserSharedAccountsOutputSchema,
+  adjustSharedAccountAccountBalanceOutputSchema,
 ]);
 
-export type Output = ValiOutput<typeof outputSchema>;
+export type XmlRpcOutput = Output<typeof xmlRpcOutputSchema>;

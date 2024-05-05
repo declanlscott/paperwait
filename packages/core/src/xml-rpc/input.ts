@@ -8,17 +8,17 @@ import {
   variant,
 } from "valibot";
 
-import { method } from ".";
+import { xmlRpcMethod } from ".";
 
-import type { Output as ValiOutput } from "valibot";
+import type { Output } from "valibot";
 
-export const inputSchema = variant("methodName", [
+export const xmlRpcInputSchema = variant("methodName", [
   object({
-    methodName: literal(method.isUserExists),
+    methodName: literal(xmlRpcMethod.isUserExists),
     input: object({ username: string() }),
   }),
   object({
-    methodName: literal(method.listUserSharedAccounts),
+    methodName: literal(xmlRpcMethod.listUserSharedAccounts),
     input: object({
       username: string(),
       offset: optional(number(), 0),
@@ -27,7 +27,7 @@ export const inputSchema = variant("methodName", [
     }),
   }),
   object({
-    methodName: literal(method.adjustSharedAccountAccountBalance),
+    methodName: literal(xmlRpcMethod.adjustSharedAccountAccountBalance),
     input: object({
       username: string(),
       adjustment: number(),
@@ -36,4 +36,4 @@ export const inputSchema = variant("methodName", [
   }),
 ]);
 
-export type Input = ValiOutput<typeof inputSchema>;
+export type XmlRpcInput = Output<typeof xmlRpcInputSchema>;
