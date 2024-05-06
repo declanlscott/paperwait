@@ -29,6 +29,10 @@ declare module "sst" {
       type: "sst.sst.Secret"
       value: string
     }
+    PartyKitApiKey: {
+      type: "sst.sst.Secret"
+      value: string
+    }
     XmlRpcApi: {
       name: string
       type: "sst.aws.Function"

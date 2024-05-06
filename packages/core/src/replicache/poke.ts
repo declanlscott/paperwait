@@ -4,7 +4,7 @@ import { Resource } from "sst";
 export async function poke(entity: string) {
   const res = await fetch(
     `http${Resource.IsDev ? `://${HOST.REALTIME.DEV}` : `s://${HOST.REALTIME.PROD}`}/party/${entity}`,
-    { method: "POST" },
+    { method: "POST", headers: { "x-api-key": Resource.PartyKitApiKey.value } },
   );
 
   if (!res.ok) {

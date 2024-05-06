@@ -4,6 +4,7 @@ import {
   googleClientId,
   googleClientSecret,
   isDev,
+  partyKitApiKey,
   replicacheLicenseKey,
 } from "./secrets";
 import { permission } from "./utils";
@@ -16,6 +17,7 @@ export const astro = new sst.aws.Astro("Paperwait", {
     isDev,
     replicacheLicenseKey,
     databaseUrl,
+    partyKitApiKey,
     entraIdApp,
     entraIdClientSecret,
     googleClientId,
