@@ -81,7 +81,7 @@ export async function pull(user: User, requestBody: unknown) {
     // 17: Store client view record
 
     // 15: Commit transaction
-  }, "serializable");
+  });
 
   // 10: If transaction result returns no differences, return no-op
 

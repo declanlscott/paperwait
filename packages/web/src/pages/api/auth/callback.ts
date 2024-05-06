@@ -23,10 +23,11 @@ import { and, eq } from "drizzle-orm";
 import ky from "ky";
 import { parseJWT } from "oslo/jwt";
 import { Resource } from "sst";
-import { object, string } from "valibot";
+import { object, string, uuid } from "valibot";
 
 import entraId from "~/lib/auth/entra-id";
 import google from "~/lib/auth/google";
+import { registrationSchema } from "~/lib/schemas";
 
 import type { Provider } from "@paperwait/core/organization";
 import type { XmlRpcInput } from "@paperwait/core/xml-rpc";
@@ -45,9 +46,8 @@ type EntraIdUserInfo = {
 };
 
 type GoogleUserInfo = {
-  id: string;
+  sub: string;
   name: string;
-  family_name: string;
   given_name: string;
   picture: string;
   email: string;
@@ -64,25 +64,34 @@ export async function GET(context: APIContext) {
 
   const redirect = context.cookies.get("redirect")?.value ?? "/dashboard";
 
-  if (
-    !code ||
-    !state ||
-    !storedProvider ||
-    !storedState ||
-    !storedCodeVerifier ||
-    !storedOrgId
-  )
-    throw new BadRequestError("Missing required parameters");
-
-  const provider = storedProvider.value as Provider;
-
   try {
+    if (
+      !code ||
+      !state ||
+      !storedProvider ||
+      !storedState ||
+      !storedCodeVerifier ||
+      !storedOrgId
+    )
+      throw new BadRequestError("Missing required parameters");
+
+    const provider = parseSchema(
+      registrationSchema.entries.authProvider,
+      storedProvider.value,
+      {
+        className: InternalServerError,
+        message: "Failed to parse provider",
+      },
+    );
+
     const tokens = await getTokens(provider, code, storedCodeVerifier.value);
 
     const idToken = parseJWT(tokens.idToken)!;
-    const userProviderId = idToken.subject!;
 
-    const orgProviderId = parseOrgProviderId(provider, tokens.idToken);
+    const { orgProviderId, userProviderId, username } = parseIdTokenPayload(
+      provider,
+      idToken.payload,
+    );
 
     const [org] = await db
       .select({ status: Organization.status })
@@ -99,14 +108,34 @@ export async function GET(context: APIContext) {
       `);
     }
 
-    // await checkPapercutUser("");
+    await checkPapercutUser(username);
 
     const [existingUser] = await db
-      .select({ id: User.id })
+      .select({ id: User.id, username: User.username })
       .from(User)
       .where(eq(User.providerId, userProviderId));
 
     if (existingUser) {
+      // Update username if it has changed
+      if (existingUser.username !== username) {
+        const userIds = await transact(async (tx) => {
+          const [user] = await tx
+            .update(User)
+            .set({ username })
+            .where(eq(User.id, existingUser.id))
+            .returning({ id: User.id });
+
+          const admins = await tx
+            .select({ id: User.id })
+            .from(User)
+            .where(eq(User.role, "administrator"));
+
+          return Array.from(new Set([user.id, ...admins.map(({ id }) => id)]));
+        });
+
+        await pokeMany(userIds);
+      }
+
       const { cookie } = await createSession(existingUser.id);
 
       context.cookies.set(cookie.name, cookie.value, cookie.attributes);
@@ -132,6 +161,7 @@ export async function GET(context: APIContext) {
           name: userInfo.name,
           email: userInfo.email,
           role: isInitializing ? "administrator" : "customer",
+          username,
         })
         .returning({ id: User.id });
 
@@ -183,22 +213,52 @@ async function getTokens(
   }
 }
 
-function parseOrgProviderId(provider: Provider, idToken: string) {
+function parseIdTokenPayload(
+  provider: Provider,
+  payload: unknown,
+): { userProviderId: string; orgProviderId: string; username: string } {
   switch (provider) {
-    case "entra-id":
-      return parseSchema(object({ tid: string() }), idToken, {
-        className: InternalServerError,
-        message: "Failed to parse id token payload",
-      }).tid;
-    case "google":
-      return parseSchema(object({ hd: string() }), idToken, {
-        className: InternalServerError,
-        message: "Failed to parse id token payload",
-      }).hd;
-    default:
+    case "entra-id": {
+      const { tid, oid, preferred_username } = parseSchema(
+        object({
+          tid: string([uuid()]),
+          oid: string([uuid()]),
+          preferred_username: string(),
+        }),
+        payload,
+        {
+          className: InternalServerError,
+          message: `Failed to parse ${provider} id token payload`,
+        },
+      );
+
+      return {
+        orgProviderId: tid,
+        userProviderId: oid,
+        username: preferred_username,
+      };
+    }
+    case "google": {
+      const { hd, sub, name } = parseSchema(
+        object({ hd: string(), sub: string(), name: string() }),
+        payload,
+        {
+          className: InternalServerError,
+          message: `Failed to parse ${provider} id token payload`,
+        },
+      );
+
+      return {
+        orgProviderId: hd,
+        userProviderId: sub,
+        username: name,
+      };
+    }
+    default: {
       provider satisfies never;
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       throw new InternalServerError(`Unknown provider: ${provider}`);
+    }
   }
 }
 

@@ -28,7 +28,7 @@ export async function POST(context: APIContext) {
           name: registration.name,
           slug: registration.slug,
           provider: registration.authProvider,
-          providerId: registration.tenantId,
+          providerId: registration.providerId,
         })
         .returning({ id: Organization.id, slug: Organization.slug });
 

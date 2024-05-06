@@ -18,7 +18,7 @@ export type Transaction = PgTransaction<
 
 export async function transact<Return>(
   callback: (tx: Transaction) => Promise<Return>,
-  isolationLevel: PgTransactionConfig["isolationLevel"] = "read committed",
+  isolationLevel: PgTransactionConfig["isolationLevel"] = "serializable",
 ) {
   for (let i = 0; i < DB_TRANSACTION_MAX_RETRIES; i++) {
     try {

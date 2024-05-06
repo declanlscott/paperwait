@@ -1,16 +1,13 @@
 ---
-import { provider as authProvider } from "@paperwait/core/organization";
-import { fallback, literal, parse, union } from "valibot";
+import { fallback, parse } from "valibot";
 
 import RegisterOrgProviderId from "~/components/register-org/provider-id.astro";
+import { registrationSchema } from "~/lib/schemas";
 
 export const partial = true;
 
 const provider = parse(
-  fallback(
-    union(authProvider.enumValues.map((value) => literal(value))),
-    "entra-id",
-  ),
+  fallback(registrationSchema.entries.authProvider, "entra-id"),
   Astro.url.searchParams.get("authProvider"),
 );
 ---

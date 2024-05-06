@@ -160,7 +160,7 @@ async function processMutation(
     console.log(`Processed mutation ${mutation.id} in ${end - start}ms`);
 
     return new Set(entities);
-  }, "serializable");
+  });
 }
 
 async function mutate(
