@@ -8,8 +8,6 @@
   },
   "dependencies": {
     "@paperwait/core": "workspace:*",
-    "@pulumi/azuread": "^5.48.0",
-    "@pulumiverse/time": "^0.0.17",
     "sst": "^3.0.13"
   },
   "devDependencies": {

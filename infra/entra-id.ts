@@ -1,8 +1,6 @@
 import { AUTH_CALLBACK_PATH, HOST } from "@paperwait/core/constants";
-import * as entraId from "@pulumi/azuread";
-import * as time from "@pulumiverse/time";
 
-$linkable(entraId.Application, function () {
+$linkable(azuread.Application, function () {
   return {
     properties: {
       clientId: this.clientId,
@@ -10,7 +8,7 @@ $linkable(entraId.Application, function () {
   };
 });
 
-$linkable(entraId.ApplicationPassword, function () {
+$linkable(azuread.ApplicationPassword, function () {
   return {
     properties: {
       value: this.value,
@@ -18,7 +16,7 @@ $linkable(entraId.ApplicationPassword, function () {
   };
 });
 
-export const entraIdApp = new entraId.Application("EntraIdApplication", {
+export const entraIdApp = new azuread.Application("EntraIdApplication", {
   displayName: "Paperwait",
   preventDuplicateNames: true,
   signInAudience: "AzureADMultipleOrgs",
@@ -39,11 +37,12 @@ export const entraIdApp = new entraId.Application("EntraIdApplication", {
 // );
 
 export const rotationHours = 24 * 7 * 26; // 6 months
-export const clientSecretRotation = new time.Rotating("ClientSecretRotation", {
-  rotationHours,
-});
+export const clientSecretRotation = new versetime.Rotating(
+  "ClientSecretRotation",
+  { rotationHours },
+);
 
-export const entraIdClientSecret = new entraId.ApplicationPassword(
+export const entraIdClientSecret = new azuread.ApplicationPassword(
   "EntraIdClientSecret",
   {
     applicationObjectId: entraIdApp.id,
@@ -54,7 +53,7 @@ export const entraIdClientSecret = new entraId.ApplicationPassword(
   },
 );
 
-export const servicePrincipal = new entraId.ServicePrincipal(
+export const servicePrincipal = new azuread.ServicePrincipal(
   "EntraIdServicePrincipal",
   { clientId: entraIdApp.clientId },
 );

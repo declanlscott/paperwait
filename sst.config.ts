@@ -20,6 +20,8 @@ export default $config({
               : `${AWS_ORG_NAME}-dev`,
           region: AWS_REGION,
         },
+        azuread: true,
+        "@pulumiverse/time": true,
       },
     };
   },
