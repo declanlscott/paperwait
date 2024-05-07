@@ -1,5 +1,3 @@
-import { AWS_REGION } from "@paperwait/core/constants";
-
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
 import {
   databaseUrl,
@@ -29,7 +27,7 @@ export const astro = new sst.aws.Astro("Paperwait", {
     {
       actions: ["ssm:PutParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${AWS_REGION}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/papercut`,
+        $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/papercut`,
       ],
     },
     { actions: ["lambda:InvokeFunction"], resources: [xmlRpcApi.arn] },

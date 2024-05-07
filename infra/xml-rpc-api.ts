@@ -1,4 +1,4 @@
-import { AWS_REGION } from "@paperwait/core/constants";
+import { fckNatSg, privateSubnet } from "./vpc";
 
 export const xmlRpcApi = new sst.aws.Function("XmlRpcApi", {
   handler: "packages/functions/src/xml-rpc-api.handler",
@@ -7,8 +7,12 @@ export const xmlRpcApi = new sst.aws.Function("XmlRpcApi", {
     {
       actions: ["ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${AWS_REGION}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/papercut`,
+        $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/papercut`,
       ],
     },
   ],
+  vpc: {
+    securityGroups: [fckNatSg.id],
+    subnets: [privateSubnet.id],
+  },
 });
