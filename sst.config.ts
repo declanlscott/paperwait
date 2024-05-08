@@ -22,6 +22,7 @@ export default $config({
         },
         azuread: true,
         "@pulumiverse/time": true,
+        tls: true,
       },
     };
   },
@@ -30,6 +31,7 @@ export default $config({
 
     return {
       url: infra.astro.url,
+      whitelistIp: infra.natInstance.publicIp,
     };
   },
 });

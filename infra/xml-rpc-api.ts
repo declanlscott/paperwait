@@ -1,4 +1,4 @@
-import { fckNatSg, privateSubnet } from "./vpc";
+import { natSecurityGroup, privateSubnetsOutput } from "./vpc";
 
 export const xmlRpcApi = new sst.aws.Function("XmlRpcApi", {
   handler: "packages/functions/src/xml-rpc-api.handler",
@@ -12,7 +12,7 @@ export const xmlRpcApi = new sst.aws.Function("XmlRpcApi", {
     },
   ],
   vpc: {
-    securityGroups: [fckNatSg.id],
-    subnets: [privateSubnet.id],
+    securityGroups: [natSecurityGroup.id],
+    subnets: [privateSubnetsOutput[0].id],
   },
 });
