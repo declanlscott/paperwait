@@ -45,6 +45,9 @@ export const publicSubnetsOutput = availabilityZones.apply((zones) =>
         availabilityZone,
         cidrBlock: `10.0.${index * 32}.0/22`,
         mapPublicIpOnLaunch: true,
+        tags: {
+          Name: `public-subnet-${index}`,
+        },
       }),
   ),
 );
@@ -57,6 +60,9 @@ export const privateSubnetsOutput = availabilityZones.apply((zones) =>
         availabilityZone,
         cidrBlock: `10.0.${index * 32 + 16}.0/22`,
         mapPublicIpOnLaunch: false,
+        tags: {
+          Name: `private-subnet-${index}`,
+        },
       }),
   ),
 );

@@ -65,3 +65,4 @@ export class NotImplementedError extends HttpError {
 }
 
 export { NeonDbError as DatabaseError } from "@neondatabase/serverless";
+export { XmlRpcFault } from "@foxglove/xmlrpc";

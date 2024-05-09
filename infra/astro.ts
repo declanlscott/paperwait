@@ -1,4 +1,5 @@
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
+import { papercutApiGateway } from "./papercut-api";
 import {
   databaseUrl,
   googleClientId,
@@ -7,7 +8,6 @@ import {
   partyKitApiKey,
   replicacheLicenseKey,
 } from "./secrets";
-import { xmlRpcApi } from "./xml-rpc-api";
 
 export const astro = new sst.aws.Astro("Paperwait", {
   path: "packages/web",
@@ -21,7 +21,7 @@ export const astro = new sst.aws.Astro("Paperwait", {
     entraIdClientSecret,
     googleClientId,
     googleClientSecret,
-    xmlRpcApi,
+    papercutApiGateway,
   ],
   permissions: [
     {
@@ -30,7 +30,12 @@ export const astro = new sst.aws.Astro("Paperwait", {
         $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/papercut`,
       ],
     },
-    { actions: ["lambda:InvokeFunction"], resources: [xmlRpcApi.arn] },
+    {
+      actions: ["execute-api:Invoke"],
+      resources: [
+        $interpolate`arn:aws:execute-api:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:${papercutApiGateway.nodes.api.id}/*/POST/*`,
+      ],
+    },
   ],
   environment: {
     PROD: String($app.stage === "production"),

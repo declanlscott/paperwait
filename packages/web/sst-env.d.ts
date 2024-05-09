@@ -1,4 +1,6 @@
-/* tslint:disable *//* eslint-disable */import "sst"
+/* tslint:disable */
+/* eslint-disable */
+import "sst"
 declare module "sst" {
   export interface Resource {
     ClientIsDev: {
@@ -29,13 +31,13 @@ declare module "sst" {
       type: "sst.sst.Secret"
       value: string
     }
+    PapercutApiGateway: {
+      type: "sst.aws.ApiGatewayV2"
+      url: string
+    }
     PartyKitApiKey: {
       type: "sst.sst.Secret"
       value: string
-    }
-    XmlRpcApi: {
-      name: string
-      type: "sst.aws.Function"
     }
   }
 }

@@ -37,10 +37,9 @@ export const entraIdApp = new azuread.Application("EntraIdApplication", {
 // );
 
 export const rotationHours = 24 * 7 * 26; // 6 months
-export const clientSecretRotation = new versetime.Rotating(
-  "ClientSecretRotation",
-  { rotationHours },
-);
+export const clientSecretRotation = new time.Rotating("ClientSecretRotation", {
+  rotationHours,
+});
 
 export const entraIdClientSecret = new azuread.ApplicationPassword(
   "EntraIdClientSecret",

@@ -1,5 +1,4 @@
 import { createSession } from "@paperwait/core/auth";
-import { invokeLambda } from "@paperwait/core/aws";
 import { db, transact } from "@paperwait/core/database";
 import {
   BadRequestError,
@@ -13,14 +12,10 @@ import { Organization } from "@paperwait/core/organization";
 import { pokeMany } from "@paperwait/core/replicache";
 import { User } from "@paperwait/core/user";
 import { parseSchema } from "@paperwait/core/utils";
-import {
-  isUserExistsOutputSchema,
-  xmlRpcMethod,
-  xmlRpcResultSchema,
-} from "@paperwait/core/xml-rpc";
+import { isUserExistsResultBodySchema } from "@paperwait/core/xml-rpc";
 import { OAuth2RequestError } from "arctic";
 import { and, eq } from "drizzle-orm";
-import ky from "ky";
+import ky, { HTTPError as kyHttpError } from "ky";
 import { parseJWT } from "oslo/jwt";
 import { Resource } from "sst";
 import { object, string, uuid } from "valibot";
@@ -30,7 +25,7 @@ import google from "~/lib/auth/google";
 import { registrationSchema } from "~/lib/schemas";
 
 import type { Provider } from "@paperwait/core/organization";
-import type { XmlRpcInput } from "@paperwait/core/xml-rpc";
+import type { IsUserExistsInput } from "@paperwait/core/xml-rpc";
 import type { GoogleTokens, MicrosoftEntraIdTokens } from "arctic";
 import type { APIContext } from "astro";
 
@@ -108,7 +103,7 @@ export async function GET(context: APIContext) {
       `);
     }
 
-    await checkPapercutUser(username);
+    await authorizeUser({ username });
 
     const [existingUser] = await db
       .select({ id: User.id, username: User.username })
@@ -262,40 +257,28 @@ function parseIdTokenPayload(
   }
 }
 
-async function checkPapercutUser(username: string) {
-  const { Payload } = await invokeLambda({
-    FunctionName: Resource.XmlRpcApi.name,
-    InvocationType: "Event",
-    Payload: JSON.stringify({
-      methodName: xmlRpcMethod.isUserExists,
-      input: { username },
-    } satisfies XmlRpcInput),
-  });
+async function authorizeUser(input: IsUserExistsInput) {
+  try {
+    const body = await ky
+      .post(`${Resource.PapercutApiGateway.url}/is-user-exists`, {
+        body: JSON.stringify({ username: input.username }),
+      })
+      .json();
 
-  const invokeResult = parseSchema(xmlRpcResultSchema, Payload, {
-    className: InternalServerError,
-    message: "Failed to parse xml-rpc handler result",
-  });
-
-  if (!invokeResult.isSuccess) {
-    console.log(invokeResult.reason);
-    throw new InternalServerError(invokeResult.reason);
-  }
-
-  const { value: isUserExists } = parseSchema(
-    isUserExistsOutputSchema,
-    {
-      methodName: xmlRpcMethod.isUserExists,
-      value: invokeResult.value,
-    },
-    {
+    const { output } = parseSchema(isUserExistsResultBodySchema, body, {
       className: InternalServerError,
       message: "Failed to parse xml-rpc output",
-    },
-  );
+    });
 
-  if (!isUserExists)
-    throw new UnauthorizedError("User does not exist in PaperCut");
+    if (!output) throw new UnauthorizedError("User does not exist in PaperCut");
+  } catch (e) {
+    console.error(e);
+
+    if (e instanceof HttpError) throw e;
+    if (e instanceof kyHttpError) throw new InternalServerError(e.message);
+
+    throw new InternalServerError("An unexpected error occurred");
+  }
 }
 
 async function getUserInfo(provider: Provider, accessToken: string) {
