@@ -1,10 +1,6 @@
 import { putParameter } from "@paperwait/core/aws";
-import { db } from "@paperwait/core/database";
-import {
-  BadRequestError,
-  DatabaseError,
-  HttpError,
-} from "@paperwait/core/errors";
+import { DatabaseError, db } from "@paperwait/core/database";
+import { BadRequestError, HttpError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { parseSchema } from "@paperwait/core/utils";
 

@@ -2,13 +2,13 @@ import {
   BadRequestError,
   HttpError,
   InternalServerError,
-  XmlRpcFault,
 } from "@paperwait/core/errors";
 import { parseSchema } from "@paperwait/core/utils";
 import {
   buildClient,
   listUserSharedAccountsEventSchema,
   listUserSharedAccountsOutputSchema,
+  XmlRpcFault,
   xmlRpcMethod,
 } from "@paperwait/core/xml-rpc";
 

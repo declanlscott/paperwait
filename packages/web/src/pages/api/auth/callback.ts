@@ -1,9 +1,8 @@
 import { createSession } from "@paperwait/core/auth";
 import { buildSigner } from "@paperwait/core/aws";
-import { db, transact } from "@paperwait/core/database";
+import { DatabaseError, db, transact } from "@paperwait/core/database";
 import {
   BadRequestError,
-  DatabaseError,
   HttpError,
   InternalServerError,
   NotFoundError,

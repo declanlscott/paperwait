@@ -1,7 +1,6 @@
-import { db } from "@paperwait/core/database";
+import { DatabaseError, db } from "@paperwait/core/database";
 import {
   BadRequestError,
-  DatabaseError,
   HttpError,
   InternalServerError,
   NotFoundError,

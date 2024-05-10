@@ -11,3 +11,4 @@ export const db = drizzle(pool, { logger: true });
 
 export * from "./relations.sql";
 export * from "./transaction";
+export { NeonDbError as DatabaseError } from "@neondatabase/serverless";
