@@ -11,10 +11,6 @@ declare module "sst" {
       type: "sst.sst.Secret"
       value: string
     }
-    DatabaseUrl: {
-      type: "sst.sst.Secret"
-      value: string
-    }
     EntraIdApplication: {
       clientId: string
       type: "azuread.index/application.Application"
@@ -36,6 +32,30 @@ declare module "sst" {
       url: string
     }
     PartyKitApiKey: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    PostgresDatabase: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    PostgresHost: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    PostgresPassword: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    PostgresPort: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    PostgresSsl: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    PostgresUser: {
       type: "sst.sst.Secret"
       value: string
     }

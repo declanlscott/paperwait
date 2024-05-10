@@ -10,6 +10,11 @@ import {
 } from "../replicache";
 import { User } from "../user";
 
+export const organizationRelations = relations(Organization, ({ many }) => ({
+  user: many(User, { relationName: "userOrg" }),
+  order: many(Order, { relationName: "orderOrg" }),
+}));
+
 export const userRelations = relations(User, ({ one, many }) => ({
   organization: one(Organization, {
     fields: [User.orgId],
@@ -23,16 +28,24 @@ export const userRelations = relations(User, ({ one, many }) => ({
   order: many(Order, { relationName: "orderCustomer" }),
 }));
 
-export const organizationRelations = relations(Organization, ({ many }) => ({
-  user: many(User, { relationName: "userOrg" }),
-  order: many(Order, { relationName: "orderOrg" }),
-}));
-
 export const sessionRelations = relations(Session, ({ one }) => ({
   user: one(User, {
     fields: [Session.userId],
     references: [User.id],
     relationName: "userSession",
+  }),
+}));
+
+export const orderRelations = relations(Order, ({ one }) => ({
+  organization: one(Organization, {
+    fields: [Order.orgId],
+    references: [Organization.id],
+    relationName: "orderOrg",
+  }),
+  customer: one(User, {
+    fields: [Order.customerId],
+    references: [User.id],
+    relationName: "orderCustomer",
   }),
 }));
 

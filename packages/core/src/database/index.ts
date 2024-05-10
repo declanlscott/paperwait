@@ -5,7 +5,14 @@ import ws from "ws";
 
 neonConfig.webSocketConstructor = ws;
 
-const pool = new Pool({ connectionString: Resource.DatabaseUrl.value });
+const pool = new Pool({
+  host: Resource.PostgresHost.value,
+  port: Number(Resource.PostgresPort.value),
+  user: Resource.PostgresUser.value,
+  password: Resource.PostgresPassword.value,
+  database: Resource.PostgresDatabase.value,
+  ssl: Resource.PostgresSsl.value === "true",
+});
 
 export const db = drizzle(pool, { logger: true });
 
