@@ -5,6 +5,7 @@ import {
   PutParameterCommand,
   SSMClient,
 } from "@aws-sdk/client-ssm";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 import { AWS_REGION } from "../constants";
 import { ConflictError, NotFoundError } from "../errors";
@@ -14,7 +15,10 @@ import type {
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
 
-export const ssmClient = new SSMClient({ region: AWS_REGION });
+export const ssmClient = new SSMClient({
+  region: AWS_REGION,
+  credentials: fromNodeProviderChain(),
+});
 
 export async function putParameter(input: PutParameterCommandInput) {
   try {

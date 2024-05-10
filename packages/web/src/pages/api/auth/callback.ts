@@ -1,4 +1,5 @@
 import { createSession } from "@paperwait/core/auth";
+import { buildSigner } from "@paperwait/core/aws";
 import { db, transact } from "@paperwait/core/database";
 import {
   BadRequestError,
@@ -259,13 +260,29 @@ function parseIdTokenPayload(
 
 async function authorizeUser(input: IsUserExistsInput) {
   try {
-    const body = await ky
-      .post(`${Resource.PapercutApiGateway.url}/is-user-exists`, {
-        body: JSON.stringify({ username: input.username }),
-      })
+    const url = new URL(`${Resource.PapercutApiGateway.url}/is-user-exists`);
+
+    const signer = buildSigner({ service: "execute-api" });
+
+    const requestBody = JSON.stringify({ username: input.username });
+
+    const { headers } = await signer.sign({
+      hostname: url.hostname,
+      protocol: url.protocol,
+      method: "POST",
+      path: url.pathname,
+      headers: {
+        host: url.hostname,
+        accept: "application/json",
+      },
+      body: requestBody,
+    });
+
+    const responseBody = await ky
+      .post(url, { body: requestBody, headers })
       .json();
 
-    const { output } = parseSchema(isUserExistsResultBodySchema, body, {
+    const { output } = parseSchema(isUserExistsResultBodySchema, responseBody, {
       className: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });

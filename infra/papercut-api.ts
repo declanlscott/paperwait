@@ -64,37 +64,38 @@ export const adjustSharedAccountAccountBalanceQueue = new sst.aws.Queue(
   },
 );
 
-export const papercutApiRole = new aws.iam.Role("PapercutApiRole", {
-  assumeRolePolicy: $jsonStringify({
-    Version: "2012-10-17",
-    Statement: [
-      {
-        Effect: "Allow",
-        Principal: {
-          Service: "apigateway.amazonaws.com",
+export const adjustSharedAccountAccountBalanceIntegrationCredentials =
+  new aws.iam.Role("AdjustSharedAccountAccountBalanceIntegrationCredentials", {
+    assumeRolePolicy: $jsonStringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Principal: {
+            Service: "apigateway.amazonaws.com",
+          },
+          Action: "sts:AssumeRole",
         },
-        Action: "sts:AssumeRole",
+      ],
+    }),
+
+    inlinePolicies: [
+      {
+        name: "AdjustSharedAccountAccountBalanceQueueSendMessagePolicy",
+        policy: adjustSharedAccountAccountBalanceQueue.arn.apply((arn) =>
+          aws.iam.getPolicyDocument({
+            statements: [
+              {
+                effect: "Allow",
+                actions: ["sqs:SendMessage"],
+                resources: [arn],
+              },
+            ],
+          }),
+        ).json,
       },
     ],
-  }),
-
-  inlinePolicies: [
-    {
-      name: "QueueSendMessage",
-      policy: adjustSharedAccountAccountBalanceQueue.arn.apply((arn) =>
-        aws.iam.getPolicyDocument({
-          statements: [
-            {
-              effect: "Allow",
-              actions: ["sqs:SendMessage"],
-              resources: [arn],
-            },
-          ],
-        }),
-      ).json,
-    },
-  ],
-});
+  });
 
 export const adjustSharedAccountAccountBalanceIntegration =
   new aws.apigatewayv2.Integration(
@@ -103,10 +104,11 @@ export const adjustSharedAccountAccountBalanceIntegration =
       apiId: papercutApiGateway.nodes.api.id,
       integrationType: "AWS_PROXY",
       integrationSubtype: "SQS-SendMessage",
-      credentialsArn: papercutApiRole.arn,
+      credentialsArn:
+        adjustSharedAccountAccountBalanceIntegrationCredentials.arn,
       requestParameters: {
         QueueUrl: adjustSharedAccountAccountBalanceQueue.url,
-        MessageBody: "$request.body.message",
+        MessageBody: "$request.body.MessageBody",
       },
     },
   );
