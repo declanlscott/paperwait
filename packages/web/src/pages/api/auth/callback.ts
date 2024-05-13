@@ -25,7 +25,7 @@ import google from "~/lib/auth/google";
 import { registrationSchema } from "~/lib/schemas";
 
 import type { Provider } from "@paperwait/core/organization";
-import type { IsUserExistsInput } from "@paperwait/core/xml-rpc";
+import type { IsUserExistsEventBody } from "@paperwait/core/xml-rpc";
 import type { GoogleTokens, MicrosoftEntraIdTokens } from "arctic";
 import type { APIContext } from "astro";
 
@@ -103,7 +103,7 @@ export async function GET(context: APIContext) {
       `);
     }
 
-    await authorizeUser({ username });
+    await authorizeUser({ orgId: storedOrgId.value, input: { username } });
 
     const [existingUser] = await db
       .select({ id: User.id, username: User.username })
@@ -257,13 +257,13 @@ function parseIdTokenPayload(
   }
 }
 
-async function authorizeUser(input: IsUserExistsInput) {
+async function authorizeUser(event: IsUserExistsEventBody) {
   try {
     const url = new URL(`${Resource.PapercutApiGateway.url}/is-user-exists`);
 
     const signer = buildSigner({ service: "execute-api" });
 
-    const requestBody = JSON.stringify({ username: input.username });
+    const requestBody = JSON.stringify(event);
 
     const { headers } = await signer.sign({
       hostname: url.hostname,

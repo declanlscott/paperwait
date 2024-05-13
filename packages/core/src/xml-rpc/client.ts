@@ -7,12 +7,16 @@ import { parseSchema } from "../utils";
 
 export async function buildClient(orgId: string) {
   const config = await getConfig(orgId);
-  const { serverUrl, authToken } = parseSchema(papercutSchema, config, {
-    className: InternalServerError,
-    message: "Failed to parse papercut config",
-  });
+  const { serverUrl, authToken } = parseSchema(
+    papercutSchema,
+    JSON.parse(config),
+    {
+      className: InternalServerError,
+      message: "Failed to parse papercut config",
+    },
+  );
 
-  const client = new XmlRpcClient(`${serverUrl}/rpc/api/xmlrpc`);
+  const client = new XmlRpcClient(serverUrl);
 
   return { client, authToken };
 }

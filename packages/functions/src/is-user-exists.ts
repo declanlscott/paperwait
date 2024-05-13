@@ -18,7 +18,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     const { orgId, input } = parseSchema(
       isUserExistsEventBodySchema,
-      event.body,
+      JSON.parse(event.body ?? "{}"),
       {
         className: BadRequestError,
         message: "Failed to parse event",
