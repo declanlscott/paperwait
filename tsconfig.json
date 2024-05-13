@@ -4,5 +4,5 @@
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
-  "exclude": ["./packages/eslint-config/*.cjs"]
+  "exclude": ["./packages/eslint-config/*.cjs", "./packages/web/dist"]
 }
