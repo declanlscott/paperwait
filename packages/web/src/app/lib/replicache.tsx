@@ -7,12 +7,19 @@ import { useResource } from "~/app/lib/resource";
 
 import type { PropsWithChildren } from "react";
 
-type ReplicacheContext = Replicache;
+type ReplicacheContext =
+  | { status: "initializing"; replicache: null }
+  | { status: "ready"; replicache: Replicache };
 
-const ReplicacheContext = createContext<Replicache | null>(null);
+const ReplicacheContext = createContext<ReplicacheContext | null>(null);
 
 export function ReplicacheProvider(props: PropsWithChildren) {
-  const [replicache, setReplicache] = useState<Replicache | null>(null);
+  const [replicache, setReplicache] = useState<ReplicacheContext | null>(
+    () => ({
+      status: "initializing",
+      replicache: null,
+    }),
+  );
 
   const { user, org } = useAuthedContext();
 
@@ -34,7 +41,7 @@ export function ReplicacheProvider(props: PropsWithChildren) {
       return null;
     };
 
-    setReplicache(() => replicache);
+    setReplicache(() => ({ status: "ready", replicache }));
 
     return () => void replicache.close();
   }, [user.id, ReplicacheLicenseKey.value, IsDev.value, navigate, org.slug]);
@@ -47,11 +54,10 @@ export function ReplicacheProvider(props: PropsWithChildren) {
 }
 
 export function useReplicache() {
-  const replicache = useContext(ReplicacheContext);
+  const context = useContext(ReplicacheContext);
 
-  if (!replicache) {
+  if (!context)
     throw new Error("useReplicache must be used within a ReplicacheProvider");
-  }
 
-  return replicache;
+  return context.replicache;
 }

@@ -17,7 +17,7 @@ export default class Server implements Party.Server {
   static onBeforeConnect(request: Party.Request, lobby: Party.Lobby) {
     try {
       if (
-        request.headers.get("x-replicache-license-key") !==
+        new URL(request.url).searchParams.get("replicacheLicenseKey") !==
         lobby.env[REALTIME_ENV_KEY.REPLICACHE_LICENSE_KEY]
       )
         throw new UnauthorizedError();
