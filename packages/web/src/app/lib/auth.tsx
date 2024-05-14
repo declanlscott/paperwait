@@ -9,6 +9,7 @@ import { useShallow } from "zustand/react/shallow";
 
 import type { PropsWithChildren } from "react";
 import type { LuciaSession, LuciaUser } from "@paperwait/core/auth";
+import type { Organization } from "@paperwait/core/organization";
 import type { UserRole } from "@paperwait/core/user";
 import type { Output } from "valibot";
 import type { StoreApi } from "zustand";
@@ -16,6 +17,7 @@ import type { StoreApi } from "zustand";
 export type Auth = {
   user: LuciaUser | null;
   session: LuciaSession | null;
+  org: Pick<Organization, "slug" | "name"> | null;
 };
 
 type AuthActions = {
@@ -53,6 +55,7 @@ export function AuthProvider(props: AuthProviderProps) {
     createStore<AuthStore>((set, get) => ({
       user: props.initialAuth.user,
       session: props.initialAuth.session,
+      org: props.initialAuth.org,
       actions: {
         reset: () => set(() => ({ user: null, session: null })),
         logout: async () => {
@@ -101,26 +104,29 @@ export type Authed = {
   isAuthed: true;
   user: LuciaUser;
   session: LuciaSession;
+  org: Pick<Organization, "slug" | "name">;
 };
 
 export type UnAuthed = {
   isAuthed: false;
   user: null;
   session: null;
+  org: null;
 };
 
 export const useAuthContext = () =>
   useAuthStore(
-    useShallow(({ user, session }) => {
-      if (!user || !session) {
+    useShallow(({ user, session, org }) => {
+      if (!user || !session || !org) {
         return {
           isAuthed: false,
           user: null,
           session: null,
+          org: null,
         } satisfies UnAuthed;
       }
 
-      return { isAuthed: true, user, session } satisfies Authed;
+      return { isAuthed: true, user, session, org } satisfies Authed;
     }),
   );
 

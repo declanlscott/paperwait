@@ -7,5 +7,9 @@ declare namespace App {
   interface Locals {
     session: import("@paperwait/core/auth").LuciaSession | null;
     user: import("@paperwait/core/auth").LuciaUser | null;
+    org: Pick<
+      import("@paperwait/core/organization").Organization,
+      "slug" | "name"
+    > | null;
   }
 }

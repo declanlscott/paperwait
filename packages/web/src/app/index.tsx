@@ -24,6 +24,7 @@ export interface AppProps extends Partial<Slot> {
   initialAuth: {
     user: App.Locals["user"];
     session: App.Locals["session"];
+    org: App.Locals["org"];
   };
 }
 

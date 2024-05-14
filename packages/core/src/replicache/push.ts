@@ -11,12 +11,11 @@ import { transact } from "../database";
 import { pushRequestSchema } from "./schemas";
 
 import type { User } from "lucia";
-import type { ReadonlyJSONValue } from "replicache";
 import type { Transaction } from "../database";
 import type { OmitTimestamps } from "../utils";
 import type { Mutation } from "./schemas";
 
-export async function push(user: User, requestBody: ReadonlyJSONValue) {
+export async function push(user: User, requestBody: unknown) {
   const push = parse(pushRequestSchema, requestBody);
 
   let entities = new Set<string>();

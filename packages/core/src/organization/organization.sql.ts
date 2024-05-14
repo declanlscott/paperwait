@@ -21,3 +21,4 @@ export const Organization = pgTable("organization", {
   status: orgStatus("status").notNull().default("initializing"),
   ...timestamps,
 });
+export type Organization = typeof Organization.$inferInsert;
