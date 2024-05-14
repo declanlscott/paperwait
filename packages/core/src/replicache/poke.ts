@@ -1,14 +1,15 @@
-import { HOST } from "@paperwait/core/constants";
 import { Resource } from "sst";
 
 export async function poke(entity: string) {
   const res = await fetch(
-    `http${Resource.IsDev ? `://${HOST.REALTIME.DEV}` : `s://${HOST.REALTIME.PROD}`}/party/${entity}`,
+    `http${Resource.ClientIsDev ? `://localhost:4321` : `s://${Resource.ClientDomain.value}`}`,
     { method: "POST", headers: { "x-api-key": Resource.PartyKitApiKey.value } },
   );
 
   if (!res.ok) {
-    console.error(`Failed to poke ${entity}: ${res.status} ${res.statusText}`);
+    console.error(
+      new Error(`Failed to poke ${entity}: ${res.status} ${res.statusText}`),
+    );
   }
 }
 

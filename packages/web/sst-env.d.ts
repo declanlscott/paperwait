@@ -3,7 +3,15 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
+    ClientDomain: {
+      type: "sst.sst.Secret"
+      value: string
+    }
     ClientIsDev: {
+      type: "sst.sst.Secret"
+      value: string
+    }
+    ClientPartyKitUrl: {
       type: "sst.sst.Secret"
       value: string
     }

@@ -1,5 +1,10 @@
 import { CLIENT_RESOURCE_PREFIX } from "@paperwait/core/constants";
 
+export const domain = new sst.Secret(
+  `${CLIENT_RESOURCE_PREFIX}Domain`,
+  "paperwait.app",
+);
+
 export const isDev = new sst.Secret(
   `${CLIENT_RESOURCE_PREFIX}IsDev`,
   String($dev),
@@ -18,7 +23,12 @@ export const dbCredentials = {
   ssl: new sst.Secret("PostgresSsl", "true"),
 } as const;
 
-export const partyKitApiKey = new sst.Secret("PartyKitApiKey");
+export const partyKitSecrets = {
+  apiKey: new sst.Secret("PartyKitApiKey"),
+  url: new sst.Secret(`${CLIENT_RESOURCE_PREFIX}PartyKitUrl`),
+} as const;
 
-export const googleClientId = new sst.Secret("GoogleClientId");
-export const googleClientSecret = new sst.Secret("GoogleClientSecret");
+export const googleCredentials = {
+  clientId: new sst.Secret("GoogleClientId"),
+  clientSecret: new sst.Secret("GoogleClientSecret"),
+} as const;

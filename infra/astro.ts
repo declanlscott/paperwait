@@ -2,10 +2,10 @@ import { entraIdApp, entraIdClientSecret } from "./entra-id";
 import { papercutApiGateway } from "./papercut-api";
 import {
   dbCredentials,
-  googleClientId,
-  googleClientSecret,
+  domain,
+  googleCredentials,
   isDev,
-  partyKitApiKey,
+  partyKitSecrets,
   replicacheLicenseKey,
 } from "./secrets";
 
@@ -16,12 +16,12 @@ export const astro = new sst.aws.Astro("Paperwait", {
     isDev,
     replicacheLicenseKey,
     ...Object.values(dbCredentials),
-    partyKitApiKey,
+    ...Object.values(partyKitSecrets),
     entraIdApp,
     entraIdClientSecret,
-    googleClientId,
-    googleClientSecret,
+    ...Object.values(googleCredentials),
     papercutApiGateway,
+    domain,
   ],
   permissions: [
     {

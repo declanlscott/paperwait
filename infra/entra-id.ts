@@ -1,4 +1,6 @@
-import { AUTH_CALLBACK_PATH, HOST } from "@paperwait/core/constants";
+import { AUTH_CALLBACK_PATH } from "@paperwait/core/constants";
+
+import { domain } from "./secrets";
 
 $linkable(azuread.Application, function () {
   return {
@@ -22,8 +24,8 @@ export const entraIdApp = new azuread.Application("EntraIdApplication", {
   signInAudience: "AzureADMultipleOrgs",
   web: {
     redirectUris: [
-      `http://${HOST.WEB.DEV}${AUTH_CALLBACK_PATH}`,
-      `https://${HOST.WEB.PROD}${AUTH_CALLBACK_PATH}}`,
+      `http://localhost:4321${AUTH_CALLBACK_PATH}`,
+      $interpolate`https://${domain.value}${AUTH_CALLBACK_PATH}`,
     ],
   },
 });
