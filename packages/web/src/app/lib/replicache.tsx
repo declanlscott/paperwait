@@ -1,8 +1,14 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { useRouter } from "@tanstack/react-router";
 import { Replicache } from "replicache";
 
-import { useAuthedContext } from "~/app/lib/auth";
+import { useAuthActions, useAuthedContext } from "~/app/lib/auth";
 import { useResource } from "~/app/lib/resource";
 
 import type { PropsWithChildren } from "react";
@@ -21,11 +27,18 @@ export function ReplicacheProvider(props: PropsWithChildren) {
     }),
   );
 
-  const { user, org } = useAuthedContext();
+  const { user } = useAuthedContext();
+  const { logout } = useAuthActions();
 
   const { ReplicacheLicenseKey, IsDev } = useResource();
 
-  const navigate = useNavigate();
+  const { invalidate } = useRouter();
+
+  const reauthenticate = useCallback(async () => {
+    await logout();
+    await invalidate();
+    return null;
+  }, [logout, invalidate]);
 
   useEffect(() => {
     const replicache = new Replicache({
@@ -36,15 +49,12 @@ export function ReplicacheProvider(props: PropsWithChildren) {
       logLevel: IsDev.value === "true" ? "info" : "error",
     });
 
-    replicache.getAuth = async () => {
-      await navigate({ to: "/login", search: { org: org.slug } });
-      return null;
-    };
+    replicache.getAuth = reauthenticate;
 
     setReplicache(() => ({ status: "ready", replicache }));
 
     return () => void replicache.close();
-  }, [user.id, ReplicacheLicenseKey.value, IsDev.value, navigate, org.slug]);
+  }, [user.id, ReplicacheLicenseKey.value, IsDev.value, reauthenticate]);
 
   return (
     <ReplicacheContext.Provider value={replicache}>

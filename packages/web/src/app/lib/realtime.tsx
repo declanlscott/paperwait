@@ -16,10 +16,7 @@ export function useRealtime(props: RealtimeProps) {
     host: PartyKitUrl.value,
     room: props.room,
     onMessage: (message) => {
-      if (message.data === "poke") {
-        if (!replicache) return;
-        void replicache.pull();
-      }
+      if (message.data === "poke") void replicache?.pull();
     },
     query: {
       replicacheLicenseKey: ReplicacheLicenseKey.value,
