@@ -21,6 +21,7 @@ const { value, show = false } = Astro.props;
       class={inputStyles()}
       required
       type={show ? "text" : "password"}
+      autocomplete="off"
       {value}
     />
 
