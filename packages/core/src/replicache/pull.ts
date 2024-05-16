@@ -5,15 +5,18 @@ import { parse } from "valibot";
 import { ReplicacheClientGroup, ReplicacheClientViewRecord } from ".";
 import { transact } from "../database";
 import { UnauthorizedError } from "../errors";
+import { buildCvrEntries, diffCvr } from "./cvr";
+import { searchClients, searchOrders, searchUsers } from "./metadata";
 import { pullRequestSchema } from "./schemas";
 
-import type { User } from "lucia";
+import type { LuciaUser } from "../auth";
+import type { Cvr } from "./cvr";
 import type { PullRequest } from "./schemas";
 
 // Implements pull algorithm from Replicache docs (modified)
 // https://doc.replicache.dev/strategies/row-version#pull
 // Some steps are out of order due to what is included in the transaction
-export async function pull(user: User, requestBody: unknown) {
+export async function pull(user: LuciaUser, requestBody: unknown) {
   const pull = parse(pullRequestSchema, requestBody);
 
   // 3: Begin transaction
@@ -21,7 +24,7 @@ export async function pull(user: User, requestBody: unknown) {
     // 1: Fetch previous client view record
     const [prevCvr] = pull.cookie
       ? await tx
-          .select()
+          .select({ data: ReplicacheClientViewRecord.data })
           .from(ReplicacheClientViewRecord)
           .where(
             and(
@@ -29,13 +32,10 @@ export async function pull(user: User, requestBody: unknown) {
               eq(ReplicacheClientViewRecord.id, pull.cookie.order),
             ),
           )
-      : [];
+      : [undefined];
 
     // 2: Initialize base client view record
-    const baseCvr = prevCvr ?? {
-      data: {},
-      clientVersion: 0,
-    };
+    const baseCvr = prevCvr ?? {};
 
     // 4: Get client group (insert into db if it doesn't exist)
     const [group] = await tx
@@ -58,14 +58,24 @@ export async function pull(user: User, requestBody: unknown) {
     }
 
     // 6: Read all domain data, just ids and versions
-
     // 7: Read all clients in the client group
+    const [users, orders, clients] = await Promise.all([
+      searchUsers(tx, user),
+      searchOrders(tx, user),
+      searchClients(tx, group.id),
+    ]);
 
     // 8: Build next client view record
+    const nextCvr = {
+      user: buildCvrEntries(users),
+      order: buildCvrEntries(orders),
+      client: buildCvrEntries(clients),
+    } satisfies Cvr;
 
-    // 9: Calculate differences
+    // 9: Calculate diffs
+    const diff = diffCvr(baseCvr, nextCvr);
 
-    // 10: If no differences, return no-op
+    // 10: If diff is empty, return no-op
 
     // 11: Get entities
 
