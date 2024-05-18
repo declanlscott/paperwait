@@ -79,7 +79,7 @@ async function processMutation(
       .select({
         id: ReplicacheClient.id,
         clientGroupId: ReplicacheClient.clientGroupId,
-        mutationId: ReplicacheClient.mutationId,
+        lastMutationId: ReplicacheClient.lastMutationId,
       })
       .from(ReplicacheClient)
       .for("update")
@@ -87,7 +87,7 @@ async function processMutation(
       {
         id: mutation.clientId,
         clientGroupId: clientGroupId,
-        mutationId: 0,
+        lastMutationId: 0,
       } satisfies OmitTimestamps<typeof ReplicacheClient.$inferInsert>,
     ];
 
@@ -99,7 +99,7 @@ async function processMutation(
     }
 
     // 7: Next mutation ID
-    const nextMutationId = client.mutationId + 1;
+    const nextMutationId = client.lastMutationId + 1;
 
     // 8: Rollback and skip if mutation already processed
     if (mutation.id < nextMutationId) {
@@ -132,7 +132,7 @@ async function processMutation(
     const nextClient = {
       id: client.id,
       clientGroupId,
-      mutationId: nextMutationId,
+      lastMutationId: nextMutationId,
     } satisfies OmitTimestamps<typeof ReplicacheClient.$inferInsert>;
 
     await Promise.allSettled([

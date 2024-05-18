@@ -1,6 +1,6 @@
 import { pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 
-import { generateId, id, timestamps } from "../utils";
+import { idPrimaryKey, timestamps } from "../utils";
 
 export const provider = pgEnum("provider", ["entra-id", "google"]);
 export type Provider = (typeof provider.enumValues)[number];
@@ -13,7 +13,7 @@ export const orgStatus = pgEnum("org_status", [
 export type OrgStatus = (typeof orgStatus.enumValues)[number];
 
 export const Organization = pgTable("organization", {
-  id: id("id").$defaultFn(generateId).primaryKey(),
+  ...idPrimaryKey,
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   provider: provider("provider").notNull(),

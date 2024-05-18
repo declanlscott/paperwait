@@ -8,7 +8,9 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { User } from "../user";
-import { generateId, id, timestamps } from "../utils";
+import { id, idPrimaryKey, timestamps } from "../utils";
+
+import type { ClientViewRecord } from "./client-view-record";
 
 export const ReplicacheMeta = pgTable("replicache_meta", {
   key: text("key").primaryKey(),
@@ -16,34 +18,39 @@ export const ReplicacheMeta = pgTable("replicache_meta", {
 });
 
 export const ReplicacheClientGroup = pgTable("replicache_client_group", {
-  id: id("id").$defaultFn(generateId).primaryKey(),
+  ...idPrimaryKey,
   userId: id("user_id")
     .notNull()
     .references(() => User.id),
   cvrVersion: integer("cvr_version").notNull(),
   ...timestamps,
 });
+export type ReplicacheClientGroup = typeof ReplicacheClientGroup.$inferSelect;
 
 export const ReplicacheClient = pgTable("replicache_client", {
-  id: id("id").$defaultFn(generateId).primaryKey(),
+  ...idPrimaryKey,
   clientGroupId: id("client_group_id")
     .notNull()
     .references(() => ReplicacheClientGroup.id),
-  mutationId: bigint("mutation_id", { mode: "number" }).notNull(),
+  lastMutationId: bigint("last_mutation_id", { mode: "number" })
+    .notNull()
+    .default(0),
   ...timestamps,
 });
+export type ReplicacheClient = typeof ReplicacheClient.$inferSelect;
 
-export const ReplicacheClientViewRecord = pgTable(
-  "replicache_cvr",
+export const ReplicacheClientView = pgTable(
+  "replicache_client_view",
   {
-    id: integer("id").notNull(),
     clientGroupId: id("client_group_id")
       .notNull()
       .references(() => ReplicacheClientGroup.id),
-    data: json("data").$type<Record<string, number>>().notNull(),
+    version: integer("version").notNull(),
+    record: json("record").$type<ClientViewRecord>().notNull(),
     ...timestamps,
   },
   (table) => ({
-    primary: primaryKey({ columns: [table.id, table.clientGroupId] }),
+    primary: primaryKey({ columns: [table.clientGroupId, table.version] }),
   }),
 );
+export type ReplicacheClientView = typeof ReplicacheClientView.$inferSelect;

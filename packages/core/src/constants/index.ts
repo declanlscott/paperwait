@@ -16,3 +16,5 @@ export const REALTIME_ENV_KEY = {
   API_KEY: "API_KEY",
   REPLICACHE_LICENSE_KEY: "REPLICACHE_LICENSE_KEY",
 } as const;
+
+export const COMPOSITE_KEY_DELIMITER = ":";

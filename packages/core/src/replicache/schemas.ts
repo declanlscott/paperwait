@@ -1,7 +1,7 @@
 import {
   array,
+  fallback,
   literal,
-  nullable,
   number,
   object,
   picklist,
@@ -42,8 +42,11 @@ export const pushRequestSchema = object({
 export type PushRequest = Output<typeof pushRequestSchema>;
 
 export const pullRequestSchema = object({
-  clientGroupId: string(),
-  cookie: nullable(object({ order: number(), cvrId: string() })),
+  pullVersion: literal(1),
+  clientGroupID: string(),
+  cookie: fallback(number(), 0),
+  profileID: string(),
+  schemaVersion: string(),
 });
 export type PullRequest = Output<typeof pullRequestSchema>;
 
@@ -51,3 +54,6 @@ export const updateUserRoleSchema = object({
   userId: nanoIdSchema,
   role: picklist(userRole.enumValues),
 });
+
+export const domainSchema = picklist(["user", "order", "client"]);
+export type Domain = Output<typeof domainSchema>;

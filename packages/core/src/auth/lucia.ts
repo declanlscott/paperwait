@@ -26,7 +26,7 @@ export const lucia = new Lucia(adapter, {
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
-    DatabaseUserAttributes: Omit<typeof User.$inferSelect, "id">;
+    DatabaseUserAttributes: Omit<User, "id">;
   }
 }
 

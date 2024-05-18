@@ -13,3 +13,4 @@ export const Session = pgTable("session", {
     mode: "date",
   }).notNull(),
 });
+export type Session = typeof Session.$inferSelect;

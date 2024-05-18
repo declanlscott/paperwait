@@ -6,7 +6,7 @@ import { Organization } from "../organization";
 import {
   ReplicacheClient,
   ReplicacheClientGroup,
-  ReplicacheClientViewRecord,
+  ReplicacheClientView,
 } from "../replicache";
 import { User } from "../user";
 
@@ -60,7 +60,7 @@ export const replicacheClientGroupRelations = relations(
     replicacheClient: many(ReplicacheClient, {
       relationName: "replicacheClientGroup",
     }),
-    replicacheClientViewRecord: many(ReplicacheClientViewRecord, {
+    replicacheClientView: many(ReplicacheClientView, {
       relationName: "replicacheCvrGroup",
     }),
   }),
@@ -78,10 +78,10 @@ export const replicacheClientRelations = relations(
 );
 
 export const replicacheClientViewRecordRelations = relations(
-  ReplicacheClientViewRecord,
+  ReplicacheClientView,
   ({ one }) => ({
     replicacheClientGroup: one(ReplicacheClientGroup, {
-      fields: [ReplicacheClientViewRecord.clientGroupId],
+      fields: [ReplicacheClientView.clientGroupId],
       references: [ReplicacheClientGroup.id],
       relationName: "replicacheCvrGroup",
     }),

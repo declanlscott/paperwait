@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { Order } from "../order";
 import { User } from "../user";
@@ -7,24 +7,19 @@ import { ReplicacheClient } from "./replicache.sql";
 import type { LuciaUser } from "../auth";
 import type { Transaction } from "../database";
 
-export type MetadataSymbol = string | number | symbol;
-
-export type Metadata<
-  TId extends MetadataSymbol,
-  TRowVersion extends MetadataSymbol,
-> = {
-  id: TId;
-  rowVersion: TRowVersion;
+export type Metadata = {
+  id: string;
+  rowVersion: number;
 };
 
 export async function searchClients(
   tx: Transaction,
-  clientGroupId: (typeof ReplicacheClient.$inferSelect)["clientGroupId"],
+  clientGroupId: ReplicacheClient["clientGroupId"],
 ) {
   return await tx
     .select({
       id: ReplicacheClient.id,
-      rowVersion: ReplicacheClient.mutationId,
+      rowVersion: ReplicacheClient.lastMutationId,
     })
     .from(ReplicacheClient)
     .where(eq(ReplicacheClient.clientGroupId, clientGroupId));
@@ -52,7 +47,7 @@ export async function searchUsers(tx: Transaction, user: LuciaUser) {
 export async function searchOrders(tx: Transaction, user: LuciaUser) {
   const selectAll = async () =>
     await tx
-      .select({ id: Order.number, rowVersion: sql<number>`xmin` })
+      .select({ id: Order.id, rowVersion: sql<number>`xmin` })
       .from(Order)
       .where(eq(Order.orgId, user.orgId));
 
@@ -60,18 +55,19 @@ export async function searchOrders(tx: Transaction, user: LuciaUser) {
     searchAsAdministrator: selectAll,
     searchAsTechnician: selectAll,
     searchAsManager: async () => [],
-    searchAsCustomer: async () => [],
+    searchAsCustomer: async () =>
+      await tx
+        .select({ id: Order.id, rowVersion: sql<number>`xmin` })
+        .from(Order)
+        .where(and(eq(Order.orgId, user.orgId), eq(Order.customerId, user.id))),
   });
 }
 
-async function searchAsRole<
-  TId extends MetadataSymbol,
-  TRowVersion extends MetadataSymbol,
->(
+async function searchAsRole(
   role: LuciaUser["role"],
   callbacks: Record<
     `searchAs${Capitalize<LuciaUser["role"]>}`,
-    () => Promise<Array<Metadata<TId, TRowVersion>>>
+    () => Promise<Array<Metadata>>
   >,
 ) {
   switch (role) {

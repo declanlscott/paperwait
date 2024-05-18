@@ -1,22 +1,10 @@
-import { integer, pgTable, primaryKey } from "drizzle-orm/pg-core";
-
-import { Organization } from "../organization";
 import { User } from "../user";
-import { id, timestamps } from "../utils";
+import { id, orgTable, timestamps } from "../utils";
 
-export const Order = pgTable(
-  "order",
-  {
-    orgId: id("org_id")
-      .notNull()
-      .references(() => Organization.id),
-    number: integer("number").notNull(),
-    customerId: id("customer_id")
-      .notNull()
-      .references(() => User.id),
-    ...timestamps,
-  },
-  ({ orgId, number }) => ({
-    id: primaryKey({ columns: [orgId, number] }),
-  }),
-);
+export const Order = orgTable("order", {
+  customerId: id("customer_id")
+    .notNull()
+    .references(() => User.id),
+  ...timestamps,
+});
+export type Order = typeof Order.$inferSelect;
