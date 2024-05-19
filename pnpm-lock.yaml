@@ -158,8 +158,8 @@ importers:
         specifier: workspace:*
         version: link:../eslint-config
       tsx:
-        specifier: ^4.10.3
-        version: 4.10.3
+        specifier: ^4.10.5
+        version: 4.10.5
 
   packages/web:
     dependencies:
@@ -168,31 +168,31 @@ importers:
         version: 3.3.4(@types/react-dom@18.3.0)(@types/react@18.3.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.2.11(@types/node@20.12.12))
       '@astrojs/starlight':
         specifier: ^0.21.5
-        version: 0.21.5(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5))
+        version: 0.21.5(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5))
       '@astrojs/tailwind':
         specifier: ^5.1.0
-        version: 5.1.0(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5))(tailwindcss@3.4.3)
+        version: 5.1.0(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5))(tailwindcss@3.4.3)
       '@paperwait/core':
         specifier: workspace:*
         version: link:../core
       '@tanstack/react-router':
-        specifier: ^1.32.13
-        version: 1.32.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^1.33.4
+        version: 1.33.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/router-devtools':
-        specifier: ^1.32.13
-        version: 1.32.13(csstype@3.1.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^1.33.4
+        version: 1.33.4(csstype@3.1.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/router-vite-plugin':
-        specifier: ^1.32.10
-        version: 1.32.10(vite@5.2.11(@types/node@20.12.12))
+        specifier: ^1.32.17
+        version: 1.32.17(vite@5.2.11(@types/node@20.12.12))
       arctic:
         specifier: ^1.8.1
         version: 1.8.1
       astro:
-        specifier: ^4.8.5
-        version: 4.8.5(@types/node@20.12.12)(typescript@5.4.5)
+        specifier: ^4.8.6
+        version: 4.8.6(@types/node@20.12.12)(typescript@5.4.5)
       astro-sst:
-        specifier: ^2.41.5
-        version: 2.41.5
+        specifier: ^2.42.0
+        version: 2.42.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1415,17 +1415,17 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@formatjs/ecma402-abstract@1.18.2':
-    resolution: {integrity: sha512-+QoPW4csYALsQIl8GbN14igZzDbuwzcpWrku9nyMXlaqAlwRBgl5V+p0vWMGFqHOw37czNXaP/lEk4wbLgcmtA==}
+  '@formatjs/ecma402-abstract@1.18.3':
+    resolution: {integrity: sha512-J961RbhyjHWeCIv+iOceNxpoZ/qomJOs5lH+rUJCeKNa59gME4KC0LJVMeWODjHsnv/hTH8Hvd6sevzcAzjuaQ==}
 
   '@formatjs/fast-memoize@2.2.0':
     resolution: {integrity: sha512-hnk/nY8FyrL5YxwP9e4r9dqeM6cAbo8PeU9UjyXojZMNvVad2Z06FAVHyR3Ecw6fza+0GH7vdJgiKIVXTMbSBA==}
 
-  '@formatjs/icu-messageformat-parser@2.7.6':
-    resolution: {integrity: sha512-etVau26po9+eewJKYoiBKP6743I1br0/Ie00Pb/S/PtmYfmjTcOn2YCh2yNkSZI12h6Rg+BOgQYborXk46BvkA==}
+  '@formatjs/icu-messageformat-parser@2.7.7':
+    resolution: {integrity: sha512-Ij9uAv8GxcB6jecOtxwZ+Tyw/UOipOtxTgoQzofdCy/6sqaf+vWUuACRsNmhnz0R/RSlxhzcuQoe8ZhkuKiFzQ==}
 
-  '@formatjs/icu-skeleton-parser@1.8.0':
-    resolution: {integrity: sha512-QWLAYvM0n8hv7Nq5BEs4LKIjevpVpbGLAJgOaYzg9wABEoX1j0JO1q2/jVkO6CVlq0dbsxZCngS5aXbysYueqA==}
+  '@formatjs/icu-skeleton-parser@1.8.1':
+    resolution: {integrity: sha512-+08h1L0diiJB3KHyTJfWzpdIydkqqlrAzVJQ04uvCgHTtq+7+/7y7IreMlLv46LQZU0dX7p1nmZvrsfMY5i/Iw==}
 
   '@formatjs/intl-localematcher@0.5.4':
     resolution: {integrity: sha512-zTwEpWOzZ2CiKcB93BLngUX59hQkuZjT2+SAQEscSm52peDW/getsawMcWF1rGRpMCX6D7nSJA3CzJ8gn13N/g==}
@@ -2460,8 +2460,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@shikijs/core@1.5.2':
-    resolution: {integrity: sha512-wSAOgaz48GmhILFElMCeQypSZmj6Ru6DttOOtl3KNkdJ17ApQuGNCfzpk4cClasVrnIu45++2DBwG4LNMQAfaA==}
+  '@shikijs/core@1.6.0':
+    resolution: {integrity: sha512-NIEAi5U5R7BLkbW1pG/ZKu3eb1lzc3/+jD0lFsuxMT7zjaf9bbNwdNyMr7zh/Zl8EXQtQ+MYBAt5G+JLu+5DlA==}
 
   '@smithy/abort-controller@2.2.0':
     resolution: {integrity: sha512-wRlta7GuLWpTqtFfGo+nZyOO1vEvewdNR1R4rTxpC8XU6vG/NDyrFBhwLZsqg1NUoR1noVaXJPC/7ZK47QCySw==}
@@ -2807,8 +2807,8 @@ packages:
     resolution: {integrity: sha512-rahAZXlR879P7dngDH7BZwGYiODA9D5Hqo6nUHn9GAURcqZU5IW0ZiT54dPtV5EPES7muZZmknReYueDHs7FFQ==}
     engines: {node: '>=12'}
 
-  '@tanstack/react-router@1.32.13':
-    resolution: {integrity: sha512-J6tiMRsFt91kkczEiuzHidePcPU62GuWGc2gSb9eqRKV17+TRofE4AJ1kM111F5wgDiPTsx4RwFVPU68+JVfAQ==}
+  '@tanstack/react-router@1.33.4':
+    resolution: {integrity: sha512-aT8Tz0Opp0fHa+5h1eQRu3VRrIofqvcIODKfVVuhwif4O7Y0qrxmB24c1qSpkv6YlrbAkRPYgk3SyG+jBSR77g==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '>=16.8'
@@ -2820,8 +2820,8 @@ packages:
       react: '>=16'
       react-dom: '>=16'
 
-  '@tanstack/router-devtools@1.32.13':
-    resolution: {integrity: sha512-QBycfyMq3F8NWuFuWLUNek5uLH0VYLzwBmczEJnpcQXZqaVxT7t5eV4TlBR1EosuVazwDnq7Zu+AaigUqljfYg==}
+  '@tanstack/router-devtools@1.33.4':
+    resolution: {integrity: sha512-8UB9QJy29Zw1qChXn3CzG+RBwI6DKkywQ1fssS0KpZBXHea3xU5NvJdsDEcSDHtJXrwgXpKZK25YjNs8qoQptg==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '>=16.8'
@@ -2831,8 +2831,8 @@ packages:
     resolution: {integrity: sha512-WYGYnbZxJRM5JvP1VyQCA7IQneUPx9clviRIy8NbpKytxKK5eln5pvzBfPmwCKfV+s4pEGD8SDZ8JxcuP+bnfA==}
     engines: {node: '>=12'}
 
-  '@tanstack/router-vite-plugin@1.32.10':
-    resolution: {integrity: sha512-lVrVhtOO4fJArl01+n4Id5/MS9f6ELq+pcrgGKBCG/dawFx5p2b7N9RKy+LlKBmxAbSQQL5+PQwuy6yJLKFmTA==}
+  '@tanstack/router-vite-plugin@1.32.17':
+    resolution: {integrity: sha512-9yaWdLRrpL3xEBrDxhbNWXTy0ju+uK4YNGypwI1Va8TCsGAN7yZW15IfrOGwebiSNOHiaSLa+c813nPC8kBTRQ==}
     engines: {node: '>=12'}
 
   '@tanstack/store@0.1.3':
@@ -3133,11 +3133,11 @@ packages:
     peerDependencies:
       astro: ^4.0.0-beta || ^3.3.0
 
-  astro-sst@2.41.5:
-    resolution: {integrity: sha512-c6/H9h2ekWGUBvhQ2YXdwI0HL7wRc4fFBzZSFAbYW1INpG+Gmg72GQaGO6uUJZRKNPrQNUPihS9YviUhqI0PCQ==}
+  astro-sst@2.42.0:
+    resolution: {integrity: sha512-5r4QJkp6OW02YjJNLVAUi4rHnG8wL9un/LC80AK9dHjOpk2USNx11cQOORJu+KG1NsKfO5/S4Gx0BRpNLXhk8A==}
 
-  astro@4.8.5:
-    resolution: {integrity: sha512-h+t4VGLPBk6KjIiJnYGotJ16wsLIdmNVSvnwEk51XhqZ5T2VlbozgDtgDi6y3qP3mqkhpN3Q39YQORhVeuEYsg==}
+  astro@4.8.6:
+    resolution: {integrity: sha512-psHIfK+e+bMPhRwghV9yCGH/uc1jvY4DHmDZdoEepax9yA7kzYH0wt3dpkqlcrO2zxl5jzSC3DmqZfkD6wnW9A==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
 
@@ -3608,8 +3608,8 @@ packages:
     resolution: {integrity: sha512-dtJUTepzMW3Lm/NPxRf3wP4642UWhjL2sQxc+ym2YMj1m/H2zDNQOlezafzkHwn6sMstjHTwG6iQQsctDW/b1A==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  es-module-lexer@1.5.2:
-    resolution: {integrity: sha512-l60ETUTmLqbVbVHv1J4/qj+M8nq7AwMzEcg3kmJDt9dCNrTk+yHcYFf/Kw75pMDwd9mPcIGCG5LcS20SxYRzFA==}
+  es-module-lexer@1.5.3:
+    resolution: {integrity: sha512-i1gCgmR9dCl6Vil6UKPI/trA69s08g/syhiDK9TG0Nf1RJjjFI+AzoWW7sPufzkgYAn861skuCwJa0pIIHYxvg==}
 
   es5-ext@0.10.64:
     resolution: {integrity: sha512-p2snDhiLaXe6dahss1LddxqEm+SkuDvV8dnIQG0MWjyHpcMNfXKPE+/Cc0y+PhxJX3A4xGNeFCj5oc0BUh6deg==}
@@ -4088,8 +4088,8 @@ packages:
   inline-style-parser@0.2.3:
     resolution: {integrity: sha512-qlD8YNDqyTKTyuITrDOffsl6Tdhv+UC4hcdAVuQsK4IMQ99nSgd1MIA/Q+jQYoh9r3hVUXhYh7urSRmXPkW04g==}
 
-  intl-messageformat@10.5.12:
-    resolution: {integrity: sha512-izl0uxhy/melhw8gP2r8pGiVieviZmM4v5Oqx3c1/R7g9cwER2smmGfSjcIsp8Y3Q53bfciL/gkxacJRx/dUvg==}
+  intl-messageformat@10.5.13:
+    resolution: {integrity: sha512-9X3kzxrXlaFNtXwEQV7UWk1KwIyEMguQyuj2I0NDDMcCd3+1d/51tL7nLzi7YE/HVe9G3v2rEMxQl61G4gmTIQ==}
 
   is-alphabetical@2.0.1:
     resolution: {integrity: sha512-FWyyY60MeTNyeSRpkM2Iry0G9hpr7/9kD40mD/cGQEuilcZYS4okz8SN2Q6rLCJ8gbCt6fN+rC+6tMGS99LaxQ==}
@@ -5230,8 +5230,8 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  shiki@1.5.2:
-    resolution: {integrity: sha512-fpPbuSaatinmdGijE7VYUD3hxLozR3ZZ+iAx8Iy2X6REmJGyF5hQl94SgmiUNTospq346nXUVZx0035dyGvIVw==}
+  shiki@1.6.0:
+    resolution: {integrity: sha512-P31ROeXcVgW/k3Z+vUUErcxoTah7ZRaimctOpzGuqAntqnnSmx1HOsvnbAB8Z2qfXPRhw61yptAzCsuKOhTHwQ==}
 
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
@@ -5473,8 +5473,8 @@ packages:
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
 
-  tsx@4.10.3:
-    resolution: {integrity: sha512-f0g60aFSVRVkzcQkEflh8fPLRfmt+HJHgWi/plG5UgvVaV+9TcpOwJ0sZJSACXmwmjMPg9yQR0BhTLbhkfV2uA==}
+  tsx@4.10.5:
+    resolution: {integrity: sha512-twDSbf7Gtea4I2copqovUiNTEDrT8XNFXsuHpfGbdpW/z9ZW4fTghzzhAG0WfrCuJmJiOEY1nLIjq4u3oujRWQ==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -5948,7 +5948,7 @@ snapshots:
       remark-parse: 11.0.0
       remark-rehype: 11.1.0
       remark-smartypants: 2.1.0
-      shiki: 1.5.2
+      shiki: 1.6.0
       unified: 11.0.4
       unist-util-remove-position: 5.0.0
       unist-util-visit: 5.0.0
@@ -5957,13 +5957,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@2.3.1(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5))':
+  '@astrojs/mdx@2.3.1(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5))':
     dependencies:
       '@astrojs/markdown-remark': 5.1.0
       '@mdx-js/mdx': 3.0.1
       acorn: 8.11.3
-      astro: 4.8.5(@types/node@20.12.12)(typescript@5.4.5)
-      es-module-lexer: 1.5.2
+      astro: 4.8.6(@types/node@20.12.12)(typescript@5.4.5)
+      es-module-lexer: 1.5.3
       estree-util-visit: 2.0.0
       github-slugger: 2.0.0
       gray-matter: 4.0.3
@@ -6000,15 +6000,15 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 3.23.8
 
-  '@astrojs/starlight@0.21.5(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5))':
+  '@astrojs/starlight@0.21.5(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5))':
     dependencies:
-      '@astrojs/mdx': 2.3.1(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5))
+      '@astrojs/mdx': 2.3.1(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5))
       '@astrojs/sitemap': 3.1.4
       '@pagefind/default-ui': 1.1.0
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
-      astro: 4.8.5(@types/node@20.12.12)(typescript@5.4.5)
-      astro-expressive-code: 0.33.5(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5))
+      astro: 4.8.6(@types/node@20.12.12)(typescript@5.4.5)
+      astro-expressive-code: 0.33.5(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.1
       hast-util-select: 6.0.2
@@ -6025,9 +6025,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/tailwind@5.1.0(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5))(tailwindcss@3.4.3)':
+  '@astrojs/tailwind@5.1.0(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5))(tailwindcss@3.4.3)':
     dependencies:
-      astro: 4.8.5(@types/node@20.12.12)(typescript@5.4.5)
+      astro: 4.8.6(@types/node@20.12.12)(typescript@5.4.5)
       autoprefixer: 10.4.19(postcss@8.4.38)
       postcss: 8.4.38
       postcss-load-config: 4.0.2(postcss@8.4.38)
@@ -6067,7 +6067,7 @@ snapshots:
       '@aws-crypto/sha256-js': 3.0.0
       '@aws-crypto/supports-web-crypto': 3.0.0
       '@aws-crypto/util': 3.0.0
-      '@aws-sdk/types': 3.567.0
+      '@aws-sdk/types': 3.577.0
       '@aws-sdk/util-locate-window': 3.568.0
       '@aws-sdk/util-utf8-browser': 3.259.0
       tslib: 1.14.1
@@ -6075,7 +6075,7 @@ snapshots:
   '@aws-crypto/sha256-js@3.0.0':
     dependencies:
       '@aws-crypto/util': 3.0.0
-      '@aws-sdk/types': 3.567.0
+      '@aws-sdk/types': 3.577.0
       tslib: 1.14.1
 
   '@aws-crypto/sha256-js@5.2.0':
@@ -7469,7 +7469,7 @@ snapshots:
   '@expressive-code/plugin-shiki@0.33.5':
     dependencies:
       '@expressive-code/core': 0.33.5
-      shiki: 1.5.2
+      shiki: 1.6.0
 
   '@expressive-code/plugin-text-markers@0.33.5':
     dependencies:
@@ -7479,7 +7479,7 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@formatjs/ecma402-abstract@1.18.2':
+  '@formatjs/ecma402-abstract@1.18.3':
     dependencies:
       '@formatjs/intl-localematcher': 0.5.4
       tslib: 2.6.2
@@ -7488,15 +7488,15 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@formatjs/icu-messageformat-parser@2.7.6':
+  '@formatjs/icu-messageformat-parser@2.7.7':
     dependencies:
-      '@formatjs/ecma402-abstract': 1.18.2
-      '@formatjs/icu-skeleton-parser': 1.8.0
+      '@formatjs/ecma402-abstract': 1.18.3
+      '@formatjs/icu-skeleton-parser': 1.8.1
       tslib: 2.6.2
 
-  '@formatjs/icu-skeleton-parser@1.8.0':
+  '@formatjs/icu-skeleton-parser@1.8.1':
     dependencies:
-      '@formatjs/ecma402-abstract': 1.18.2
+      '@formatjs/ecma402-abstract': 1.18.3
       tslib: 2.6.2
 
   '@formatjs/intl-localematcher@0.5.4':
@@ -7635,7 +7635,7 @@ snapshots:
   '@internationalized/message@3.1.3':
     dependencies:
       '@swc/helpers': 0.5.11
-      intl-messageformat: 10.5.12
+      intl-messageformat: 10.5.13
 
   '@internationalized/number@3.5.2':
     dependencies:
@@ -8867,7 +8867,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.17.2':
     optional: true
 
-  '@shikijs/core@1.5.2': {}
+  '@shikijs/core@1.6.0': {}
 
   '@smithy/abort-controller@2.2.0':
     dependencies:
@@ -9426,7 +9426,7 @@ snapshots:
 
   '@tanstack/history@1.31.16': {}
 
-  '@tanstack/react-router@1.32.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@tanstack/react-router@1.33.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@tanstack/history': 1.31.16
       '@tanstack/react-store': 0.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -9442,9 +9442,9 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       use-sync-external-store: 1.2.2(react@18.3.1)
 
-  '@tanstack/router-devtools@1.32.13(csstype@3.1.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@tanstack/router-devtools@1.33.4(csstype@3.1.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@tanstack/react-router': 1.32.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@tanstack/react-router': 1.33.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       clsx: 2.1.1
       date-fns: 2.30.0
       goober: 2.1.14(csstype@3.1.3)
@@ -9458,7 +9458,7 @@ snapshots:
       prettier: 3.2.5
       zod: 3.23.8
 
-  '@tanstack/router-vite-plugin@1.32.10(vite@5.2.11(@types/node@20.12.12))':
+  '@tanstack/router-vite-plugin@1.32.17(vite@5.2.11(@types/node@20.12.12))':
     dependencies:
       '@babel/core': 7.24.5
       '@babel/generator': 7.24.5
@@ -9851,18 +9851,18 @@ snapshots:
       - supports-color
       - typescript
 
-  astro-expressive-code@0.33.5(astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5)):
+  astro-expressive-code@0.33.5(astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5)):
     dependencies:
-      astro: 4.8.5(@types/node@20.12.12)(typescript@5.4.5)
+      astro: 4.8.6(@types/node@20.12.12)(typescript@5.4.5)
       hast-util-to-html: 8.0.4
       remark-expressive-code: 0.33.5
 
-  astro-sst@2.41.5:
+  astro-sst@2.42.0:
     dependencies:
       '@astrojs/webapi': 3.0.0
       set-cookie-parser: 2.6.0
 
-  astro@4.8.5(@types/node@20.12.12)(typescript@5.4.5):
+  astro@4.8.6(@types/node@20.12.12)(typescript@5.4.5):
     dependencies:
       '@astrojs/compiler': 2.8.0
       '@astrojs/internal-helpers': 0.4.0
@@ -9892,7 +9892,7 @@ snapshots:
       diff: 5.2.0
       dlv: 1.1.3
       dset: 3.1.3
-      es-module-lexer: 1.5.2
+      es-module-lexer: 1.5.3
       esbuild: 0.21.3
       estree-walker: 3.0.3
       execa: 8.0.1
@@ -9915,7 +9915,7 @@ snapshots:
       rehype: 13.0.1
       resolve: 1.22.8
       semver: 7.6.2
-      shiki: 1.5.2
+      shiki: 1.6.0
       string-width: 7.1.0
       strip-ansi: 7.1.0
       tsconfck: 3.0.3(typescript@5.4.5)
@@ -10365,7 +10365,7 @@ snapshots:
 
   env-paths@3.0.0: {}
 
-  es-module-lexer@1.5.2: {}
+  es-module-lexer@1.5.3: {}
 
   es5-ext@0.10.64:
     dependencies:
@@ -11135,11 +11135,11 @@ snapshots:
 
   inline-style-parser@0.2.3: {}
 
-  intl-messageformat@10.5.12:
+  intl-messageformat@10.5.13:
     dependencies:
-      '@formatjs/ecma402-abstract': 1.18.2
+      '@formatjs/ecma402-abstract': 1.18.3
       '@formatjs/fast-memoize': 2.2.0
-      '@formatjs/icu-messageformat-parser': 2.7.6
+      '@formatjs/icu-messageformat-parser': 2.7.7
       tslib: 2.6.2
 
   is-alphabetical@2.0.1: {}
@@ -12698,9 +12698,9 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
-  shiki@1.5.2:
+  shiki@1.6.0:
     dependencies:
-      '@shikijs/core': 1.5.2
+      '@shikijs/core': 1.6.0
 
   signal-exit@3.0.7: {}
 
@@ -12949,7 +12949,7 @@ snapshots:
       tslib: 1.14.1
       typescript: 5.4.5
 
-  tsx@4.10.3:
+  tsx@4.10.5:
     dependencies:
       esbuild: 0.20.2
       get-tsconfig: 4.7.5
