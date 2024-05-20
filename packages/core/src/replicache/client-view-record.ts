@@ -1,9 +1,8 @@
 import { array, parse } from "valibot";
 
-import { domainSchema } from "./schemas";
+import { Domain } from "./schemas";
 
 import type { Metadata } from "./metadata";
-import type { Domain } from "./schemas";
 
 export type ClientViewRecord = Record<Domain, ClientViewRecordEntries>;
 export type ClientViewRecordEntries = Record<
@@ -28,8 +27,8 @@ type ClientViewRecordEntryRowVersion =
 
 export function diffCvr(prev: ClientViewRecord, next: ClientViewRecord) {
   const domains = new Set<Domain>([
-    ...parse(array(domainSchema), Object.keys(prev)),
-    ...parse(array(domainSchema), Object.keys(next)),
+    ...parse(array(Domain), Object.keys(prev)),
+    ...parse(array(Domain), Object.keys(next)),
   ]);
 
   let prevEntries: ClientViewRecordEntries;

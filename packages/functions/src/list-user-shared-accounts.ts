@@ -6,8 +6,8 @@ import {
 import { parseSchema } from "@paperwait/core/utils";
 import {
   buildClient,
-  listUserSharedAccountsEventSchema,
-  listUserSharedAccountsOutputSchema,
+  ListUserSharedAccountsEvent,
+  ListUserSharedAccountsOutput,
   XmlRpcFault,
   xmlRpcMethod,
 } from "@paperwait/core/xml-rpc";
@@ -16,14 +16,10 @@ import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    const { orgId, input } = parseSchema(
-      listUserSharedAccountsEventSchema,
-      event,
-      {
-        className: BadRequestError,
-        message: "Failed to parse event",
-      },
-    );
+    const { orgId, input } = parseSchema(ListUserSharedAccountsEvent, event, {
+      Error: BadRequestError,
+      message: "Failed to parse event",
+    });
 
     const { client, authToken } = await buildClient(orgId);
 
@@ -32,8 +28,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       ...Object.values(input),
     ]);
 
-    const output = parseSchema(listUserSharedAccountsOutputSchema, value, {
-      className: InternalServerError,
+    const output = parseSchema(ListUserSharedAccountsOutput, value, {
+      Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });
 

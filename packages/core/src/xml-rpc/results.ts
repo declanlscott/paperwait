@@ -1,19 +1,19 @@
 import { array, boolean, object, string } from "valibot";
 
 // api.isUserExists
-export const isUserExistsOutputSchema = boolean();
-export const isUserExistsResultBodySchema = object({
-  output: isUserExistsOutputSchema,
+export const IsUserExistsOutput = boolean();
+export const IsUserExistsResultBody = object({
+  output: IsUserExistsOutput,
 });
 
 // api.listUserSharedAccounts
-export const listUserSharedAccountsOutputSchema = array(string());
-export const listUserSharedAccountsResultBodySchema = object({
-  output: listUserSharedAccountsOutputSchema,
+export const ListUserSharedAccountsOutput = array(string());
+export const ListUserSharedAccountsResultBody = object({
+  output: ListUserSharedAccountsOutput,
 });
 
 // api.adjustSharedAccountAccountBalance
-export const adjustSharedAccountAccountBalanceOutputSchema = boolean();
-export const adjustSharedAccountAccountBalanceResultBodySchema = object({
-  output: adjustSharedAccountAccountBalanceOutputSchema,
+export const AdjustSharedAccountAccountBalanceOutput = boolean();
+export const AdjustSharedAccountAccountBalanceResultBody = object({
+  output: AdjustSharedAccountAccountBalanceOutput,
 });

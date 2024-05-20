@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
 import { char, pgTable, primaryKey, timestamp } from "drizzle-orm/pg-core";
 
-import { generateId } from ".";
 import { COMPOSITE_KEY_DELIMITER, NANOID_LENGTH } from "../constants";
 import { Organization } from "../organization";
+import { generateId } from "./nano-id";
 
 import type { BuildColumns } from "drizzle-orm";
 import type {
@@ -32,7 +32,7 @@ export const idPrimaryKey = {
  */
 export const orgId = {
   get id() {
-    return id("id").notNull();
+    return id("id").$defaultFn(generateId).notNull();
   },
   get orgId() {
     return id("org_id")

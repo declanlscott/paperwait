@@ -1,4 +1,5 @@
 import { Link } from "react-aria-components";
+import { formatChannel } from "@paperwait/core/utils";
 import { Outlet, useRouter } from "@tanstack/react-router";
 
 import {
@@ -56,8 +57,8 @@ export function AuthedLayout() {
 function Realtime(props: PropsWithChildren) {
   const { user } = useAuthedContext();
 
-  useRealtime({ room: user.orgId });
-  useRealtime({ room: user.id });
+  useRealtime({ channel: formatChannel("org", user.orgId) });
+  useRealtime({ channel: formatChannel("user", user.id) });
 
   return props.children;
 }

@@ -4,7 +4,7 @@ import { BadRequestError, HttpError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { parseSchema } from "@paperwait/core/utils";
 
-import { registrationSchema } from "~/lib/schemas";
+import { Registration } from "~/lib/schemas";
 
 import type { APIContext } from "astro";
 
@@ -12,9 +12,9 @@ export async function POST(context: APIContext) {
   try {
     const formData = await context.request.formData();
     const registration = parseSchema(
-      registrationSchema,
+      Registration,
       Object.fromEntries(formData.entries()),
-      { className: BadRequestError, message: "Failed to parse registration" },
+      { Error: BadRequestError, message: "Failed to parse registration" },
     );
 
     const org = await db.transaction(async (tx) => {
@@ -52,6 +52,6 @@ export async function POST(context: APIContext) {
     if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
 
-    return new Response("An unexpected error occurred", { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
 }

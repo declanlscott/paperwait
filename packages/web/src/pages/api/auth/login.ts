@@ -17,9 +17,7 @@ import type { APIContext } from "astro";
 export async function GET(context: APIContext) {
   try {
     const orgParam = context.url.searchParams.get("org");
-    if (!orgParam) {
-      throw new BadRequestError("No org provided");
-    }
+    if (!orgParam) throw new BadRequestError("No org provided");
 
     const [org] = await db
       .select({
@@ -40,9 +38,7 @@ export async function GET(context: APIContext) {
           ),
         ),
       );
-    if (!org) {
-      throw new NotFoundError("Organization not found");
-    }
+    if (!org) throw new NotFoundError("Organization not found");
 
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
@@ -106,7 +102,7 @@ export async function GET(context: APIContext) {
     });
 
     const redirect = context.url.searchParams.get("redirect");
-    if (redirect) {
+    if (redirect)
       // store the redirect URL as a cookie
       context.cookies.set("redirect", redirect, {
         secure: import.meta.env.PROD,
@@ -115,7 +111,6 @@ export async function GET(context: APIContext) {
         maxAge: 60 * 10, // 10 minutes
         sameSite: "lax",
       });
-    }
 
     return context.redirect(url.toString());
   } catch (e) {
@@ -126,6 +121,6 @@ export async function GET(context: APIContext) {
     if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
 
-    return new Response("An unexpected error occurred", { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
 }

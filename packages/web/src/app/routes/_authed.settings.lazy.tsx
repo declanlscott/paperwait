@@ -3,7 +3,7 @@ import ky from "ky";
 
 import { useAuthedContext } from "~/app/lib/auth";
 
-import type { Papercut } from "@paperwait/core/papercut";
+import type { PaperCutParameter } from "@paperwait/core/papercut";
 
 export const Route = createLazyFileRoute("/_authed/settings")({
   component: () => <Component />,
@@ -16,7 +16,7 @@ function Component() {
     const papercut = {
       serverUrl: "https://example.com",
       authToken: "secret-token",
-    } satisfies Papercut;
+    } satisfies PaperCutParameter;
 
     await ky.post(`/api/organization/${user.orgId}/papercut`, {
       headers: {

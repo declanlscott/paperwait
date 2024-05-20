@@ -2,16 +2,16 @@ import { XmlRpcClient } from "@foxglove/xmlrpc";
 
 import { getParameter } from "../aws";
 import { InternalServerError, NotFoundError } from "../errors";
-import { papercutSchema } from "../papercut";
+import { PaperCutParameter } from "../papercut";
 import { parseSchema } from "../utils";
 
 export async function buildClient(orgId: string) {
   const config = await getConfig(orgId);
   const { serverUrl, authToken } = parseSchema(
-    papercutSchema,
+    PaperCutParameter,
     JSON.parse(config),
     {
-      className: InternalServerError,
+      Error: InternalServerError,
       message: "Failed to parse papercut config",
     },
   );

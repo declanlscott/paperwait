@@ -6,12 +6,12 @@ import type { APIContext } from "astro";
 
 export function authorize(
   context: APIContext,
-  roleSet = new Set<UserRole>([
+  roleSet: Array<UserRole> = [
     "administrator",
     "technician",
     "manager",
     "customer",
-  ]),
+  ],
 ) {
   if (!context.locals.session || !context.locals.user) {
     throw new UnauthorizedError();

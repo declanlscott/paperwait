@@ -1,20 +1,21 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { parse } from "valibot";
 
-import { ReplicacheClientGroup, ReplicacheClientView } from ".";
 import { transact } from "../database";
-import { UnauthorizedError } from "../errors";
+import { BadRequestError, UnauthorizedError } from "../errors";
 import { Order } from "../order";
 import { User } from "../user";
 import { serializeEntity } from "../utils";
 import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { searchClients, searchOrders, searchUsers } from "./metadata";
-import { pullRequestSchema } from "./schemas";
+import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
 
 import type {
+  ClientStateNotFoundResponse,
   PatchOperation,
-  PullResponseV1,
+  PullRequest,
+  PullResponseOKV1,
   ReadonlyJSONObject,
+  VersionNotSupportedResponse,
 } from "replicache";
 import type { LuciaUser } from "../auth";
 import type {
@@ -22,26 +23,51 @@ import type {
   ClientViewRecordEntries,
 } from "./client-view-record";
 
+type PullResult =
+  | {
+      type: "success";
+      response: PullResponseOKV1;
+    }
+  | {
+      type: "error";
+      response: ClientStateNotFoundResponse | VersionNotSupportedResponse;
+    };
+
 // Implements pull algorithm from Replicache docs (modified)
 // https://doc.replicache.dev/strategies/row-version#pull
 // Some steps are out of order due to what is included in the transaction
 export async function pull(
   user: LuciaUser,
-  requestBody: unknown,
-): Promise<PullResponseV1> {
-  const pull = parse(pullRequestSchema, requestBody);
+  pullRequest: PullRequest,
+): Promise<PullResult> {
+  if (pullRequest.pullVersion !== 1)
+    return {
+      type: "error",
+      response: {
+        error: "VersionNotSupported",
+        versionType: "pull",
+      },
+    };
+
+  const order = Number(
+    typeof pullRequest.cookie === "object"
+      ? pullRequest.cookie?.order ?? 0
+      : pullRequest.cookie,
+  );
+
+  if (isNaN(order)) throw new BadRequestError("Cookie order is not a number");
 
   // 3: Begin transaction
   const result = await transact(async (tx) => {
     // 1: Fetch previous client view record
-    const [prevClientView] = pull.cookie
+    const [prevClientView] = pullRequest.cookie
       ? await tx
           .select({ record: ReplicacheClientView.record })
           .from(ReplicacheClientView)
           .where(
             and(
-              eq(ReplicacheClientView.clientGroupId, pull.clientGroupID),
-              eq(ReplicacheClientView.version, pull.cookie),
+              eq(ReplicacheClientView.clientGroupId, pullRequest.clientGroupID),
+              eq(ReplicacheClientView.version, order),
             ),
           )
       : [undefined];
@@ -59,7 +85,7 @@ export async function pull(
     const [baseClientGroup] = await tx
       .insert(ReplicacheClientGroup)
       .values({
-        id: pull.clientGroupID,
+        id: pullRequest.clientGroupID,
         userId: user.id,
         cvrVersion: 0,
       })
@@ -120,8 +146,7 @@ export async function pull(
     }, {} as ClientViewRecordEntries);
 
     // 13: new client view record version
-    const nextCvrVersion =
-      Math.max(pull.cookie ?? 0, baseClientGroup.cvrVersion) + 1;
+    const nextCvrVersion = Math.max(order, baseClientGroup.cvrVersion) + 1;
 
     // 14: Write client group record
     const nextClientGroup = {
@@ -163,21 +188,27 @@ export async function pull(
   // 10: If transaction result returns empty diff, return no-op
   if (!result) {
     return {
-      patch: [],
-      cookie: pull.cookie,
-      lastMutationIDChanges: {},
+      type: "success",
+      response: {
+        patch: [],
+        cookie: pullRequest.cookie,
+        lastMutationIDChanges: {},
+      },
     };
   }
 
   return {
-    // 18(i): Build patch
-    patch: buildPatch(result.entities, result.prevCvr === undefined),
+    type: "success",
+    response: {
+      // 18(i): Build patch
+      patch: buildPatch(result.entities, result.prevCvr === undefined),
 
-    // 18(ii): Construct cookie
-    cookie: result.nextCvrVersion,
+      // 18(ii): Construct cookie
+      cookie: result.nextCvrVersion,
 
-    // 18(iii): Last mutation ID changes
-    lastMutationIDChanges: result.clients,
+      // 18(iii): Last mutation ID changes
+      lastMutationIDChanges: result.clients,
+    },
   };
 }
 

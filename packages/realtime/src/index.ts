@@ -29,7 +29,7 @@ export default class Server implements Party.Server {
       if (e instanceof HttpError)
         return new Response(e.message, { status: e.statusCode });
 
-      return new Response("Internal Server Error", { status: 500 });
+      return new Response("Internal server error", { status: 500 });
     }
   }
 
@@ -49,7 +49,7 @@ export default class Server implements Party.Server {
       if (e instanceof HttpError)
         return new Response(e.message, { status: e.statusCode });
 
-      return new Response("Internal Server Error", { status: 500 });
+      return new Response("Internal server error", { status: 500 });
     }
   }
 

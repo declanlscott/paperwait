@@ -1,14 +1,14 @@
 ---
 import { boolean, fallback, parse, pick } from "valibot";
 
-import RegisterOrgPapercutAuthToken from "~/components/register-org/papercut-auth-token.astro";
-import { registrationSchema } from "~/lib/schemas";
+import RegisterOrgPaperCutAuthToken from "~/components/register-org/papercut-auth-token.astro";
+import { Registration } from "~/lib/schemas";
 
 export const partial = true;
 
 const formData = await Astro.request.formData();
 const { authToken: value } = parse(
-  fallback(pick(registrationSchema, ["authToken"]), { authToken: "" }),
+  fallback(pick(Registration, ["authToken"]), { authToken: "" }),
   Object.fromEntries(formData.entries()),
 );
 
@@ -18,4 +18,4 @@ const show = parse(
 );
 ---
 
-<RegisterOrgPapercutAuthToken {value} {show} />
+<RegisterOrgPaperCutAuthToken {value} {show} />

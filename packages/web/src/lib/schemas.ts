@@ -1,5 +1,5 @@
 import { provider } from "@paperwait/core/organization";
-import { papercutSchema } from "@paperwait/core/papercut";
+import { PaperCutParameter } from "@paperwait/core/papercut";
 import {
   boolean,
   custom,
@@ -16,7 +16,7 @@ import {
 
 import type { Output } from "valibot";
 
-export const registrationSchema = merge([
+export const Registration = merge([
   object(
     {
       name: string([toTrimmed(), minLength(1)]),
@@ -33,12 +33,12 @@ export const registrationSchema = merge([
       }),
     ],
   ),
-  papercutSchema,
+  PaperCutParameter,
 ]);
+export type Registration = Output<typeof Registration>;
 
-export const orgSlugValiditySchema = object({
+export const IsOrgSlugValid = object({
   value: string(),
   isValid: boolean(),
 });
-
-export type OrgSlugValidity = Output<typeof orgSlugValiditySchema>;
+export type IsOrgSlugValid = Output<typeof IsOrgSlugValid>;

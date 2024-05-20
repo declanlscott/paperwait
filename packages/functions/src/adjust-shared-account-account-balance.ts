@@ -1,8 +1,8 @@
 import { BadRequestError, InternalServerError } from "@paperwait/core/errors";
 import { parseSchema } from "@paperwait/core/utils";
 import {
-  adjustSharedAccountAccountBalanceEventRecordSchema,
-  adjustSharedAccountAccountBalanceOutputSchema,
+  AdjustSharedAccountAccountBalanceEventRecord,
+  AdjustSharedAccountAccountBalanceOutput,
   buildClient,
   xmlRpcMethod,
 } from "@paperwait/core/xml-rpc";
@@ -20,10 +20,10 @@ async function processRecord(record: SQSRecord) {
     const message = JSON.parse(record.body) as unknown;
 
     const { orgId, input } = parseSchema(
-      adjustSharedAccountAccountBalanceEventRecordSchema,
+      AdjustSharedAccountAccountBalanceEventRecord,
       message,
       {
-        className: BadRequestError,
+        Error: BadRequestError,
         message: "Failed to parse message",
       },
     );
@@ -35,14 +35,10 @@ async function processRecord(record: SQSRecord) {
       [authToken, ...Object.values(input)],
     );
 
-    const output = parseSchema(
-      adjustSharedAccountAccountBalanceOutputSchema,
-      value,
-      {
-        className: InternalServerError,
-        message: "Failed to parse xml-rpc output",
-      },
-    );
+    const output = parseSchema(AdjustSharedAccountAccountBalanceOutput, value, {
+      Error: InternalServerError,
+      message: "Failed to parse xml-rpc output",
+    });
 
     if (!output)
       throw new InternalServerError("Failed to adjust account balance");

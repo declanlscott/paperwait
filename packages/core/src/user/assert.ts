@@ -3,10 +3,10 @@ import type { UserRole } from "../user";
 
 export function assertRole(
   user: User,
-  roleSet: Set<UserRole>,
+  roleSet: Array<UserRole>,
   shouldThrow = true,
 ) {
-  if (!roleSet.has(user.role)) {
+  if (!roleSet.includes(user.role)) {
     if (!shouldThrow) return false;
 
     throw new Error("User does not have permission to perform this action");

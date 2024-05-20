@@ -5,19 +5,19 @@ import { parseSchema } from "@paperwait/core/utils";
 import { eq } from "drizzle-orm";
 import { pick } from "valibot";
 
-import { registrationSchema } from "~/lib/schemas";
+import { Registration } from "~/lib/schemas";
 
 import type { APIContext } from "astro";
-import type { OrgSlugValidity } from "~/lib/schemas";
+import type { IsOrgSlugValid } from "~/lib/schemas";
 
 export async function POST(context: APIContext) {
   const formData = await context.request.formData();
 
   try {
     const { slug } = parseSchema(
-      pick(registrationSchema, ["slug"]),
+      pick(Registration, ["slug"]),
       Object.fromEntries(formData.entries()),
-      { className: BadRequestError },
+      { Error: BadRequestError },
     );
 
     const [exists] = await db
@@ -29,7 +29,7 @@ export async function POST(context: APIContext) {
       JSON.stringify({
         value: slug,
         isValid: !exists,
-      } satisfies OrgSlugValidity),
+      } satisfies IsOrgSlugValid),
     );
   } catch (e) {
     console.error(e);
@@ -39,9 +39,9 @@ export async function POST(context: APIContext) {
         JSON.stringify({
           value: formData.get("slug")?.toString() ?? "",
           isValid: false,
-        } satisfies OrgSlugValidity),
+        } satisfies IsOrgSlugValid),
       );
 
-    return new Response("An unexpected error occurred", { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
 }

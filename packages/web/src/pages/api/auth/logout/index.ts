@@ -19,6 +19,6 @@ export async function POST(context: APIContext) {
     if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
 
-    return new Response("An unexpected error occurred", { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
 }

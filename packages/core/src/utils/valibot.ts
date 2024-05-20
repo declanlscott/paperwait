@@ -9,8 +9,8 @@ export function parseSchema<
 >(
   schema: TSchema,
   input: unknown,
-  error?: {
-    className: new (message?: string, statusCode?: number) => TError;
+  customError?: {
+    Error: new (message?: string, statusCode?: number) => TError;
     message?: string;
   },
 ): Output<TSchema> {
@@ -19,8 +19,10 @@ export function parseSchema<
   if (!result.success) {
     console.log(result.issues);
 
-    if (error)
-      throw new error.className(error.message ?? "Failed to parse schema");
+    if (customError)
+      throw new customError.Error(
+        customError.message ?? "Failed to parse schema",
+      );
 
     throw new Error("Failed to parse schema");
   }

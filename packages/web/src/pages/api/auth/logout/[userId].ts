@@ -7,7 +7,7 @@ import type { APIContext } from "astro";
 
 export async function POST(context: APIContext) {
   try {
-    authorize(context, new Set(["administrator"]));
+    authorize(context, ["administrator"]);
 
     if (!context.params.userId)
       throw new BadRequestError("missing userId parameter");
@@ -21,6 +21,6 @@ export async function POST(context: APIContext) {
     if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
 
-    return new Response("An unexpected error occurred", { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
 }

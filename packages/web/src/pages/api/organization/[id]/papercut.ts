@@ -4,7 +4,7 @@ import {
   ForbiddenError,
   HttpError,
 } from "@paperwait/core/errors";
-import { papercutSchema } from "@paperwait/core/papercut";
+import { PaperCutParameter } from "@paperwait/core/papercut";
 import { parseSchema } from "@paperwait/core/utils";
 
 import { authorize } from "~/lib/auth/authorize";
@@ -13,16 +13,16 @@ import type { APIContext } from "astro";
 
 export async function POST(context: APIContext) {
   try {
-    const { user } = authorize(context, new Set(["administrator"]));
+    const { user } = authorize(context, ["administrator"]);
 
     if (context.params.id! !== user.orgId) {
       throw new ForbiddenError();
     }
 
     const body = await context.request.json();
-    const data = parseSchema(papercutSchema, body, {
-      className: BadRequestError,
-      message: "Failed to parse papercut config",
+    const data = parseSchema(PaperCutParameter, body, {
+      Error: BadRequestError,
+      message: "Failed to parse PaperCut parameter",
     });
 
     await putParameter({
@@ -39,6 +39,6 @@ export async function POST(context: APIContext) {
     if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
 
-    return new Response("An unexpected error occurred", { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
 }

@@ -11,8 +11,8 @@ import {
 import { Organization } from "@paperwait/core/organization";
 import { pokeMany } from "@paperwait/core/replicache";
 import { User } from "@paperwait/core/user";
-import { parseSchema } from "@paperwait/core/utils";
-import { isUserExistsResultBodySchema } from "@paperwait/core/xml-rpc";
+import { formatChannel, parseSchema } from "@paperwait/core/utils";
+import { IsUserExistsResultBody } from "@paperwait/core/xml-rpc";
 import { OAuth2RequestError } from "arctic";
 import { and, eq } from "drizzle-orm";
 import ky, { HTTPError as kyHttpError } from "ky";
@@ -22,7 +22,7 @@ import { object, string, uuid } from "valibot";
 
 import entraId from "~/lib/auth/entra-id";
 import google from "~/lib/auth/google";
-import { registrationSchema } from "~/lib/schemas";
+import { Registration } from "~/lib/schemas";
 
 import type { Provider } from "@paperwait/core/organization";
 import type { IsUserExistsEventBody } from "@paperwait/core/xml-rpc";
@@ -71,10 +71,10 @@ export async function GET(context: APIContext) {
       throw new BadRequestError("Missing required parameters");
 
     const provider = parseSchema(
-      registrationSchema.entries.authProvider,
+      Registration.entries.authProvider,
       storedProvider.value,
       {
-        className: InternalServerError,
+        Error: InternalServerError,
         message: "Failed to parse provider",
       },
     );
@@ -97,11 +97,10 @@ export async function GET(context: APIContext) {
           eq(Organization.id, storedOrgId.value),
         ),
       );
-    if (!org) {
+    if (!org)
       throw new NotFoundError(`
         Failed to find organization (${storedOrgId.value}) with providerId: ${orgProviderId}
       `);
-    }
 
     await authorizeUser({ orgId: storedOrgId.value, input: { username } });
 
@@ -151,11 +150,11 @@ export async function GET(context: APIContext) {
       const [newUser] = await tx
         .insert(User)
         .values({
-          providerId: userProviderId,
           orgId: storedOrgId.value,
+          providerId: userProviderId,
+          role: isInitializing ? "administrator" : "customer",
           name: userInfo.name,
           email: userInfo.email,
-          role: isInitializing ? "administrator" : "customer",
           username,
         })
         .returning({ id: User.id });
@@ -170,7 +169,7 @@ export async function GET(context: APIContext) {
       return { newUser, admins };
     });
 
-    await pokeMany(admins.map(({ id }) => id));
+    await pokeMany(admins.map(({ id }) => formatChannel("user", id)));
 
     const { cookie } = await createSession(newUser.id);
 
@@ -187,7 +186,7 @@ export async function GET(context: APIContext) {
     if (e instanceof DatabaseError)
       return new Response(e.message, { status: 500 });
 
-    return new Response("An unexpected error occurred", { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
 }
 
@@ -222,7 +221,7 @@ function parseIdTokenPayload(
         }),
         payload,
         {
-          className: InternalServerError,
+          Error: InternalServerError,
           message: `Failed to parse ${provider} id token payload`,
         },
       );
@@ -238,7 +237,7 @@ function parseIdTokenPayload(
         object({ hd: string(), sub: string(), name: string() }),
         payload,
         {
-          className: InternalServerError,
+          Error: InternalServerError,
           message: `Failed to parse ${provider} id token payload`,
         },
       );
@@ -281,8 +280,8 @@ async function authorizeUser(event: IsUserExistsEventBody) {
       .post(url, { body: requestBody, headers })
       .json();
 
-    const { output } = parseSchema(isUserExistsResultBodySchema, responseBody, {
-      className: InternalServerError,
+    const { output } = parseSchema(IsUserExistsResultBody, responseBody, {
+      Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });
 
@@ -293,7 +292,7 @@ async function authorizeUser(event: IsUserExistsEventBody) {
     if (e instanceof HttpError) throw e;
     if (e instanceof kyHttpError) throw new InternalServerError(e.message);
 
-    throw new InternalServerError("An unexpected error occurred");
+    throw new InternalServerError();
   }
 }
 

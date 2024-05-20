@@ -4,7 +4,7 @@ import { useReplicache } from "~/app/lib/replicache";
 import { useResource } from "~/app/lib/resource";
 
 type RealtimeProps = {
-  room: string;
+  channel: string;
 };
 
 export function useRealtime(props: RealtimeProps) {
@@ -14,7 +14,7 @@ export function useRealtime(props: RealtimeProps) {
 
   return usePartySocket({
     host: PartyKitUrl.value,
-    room: props.room,
+    room: props.channel,
     onMessage: (message) => {
       if (message.data === "poke") void replicache?.pull();
     },

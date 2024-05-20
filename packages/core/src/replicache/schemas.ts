@@ -1,59 +1,133 @@
 import {
   array,
-  fallback,
+  boolean,
+  intersect,
+  lazy,
   literal,
+  merge,
+  nullable,
   number,
   object,
+  optional,
   picklist,
+  record,
   string,
   union,
   unknown,
+  variant,
 } from "valibot";
 
-import { userRole } from "../user";
-import { nanoIdSchema } from "../utils";
+import { UserRole } from "../user";
+import { NanoId } from "../utils";
 
-import type { Output } from "valibot";
-import type { UserRole } from "../user";
+import type { JSONValue } from "replicache";
+import type { BaseSchema, Output } from "valibot";
 
-export const mutationMeta = {
-  updateUserRole: {
-    name: "updateUserRole",
-    roleSet: new Set(["administrator"]),
-  },
-  createOrder: {
-    name: "createOrder",
-    roleSet: new Set(["administrator", "technician", "manager", "customer"]),
-  },
-} as const satisfies Record<string, { name: string; roleSet: Set<UserRole> }>;
+export const JsonValue: BaseSchema<JSONValue> = nullable(
+  union([
+    number(),
+    string(),
+    boolean(),
+    lazy(() => array(JsonValue)),
+    lazy(() => JsonObject),
+  ]),
+);
+export type JsonValue = Output<typeof JsonValue>;
 
-export const mutationSchema = object({
-  id: number(),
-  clientId: string(),
-  name: union(Object.values(mutationMeta).map(({ name }) => literal(name))),
-  args: unknown(),
+export const JsonObject = record(string(), optional(JsonValue));
+export type JsonObject = Output<typeof JsonObject>;
+
+export const PushRequest = variant("pushVersion", [
+  object({
+    pushVersion: literal(0),
+    clientID: NanoId,
+    mutations: array(
+      object({
+        name: string(),
+        args: JsonValue,
+        id: number(),
+        timestamp: number(),
+      }),
+    ),
+    profileID: string(),
+    schemaVersion: string(),
+  }),
+  object({
+    pushVersion: literal(1),
+    clientGroupID: NanoId,
+    mutations: array(
+      object({
+        name: string(),
+        args: JsonValue,
+        clientID: NanoId,
+        id: number(),
+        timestamp: number(),
+      }),
+    ),
+    profileID: string(),
+    schemaVersion: string(),
+  }),
+]);
+export type PushRequest = Output<typeof PushRequest>;
+
+export const UpdateUserRoleMutationArgs = object({
+  userId: NanoId,
+  newRole: picklist(UserRole.enumValues),
 });
-export type Mutation = Output<typeof mutationSchema>;
+export type UpdateUserRoleMutationArgs = Output<
+  typeof UpdateUserRoleMutationArgs
+>;
 
-export const pushRequestSchema = object({
-  clientGroupId: string(),
-  mutations: array(mutationSchema),
-});
-export type PushRequest = Output<typeof pushRequestSchema>;
+export const BaseMutation = PushRequest.options[1].entries.mutations.item;
 
-export const pullRequestSchema = object({
-  pullVersion: literal(1),
-  clientGroupID: string(),
-  cookie: fallback(number(), 0),
-  profileID: string(),
-  schemaVersion: string(),
-});
-export type PullRequest = Output<typeof pullRequestSchema>;
+export const Mutation = variant("name", [
+  merge([
+    BaseMutation,
+    object({
+      name: literal("updateUserRole"),
+      args: UpdateUserRoleMutationArgs,
+    }),
+  ]),
+  merge([
+    BaseMutation,
+    object({
+      name: literal("createOrder"),
+      // TODO: `createOrder` args
+      args: unknown(),
+    }),
+  ]),
+]);
+export type Mutation = Output<typeof Mutation>;
 
-export const updateUserRoleSchema = object({
-  userId: nanoIdSchema,
-  role: picklist(userRole.enumValues),
-});
+export const mutationPermissions = {
+  updateUserRole: ["administrator"],
+  createOrder: ["administrator", "technician", "manager", "customer"],
+} as const satisfies Record<Mutation["name"], Array<UserRole>>;
 
-export const domainSchema = picklist(["user", "order", "client"]);
-export type Domain = Output<typeof domainSchema>;
+export const PullRequest = variant("pullVersion", [
+  object({
+    pullVersion: literal(0),
+    schemaVersion: string(),
+    profileID: string(),
+    cookie: JsonValue,
+    clientID: NanoId,
+    lastMutationID: number(),
+  }),
+  object({
+    pullVersion: literal(1),
+    schemaVersion: string(),
+    profileID: string(),
+    cookie: nullable(
+      union([
+        string(),
+        number(),
+        intersect([JsonValue, object({ order: union([string(), number()]) })]),
+      ]),
+    ),
+    clientGroupID: NanoId,
+  }),
+]);
+export type PullRequest = Output<typeof PullRequest>;
+
+export const Domain = picklist(["user", "order", "client"]);
+export type Domain = Output<typeof Domain>;
