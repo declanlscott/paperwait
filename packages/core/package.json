@@ -8,7 +8,7 @@
     ]
   },
   "scripts": {
-    "db:push": "drizzle-kit push:pg",
+    "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
@@ -33,7 +33,6 @@
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.10",
-    "drizzle-kit": "^0.21.2",
-    "pg": "^8.11.5"
+    "drizzle-kit": "^0.21.2"
   }
 }

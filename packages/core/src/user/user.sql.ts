@@ -1,6 +1,7 @@
-import { pgEnum, text } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 
-import { orgTable, timestamps } from "../utils";
+import { Organization } from "../organization";
+import { id, idPrimaryKey, timestamps } from "../utils";
 
 export const UserRole = pgEnum("user_role", [
   "administrator",
@@ -10,7 +11,11 @@ export const UserRole = pgEnum("user_role", [
 ]);
 export type UserRole = (typeof UserRole.enumValues)[number];
 
-export const User = orgTable("user", {
+export const User = pgTable("user", {
+  ...idPrimaryKey,
+  orgId: id("org_id")
+    .notNull()
+    .references(() => Organization.id),
   providerId: text("provider_id").notNull().unique(),
   role: UserRole("role").notNull().default("customer"),
   name: text("name").notNull(),

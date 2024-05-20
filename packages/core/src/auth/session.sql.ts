@@ -8,9 +8,6 @@ export const Session = pgTable("session", {
   userId: id("user_id")
     .notNull()
     .references(() => User.id),
-  expiresAt: timestamp("expires_at", {
-    withTimezone: true,
-    mode: "date",
-  }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
 });
 export type Session = typeof Session.$inferSelect;
