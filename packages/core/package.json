@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "@aws-sdk/client-ssm": "^3.577.0",
-    "@aws-sdk/credential-providers": "^3.577.0",
+    "@aws-sdk/client-ssm": "^3.582.0",
+    "@aws-sdk/credential-providers": "^3.582.0",
     "@foxglove/xmlrpc": "^1.3.0",
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@neondatabase/serverless": "^0.9.3",
@@ -33,6 +33,6 @@
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.10",
-    "drizzle-kit": "^0.21.2"
+    "drizzle-kit": "^0.21.4"
   }
 }

@@ -1,10 +1,10 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
-import { transact } from "../database";
-import { BadRequestError, UnauthorizedError } from "../errors";
-import { Order } from "../order";
-import { User } from "../user";
-import { serializeEntity } from "../utils";
+import { transact } from "../database/transaction";
+import { serializeEntity } from "../drizzle/utils";
+import { BadRequestError, UnauthorizedError } from "../errors/http";
+import { Order } from "../order/order.sql";
+import { User } from "../user/user.sql";
 import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { searchClients, searchOrders, searchUsers } from "./metadata";
 import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
@@ -17,7 +17,7 @@ import type {
   ReadonlyJSONObject,
   VersionNotSupportedResponse,
 } from "replicache";
-import type { LuciaUser } from "../auth";
+import type { LuciaUser } from "../auth/lucia";
 import type {
   ClientViewRecord,
   ClientViewRecordEntries,

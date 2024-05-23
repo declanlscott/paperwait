@@ -1,42 +1,39 @@
 import { spawn } from "child_process";
 import { resolve } from "path";
 
-import {
-  ENV_RESOURCE_PREFIX,
-  REALTIME_ENV_KEY,
-} from "@paperwait/core/constants";
-
 import type { Resource } from "sst";
 
-type EnvVars = {
-  apiKey: Resource["PartyKitApiKey"]["value"];
-  replicacheLicenseKey: Resource["ClientReplicacheLicenseKey"]["value"];
-};
+const rawResource = (() => {
+  const prefix = "SST_RESOURCE_";
 
-function buildResource() {
-  // Extract resource from environment variables
-  const resource = Object.entries(process.env).reduce(
-    (resource, [key, value]) => {
-      if (key.startsWith(ENV_RESOURCE_PREFIX) && value) {
-        // Remove prefix and parse JSON
-        resource[key.slice(ENV_RESOURCE_PREFIX.length)] = JSON.parse(
-          value,
-        ) as unknown;
-      }
+  const raw = Object.entries(process.env).reduce(
+    (raw, [key, value]) => {
+      if (key.startsWith(prefix) && value)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        raw[key.slice(prefix.length)] = JSON.parse(value);
 
-      return resource;
+      return raw;
     },
-    {} as Resource,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    {} as Record<string, any>,
   );
 
-  if (Object.keys(resource).length === 0) {
-    throw new Error("Resource is empty. Are you not running in sst shell?");
-  }
+  if (Object.keys(raw).length === 0)
+    throw new Error(`No resources found. Did you forget to run in sst shell?`);
 
-  return resource;
-}
+  return raw;
+})();
 
-function buildCommand(envVars: EnvVars) {
+const resource = new Proxy(rawResource, {
+  get(target, prop: string) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    if (prop in target) return target[prop];
+
+    throw new Error(`Resource "${prop}" not found.`);
+  },
+}) as Resource;
+
+function buildCommand(customArgs: string[] = []) {
   const mode = process.argv[2];
 
   switch (mode) {
@@ -44,15 +41,8 @@ function buildCommand(envVars: EnvVars) {
     case "deploy":
       return {
         command: "npx",
-        args: [
-          "partykit",
-          mode,
-          "--var",
-          `${REALTIME_ENV_KEY.API_KEY}=${envVars.apiKey}`,
-          "--var",
-          `${REALTIME_ENV_KEY.REPLICACHE_LICENSE_KEY}=${envVars.replicacheLicenseKey}`,
-        ],
-      } as const;
+        args: ["partykit", mode, ...customArgs],
+      };
     default:
       throw new Error(
         `Invalid mode argument "${mode}". Must be "dev" or "deploy".`,
@@ -62,12 +52,12 @@ function buildCommand(envVars: EnvVars) {
 
 function main() {
   try {
-    const resource = buildResource();
-
-    const { command, args } = buildCommand({
-      apiKey: resource.PartyKitApiKey.value,
-      replicacheLicenseKey: resource.ClientReplicacheLicenseKey.value,
-    });
+    const { command, args } = buildCommand([
+      "--var",
+      `API_KEY=${resource.PartyKitApiKey.value}`,
+      "--var",
+      `REPLICACHE_LICENSE_KEY=${resource.ClientReplicacheLicenseKey.value}`,
+    ]);
 
     const process = spawn(command, args, {
       stdio: "inherit",

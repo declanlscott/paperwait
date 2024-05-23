@@ -17,8 +17,8 @@ import {
   variant,
 } from "valibot";
 
-import { UserRole } from "../user";
-import { NanoId } from "../utils";
+import { NanoId } from "../nano-id";
+import { UserRole } from "../user/user.sql";
 
 import type { JSONValue } from "replicache";
 import type { BaseSchema, Output } from "valibot";

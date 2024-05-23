@@ -2,11 +2,12 @@ import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
 
 import { db } from "../database";
-import { User } from "../user";
-import { generateId } from "../utils";
+import { generateId } from "../nano-id";
+import { User } from "../user/user.sql";
 import { Session } from "./session.sql";
 
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
+import type { NanoId } from "../nano-id";
 
 export const adapter = new DrizzlePostgreSQLAdapter(db, Session, User);
 
@@ -21,21 +22,25 @@ export const lucia = new Lucia(adapter, {
     role,
     email,
   }),
+  getSessionAttributes: ({ orgId }) => ({ orgId }),
 });
 
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
     DatabaseUserAttributes: Omit<User, "id">;
+    DatabaseSessionAttributes: {
+      orgId: NanoId;
+    };
   }
 }
 
 export type { User as LuciaUser, Session as LuciaSession } from "lucia";
 
-export async function createSession(userId: LuciaUser["id"]) {
+export async function createSession(userId: LuciaUser["id"], orgId: NanoId) {
   const session = await lucia.createSession(
     userId,
-    {},
+    { orgId },
     { sessionId: generateId() },
   );
 

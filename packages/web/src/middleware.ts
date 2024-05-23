@@ -6,9 +6,7 @@ import { eq } from "drizzle-orm";
 import { verifyRequestOrigin } from "oslo/request";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  if (context.url.pathname.startsWith("/partials")) {
-    return next();
-  }
+  if (context.url.pathname.startsWith("/partials")) return next();
 
   if (context.request.method !== "GET") {
     const originHeader = context.request.headers.get("Origin");
@@ -18,9 +16,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       !originHeader ||
       !hostHeader ||
       !verifyRequestOrigin(originHeader, [hostHeader])
-    ) {
+    )
       return new Response(null, { status: 403 });
-    }
   }
 
   const sessionId = context.cookies.get(lucia.sessionCookieName)?.value ?? null;

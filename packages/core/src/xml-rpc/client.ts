@@ -3,7 +3,7 @@ import { XmlRpcClient } from "@foxglove/xmlrpc";
 import { getParameter } from "../aws";
 import { InternalServerError, NotFoundError } from "../errors";
 import { PaperCutParameter } from "../papercut";
-import { parseSchema } from "../utils";
+import { parseSchema } from "../valibot";
 
 export async function buildClient(orgId: string) {
   const config = await getConfig(orgId);

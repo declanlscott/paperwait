@@ -1,6 +1,6 @@
 import { pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 
-import { idPrimaryKey, timestamps } from "../utils";
+import { idPrimaryKey, timestamps } from "../drizzle/columns";
 
 export const provider = pgEnum("provider", ["entra-id", "google"]);
 export type Provider = (typeof provider.enumValues)[number];
@@ -21,4 +21,4 @@ export const Organization = pgTable("organization", {
   status: orgStatus("status").notNull().default("initializing"),
   ...timestamps,
 });
-export type Organization = typeof Organization.$inferInsert;
+export type Organization = typeof Organization.$inferSelect;

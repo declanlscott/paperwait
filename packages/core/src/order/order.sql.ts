@@ -1,17 +1,19 @@
-import { pgTable } from "drizzle-orm/pg-core";
+import { foreignKey } from "drizzle-orm/pg-core";
 
-import { Organization } from "../organization";
-import { User } from "../user";
-import { id, idPrimaryKey, timestamps } from "../utils";
+import { id } from "../drizzle/columns";
+import { defaultOrgTableOptions, orgTable } from "../drizzle/tables";
+import { User } from "../user/user.sql";
 
-export const Order = pgTable("order", {
-  ...idPrimaryKey,
-  orgId: id("org_id")
-    .notNull()
-    .references(() => Organization.id),
-  customerId: id("customer_id")
-    .notNull()
-    .references(() => User.id),
-  ...timestamps,
-});
+export const Order = orgTable(
+  "order",
+  { customerId: id("customer_id").notNull() },
+  defaultOrgTableOptions,
+  (table) => ({
+    customerReference: foreignKey({
+      columns: [table.customerId, table.orgId],
+      foreignColumns: [User.id, User.orgId],
+      name: "customer_fk",
+    }),
+  }),
+);
 export type Order = typeof Order.$inferSelect;

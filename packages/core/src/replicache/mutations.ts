@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 
+import { formatChannel } from "../realtime";
 import { assertRole, User } from "../user";
-import { formatChannel } from "../utils";
 import { mutationPermissions } from "./schemas";
 
-import type { LuciaUser } from "../auth";
+import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database";
 import type { UpdateUserRoleMutationArgs } from "./schemas";
 

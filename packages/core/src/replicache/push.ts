@@ -1,22 +1,22 @@
 import { eq, sql } from "drizzle-orm";
 
-import { transact } from "../database";
-import { BadRequestError } from "../errors";
-import { parseSchema } from "../utils";
+import { transact } from "../database/transaction";
+import { BadRequestError } from "../errors/http";
+import { parseSchema } from "../valibot";
 import { updateUserRole } from "./mutations";
 import { pokeMany } from "./poke";
 import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
 import { Mutation } from "./schemas";
 
+import type { User as LuciaUser } from "lucia";
 import type {
   ClientStateNotFoundResponse,
   MutationV1,
   PushRequest,
   VersionNotSupportedResponse,
 } from "replicache";
-import type { LuciaUser } from "../auth";
-import type { Transaction } from "../database";
-import type { OmitTimestamps } from "../utils";
+import type { Transaction } from "../database/transaction";
+import type { OmitTimestamps } from "../drizzle/utils";
 
 type PushResult =
   | { type: "success" }

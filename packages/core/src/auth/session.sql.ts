@@ -1,13 +1,25 @@
-import { pgTable, timestamp } from "drizzle-orm/pg-core";
+import { foreignKey, timestamp } from "drizzle-orm/pg-core";
 
+import { orgTable } from "../drizzle";
+import { id } from "../drizzle/columns";
 import { User } from "../user/user.sql";
-import { id } from "../utils";
 
-export const Session = pgTable("session", {
-  id: id("id").primaryKey(),
-  userId: id("user_id")
-    .notNull()
-    .references(() => User.id),
-  expiresAt: timestamp("expires_at").notNull(),
-});
+export const Session = orgTable(
+  "session",
+  {
+    userId: id("user_id").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+  },
+  {
+    generateDefaultId: false,
+    includeTimestamps: false,
+  },
+  (table) => ({
+    userReference: foreignKey({
+      columns: [table.userId, table.orgId],
+      foreignColumns: [User.id, User.orgId],
+      name: "user_fk",
+    }),
+  }),
+);
 export type Session = typeof Session.$inferSelect;

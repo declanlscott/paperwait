@@ -76,9 +76,7 @@ export function AuthProvider(props: AuthProviderProps) {
         updateRole: (newRole) =>
           set(
             produce((state: Auth) => {
-              if (state.user) {
-                state.user.role = newRole;
-              }
+              if (state.user) state.user.role = newRole;
             }),
           ),
       },

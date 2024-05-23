@@ -1,14 +1,14 @@
 import { relations } from "drizzle-orm";
 
-import { Session } from "../auth";
-import { Order } from "../order";
-import { Organization } from "../organization";
+import { Session } from "../auth/session.sql";
+import { Order } from "../order/order.sql";
+import { Organization } from "../organization/organization.sql";
 import {
   ReplicacheClient,
   ReplicacheClientGroup,
   ReplicacheClientView,
-} from "../replicache";
-import { User } from "../user";
+} from "../replicache/replicache.sql";
+import { User } from "../user/user.sql";
 
 export const organizationRelations = relations(Organization, ({ many }) => ({
   user: many(User, { relationName: "userOrg" }),
@@ -30,8 +30,8 @@ export const userRelations = relations(User, ({ one, many }) => ({
 
 export const sessionRelations = relations(Session, ({ one }) => ({
   user: one(User, {
-    fields: [Session.userId],
-    references: [User.id],
+    fields: [Session.userId, Session.orgId],
+    references: [User.id, User.orgId],
     relationName: "userSession",
   }),
 }));
@@ -43,8 +43,8 @@ export const orderRelations = relations(Order, ({ one }) => ({
     relationName: "orderOrg",
   }),
   customer: one(User, {
-    fields: [Order.customerId],
-    references: [User.id],
+    fields: [Order.customerId, Order.orgId],
+    references: [User.id, User.orgId],
     relationName: "orderCustomer",
   }),
 }));
@@ -53,8 +53,8 @@ export const replicacheClientGroupRelations = relations(
   ReplicacheClientGroup,
   ({ one, many }) => ({
     user: one(User, {
-      fields: [ReplicacheClientGroup.userId],
-      references: [User.id],
+      fields: [ReplicacheClientGroup.userId, ReplicacheClientGroup.orgId],
+      references: [User.id, User.orgId],
       relationName: "userReplicacheClientGroup",
     }),
     replicacheClient: many(ReplicacheClient, {
@@ -70,8 +70,8 @@ export const replicacheClientRelations = relations(
   ReplicacheClient,
   ({ one }) => ({
     replicacheClientGroup: one(ReplicacheClientGroup, {
-      fields: [ReplicacheClient.clientGroupId],
-      references: [ReplicacheClientGroup.id],
+      fields: [ReplicacheClient.clientGroupId, ReplicacheClient.orgId],
+      references: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
       relationName: "replicacheClientGroup",
     }),
   }),
@@ -81,8 +81,8 @@ export const replicacheClientViewRecordRelations = relations(
   ReplicacheClientView,
   ({ one }) => ({
     replicacheClientGroup: one(ReplicacheClientGroup, {
-      fields: [ReplicacheClientView.clientGroupId],
-      references: [ReplicacheClientGroup.id],
+      fields: [ReplicacheClientView.clientGroupId, ReplicacheClientView.orgId],
+      references: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
       relationName: "replicacheCvrGroup",
     }),
   }),

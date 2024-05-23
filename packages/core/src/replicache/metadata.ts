@@ -1,11 +1,11 @@
 import { and, eq, sql } from "drizzle-orm";
 
-import { Order } from "../order";
-import { User } from "../user";
+import { Order } from "../order/order.sql";
+import { User } from "../user/user.sql";
 import { ReplicacheClient } from "./replicache.sql";
 
-import type { LuciaUser } from "../auth";
-import type { Transaction } from "../database";
+import type { LuciaUser } from "../auth/lucia";
+import type { Transaction } from "../database/transaction";
 
 export type Metadata = {
   id: string;

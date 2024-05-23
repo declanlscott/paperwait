@@ -50,18 +50,30 @@ const AuthedDashboardRoute = AuthedDashboardImport.update({
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: ''
       preLoaderRoute: typeof AuthedImport
       parentRoute: typeof rootRoute
     }
     '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
     '/_authed/dashboard': {
+      id: '/_authed/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
       preLoaderRoute: typeof AuthedDashboardImport
       parentRoute: typeof AuthedImport
     }
     '/_authed/settings': {
+      id: '/_authed/settings'
+      path: '/settings'
+      fullPath: '/settings'
       preLoaderRoute: typeof AuthedSettingsLazyImport
       parentRoute: typeof AuthedImport
     }
@@ -70,9 +82,12 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren([
-  AuthedRoute.addChildren([AuthedDashboardRoute, AuthedSettingsLazyRoute]),
+export const routeTree = rootRoute.addChildren({
+  AuthedRoute: AuthedRoute.addChildren({
+    AuthedDashboardRoute,
+    AuthedSettingsLazyRoute,
+  }),
   LoginRoute,
-])
+})
 
 /* prettier-ignore-end */

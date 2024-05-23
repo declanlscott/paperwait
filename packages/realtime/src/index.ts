@@ -1,4 +1,3 @@
-import { REALTIME_ENV_KEY } from "@paperwait/core/constants";
 import {
   HttpError,
   MethodNotAllowedError,
@@ -18,7 +17,7 @@ export default class Server implements Party.Server {
     try {
       if (
         new URL(request.url).searchParams.get("replicacheLicenseKey") !==
-        lobby.env[REALTIME_ENV_KEY.REPLICACHE_LICENSE_KEY]
+        lobby.env.REPLICACHE_LICENSE_KEY
       )
         throw new UnauthorizedError();
 
@@ -37,9 +36,7 @@ export default class Server implements Party.Server {
     try {
       if (request.method !== "POST") throw new MethodNotAllowedError();
 
-      if (
-        request.headers.get("x-api-key") !== lobby.env[REALTIME_ENV_KEY.API_KEY]
-      )
+      if (request.headers.get("x-api-key") !== lobby.env.API_KEY)
         throw new UnauthorizedError();
 
       return request;
