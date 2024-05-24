@@ -25,16 +25,16 @@ export const idPrimaryKey = {
  */
 export const timestamps = {
   get createdAt() {
-    return timestamp("created_at").notNull().defaultNow();
+    return timestamp("created_at", { mode: "string" }).notNull().defaultNow();
   },
   get updatedAt() {
-    return timestamp("updated_at")
+    return timestamp("updated_at", { mode: "string" })
       .notNull()
       .defaultNow()
       .$onUpdate(() => sql`now()`);
   },
   get deletedAt() {
-    return timestamp("deleted_at");
+    return timestamp("deleted_at", { mode: "string" });
   },
 };
 export type Timestamp = keyof typeof timestamps;
