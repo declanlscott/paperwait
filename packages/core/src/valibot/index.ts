@@ -1,7 +1,7 @@
 import { safeParse } from "valibot";
 
 import type { BaseSchema, Output } from "valibot";
-import type { HttpError } from "../errors";
+import type { HttpError } from "../errors/http";
 
 export function parseSchema<
   TSchema extends BaseSchema,

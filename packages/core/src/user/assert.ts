@@ -1,5 +1,5 @@
 import type { User } from "lucia";
-import type { UserRole } from "../user";
+import type { UserRole } from "./user.sql";
 
 export function assertRole(
   user: User,

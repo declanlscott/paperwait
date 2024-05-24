@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
 
 import { formatChannel } from "../realtime";
-import { assertRole, User } from "../user";
+import { assertRole } from "../user/assert";
+import { User } from "../user/user.sql";
 import { mutationPermissions } from "./schemas";
 
 import type { LuciaUser } from "../auth/lucia";
-import type { Transaction } from "../database";
+import type { Transaction } from "../database/transaction";
 import type { UpdateUserRoleMutationArgs } from "./schemas";
 
 export async function updateUserRole(

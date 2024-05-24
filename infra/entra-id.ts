@@ -30,14 +30,6 @@ export const entraIdApp = new azuread.Application("EntraIdApplication", {
   },
 });
 
-// export const entraIdAppIdUri = new entraId.ApplicationIdentifierUri(
-//   "EntraIdApplicationIdentifierUri",
-//   {
-//     applicationId: entraIdApp.id,
-//     identifierUri: `api://paperwait`,
-//   },
-// );
-
 export const rotationHours = 24 * 7 * 26; // 6 months
 export const clientSecretRotation = new time.Rotating("ClientSecretRotation", {
   rotationHours,

@@ -8,7 +8,7 @@ import {
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 import { AWS_REGION } from "../constants";
-import { ConflictError, NotFoundError } from "../errors";
+import { ConflictError, NotFoundError } from "../errors/http";
 
 import type {
   GetParameterCommandInput,

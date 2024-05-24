@@ -78,7 +78,6 @@ export const adjustSharedAccountAccountBalanceIntegrationCredentials =
         },
       ],
     }),
-
     inlinePolicies: [
       {
         name: "AdjustSharedAccountAccountBalanceQueueSendMessagePolicy",

@@ -2,7 +2,7 @@ import { Resource } from "sst";
 
 import { CLIENT_RESOURCE_PREFIX } from "../constants";
 
-import type { ClientResourceType } from "../types";
+import type { ClientResourceType } from "../types/resource";
 
 export const ClientResource = Object.entries({ ...Resource }).reduce(
   (clientResource, [key, value]) => {

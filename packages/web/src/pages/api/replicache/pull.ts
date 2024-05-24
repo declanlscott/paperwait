@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { BadRequestError, HttpError } from "@paperwait/core/errors";
 import { pull, PullRequest } from "@paperwait/core/replicache";
 import { parseSchema } from "@paperwait/core/valibot";
@@ -21,7 +20,7 @@ export async function POST(context: APIContext) {
       }),
     );
 
-    if (pullResult.type === "error")
+    if (pullResult.type !== "success")
       throw new BadRequestError(JSON.stringify(pullResult.response));
 
     return new Response(JSON.stringify(pullResult.response), { status: 200 });
