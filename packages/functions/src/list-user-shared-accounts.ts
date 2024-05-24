@@ -3,7 +3,7 @@ import {
   HttpError,
   InternalServerError,
 } from "@paperwait/core/errors";
-import { parseSchema } from "@paperwait/core/utils";
+import { parseSchema } from "@paperwait/core/valibot";
 import {
   buildClient,
   ListUserSharedAccountsEvent,

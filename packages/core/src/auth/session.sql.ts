@@ -1,20 +1,24 @@
-import { foreignKey, timestamp } from "drizzle-orm/pg-core";
+import {
+  foreignKey,
+  pgTable,
+  primaryKey,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
-import { orgTable } from "../drizzle";
+import { orgIdColumns } from "../drizzle";
 import { id } from "../drizzle/columns";
 import { User } from "../user/user.sql";
 
-export const Session = orgTable(
+export const Session = pgTable(
   "session",
   {
+    id: id("id").notNull(),
+    orgId: orgIdColumns.orgId,
     userId: id("user_id").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
   },
-  {
-    generateDefaultId: false,
-    includeTimestamps: false,
-  },
   (table) => ({
+    primary: primaryKey({ columns: [table.id, table.orgId] }),
     userReference: foreignKey({
       columns: [table.userId, table.orgId],
       foreignColumns: [User.id, User.orgId],

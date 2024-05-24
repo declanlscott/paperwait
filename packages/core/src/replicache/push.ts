@@ -71,6 +71,7 @@ async function processMutation(
     const [clientGroup] = (await tx
       .select({
         id: ReplicacheClientGroup.id,
+        orgId: ReplicacheClientGroup.orgId,
         cvrVersion: ReplicacheClientGroup.cvrVersion,
         userId: ReplicacheClientGroup.userId,
       })
@@ -79,6 +80,7 @@ async function processMutation(
       .where(eq(ReplicacheClientGroup.id, clientGroupId))) ?? [
       {
         id: clientGroupId,
+        orgId: user.orgId,
         cvrVersion: 0,
         userId: user.id,
       } satisfies OmitTimestamps<ReplicacheClientGroup>,
@@ -94,6 +96,7 @@ async function processMutation(
     const [client] = (await tx
       .select({
         id: ReplicacheClient.id,
+        orgId: ReplicacheClient.orgId,
         clientGroupId: ReplicacheClient.clientGroupId,
         lastMutationId: ReplicacheClient.lastMutationId,
       })
@@ -102,6 +105,7 @@ async function processMutation(
       .where(eq(ReplicacheClient.id, mutation.clientID))) ?? [
       {
         id: mutation.clientID,
+        orgId: user.orgId,
         clientGroupId: clientGroupId,
         lastMutationId: 0,
       } satisfies OmitTimestamps<ReplicacheClient>,
@@ -154,6 +158,7 @@ async function processMutation(
 
     const nextClient = {
       id: client.id,
+      orgId: client.orgId,
       clientGroupId,
       lastMutationId: nextMutationId,
     } satisfies OmitTimestamps<ReplicacheClient>;
@@ -164,7 +169,7 @@ async function processMutation(
         .insert(ReplicacheClientGroup)
         .values(clientGroup)
         .onConflictDoUpdate({
-          target: ReplicacheClientGroup.id,
+          target: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
           set: { ...clientGroup, updatedAt: sql`now()` },
         }),
 

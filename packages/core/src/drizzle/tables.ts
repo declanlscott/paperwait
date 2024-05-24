@@ -13,29 +13,19 @@ import type {
 /**
  * IDs for organization owned tables (used as composite primary key)
  */
-export function orgIdColumns(generateDefaultId = true) {
-  return {
-    id: generateDefaultId
-      ? id("id").$defaultFn(generateId).notNull()
-      : id("id").notNull(),
-    orgId: id("org_id")
+export const orgIdColumns = {
+  get id() {
+    return id("id").$defaultFn(generateId).notNull();
+  },
+  get orgId() {
+    return id("org_id")
       .notNull()
-      .references(() => Organization.id),
-  };
-}
-
-export type OrgTableOptions = {
-  generateDefaultId?: boolean;
-  includeTimestamps?: boolean;
+      .references(() => Organization.id);
+  },
 };
 
-export const defaultOrgTableOptions = {
-  generateDefaultId: true,
-  includeTimestamps: true,
-} satisfies OrgTableOptions;
-
 /**
- * Wrapper for organization owned tables
+ * Wrapper for organization owned tables with timestamps and default ID
  */
 export function orgTable<
   TTableName extends string,
@@ -43,25 +33,17 @@ export function orgTable<
 >(
   name: TTableName,
   columns: TColumnsMap,
-  options: {
-    generateDefaultId?: boolean;
-    includeTimestamps?: boolean;
-  } = defaultOrgTableOptions,
   extraConfig?: (
     self: BuildColumns<
       TTableName,
-      TColumnsMap & ReturnType<typeof orgIdColumns>,
+      TColumnsMap & typeof orgIdColumns & typeof timestamps,
       "pg"
     >,
   ) => PgTableExtraConfig,
 ) {
   return pgTable(
     name,
-    {
-      ...orgIdColumns(options.generateDefaultId),
-      ...(options.includeTimestamps ? timestamps : {}),
-      ...columns,
-    },
+    { ...orgIdColumns, ...timestamps, ...columns },
     (table) => ({
       primary: primaryKey({ columns: [table.id, table.orgId] }),
       ...extraConfig,

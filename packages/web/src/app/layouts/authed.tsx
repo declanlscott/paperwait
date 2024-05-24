@@ -1,5 +1,5 @@
 import { Link } from "react-aria-components";
-import { formatChannel } from "@paperwait/core/utils";
+import { formatChannel } from "@paperwait/core/realtime";
 import { Outlet, useRouter } from "@tanstack/react-router";
 
 import {

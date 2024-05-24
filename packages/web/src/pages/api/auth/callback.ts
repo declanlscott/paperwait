@@ -9,9 +9,10 @@ import {
   UnauthorizedError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
+import { formatChannel } from "@paperwait/core/realtime";
 import { pokeMany } from "@paperwait/core/replicache";
 import { User } from "@paperwait/core/user";
-import { formatChannel, parseSchema } from "@paperwait/core/utils";
+import { parseSchema } from "@paperwait/core/valibot";
 import { IsUserExistsResultBody } from "@paperwait/core/xml-rpc";
 import { OAuth2RequestError } from "arctic";
 import { and, eq } from "drizzle-orm";
@@ -130,7 +131,10 @@ export async function GET(context: APIContext) {
         await pokeMany(userIds);
       }
 
-      const { cookie } = await createSession(existingUser.id);
+      const { cookie } = await createSession(
+        existingUser.id,
+        storedOrgId.value,
+      );
 
       context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
@@ -171,7 +175,7 @@ export async function GET(context: APIContext) {
 
     await pokeMany(admins.map(({ id }) => formatChannel("user", id)));
 
-    const { cookie } = await createSession(newUser.id);
+    const { cookie } = await createSession(newUser.id, storedOrgId.value);
 
     context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 

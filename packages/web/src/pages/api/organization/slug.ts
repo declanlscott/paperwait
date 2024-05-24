@@ -1,7 +1,7 @@
 import { db } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
-import { parseSchema } from "@paperwait/core/utils";
+import { parseSchema } from "@paperwait/core/valibot";
 import { eq } from "drizzle-orm";
 import { pick } from "valibot";
 

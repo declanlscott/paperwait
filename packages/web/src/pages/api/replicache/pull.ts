@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BadRequestError, HttpError } from "@paperwait/core/errors";
 import { pull, PullRequest } from "@paperwait/core/replicache";
-import { parseSchema } from "@paperwait/core/utils";
+import { parseSchema } from "@paperwait/core/valibot";
 
 import { authorize } from "~/lib/auth/authorize";
 

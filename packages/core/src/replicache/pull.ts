@@ -86,12 +86,14 @@ export async function pull(
       .insert(ReplicacheClientGroup)
       .values({
         id: pullRequest.clientGroupID,
+        orgId: user.orgId,
         userId: user.id,
         cvrVersion: 0,
       })
       .onConflictDoNothing({ target: ReplicacheClientGroup.id })
       .returning({
         id: ReplicacheClientGroup.id,
+        orgId: ReplicacheClientGroup.orgId,
         cvrVersion: ReplicacheClientGroup.cvrVersion,
         userId: ReplicacheClientGroup.userId,
       });
@@ -157,8 +159,9 @@ export async function pull(
       .insert(ReplicacheClientGroup)
       .values(nextClientGroup)
       .onConflictDoUpdate({
-        target: ReplicacheClientGroup.id,
+        target: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
         set: {
+          orgId: nextClientGroup.orgId,
           userId: nextClientGroup.userId,
           cvrVersion: nextClientGroup.cvrVersion,
           updatedAt: sql`now()`,
@@ -168,6 +171,7 @@ export async function pull(
     // 16-17: Generate client view record id, store client view record
     await tx.insert(ReplicacheClientView).values({
       clientGroupId: baseClientGroup.id,
+      orgId: user.orgId,
       version: nextCvrVersion,
       record: nextCvr,
     });
