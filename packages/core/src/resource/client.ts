@@ -6,9 +6,8 @@ import type { ClientResourceType } from "../types/resource";
 
 export const ClientResource = Object.entries({ ...Resource }).reduce(
   (clientResource, [key, value]) => {
-    if (key.startsWith(CLIENT_RESOURCE_PREFIX) && value) {
+    if (key.startsWith(CLIENT_RESOURCE_PREFIX) && value)
       clientResource[key.slice(CLIENT_RESOURCE_PREFIX.length)] = value;
-    }
 
     return clientResource;
   },

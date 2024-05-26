@@ -112,11 +112,10 @@ async function processMutation(
     ];
 
     // 6: Verify requesting client group owns the client
-    if (client.clientGroupId !== clientGroupId) {
+    if (client.clientGroupId !== clientGroupId)
       throw new Error(
         `Client ${mutation.clientID} does not belong to client group ${clientGroupId}`,
       );
-    }
 
     // 7: Next mutation ID
     const nextMutationId = client.lastMutationId + 1;
@@ -129,9 +128,8 @@ async function processMutation(
     }
 
     // 9: Rollback and throw if mutation is from the future
-    if (mutation.id > nextMutationId) {
+    if (mutation.id > nextMutationId)
       throw new Error(`Mutation ${mutation.id} is from the future - aborting`);
-    }
 
     const start = Date.now();
 

@@ -12,13 +12,11 @@ export function serializeEntity<TEntity extends Record<string, unknown>>(
   entity: TEntity,
 ) {
   return Object.entries(entity).reduce((serializedEntity, [key, value]) => {
-    if (value instanceof Date) {
+    if (value instanceof Date)
       return { ...serializedEntity, [key]: value.toISOString() };
-    }
 
-    if (value instanceof Object) {
+    if (value instanceof Object)
       return { ...serializedEntity, [key]: JSON.stringify(value) };
-    }
 
     return { ...serializedEntity, [key]: value };
   }, {} as SerializedEntity<TEntity>);

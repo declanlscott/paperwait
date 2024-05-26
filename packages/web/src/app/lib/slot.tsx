@@ -25,9 +25,7 @@ export function SlotProvider(props: SlotProviderProps) {
 export function useSlot() {
   const context = useContext(SlotContext);
 
-  if (!context) {
-    throw new Error("useSlot must be used within a SlotProvider");
-  }
+  if (!context) throw new Error("useSlot must be used within a SlotProvider");
 
   return context;
 }

@@ -163,12 +163,11 @@ export async function GET(context: APIContext) {
         })
         .returning({ id: User.id });
 
-      if (isInitializing) {
+      if (isInitializing)
         await tx
           .update(Organization)
           .set({ status: "active" })
           .where(eq(Organization.id, storedOrgId.value));
-      }
 
       return { newUser, admins };
     });

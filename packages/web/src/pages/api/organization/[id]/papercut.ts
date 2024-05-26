@@ -15,9 +15,7 @@ export async function POST(context: APIContext) {
   try {
     const { user } = authorize(context, ["administrator"]);
 
-    if (context.params.id! !== user.orgId) {
-      throw new ForbiddenError();
-    }
+    if (context.params.id! !== user.orgId) throw new ForbiddenError();
 
     const body = await context.request.json();
     const data = parseSchema(PaperCutParameter, body, {

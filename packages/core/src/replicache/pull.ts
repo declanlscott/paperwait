@@ -99,9 +99,8 @@ export async function pull(
       });
 
     // 5: Verify requesting client group owns requested client
-    if (baseClientGroup.userId !== user.id) {
+    if (baseClientGroup.userId !== user.id)
       throw new UnauthorizedError("User does not own client group");
-    }
 
     // 6: Read all domain data, just ids and versions
     // 7: Read all clients in the client group
@@ -122,9 +121,7 @@ export async function pull(
     const diff = diffCvr(baseCvr, nextCvr);
 
     // 10: If diff is empty, return no-op
-    if (prevClientView && isCvrDiffEmpty(diff)) {
-      return null;
-    }
+    if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
     // 11: Get entities
     const [users, orders] = await Promise.all([
@@ -190,7 +187,7 @@ export async function pull(
   });
 
   // 10: If transaction result returns empty diff, return no-op
-  if (!result) {
+  if (!result)
     return {
       type: "success",
       response: {
@@ -199,7 +196,6 @@ export async function pull(
         lastMutationIDChanges: {},
       },
     };
-  }
 
   return {
     type: "success",
@@ -229,13 +225,12 @@ function buildPatch(
       dels.forEach((id) => patch.push({ op: "del", key: `${name}/${id}` }));
 
       puts.forEach((entity) => {
-        if (typeof entity.id === "string") {
+        if (typeof entity.id === "string")
           patch.push({
             op: "put",
             key: `${name}/${entity.id}`,
             value: entity,
           });
-        }
       });
 
       return patch;

@@ -2,9 +2,7 @@
 import { AWS_REGION } from "@paperwait/core/constants";
 
 const AWS_ORG_NAME = process.env.AWS_ORG_NAME;
-if (!AWS_ORG_NAME) {
-  throw new Error("AWS_ORG_NAME is not set");
-}
+if (!AWS_ORG_NAME) throw new Error("AWS_ORG_NAME is not set");
 
 export default $config({
   app(input) {

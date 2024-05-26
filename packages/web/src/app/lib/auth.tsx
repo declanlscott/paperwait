@@ -61,10 +61,9 @@ export function AuthProvider(props: AuthProviderProps) {
         logout: async () => {
           const result = await ky.post("/api/auth/logout");
 
-          if (result.status === 204) {
+          if (result.status === 204)
             // Flush sync to ensure the reset finishes before the router runs
             flushSync(get().actions.reset);
-          }
         },
         protectRoute: (from) => {
           if (!get().user)
@@ -91,9 +90,8 @@ export function AuthProvider(props: AuthProviderProps) {
 export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
   const store = useContext(AuthContext);
 
-  if (!store) {
+  if (!store)
     throw new Error("useAuthStore must be used within an AuthProvider");
-  }
 
   return useStore(store, selector);
 }
@@ -115,14 +113,13 @@ export type UnAuthed = {
 export const useAuthContext = () =>
   useAuthStore(
     useShallow(({ user, session, org }) => {
-      if (!user || !session || !org) {
+      if (!user || !session || !org)
         return {
           isAuthed: false,
           user: null,
           session: null,
           org: null,
         } satisfies UnAuthed;
-      }
 
       return { isAuthed: true, user, session, org } satisfies Authed;
     }),
@@ -139,9 +136,7 @@ export function AuthedProvider(props: PropsWithChildren) {
   // Render the login page if the user is not Authed
   if (!auth.isAuthed) {
     // Don't redirect if we're already on the login page
-    if (location.href.includes("/login")) {
-      return props.children;
-    }
+    if (location.href.includes("/login")) return props.children;
 
     // Otherwise redirect there
     return <Navigate to="/login" search={initialLoginSearchParams} />;
@@ -158,9 +153,8 @@ export function AuthedProvider(props: PropsWithChildren) {
 export function useAuthedContext() {
   const auth = useContext(AuthedContext);
 
-  if (!auth) {
+  if (!auth)
     throw new Error("useAuthedContext must be used within an AuthedProvider");
-  }
 
   return auth;
 }

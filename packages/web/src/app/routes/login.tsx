@@ -12,9 +12,7 @@ export const Route = createFileRoute("/login")({
   validateSearch: (search) =>
     parse(fallback(loginSearchParams, initialLoginSearchParams), search),
   beforeLoad: ({ context }) => {
-    if (context.authStore.user) {
-      throw redirect({ to: "/dashboard" });
-    }
+    if (context.authStore.user) throw redirect({ to: "/dashboard" });
   },
   component: () => <Component />,
 });

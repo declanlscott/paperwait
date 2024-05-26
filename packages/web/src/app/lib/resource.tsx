@@ -24,9 +24,8 @@ export function ResourceProvider(props: ResourceProviderProps) {
 export function useResource() {
   const context = useContext(ResourceContext);
 
-  if (!context) {
+  if (!context)
     throw new Error("useResource must be used within a ResourceProvider");
-  }
 
   return context;
 }

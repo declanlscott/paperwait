@@ -13,13 +13,11 @@ export function authorize(
     "customer",
   ],
 ) {
-  if (!context.locals.session || !context.locals.user) {
+  if (!context.locals.session || !context.locals.user)
     throw new UnauthorizedError();
-  }
 
-  if (!assertRole(context.locals.user, roleSet, false)) {
+  if (!assertRole(context.locals.user, roleSet, false))
     throw new ForbiddenError();
-  }
 
   return { user: context.locals.user, session: context.locals.session };
 }
