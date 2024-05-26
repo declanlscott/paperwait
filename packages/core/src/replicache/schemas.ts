@@ -14,6 +14,7 @@ import {
   string,
   union,
   unknown,
+  uuid,
   variant,
 } from "valibot";
 
@@ -54,7 +55,7 @@ export const PushRequest = variant("pushVersion", [
   }),
   object({
     pushVersion: literal(1),
-    clientGroupID: NanoId,
+    clientGroupID: string([uuid()]),
     mutations: array(
       object({
         name: string(),
@@ -124,7 +125,7 @@ export const PullRequest = variant("pullVersion", [
         intersect([JsonValue, object({ order: union([string(), number()]) })]),
       ]),
     ),
-    clientGroupID: NanoId,
+    clientGroupID: string([uuid()]),
   }),
 ]);
 export type PullRequest = Output<typeof PullRequest>;

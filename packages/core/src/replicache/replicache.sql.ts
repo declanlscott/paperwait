@@ -6,6 +6,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 import { id, timestamps } from "../drizzle/columns";
@@ -19,14 +20,17 @@ export const ReplicacheMeta = pgTable("replicache_meta", {
   value: json("value").notNull(),
 });
 
-export const ReplicacheClientGroup = orgTable(
+export const ReplicacheClientGroup = pgTable(
   "replicache_client_group",
   {
+    id: uuid("id").notNull(),
+    orgId: orgIdColumns.orgId,
     userId: id("user_id").notNull(),
     cvrVersion: integer("cvr_version").notNull(),
+    ...timestamps,
   },
-  // defaultOrgTableOptions,
   (table) => ({
+    primary: primaryKey({ columns: [table.id, table.orgId] }),
     userReference: foreignKey({
       columns: [table.userId, table.orgId],
       foreignColumns: [User.id, User.orgId],
@@ -39,12 +43,11 @@ export type ReplicacheClientGroup = typeof ReplicacheClientGroup.$inferSelect;
 export const ReplicacheClient = orgTable(
   "replicache_client",
   {
-    clientGroupId: id("client_group_id").notNull(),
+    clientGroupId: uuid("client_group_id").notNull(),
     lastMutationId: bigint("last_mutation_id", { mode: "number" })
       .notNull()
       .default(0),
   },
-  // defaultOrgTableOptions,
   (table) => ({
     clientGroupReference: foreignKey({
       columns: [table.clientGroupId, table.orgId],
@@ -59,7 +62,7 @@ export const ReplicacheClientView = pgTable(
   "replicache_client_view",
   {
     orgId: orgIdColumns.orgId,
-    clientGroupId: id("client_group_id").notNull(),
+    clientGroupId: uuid("client_group_id").notNull(),
     version: integer("version").notNull(),
     record: json("record").$type<ClientViewRecord>().notNull(),
     ...timestamps,

@@ -176,7 +176,7 @@ async function processMutation(
         .insert(ReplicacheClient)
         .values(nextClient)
         .onConflictDoUpdate({
-          target: ReplicacheClient.id,
+          target: [ReplicacheClient.id, ReplicacheClient.orgId],
           set: { ...nextClient, updatedAt: sql`now()` },
         }),
     ]);

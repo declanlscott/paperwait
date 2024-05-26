@@ -1,10 +1,11 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { transact } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import { User } from "../user/user.sql";
 import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
+import { getClientGroup, getData } from "./data";
 import { searchClients, searchOrders, searchUsers } from "./metadata";
 import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
 
@@ -80,22 +81,12 @@ export async function pull(
         client: {},
       } satisfies ClientViewRecord);
 
-    // 4: Get client group (insert into db if it doesn't exist)
-    const [baseClientGroup] = await tx
-      .insert(ReplicacheClientGroup)
-      .values({
-        id: pullRequest.clientGroupID,
-        orgId: user.orgId,
-        userId: user.id,
-        cvrVersion: 0,
-      })
-      .onConflictDoNothing({ target: ReplicacheClientGroup.id })
-      .returning({
-        id: ReplicacheClientGroup.id,
-        orgId: ReplicacheClientGroup.orgId,
-        cvrVersion: ReplicacheClientGroup.cvrVersion,
-        userId: ReplicacheClientGroup.userId,
-      });
+    // 4: Get client group
+    const baseClientGroup = await getClientGroup(
+      tx,
+      user,
+      pullRequest.clientGroupID,
+    );
 
     // 5: Verify requesting client group owns requested client
     if (baseClientGroup.userId !== user.id)
@@ -124,8 +115,8 @@ export async function pull(
 
     // 11: Get entities
     const [users, orders] = await Promise.all([
-      tx.select().from(User).where(inArray(User.id, diff.user.puts)),
-      tx.select().from(Order).where(inArray(Order.id, diff.order.puts)),
+      getData(tx, User, User.id, diff.user.puts),
+      getData(tx, Order, Order.id, diff.order.puts),
     ]);
 
     // 12: Changed clients - no need to re-read clients from database,
