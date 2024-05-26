@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
-import { AuthProvider, useAuthStore } from "~/app/lib/auth";
-import { ResourceProvider, useResource } from "~/app/lib/resource";
-import { SlotProvider } from "~/app/lib/slot";
+import { AuthProvider } from "~/app/components/providers/auth";
+import { ResourceProvider } from "~/app/components/providers/resource";
+import { SlotProvider } from "~/app/components/providers/slot";
+import { useAuthStore } from "~/app/lib/hooks/auth";
+import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { ClientResourceType } from "@paperwait/core/types";
-import type { Slot } from "~/app/lib/slot";
+import type { Auth, Slot } from "~/app/types";
 
 type AppRouter = ReturnType<
   typeof createRouter<typeof routeTree, "always" | "never" | "preserve">
@@ -21,11 +23,7 @@ declare module "@tanstack/react-router" {
 
 export interface AppProps extends Partial<Slot> {
   clientResource: ClientResourceType;
-  initialAuth: {
-    user: App.Locals["user"];
-    session: App.Locals["session"];
-    org: App.Locals["org"];
-  };
+  initialAuth: Auth;
 }
 
 export function App(props: AppProps) {

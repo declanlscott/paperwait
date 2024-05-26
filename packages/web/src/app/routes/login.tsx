@@ -2,10 +2,10 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
 import { fallback, parse, safeParse } from "valibot";
 
-import { Button } from "~/app/components/button";
-import { Input } from "~/app/components/input";
-import { Label } from "~/app/components/label";
-import { initialLoginSearchParams, loginSearchParams } from "~/app/lib/auth";
+import { Button } from "~/app/components/ui/primitives/button";
+import { Input } from "~/app/components/ui/primitives/input";
+import { Label } from "~/app/components/ui/primitives/label";
+import { initialLoginSearchParams, loginSearchParams } from "~/app/lib/schemas";
 import { buttonStyles } from "~/styles/components/button";
 
 export const Route = createFileRoute("/login")({
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/login")({
   beforeLoad: ({ context }) => {
     if (context.authStore.user) throw redirect({ to: "/dashboard" });
   },
-  component: () => <Component />,
+  component: Component,
 });
 
 function Component() {
@@ -57,6 +57,7 @@ function Component() {
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="org">Organization</Label>
+
               <Input
                 id="org"
                 name="org"

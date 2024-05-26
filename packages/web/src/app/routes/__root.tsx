@@ -14,8 +14,7 @@ import type {
   ToOptions,
   ToPathOption,
 } from "@tanstack/react-router";
-import type { AuthStore } from "~/app/lib/auth";
-import type { ResourceContext } from "~/app/lib/resource";
+import type { AuthStore, ResourceContext } from "~/app/lib/contexts";
 
 const TanStackRouterDevtools = import.meta.env.DEV
   ? lazy(() =>
@@ -32,7 +31,7 @@ type RouterContext = {
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  component: () => <Component />,
+  component: Component,
 });
 
 declare module "react-aria-components" {

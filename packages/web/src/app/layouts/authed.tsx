@@ -1,51 +1,20 @@
 import { Link } from "react-aria-components";
 import { formatChannel } from "@paperwait/core/realtime";
-import { Outlet, useRouter } from "@tanstack/react-router";
+import { Outlet } from "@tanstack/react-router";
 
-import {
-  AuthedProvider,
-  useAuthActions,
-  useAuthedContext,
-} from "~/app/lib/auth";
-import { useRealtime } from "~/app/lib/realtime";
-import { ReplicacheProvider } from "~/app/lib/replicache";
+import { AuthedProvider } from "~/app/components/providers/auth";
+import { ReplicacheProvider } from "~/app/components/providers/replicache";
+import { useAuthedContext, useLogout } from "~/app/lib/hooks/auth";
+import { useRealtime } from "~/app/lib/hooks/realtime";
 
 import type { PropsWithChildren } from "react";
 
 export function AuthedLayout() {
-  const { logout } = useAuthActions();
-  const { invalidate } = useRouter();
-
-  async function handleLogout() {
-    await logout();
-    await invalidate();
-  }
-
   return (
     <AuthedProvider>
       <ReplicacheProvider>
         <Realtime>
-          <nav>
-            <img src="./logo.svg" className="size-10" />
-
-            <ul>
-              <li>
-                <a href="/">Home</a>
-              </li>
-
-              <li>
-                <Link href="/dashboard">Dashboard</Link>
-              </li>
-
-              <li>
-                <Link href="/settings">Settings</Link>
-              </li>
-
-              <li>
-                <Link onPress={handleLogout}>Logout</Link>
-              </li>
-            </ul>
-          </nav>
+          <Nav />
 
           <Outlet />
         </Realtime>
@@ -61,4 +30,32 @@ function Realtime(props: PropsWithChildren) {
   useRealtime({ channel: formatChannel("user", user.id) });
 
   return props.children;
+}
+
+function Nav() {
+  const logout = useLogout();
+
+  return (
+    <nav>
+      <img src="./logo.svg" className="size-10" />
+
+      <ul>
+        <li>
+          <a href="/">Home</a>
+        </li>
+
+        <li>
+          <Link href="/dashboard">Dashboard</Link>
+        </li>
+
+        <li>
+          <Link href="/settings">Settings</Link>
+        </li>
+
+        <li>
+          <Link onPress={logout}>Logout</Link>
+        </li>
+      </ul>
+    </nav>
+  );
 }

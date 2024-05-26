@@ -1,7 +1,7 @@
 import usePartySocket from "partysocket/react";
 
-import { useReplicache } from "~/app/lib/replicache";
-import { useResource } from "~/app/lib/resource";
+import { useReplicache } from "~/app/lib/hooks/replicache";
+import { useResource } from "~/app/lib/hooks/resource";
 
 type RealtimeProps = {
   channel: string;
