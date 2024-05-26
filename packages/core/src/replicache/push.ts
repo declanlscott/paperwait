@@ -16,7 +16,7 @@ import type {
   VersionNotSupportedResponse,
 } from "replicache";
 import type { Transaction } from "../database/transaction";
-import type { OmitTimestamps } from "../drizzle/utils";
+import type { OmitTimestamps } from "../types/drizzle";
 
 type PushResult =
   | { type: "success" }

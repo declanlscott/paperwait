@@ -1,7 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { transact } from "../database/transaction";
-import { serializeEntity } from "../drizzle/utils";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import { User } from "../user/user.sql";
@@ -125,16 +124,8 @@ export async function pull(
 
     // 11: Get entities
     const [users, orders] = await Promise.all([
-      tx
-        .select()
-        .from(User)
-        .where(inArray(User.id, diff.user.puts))
-        .then((users) => users.map(serializeEntity)),
-      tx
-        .select()
-        .from(Order)
-        .where(inArray(Order.id, diff.order.puts))
-        .then((orders) => orders.map(serializeEntity)),
+      tx.select().from(User).where(inArray(User.id, diff.user.puts)),
+      tx.select().from(Order).where(inArray(Order.id, diff.order.puts)),
     ]);
 
     // 12: Changed clients - no need to re-read clients from database,
@@ -234,7 +225,7 @@ function buildPatch(
       });
 
       return patch;
-    }, {} as Array<PatchOperation>),
+    }, [] as Array<PatchOperation>),
   );
 
   return patch;
