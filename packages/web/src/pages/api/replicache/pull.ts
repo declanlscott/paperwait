@@ -1,4 +1,8 @@
-import { BadRequestError, HttpError } from "@paperwait/core/errors";
+import {
+  BadRequestError,
+  DatabaseError,
+  HttpError,
+} from "@paperwait/core/errors";
 import { pull, PullRequest } from "@paperwait/core/replicache";
 import { parseSchema } from "@paperwait/core/valibot";
 
@@ -29,6 +33,8 @@ export async function POST(context: APIContext) {
 
     if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
+    if (e instanceof DatabaseError)
+      return new Response(e.message, { status: 500 });
 
     return new Response("Internal server error", { status: 500 });
   }
