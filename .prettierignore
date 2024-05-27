@@ -5,3 +5,4 @@ routeTree.gen.ts
 dist
 .sst
 .migrations
+sst-env.d.ts
