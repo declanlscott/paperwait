@@ -56,6 +56,7 @@ export const ManagerToSharedAccount = pgTable(
     }),
   }),
 );
+export type ManagerToSharedAccount = typeof ManagerToSharedAccount.$inferSelect;
 
 export const organizationRelations = relations(Organization, ({ many }) => ({
   user: many(User, { relationName: "userOrg" }),

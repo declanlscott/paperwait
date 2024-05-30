@@ -2,21 +2,19 @@ import ky, { HTTPError as kyHttpError } from "ky";
 import { Resource } from "sst";
 
 import { apiGatewaySigner } from "../aws/signature-v4";
-import {
-  HttpError,
-  InternalServerError,
-  UnauthorizedError,
-} from "../errors/http";
+import { HttpError, InternalServerError } from "../errors/http";
 import { validate } from "../valibot";
 import {
   GetSharedAccountPropertiesOutput,
   IsUserExistsResultBody,
+  ListSharedAccountsResultBody,
   ListUserSharedAccountsResultBody,
 } from "../xml-rpc/schemas";
 
 import type {
   GetSharedAccountPropertiesEvent,
   IsUserExistsEvent,
+  ListSharedAccountsEvent,
   ListUserSharedAccountsEvent,
 } from "../xml-rpc/schemas";
 
@@ -32,13 +30,31 @@ export async function isUserExists(event: IsUserExistsEvent) {
       message: "Failed to parse xml-rpc output",
     });
 
-    if (!output) throw new UnauthorizedError("User does not exist in PaperCut");
+    return output;
   } catch (e) {
     throw httpError(e);
   }
 }
 
-export async function getUserSharedAccounts(
+export async function listSharedAccounts(event: ListSharedAccountsEvent) {
+  try {
+    const responseBody = await invokeApi(
+      new URL(`${Resource.PapercutApiGateway.url}/list-shared-accounts`),
+      event,
+    );
+
+    const { output } = validate(ListSharedAccountsResultBody, responseBody, {
+      Error: InternalServerError,
+      message: "Failed to parse xml-rpc output",
+    });
+
+    return output;
+  } catch (e) {
+    throw httpError(e);
+  }
+}
+
+export async function listUserSharedAccounts(
   event: ListUserSharedAccountsEvent,
 ) {
   try {

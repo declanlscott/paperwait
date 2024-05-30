@@ -1,6 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import { Order } from "../order/order.sql";
+import { SharedAccount } from "../shared-account/shared-account.sql";
 import { User } from "../user/user.sql";
 import { ReplicacheClient } from "./replicache.sql";
 
@@ -8,7 +9,7 @@ import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
 
 export type Metadata = {
-  id: string;
+  id: string | number;
   rowVersion: number;
 };
 
@@ -60,6 +61,20 @@ export async function searchOrders(tx: Transaction, user: LuciaUser) {
         .select({ id: Order.id, rowVersion: sql<number>`xmin` })
         .from(Order)
         .where(and(eq(Order.orgId, user.orgId), eq(Order.customerId, user.id))),
+  });
+}
+
+export async function searchSharedAccounts(tx: Transaction, user: LuciaUser) {
+  const selectAll = async () =>
+    await tx
+      .select({ id: SharedAccount.id, rowVersion: sql<number>`xmin` })
+      .from(SharedAccount);
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsTechnician: selectAll,
+    searchAsManager: async () => [],
+    searchAsCustomer: async () => [],
   });
 }
 

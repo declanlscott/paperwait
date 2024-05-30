@@ -23,3 +23,5 @@ export const xmlRpcMethod = createPrefixedRecord("api.", [
   "listSharedAccounts",
   "adjustSharedAccountAccountBalance",
 ]);
+
+export const PAPERCUT_API_PAGINATION_LIMIT = 1000;

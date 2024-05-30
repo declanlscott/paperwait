@@ -5,7 +5,10 @@ import { BadRequestError, NotImplementedError } from "../errors/http";
 import {
   createOrder,
   deleteOrder,
+  deleteSharedAccount,
   deleteUser,
+  syncSharedAccounts,
+  syncUserSharedAccounts,
   updateUserRole,
 } from "../mutations/authoritative";
 import { Mutation } from "../mutations/schemas";
@@ -210,6 +213,12 @@ async function mutate(
       return await createOrder(tx, user, mutation.args);
     case "deleteOrder":
       return await deleteOrder(tx, user, mutation.args);
+    case "syncSharedAccounts":
+      return await syncSharedAccounts(tx, user, mutation.args);
+    case "deleteSharedAccount":
+      return await deleteSharedAccount(tx, user, mutation.args);
+    case "syncUserSharedAccounts":
+      return await syncUserSharedAccounts(tx, user, mutation.args);
     default:
       mutationName satisfies never;
 

@@ -15,12 +15,13 @@ export const lucia = new Lucia(adapter, {
   sessionCookie: {
     attributes: { secure: (process.env.PROD ?? "false") === "true" },
   },
-  getUserAttributes: ({ providerId, orgId, name, role, email }) => ({
-    providerId,
-    orgId,
-    name,
-    role,
-    email,
+  getUserAttributes: (attributes) => ({
+    providerId: attributes.providerId,
+    orgId: attributes.orgId,
+    name: attributes.name,
+    role: attributes.role,
+    email: attributes.email,
+    username: attributes.username,
   }),
   getSessionAttributes: ({ orgId }) => ({ orgId }),
 });

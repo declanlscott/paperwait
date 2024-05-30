@@ -22,6 +22,7 @@ import type {
   ClientViewRecord,
   ClientViewRecordEntries,
 } from "./client-view-record";
+import type { Metadata } from "./metadata";
 
 type PullResult =
   | {
@@ -115,8 +116,18 @@ export async function pull(
 
     // 11: Get entities
     const [users, orders] = await Promise.all([
-      getData(tx, User, User.id, diff.user.puts, User.deletedAt),
-      getData(tx, Order, Order.id, diff.order.puts, Order.deletedAt),
+      getData(
+        tx,
+        User,
+        { orgId: User.orgId, id: User.id, deletedAt: User.deletedAt },
+        { orgId: user.orgId, ids: diff.user.puts },
+      ),
+      getData(
+        tx,
+        Order,
+        { orgId: Order.orgId, id: Order.id, deletedAt: Order.deletedAt },
+        { orgId: user.orgId, ids: diff.order.puts },
+      ),
     ]);
 
     // 12: Changed clients - no need to re-read clients from database,
@@ -195,7 +206,10 @@ export async function pull(
 }
 
 function buildPatch(
-  entities: Record<string, { puts: ReadonlyJSONObject[]; dels: string[] }>,
+  entities: Record<
+    string,
+    { puts: ReadonlyJSONObject[]; dels: Array<Metadata["id"]> }
+  >,
   clear: boolean,
 ) {
   const patch: Array<PatchOperation> = [];

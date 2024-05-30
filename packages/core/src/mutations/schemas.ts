@@ -1,12 +1,13 @@
 import { createInsertSchema } from "drizzle-valibot";
-import { literal, merge, object, picklist, variant } from "valibot";
+import { literal, merge, object, picklist, undefined_, variant } from "valibot";
 
 import { NanoId } from "../nano-id";
 import { Order } from "../order/order.sql";
 import { PushRequest } from "../replicache/schemas";
 import { UserRole } from "../user/user.sql";
+import { SharedAccountId } from "../xml-rpc/schemas";
 
-import type { Output } from "valibot";
+import type { BaseSchema, Output } from "valibot";
 
 export const DeleteUserMutationArgs = object({
   id: NanoId,
@@ -27,37 +28,44 @@ export type CreateOrderMutationArgs = Output<typeof CreateOrderMutationArgs>;
 export const DeleteOrderMutationArgs = object({ id: NanoId });
 export type DeleteOrderMutationArgs = Output<typeof DeleteOrderMutationArgs>;
 
+export const SyncSharedAccountsMutationArgs = undefined_();
+export type SyncSharedAccountsMutationArgs = Output<
+  typeof SyncSharedAccountsMutationArgs
+>;
+
+export const DeleteSharedAccountMutationArgs = object({ id: SharedAccountId });
+export type DeleteSharedAccountMutationArgs = Output<
+  typeof DeleteSharedAccountMutationArgs
+>;
+
+export const SyncUserSharedAccountsMutationArgs = undefined_();
+export type SyncUserSharedAccountsMutationArgs = Output<
+  typeof SyncUserSharedAccountsMutationArgs
+>;
+
 export const BaseMutation = PushRequest.options[1].entries.mutations.item;
 
+function mutation<TName extends string, TArgs extends BaseSchema>(
+  name: TName,
+  Args: TArgs,
+) {
+  return merge([
+    BaseMutation,
+    object({
+      name: literal(name),
+      args: Args,
+    }),
+  ]);
+}
+
 export const Mutation = variant("name", [
-  merge([
-    BaseMutation,
-    object({
-      name: literal("deleteUser"),
-      args: DeleteUserMutationArgs,
-    }),
-  ]),
-  merge([
-    BaseMutation,
-    object({
-      name: literal("updateUserRole"),
-      args: UpdateUserRoleMutationArgs,
-    }),
-  ]),
-  merge([
-    BaseMutation,
-    object({
-      name: literal("createOrder"),
-      args: CreateOrderMutationArgs,
-    }),
-  ]),
-  merge([
-    BaseMutation,
-    object({
-      name: literal("deleteOrder"),
-      args: DeleteOrderMutationArgs,
-    }),
-  ]),
+  mutation("deleteUser", DeleteUserMutationArgs),
+  mutation("updateUserRole", UpdateUserRoleMutationArgs),
+  mutation("createOrder", CreateOrderMutationArgs),
+  mutation("deleteOrder", DeleteOrderMutationArgs),
+  mutation("syncSharedAccounts", SyncSharedAccountsMutationArgs),
+  mutation("deleteSharedAccount", DeleteSharedAccountMutationArgs),
+  mutation("syncUserSharedAccounts", SyncUserSharedAccountsMutationArgs),
 ]);
 export type Mutation = Output<typeof Mutation>;
 
@@ -66,4 +74,12 @@ export const permissions = {
   deleteUser: ["administrator"],
   createOrder: ["administrator", "technician", "manager", "customer"],
   deleteOrder: ["administrator", "technician"],
+  syncSharedAccounts: ["administrator"],
+  deleteSharedAccount: ["administrator"],
+  syncUserSharedAccounts: [
+    "administrator",
+    "technician",
+    "manager",
+    "customer",
+  ],
 } as const satisfies Record<Mutation["name"], Array<UserRole>>;

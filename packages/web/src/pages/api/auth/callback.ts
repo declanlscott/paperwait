@@ -1,10 +1,5 @@
 import { createSession } from "@paperwait/core/auth";
-import {
-  CustomerToSharedAccount,
-  db,
-  transact,
-} from "@paperwait/core/database";
-import { buildConflictUpdateColumns } from "@paperwait/core/drizzle";
+import { db, transact } from "@paperwait/core/database";
 import {
   BadRequestError,
   DatabaseError,
@@ -13,24 +8,17 @@ import {
   InternalServerError,
   NotFoundError,
   NotImplementedError,
+  UnauthorizedError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
-import {
-  getSharedAccountProperties,
-  getUserSharedAccounts,
-  isUserExists,
-} from "@paperwait/core/papercut";
+import { isUserExists } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
-import {
-  getUsersByRoles,
-  getUsersBySharedAccounts,
-  poke,
-} from "@paperwait/core/replicache";
-import { SharedAccount } from "@paperwait/core/shared-account";
+import { getUsersByRoles, poke } from "@paperwait/core/replicache";
+import { syncUserSharedAccounts } from "@paperwait/core/sync";
 import { User } from "@paperwait/core/user";
 import { validate } from "@paperwait/core/valibot";
 import { OAuth2RequestError } from "arctic";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import ky from "ky";
 import { parseJWT } from "oslo/jwt";
 import { isDeepEqual } from "remeda";
@@ -118,21 +106,21 @@ export async function GET(context: APIContext) {
       isUserExists({
         orgId: storedOrgId.value,
         input: { username: idTokenPayload.username },
-      }),
-      getUserSharedAccounts({
-        orgId: storedOrgId.value,
-        input: { username: idTokenPayload.username },
+      }).then((exists) => {
+        if (!exists)
+          throw new UnauthorizedError("User does not exist in PaperCut");
+
+        return exists;
       }),
       getUserInfo(provider, tokens.accessToken),
     ]);
 
     handlePromiseResult(results[0]);
-    const sharedAccountNames = handlePromiseResult(results[1]);
-    const userInfo = handlePromiseResult(results[2]);
+    const userInfo = handlePromiseResult(results[1]);
 
     const userId = await processUser(
       { id: storedOrgId.value, status: org.status },
-      { idTokenPayload, sharedAccountNames, info: userInfo },
+      { idTokenPayload, info: userInfo },
     );
 
     const { cookie } = await createSession(userId, storedOrgId.value);
@@ -269,7 +257,6 @@ async function processUser(
   org: Pick<Organization, "id" | "status">,
   user: {
     idTokenPayload: IdTokenPayload;
-    sharedAccountNames: Array<SharedAccount["name"]>;
     info: UserInfo;
   },
 ): Promise<User["id"]> {
@@ -283,34 +270,14 @@ async function processUser(
     .from(User)
     .where(eq(User.providerId, user.idTokenPayload.userProviderId));
 
-  const sharedAccounts = await Promise.all(
-    user.sharedAccountNames.map(async (sharedAccountName) => {
-      const properties = await getSharedAccountProperties({
-        orgId: org.id,
-        input: { sharedAccountName },
-      });
-
-      return {
-        id: properties.accountId,
-        orgId: org.id,
-        name: sharedAccountName,
-      };
-    }),
-  );
-
   // Create user if it doesn't exist
   if (!existingUser) {
     const { channels, newUser } = await transact(async (tx) => {
       const isInitializing = org.status === "initializing";
 
-      const sharedAccountNameColumn = buildConflictUpdateColumns(
-        SharedAccount,
-        ["name"],
-      );
-
-      const [admins, [newUser], newSharedAccounts] = await Promise.all([
-        // Get all administrators in the organization
-        getUsersByRoles(tx, org.id, ["administrator"]),
+      const [recipients, [newUser]] = await Promise.all([
+        // Get administrators and technicians in the organization
+        getUsersByRoles(tx, org.id, ["administrator", "technician"]),
         // Create new user
         tx
           .insert(User)
@@ -323,18 +290,6 @@ async function processUser(
             username: user.idTokenPayload.username,
           })
           .returning({ id: User.id }),
-        // Create shared accounts if they don't already exist
-        // If shared account name has changed, update it
-        // Return upserted (changes or new)
-        tx
-          .insert(SharedAccount)
-          .values(sharedAccounts)
-          .onConflictDoUpdate({
-            target: [SharedAccount.id, SharedAccount.orgId],
-            set: sharedAccountNameColumn,
-            setWhere: sql`${SharedAccount.name} <> ${sharedAccountNameColumn}`,
-          })
-          .returning({ id: SharedAccount.id }),
         // Update organization status to active if it's still initializing
         isInitializing
           ? tx
@@ -344,31 +299,14 @@ async function processUser(
           : undefined,
       ]);
 
-      const [accountUsers] = await Promise.all([
-        // Get users that have access to the shared accounts
-        getUsersBySharedAccounts(
-          tx,
-          org.id,
-          newSharedAccounts.map(({ id }) => id),
-        ),
-        // Create shared accounts relationships if they don't already exist
-        tx
-          .insert(CustomerToSharedAccount)
-          .values(
-            newSharedAccounts.map((sharedAccount) => ({
-              orgId: org.id,
-              customerId: newUser.id,
-              sharedAccountId: sharedAccount.id,
-            })),
-          )
-          .onConflictDoNothing(),
-      ]);
+      await syncUserSharedAccounts(
+        org.id,
+        newUser.id,
+        user.idTokenPayload.username,
+      );
 
       return {
-        channels: [
-          ...admins.map(({ id }) => formatChannel("user", id)),
-          ...accountUsers.map(({ id }) => formatChannel("user", id)),
-        ],
+        channels: recipients.map(({ id }) => formatChannel("user", id)),
         newUser,
       };
     });
@@ -391,27 +329,35 @@ async function processUser(
     username: user.idTokenPayload.username,
   };
 
-  // Update user info if it has changed
-  if (!isDeepEqual(existingUserInfo, freshUserInfo)) {
-    const channels = await transact(async (tx) => {
-      const [admins] = await Promise.all([
-        getUsersByRoles(tx, org.id, ["administrator"]),
-        tx
-          .update(User)
-          .set(freshUserInfo)
-          .where(
-            and(eq(User.id, existingUser.id), eq(Organization.id, org.id)),
-          ),
-      ]);
+  const channels = await transact(async (tx) => {
+    const userInfoHasChanged = !isDeepEqual(existingUserInfo, freshUserInfo);
 
-      return [
-        formatChannel("user", existingUser.id),
-        ...admins.map(({ id }) => formatChannel("user", id)),
-      ];
-    });
+    const [recipients] = await Promise.all([
+      userInfoHasChanged ? getUsersByRoles(tx, org.id, ["administrator"]) : [],
+      userInfoHasChanged
+        ? tx
+            .update(User)
+            .set(freshUserInfo)
+            .where(
+              and(eq(User.id, existingUser.id), eq(Organization.id, org.id)),
+            )
+        : undefined,
+      syncUserSharedAccounts(
+        org.id,
+        existingUser.id,
+        user.idTokenPayload.username,
+      ),
+    ]);
 
-    await poke(channels);
-  }
+    if (!userInfoHasChanged) return [];
+
+    return [
+      formatChannel("user", existingUser.id),
+      ...recipients.map(({ id }) => formatChannel("user", id)),
+    ];
+  });
+
+  await poke(channels);
 
   return existingUser.id;
 }

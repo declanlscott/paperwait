@@ -49,13 +49,18 @@ export async function getClientGroup(
   );
 }
 
-export async function getData<TTable extends PgTable, TColumn extends PgColumn>(
+export async function getData<
+  TTable extends PgTable,
+  TOrgIdColumn extends PgColumn,
+  TIdColumn extends PgColumn,
+  TDeletedAtColumn extends PgColumn,
+>(
   tx: Transaction,
   table: TTable,
   column: {
-    orgId: TColumn;
-    id: TColumn;
-    deletedAt?: TColumn;
+    orgId: TOrgIdColumn;
+    id: TIdColumn;
+    deletedAt?: TDeletedAtColumn;
   },
   data: { orgId: Organization["id"]; ids: unknown[] },
 ) {

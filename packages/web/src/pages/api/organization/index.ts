@@ -6,6 +6,7 @@ import {
   HttpError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
+import { syncSharedAccounts } from "@paperwait/core/sync";
 import { validate } from "@paperwait/core/valibot";
 
 import { Registration } from "~/lib/schemas";
@@ -41,6 +42,8 @@ export async function POST(context: APIContext) {
         Type: "SecureString",
         Overwrite: false,
       });
+
+      await syncSharedAccounts(org.id);
 
       return org;
     });

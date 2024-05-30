@@ -13,6 +13,8 @@ import {
   unknown,
 } from "valibot";
 
+import { PAPERCUT_API_PAGINATION_LIMIT } from "../constants";
+
 import type { Output } from "valibot";
 
 const BaseEvent = object({
@@ -21,7 +23,12 @@ const BaseEvent = object({
 });
 
 const Offset = fallback(optional(number([integer()])), 0);
-const Limit = fallback(optional(number([integer()])), 1000);
+const Limit = fallback(
+  optional(number([integer()])),
+  PAPERCUT_API_PAGINATION_LIMIT,
+);
+
+export const SharedAccountId = number([integer()]);
 
 // api.isUserExists
 export const IsUserExistsInput = object({
@@ -78,7 +85,7 @@ export const GetSharedAccountPropertiesOutput = transform(
   tuple([
     string(), // access-groups
     string(), // access-users
-    number([integer()]), // account-id
+    SharedAccountId, // account-id
     number(), // balance
     string(), // comment-option
     boolean(), // disabled
@@ -88,31 +95,19 @@ export const GetSharedAccountPropertiesOutput = transform(
     string(), // pin
     boolean(), // restricted
   ]),
-  ([
-    accessGroups,
-    accessUsers,
-    accountId,
-    balance,
-    commentOption,
-    disabled,
-    invoiceOption,
-    notes,
-    overdraftAmount,
-    pin,
-    restricted,
-  ]) => ({
+  (properties) => ({
     output: {
-      accessGroups,
-      accessUsers,
-      accountId,
-      balance,
-      commentOption,
-      disabled,
-      invoiceOption,
-      notes,
-      overdraftAmount,
-      pin,
-      restricted,
+      accessGroups: properties[0],
+      accessUsers: properties[1],
+      accountId: properties[2],
+      balance: properties[3],
+      commentOption: properties[4],
+      disabled: properties[5],
+      invoiceOption: properties[6],
+      notes: properties[7],
+      overdraftAmount: properties[8],
+      pin: properties[9],
+      restricted: properties[10],
     },
   }),
 );
