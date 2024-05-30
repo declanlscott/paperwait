@@ -6,10 +6,6 @@ import { Organization } from "../organization/organization.sql";
 import { formatChannel } from "../realtime";
 import { getUsersByRoles, requireAccessToOrder } from "../replicache/data";
 import { SharedAccount } from "../shared-account/shared-account.sql";
-import {
-  syncSharedAccounts as syncSharedAccountsFn,
-  syncUserSharedAccounts as syncUserSharedAccountsFn,
-} from "../sync/shared-accounts";
 import { assertRole } from "../user/assert";
 import { User } from "../user/user.sql";
 import { permissions } from "./schemas";
@@ -21,8 +17,6 @@ import type {
   DeleteOrderMutationArgs,
   DeleteSharedAccountMutationArgs,
   DeleteUserMutationArgs,
-  SyncSharedAccountsMutationArgs,
-  SyncUserSharedAccountsMutationArgs,
   UpdateUserRoleMutationArgs,
 } from "./schemas";
 
@@ -104,34 +98,6 @@ export async function deleteOrder(
   return adminsTechs.map(({ id }) => formatChannel("user", id));
 }
 
-export async function syncSharedAccounts(
-  tx: Transaction,
-  user: LuciaUser,
-  _args: SyncSharedAccountsMutationArgs,
-) {
-  assertRole(user, permissions.syncSharedAccounts);
-
-  await syncSharedAccountsFn(user.orgId);
-
-  const users = await tx
-    .select({ id: User.id, username: User.username })
-    .from(User)
-    .where(eq(User.orgId, user.orgId));
-
-  const [adminsTechs, customers] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "technician"]),
-    ...users.map(
-      async ({ id, username }) =>
-        await syncUserSharedAccountsFn(user.orgId, id, username),
-    ),
-  ]);
-
-  return [
-    ...adminsTechs.map(({ id }) => formatChannel("user", id)),
-    ...customers.map(({ id }) => formatChannel("user", id)),
-  ];
-}
-
 export async function deleteSharedAccount(
   tx: Transaction,
   user: LuciaUser,
@@ -171,23 +137,5 @@ export async function deleteSharedAccount(
     ...adminsTechs.map(({ id }) => formatChannel("user", id)),
     ...customers.map(({ customerId }) => formatChannel("user", customerId)),
     ...managers.map(({ managerId }) => formatChannel("user", managerId)),
-  ];
-}
-
-export async function syncUserSharedAccounts(
-  tx: Transaction,
-  user: LuciaUser,
-  _args: SyncUserSharedAccountsMutationArgs,
-) {
-  assertRole(user, permissions.syncUserSharedAccounts);
-
-  const [adminsTechs, customers] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "technician"]),
-    syncUserSharedAccountsFn(user.orgId, user.id, user.username),
-  ]);
-
-  return [
-    ...adminsTechs.map(({ id }) => formatChannel("user", id)),
-    ...customers.map(({ id }) => formatChannel("user", id)),
   ];
 }

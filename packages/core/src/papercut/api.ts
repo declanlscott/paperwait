@@ -5,27 +5,29 @@ import { apiGatewaySigner } from "../aws/signature-v4";
 import { HttpError, InternalServerError } from "../errors/http";
 import { validate } from "../valibot";
 import {
-  GetSharedAccountPropertiesOutput,
-  IsUserExistsResultBody,
-  ListSharedAccountsResultBody,
-  ListUserSharedAccountsResultBody,
+  GetSharedAccountPropertiesResult,
+  IsUserExistsResult,
+  ListSharedAccountsResult,
+  ListUserSharedAccountsResult,
 } from "../xml-rpc/schemas";
 
 import type {
   GetSharedAccountPropertiesEvent,
   IsUserExistsEvent,
   ListSharedAccountsEvent,
+  ListSharedAccountsOutput,
   ListUserSharedAccountsEvent,
+  ListUserSharedAccountsOutput,
 } from "../xml-rpc/schemas";
 
 export async function isUserExists(event: IsUserExistsEvent) {
   try {
-    const responseBody = await invokeApi(
+    const result = await invokeApi(
       new URL(`${Resource.PapercutApiGateway.url}/is-user-exists`),
       event,
     );
 
-    const { output } = validate(IsUserExistsResultBody, responseBody, {
+    const { output } = validate(IsUserExistsResult, result, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });
@@ -37,66 +39,76 @@ export async function isUserExists(event: IsUserExistsEvent) {
 }
 
 export async function listSharedAccounts(event: ListSharedAccountsEvent) {
-  try {
-    const responseBody = await invokeApi(
-      new URL(`${Resource.PapercutApiGateway.url}/list-shared-accounts`),
-      event,
-    );
+  async function invokeAndValidate() {
+    try {
+      const result = await invokeApi(
+        new URL(`${Resource.PapercutApiGateway.url}/list-shared-accounts`),
+        event,
+      );
 
-    const { output } = validate(ListSharedAccountsResultBody, responseBody, {
-      Error: InternalServerError,
-      message: "Failed to parse xml-rpc output",
-    });
+      const { output } = validate(ListSharedAccountsResult, result, {
+        Error: InternalServerError,
+        message: "Failed to parse xml-rpc output",
+      });
 
-    return output;
-  } catch (e) {
-    throw httpError(e);
+      return output;
+    } catch (e) {
+      throw httpError(e);
+    }
   }
+
+  const sharedAccounts: ListSharedAccountsOutput = [];
+  do {
+    sharedAccounts.push(...(await invokeAndValidate()));
+  } while (sharedAccounts.length === event.input.limit);
+
+  return sharedAccounts;
 }
 
 export async function listUserSharedAccounts(
   event: ListUserSharedAccountsEvent,
 ) {
-  try {
-    const responseBody = await invokeApi(
-      new URL(`${Resource.PapercutApiGateway.url}/list-user-shared-accounts`),
-      event,
-    );
+  async function invokeAndValidate() {
+    try {
+      const result = await invokeApi(
+        new URL(`${Resource.PapercutApiGateway.url}/list-user-shared-accounts`),
+        event,
+      );
 
-    const { output } = validate(
-      ListUserSharedAccountsResultBody,
-      responseBody,
-      {
+      const { output } = validate(ListUserSharedAccountsResult, result, {
         Error: InternalServerError,
         message: "Failed to parse xml-rpc output",
-      },
-    );
+      });
 
-    return output;
-  } catch (e) {
-    throw httpError(e);
+      return output;
+    } catch (e) {
+      throw httpError(e);
+    }
   }
+
+  const userSharedAccounts: ListUserSharedAccountsOutput = [];
+  do {
+    userSharedAccounts.push(...(await invokeAndValidate()));
+  } while (userSharedAccounts.length === event.input.limit);
+
+  return userSharedAccounts;
 }
 
 export async function getSharedAccountProperties(
   event: GetSharedAccountPropertiesEvent,
 ) {
   try {
-    const responseBody = await invokeApi(
+    const result = await invokeApi(
       new URL(
         `${Resource.PapercutApiGateway.url}/get-shared-account-properties`,
       ),
       event,
     );
 
-    const { output } = validate(
-      GetSharedAccountPropertiesOutput,
-      responseBody,
-      {
-        Error: InternalServerError,
-        message: "Failed to parse xml-rpc output",
-      },
-    );
+    const { output } = validate(GetSharedAccountPropertiesResult, result, {
+      Error: InternalServerError,
+      message: "Failed to parse xml-rpc output",
+    });
 
     return output;
   } catch (e) {

@@ -41,9 +41,11 @@ export const IsUserExistsEvent = merge([
 ]);
 export type IsUserExistsEvent = Output<typeof IsUserExistsEvent>;
 export const IsUserExistsOutput = boolean();
-export const IsUserExistsResultBody = object({
+export type IsUserExistsOutput = Output<typeof IsUserExistsOutput>;
+export const IsUserExistsResult = object({
   output: IsUserExistsOutput,
 });
+export type IsUserExistsResult = Output<typeof IsUserExistsResult>;
 
 // api.listUserSharedAccounts
 export const ListUserSharedAccountsInput = object({
@@ -63,9 +65,15 @@ export type ListUserSharedAccountsEvent = Output<
   typeof ListUserSharedAccountsEvent
 >;
 export const ListUserSharedAccountsOutput = array(string());
-export const ListUserSharedAccountsResultBody = object({
+export type ListUserSharedAccountsOutput = Output<
+  typeof ListUserSharedAccountsOutput
+>;
+export const ListUserSharedAccountsResult = object({
   output: ListUserSharedAccountsOutput,
 });
+export type ListUserSharedAccountsResult = Output<
+  typeof ListUserSharedAccountsResult
+>;
 
 // api.getSharedAccountProperties
 export const GetSharedAccountPropertiesInput = object({
@@ -96,24 +104,28 @@ export const GetSharedAccountPropertiesOutput = transform(
     boolean(), // restricted
   ]),
   (properties) => ({
-    output: {
-      accessGroups: properties[0],
-      accessUsers: properties[1],
-      accountId: properties[2],
-      balance: properties[3],
-      commentOption: properties[4],
-      disabled: properties[5],
-      invoiceOption: properties[6],
-      notes: properties[7],
-      overdraftAmount: properties[8],
-      pin: properties[9],
-      restricted: properties[10],
-    },
+    accessGroups: properties[0],
+    accessUsers: properties[1],
+    accountId: properties[2],
+    balance: properties[3],
+    commentOption: properties[4],
+    disabled: properties[5],
+    invoiceOption: properties[6],
+    notes: properties[7],
+    overdraftAmount: properties[8],
+    pin: properties[9],
+    restricted: properties[10],
   }),
 );
-export const GetSharedAccountPropertiesResultBody = object({
+export type GetSharedAccountPropertiesOutput = Output<
+  typeof GetSharedAccountPropertiesOutput
+>;
+export const GetSharedAccountPropertiesResult = object({
   output: GetSharedAccountPropertiesOutput,
 });
+export type GetSharedAccountPropertiesResult = Output<
+  typeof GetSharedAccountPropertiesResult
+>;
 
 // api.listSharedAccounts
 export const ListSharedAccountsInput = object({
@@ -127,9 +139,11 @@ export const ListSharedAccountsEvent = merge([
 ]);
 export type ListSharedAccountsEvent = Output<typeof ListSharedAccountsEvent>;
 export const ListSharedAccountsOutput = array(string());
-export const ListSharedAccountsResultBody = object({
+export type ListSharedAccountsOutput = Output<typeof ListSharedAccountsOutput>;
+export const ListSharedAccountsResult = object({
   output: ListSharedAccountsOutput,
 });
+export type ListSharedAccountsResult = Output<typeof ListSharedAccountsResult>;
 
 // api.adjustSharedAccountAccountBalance
 export const AdjustSharedAccountAccountBalanceInput = object({
@@ -148,6 +162,12 @@ export type AdjustSharedAccountAccountBalanceRecord = Output<
   typeof AdjustSharedAccountAccountBalanceEventRecord
 >;
 export const AdjustSharedAccountAccountBalanceOutput = boolean();
-export const AdjustSharedAccountAccountBalanceResultBody = object({
+export type AdjustSharedAccountAccountBalanceOutput = Output<
+  typeof AdjustSharedAccountAccountBalanceOutput
+>;
+export const AdjustSharedAccountAccountBalanceResult = object({
   output: AdjustSharedAccountAccountBalanceOutput,
 });
+export type AdjustSharedAccountAccountBalanceResult = Output<
+  typeof AdjustSharedAccountAccountBalanceResult
+>;

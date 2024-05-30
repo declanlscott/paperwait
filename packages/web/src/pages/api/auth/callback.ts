@@ -1,5 +1,9 @@
 import { createSession } from "@paperwait/core/auth";
-import { db, transact } from "@paperwait/core/database";
+import {
+  CustomerToSharedAccount,
+  db,
+  transact,
+} from "@paperwait/core/database";
 import {
   BadRequestError,
   DatabaseError,
@@ -11,10 +15,13 @@ import {
   UnauthorizedError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
-import { isUserExists } from "@paperwait/core/papercut";
+import {
+  getSharedAccountProperties,
+  isUserExists,
+  listUserSharedAccounts,
+} from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { getUsersByRoles, poke } from "@paperwait/core/replicache";
-import { syncUserSharedAccounts } from "@paperwait/core/sync";
 import { User } from "@paperwait/core/user";
 import { validate } from "@paperwait/core/valibot";
 import { OAuth2RequestError } from "arctic";
@@ -275,7 +282,7 @@ async function processUser(
     const { channels, newUser } = await transact(async (tx) => {
       const isInitializing = org.status === "initializing";
 
-      const [recipients, [newUser]] = await Promise.all([
+      const [recipients, [newUser], sharedAccountNames] = await Promise.all([
         // Get administrators and technicians in the organization
         getUsersByRoles(tx, org.id, ["administrator", "technician"]),
         // Create new user
@@ -290,6 +297,11 @@ async function processUser(
             username: user.idTokenPayload.username,
           })
           .returning({ id: User.id }),
+        // Get names of the shared accounts the user has access to
+        listUserSharedAccounts({
+          orgId: org.id,
+          input: { username: user.idTokenPayload.username },
+        }),
         // Update organization status to active if it's still initializing
         isInitializing
           ? tx
@@ -299,11 +311,27 @@ async function processUser(
           : undefined,
       ]);
 
-      await syncUserSharedAccounts(
-        org.id,
-        newUser.id,
-        user.idTokenPayload.username,
+      // Build the join table entries, concurrently
+      const joinEntries = await Promise.all(
+        sharedAccountNames.map(async (sharedAccountName) => {
+          const sharedAccount = await getSharedAccountProperties({
+            orgId: org.id,
+            input: { sharedAccountName },
+          });
+
+          return {
+            orgId: org.id,
+            customerId: newUser.id,
+            sharedAccountId: sharedAccount.accountId,
+          } satisfies CustomerToSharedAccount;
+        }),
       );
+
+      // Insert the join table entries
+      await tx
+        .insert(CustomerToSharedAccount)
+        .values(joinEntries)
+        .onConflictDoNothing();
 
       return {
         channels: recipients.map(({ id }) => formatChannel("user", id)),
@@ -329,35 +357,24 @@ async function processUser(
     username: user.idTokenPayload.username,
   };
 
-  const channels = await transact(async (tx) => {
-    const userInfoHasChanged = !isDeepEqual(existingUserInfo, freshUserInfo);
+  if (!isDeepEqual(existingUserInfo, freshUserInfo)) {
+    const channels = await transact(async (tx) => {
+      // TODO: Get manager recipients
+      const [recipients] = await Promise.all([
+        getUsersByRoles(tx, org.id, ["administrator", "technician"]),
+        tx
+          .update(User)
+          .set(freshUserInfo)
+          .where(
+            and(eq(User.id, existingUser.id), eq(Organization.id, org.id)),
+          ),
+      ]);
 
-    const [recipients] = await Promise.all([
-      userInfoHasChanged ? getUsersByRoles(tx, org.id, ["administrator"]) : [],
-      userInfoHasChanged
-        ? tx
-            .update(User)
-            .set(freshUserInfo)
-            .where(
-              and(eq(User.id, existingUser.id), eq(Organization.id, org.id)),
-            )
-        : undefined,
-      syncUserSharedAccounts(
-        org.id,
-        existingUser.id,
-        user.idTokenPayload.username,
-      ),
-    ]);
+      return recipients.map(({ id }) => formatChannel("user", id));
+    });
 
-    if (!userInfoHasChanged) return [];
-
-    return [
-      formatChannel("user", existingUser.id),
-      ...recipients.map(({ id }) => formatChannel("user", id)),
-    ];
-  });
-
-  await poke(channels);
+    await poke(channels);
+  }
 
   return existingUser.id;
 }

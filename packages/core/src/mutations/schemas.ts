@@ -38,11 +38,6 @@ export type DeleteSharedAccountMutationArgs = Output<
   typeof DeleteSharedAccountMutationArgs
 >;
 
-export const SyncUserSharedAccountsMutationArgs = undefined_();
-export type SyncUserSharedAccountsMutationArgs = Output<
-  typeof SyncUserSharedAccountsMutationArgs
->;
-
 export const BaseMutation = PushRequest.options[1].entries.mutations.item;
 
 function mutation<TName extends string, TArgs extends BaseSchema>(
@@ -65,7 +60,6 @@ export const Mutation = variant("name", [
   mutation("deleteOrder", DeleteOrderMutationArgs),
   mutation("syncSharedAccounts", SyncSharedAccountsMutationArgs),
   mutation("deleteSharedAccount", DeleteSharedAccountMutationArgs),
-  mutation("syncUserSharedAccounts", SyncUserSharedAccountsMutationArgs),
 ]);
 export type Mutation = Output<typeof Mutation>;
 
@@ -76,10 +70,4 @@ export const permissions = {
   deleteOrder: ["administrator", "technician"],
   syncSharedAccounts: ["administrator"],
   deleteSharedAccount: ["administrator"],
-  syncUserSharedAccounts: [
-    "administrator",
-    "technician",
-    "manager",
-    "customer",
-  ],
 } as const satisfies Record<Mutation["name"], Array<UserRole>>;

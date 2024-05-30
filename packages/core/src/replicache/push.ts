@@ -7,8 +7,6 @@ import {
   deleteOrder,
   deleteSharedAccount,
   deleteUser,
-  syncSharedAccounts,
-  syncUserSharedAccounts,
   updateUserRole,
 } from "../mutations/authoritative";
 import { Mutation } from "../mutations/schemas";
@@ -214,11 +212,11 @@ async function mutate(
     case "deleteOrder":
       return await deleteOrder(tx, user, mutation.args);
     case "syncSharedAccounts":
-      return await syncSharedAccounts(tx, user, mutation.args);
+      throw new NotImplementedError(
+        `Mutation "syncSharedAccounts" is not implemented with replicache, call directly instead (PUT api/shared-accounts)`,
+      );
     case "deleteSharedAccount":
       return await deleteSharedAccount(tx, user, mutation.args);
-    case "syncUserSharedAccounts":
-      return await syncUserSharedAccounts(tx, user, mutation.args);
     default:
       mutationName satisfies never;
 
