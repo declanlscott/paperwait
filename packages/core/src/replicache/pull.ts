@@ -115,8 +115,8 @@ export async function pull(
 
     // 11: Get entities
     const [users, orders] = await Promise.all([
-      getData(tx, User, User.id, diff.user.puts),
-      getData(tx, Order, Order.id, diff.order.puts),
+      getData(tx, User, User.id, diff.user.puts, User.deletedAt),
+      getData(tx, Order, Order.id, diff.order.puts, Order.deletedAt),
     ]);
 
     // 12: Changed clients - no need to re-read clients from database,

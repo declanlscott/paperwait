@@ -1,1 +1,2 @@
-export * from "./schema";
+export * from "./api";
+export * from "./parameter";

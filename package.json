@@ -8,12 +8,13 @@
   },
   "dependencies": {
     "@paperwait/core": "workspace:*",
-    "sst": "^3.0.27"
+    "sst": "ion"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.2.1",
     "@total-typescript/ts-reset": "^0.5.1",
     "@tsconfig/node20": "^20.1.4",
+    "@types/aws-lambda": "8.10.138",
     "prettier": "^3.2.5",
     "prettier-plugin-astro": "^0.13.0",
     "prettier-plugin-tailwindcss": "^0.5.14",

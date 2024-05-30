@@ -25,3 +25,5 @@ export function buildSigner({
 }: BuildSignerProps) {
   return new SignatureV4({ credentials, sha256, region, service });
 }
+
+export const apiGatewaySigner = buildSigner({ service: "execute-api" });

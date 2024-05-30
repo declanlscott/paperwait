@@ -6,7 +6,7 @@ import {
   HttpError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
-import { parseSchema } from "@paperwait/core/valibot";
+import { validate } from "@paperwait/core/valibot";
 
 import { Registration } from "~/lib/schemas";
 
@@ -15,7 +15,7 @@ import type { APIContext } from "astro";
 export async function POST(context: APIContext) {
   try {
     const formData = await context.request.formData();
-    const registration = parseSchema(
+    const registration = validate(
       Registration,
       Object.fromEntries(formData.entries()),
       { Error: BadRequestError, message: "Failed to parse registration" },

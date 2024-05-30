@@ -4,7 +4,7 @@ import {
   HttpError,
 } from "@paperwait/core/errors";
 import { push, PushRequest } from "@paperwait/core/replicache";
-import { parseSchema } from "@paperwait/core/valibot";
+import { validate } from "@paperwait/core/valibot";
 
 import { authorize } from "~/lib/auth/authorize";
 
@@ -18,7 +18,7 @@ export async function POST(context: APIContext) {
 
     const pushResult = await push(
       user,
-      parseSchema(PushRequest, requestBody, {
+      validate(PushRequest, requestBody, {
         Error: BadRequestError,
         message: "Failed to parse push request",
       }),

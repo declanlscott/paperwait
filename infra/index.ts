@@ -3,4 +3,4 @@ export * from "./cron";
 export * from "./secrets";
 export * from "./entra-id";
 export * from "./vpc";
-export * from "./papercut-api";
+export * from "./papercut";

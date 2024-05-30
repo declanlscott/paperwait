@@ -3,6 +3,7 @@ import { Replicache } from "replicache";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthedContext, useLogout } from "~/app/lib/hooks/auth";
+import { useMutators } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 
 import type { PropsWithChildren } from "react";
@@ -19,14 +20,17 @@ export function ReplicacheProvider(props: PropsWithChildren) {
 
   const { ReplicacheLicenseKey, IsDev } = useResource();
 
+  const mutators = useMutators();
+
   const logout = useLogout();
 
   useEffect(() => {
     const replicache = new Replicache({
       name: user.id,
       licenseKey: ReplicacheLicenseKey.value,
-      pushURL: `/api/replicache/push`,
-      pullURL: `/api/replicache/pull`,
+      mutators,
+      pushURL: "/api/replicache/push",
+      pullURL: "/api/replicache/pull",
       logLevel: IsDev.value === "true" ? "info" : "error",
     });
 
@@ -38,7 +42,7 @@ export function ReplicacheProvider(props: PropsWithChildren) {
     setReplicache(() => ({ status: "ready", replicache }));
 
     return () => void replicache.close();
-  }, [user.id, ReplicacheLicenseKey.value, IsDev.value, logout]);
+  }, [user.id, ReplicacheLicenseKey.value, IsDev.value, mutators, logout]);
 
   return (
     <ReplicacheContext.Provider value={replicache}>

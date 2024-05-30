@@ -2,12 +2,12 @@ import { XmlRpcClient } from "@foxglove/xmlrpc";
 
 import { getParameter } from "../aws/ssm";
 import { InternalServerError, NotFoundError } from "../errors/http";
-import { PaperCutParameter } from "../papercut/schema";
-import { parseSchema } from "../valibot";
+import { PaperCutParameter } from "../papercut/parameter";
+import { validate } from "../valibot";
 
 export async function buildClient(orgId: string) {
   const config = await getConfig(orgId);
-  const { serverUrl, authToken } = parseSchema(
+  const { serverUrl, authToken } = validate(
     PaperCutParameter,
     JSON.parse(config),
     {

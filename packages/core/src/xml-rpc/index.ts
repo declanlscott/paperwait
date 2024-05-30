@@ -1,5 +1,3 @@
 export * from "./client";
-export * from "./methods";
-export * from "./events";
-export * from "./results";
-export { XmlRpcFault } from "@foxglove/xmlrpc";
+export * from "./schemas";
+export { XmlRpcFault, XmlRpcValue } from "@foxglove/xmlrpc";

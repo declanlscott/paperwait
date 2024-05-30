@@ -5,7 +5,7 @@ import {
   HttpError,
 } from "@paperwait/core/errors";
 import { PaperCutParameter } from "@paperwait/core/papercut";
-import { parseSchema } from "@paperwait/core/valibot";
+import { validate } from "@paperwait/core/valibot";
 
 import { authorize } from "~/lib/auth/authorize";
 
@@ -18,7 +18,7 @@ export async function POST(context: APIContext) {
     if (context.params.id! !== user.orgId) throw new ForbiddenError();
 
     const body = await context.request.json();
-    const data = parseSchema(PaperCutParameter, body, {
+    const data = validate(PaperCutParameter, body, {
       Error: BadRequestError,
       message: "Failed to parse PaperCut parameter",
     });

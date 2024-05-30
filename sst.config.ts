@@ -8,16 +8,17 @@ export default $config({
   app(input) {
     return {
       name: "paperwait",
-      removal: input.stage === "production" ? "retain" : "remove",
+      removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
       providers: {
         aws: {
           profile:
-            input.stage === "production"
+            input?.stage === "production"
               ? `${AWS_ORG_NAME}-production`
               : `${AWS_ORG_NAME}-dev`,
           region: AWS_REGION,
         },
+        cloudflare: true,
         azuread: true,
         "@pulumiverse/time": true,
         tls: true,
@@ -30,6 +31,7 @@ export default $config({
     return {
       url: infra.astro.url,
       whitelistIp: infra.natInstance.publicIp,
+      mockPaperCutApi: infra.mockPaperCutApi.url,
     };
   },
 });

@@ -1,5 +1,5 @@
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
-import { papercutApiGateway } from "./papercut-api";
+import { papercutApiGateway } from "./papercut";
 import {
   dbCredentials,
   domain,

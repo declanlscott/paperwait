@@ -1,23 +1,23 @@
+import { xmlRpcMethod } from "@paperwait/core/constants";
 import {
   BadRequestError,
   HttpError,
   InternalServerError,
 } from "@paperwait/core/errors";
-import { parseSchema } from "@paperwait/core/valibot";
+import { validate } from "@paperwait/core/valibot";
 import {
   buildClient,
-  IsUserExistsEventBody,
+  IsUserExistsEvent,
   IsUserExistsOutput,
   XmlRpcFault,
-  xmlRpcMethod,
 } from "@paperwait/core/xml-rpc";
 
 import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    const { orgId, input } = parseSchema(
-      IsUserExistsEventBody,
+    const { orgId, input } = validate(
+      IsUserExistsEvent,
       JSON.parse(event.body ?? "{}"),
       {
         Error: BadRequestError,
@@ -32,7 +32,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       ...Object.values(input),
     ]);
 
-    const output = parseSchema(IsUserExistsOutput, value, {
+    const output = validate(IsUserExistsOutput, value, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });

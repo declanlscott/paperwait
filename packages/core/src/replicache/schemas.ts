@@ -4,7 +4,6 @@ import {
   intersect,
   lazy,
   literal,
-  merge,
   nullable,
   number,
   object,
@@ -13,13 +12,11 @@ import {
   record,
   string,
   union,
-  unknown,
   uuid,
   variant,
 } from "valibot";
 
 import { NanoId } from "../nano-id";
-import { UserRole } from "../user/user.sql";
 
 import type { JSONValue } from "replicache";
 import type { BaseSchema, Output } from "valibot";
@@ -70,40 +67,6 @@ export const PushRequest = variant("pushVersion", [
   }),
 ]);
 export type PushRequest = Output<typeof PushRequest>;
-
-export const UpdateUserRoleMutationArgs = object({
-  userId: NanoId,
-  newRole: picklist(UserRole.enumValues),
-});
-export type UpdateUserRoleMutationArgs = Output<
-  typeof UpdateUserRoleMutationArgs
->;
-
-export const BaseMutation = PushRequest.options[1].entries.mutations.item;
-
-export const Mutation = variant("name", [
-  merge([
-    BaseMutation,
-    object({
-      name: literal("updateUserRole"),
-      args: UpdateUserRoleMutationArgs,
-    }),
-  ]),
-  merge([
-    BaseMutation,
-    object({
-      name: literal("createOrder"),
-      // TODO: `createOrder` args
-      args: unknown(),
-    }),
-  ]),
-]);
-export type Mutation = Output<typeof Mutation>;
-
-export const mutationPermissions = {
-  updateUserRole: ["administrator"],
-  createOrder: ["administrator", "technician", "manager", "customer"],
-} as const satisfies Record<Mutation["name"], Array<UserRole>>;
 
 export const PullRequest = variant("pullVersion", [
   object({

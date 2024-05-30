@@ -7,8 +7,8 @@ import {
 import { validate } from "@paperwait/core/valibot";
 import {
   buildClient,
-  ListUserSharedAccountsEvent,
-  ListUserSharedAccountsOutput,
+  ListSharedAccountsEvent,
+  ListSharedAccountsOutput,
   XmlRpcFault,
 } from "@paperwait/core/xml-rpc";
 
@@ -16,19 +16,19 @@ import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    const { orgId, input } = validate(ListUserSharedAccountsEvent, event, {
+    const { orgId, input } = validate(ListSharedAccountsEvent, event, {
       Error: BadRequestError,
       message: "Failed to parse event",
     });
 
     const { client, authToken } = await buildClient(orgId);
 
-    const value = await client.methodCall(xmlRpcMethod.listUserSharedAccounts, [
+    const value = await client.methodCall(xmlRpcMethod.listSharedAccounts, [
       authToken,
-      ...Object.values(input),
+      Object.values(input),
     ]);
 
-    const output = validate(ListUserSharedAccountsOutput, value, {
+    const output = validate(ListSharedAccountsOutput, value, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });
@@ -36,7 +36,6 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ output }) };
   } catch (e) {
     console.error(e);
-
     if (e instanceof HttpError)
       return { statusCode: e.statusCode, body: e.message };
     if (e instanceof XmlRpcFault) return { statusCode: 500, body: e.message };

@@ -7,8 +7,8 @@ import {
 import { validate } from "@paperwait/core/valibot";
 import {
   buildClient,
-  ListUserSharedAccountsEvent,
-  ListUserSharedAccountsOutput,
+  GetSharedAccountPropertiesEvent,
+  GetSharedAccountPropertiesOutput,
   XmlRpcFault,
 } from "@paperwait/core/xml-rpc";
 
@@ -16,19 +16,19 @@ import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    const { orgId, input } = validate(ListUserSharedAccountsEvent, event, {
+    const { orgId, input } = validate(GetSharedAccountPropertiesEvent, event, {
       Error: BadRequestError,
       message: "Failed to parse event",
     });
 
     const { client, authToken } = await buildClient(orgId);
 
-    const value = await client.methodCall(xmlRpcMethod.listUserSharedAccounts, [
-      authToken,
-      ...Object.values(input),
-    ]);
+    const value = await client.methodCall(
+      xmlRpcMethod.getSharedAccountProperties,
+      [authToken, ...Object.values(input)],
+    );
 
-    const output = validate(ListUserSharedAccountsOutput, value, {
+    const output = validate(GetSharedAccountPropertiesOutput, value, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });

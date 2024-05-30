@@ -1,6 +1,6 @@
 export * from "./client-view-record";
+export * from "./data";
 export * from "./metadata";
-export * from "./mutations";
 export * from "./poke";
 export * from "./pull";
 export * from "./push";

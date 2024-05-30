@@ -1,12 +1,17 @@
 import { eq, sql } from "drizzle-orm";
 
 import { transact } from "../database/transaction";
-import { BadRequestError } from "../errors/http";
-import { parseSchema } from "../valibot";
-import { updateUserRole } from "./mutations";
-import { pokeMany } from "./poke";
+import { BadRequestError, NotImplementedError } from "../errors/http";
+import {
+  createOrder,
+  deleteOrder,
+  deleteUser,
+  updateUserRole,
+} from "../mutations/authoritative";
+import { Mutation } from "../mutations/schemas";
+import { validate } from "../valibot";
+import { poke } from "./poke";
 import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
-import { Mutation } from "./schemas";
 
 import type { User as LuciaUser } from "lucia";
 import type {
@@ -16,6 +21,7 @@ import type {
   VersionNotSupportedResponse,
 } from "replicache";
 import type { Transaction } from "../database/transaction";
+import type { Channel } from "../realtime";
 import type { OmitTimestamps } from "../types/drizzle";
 
 type PushResult =
@@ -43,7 +49,7 @@ export async function push(
         mutation,
       );
 
-      await pokeMany(channels);
+      await poke(channels);
     } catch (e) {
       // retry in error mode
       await processMutation(user, pushRequest.clientGroupID, mutation, true);
@@ -141,7 +147,7 @@ async function processMutation(
         channels = await mutate(
           tx,
           user,
-          parseSchema(Mutation, mutation, {
+          validate(Mutation, mutation, {
             Error: BadRequestError,
             message: "Failed to parse mutation",
           }),
@@ -192,11 +198,24 @@ async function mutate(
   tx: Transaction,
   user: LuciaUser,
   mutation: Mutation,
-): Promise<string[]> {
-  switch (mutation.name) {
+): Promise<Channel[]> {
+  const mutationName = mutation.name;
+
+  switch (mutationName) {
     case "updateUserRole":
       return await updateUserRole(tx, user, mutation.args);
+    case "deleteUser":
+      return await deleteUser(tx, user, mutation.args);
+    case "createOrder":
+      return await createOrder(tx, user, mutation.args);
+    case "deleteOrder":
+      return await deleteOrder(tx, user, mutation.args);
     default:
-      return [];
+      mutationName satisfies never;
+
+      throw new NotImplementedError(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Mutation "${mutationName}" not implemented`,
+      );
   }
 }

@@ -1,10 +1,10 @@
+import { xmlRpcMethod } from "@paperwait/core/constants";
 import { BadRequestError, InternalServerError } from "@paperwait/core/errors";
-import { parseSchema } from "@paperwait/core/valibot";
+import { validate } from "@paperwait/core/valibot";
 import {
   AdjustSharedAccountAccountBalanceEventRecord,
   AdjustSharedAccountAccountBalanceOutput,
   buildClient,
-  xmlRpcMethod,
 } from "@paperwait/core/xml-rpc";
 
 import type { SQSHandler, SQSRecord } from "aws-lambda";
@@ -19,7 +19,7 @@ async function processRecord(record: SQSRecord) {
     console.log("Processing record", record);
     const message = JSON.parse(record.body) as unknown;
 
-    const { orgId, input } = parseSchema(
+    const { orgId, input } = validate(
       AdjustSharedAccountAccountBalanceEventRecord,
       message,
       {
@@ -35,7 +35,7 @@ async function processRecord(record: SQSRecord) {
       [authToken, ...Object.values(input)],
     );
 
-    const output = parseSchema(AdjustSharedAccountAccountBalanceOutput, value, {
+    const output = validate(AdjustSharedAccountAccountBalanceOutput, value, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
     });

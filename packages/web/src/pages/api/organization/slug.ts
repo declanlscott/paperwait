@@ -1,7 +1,7 @@
 import { db } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
-import { parseSchema } from "@paperwait/core/valibot";
+import { validate } from "@paperwait/core/valibot";
 import { eq } from "drizzle-orm";
 import { pick } from "valibot";
 
@@ -14,7 +14,7 @@ export async function POST(context: APIContext) {
   const formData = await context.request.formData();
 
   try {
-    const { slug } = parseSchema(
+    const { slug } = validate(
       pick(Registration, ["slug"]),
       Object.fromEntries(formData.entries()),
       { Error: BadRequestError },

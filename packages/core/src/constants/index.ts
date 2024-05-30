@@ -1,3 +1,5 @@
+import { createPrefixedRecord } from "../utils";
+
 export const AWS_REGION = "us-east-2";
 
 export const AUTH_CALLBACK_PATH = "/api/auth/callback";
@@ -13,3 +15,11 @@ export const POSTGRES_DEADLOCK_DETECTED_ERROR_CODE = "40P01";
 export const CLIENT_RESOURCE_PREFIX = "Client";
 
 export const COMPOSITE_KEY_DELIMITER = ":";
+
+export const xmlRpcMethod = createPrefixedRecord("api.", [
+  "isUserExists",
+  "listUserSharedAccounts",
+  "getSharedAccountProperties",
+  "listSharedAccounts",
+  "adjustSharedAccountAccountBalance",
+]);

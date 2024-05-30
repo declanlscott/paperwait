@@ -1,22 +1,25 @@
 import ky from "ky";
 import { Resource } from "sst";
 
-export async function poke(channel: string) {
-  try {
-    await ky.post(
-      `http${Resource.ClientIsDev ? "://localhost:4321" : `s://${Resource.ClientDomain.value}`}`,
-      { headers: { "x-api-key": Resource.PartyKitApiKey.value } },
-    );
-  } catch (e) {
-    console.error(`Failed to poke ${channel}`);
+import type { Channel } from "../realtime";
 
-    return Promise.reject(e);
-  }
-}
+export async function poke(channels: Array<Channel>) {
+  const channelsSet = Array.from(new Set(channels));
+  if (channelsSet.length === 0) return;
 
-export async function pokeMany(channels: Array<string>) {
   const results = await Promise.allSettled(
-    Array.from(new Set(channels)).map((channel) => poke(channel)),
+    channelsSet.map(async (channel) => {
+      try {
+        await ky.post(
+          `http${Resource.ClientIsDev ? "://localhost:4321" : `s://${Resource.ClientDomain.value}`}`,
+          { headers: { "x-api-key": Resource.PartyKitApiKey.value } },
+        );
+      } catch (e) {
+        console.error(`Failed to poke ${channel}`);
+
+        return Promise.reject(e);
+      }
+    }),
   );
 
   results

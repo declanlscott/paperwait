@@ -37,7 +37,10 @@ declare module "lucia" {
 
 export type { User as LuciaUser, Session as LuciaSession } from "lucia";
 
-export async function createSession(userId: LuciaUser["id"], orgId: NanoId) {
+export async function createSession(
+  userId: LuciaUser["id"],
+  orgId: LuciaUser["orgId"],
+) {
   const session = await lucia.createSession(
     userId,
     { orgId },

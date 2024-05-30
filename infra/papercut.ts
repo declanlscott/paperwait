@@ -1,4 +1,4 @@
-import { natSecurityGroup, privateSubnetsOutput } from "./vpc";
+import { natInstance, natSecurityGroup, privateSubnetsOutput } from "./vpc";
 
 export const papercutApiGateway = new sst.aws.ApiGatewayV2(
   "PapercutApiGateway",
@@ -22,6 +22,18 @@ const getPapercutParameterPermission = {
 
 papercutApiGateway.route("POST /is-user-exists", {
   handler: "packages/functions/src/is-user-exists.handler",
+  timeout: "10 seconds",
+  permissions: [getPapercutParameterPermission],
+  vpc: {
+    securityGroups: [natSecurityGroup.id],
+    subnets: privateSubnetsOutput.apply((subnets) =>
+      subnets.map((subnet) => subnet.id),
+    ),
+  },
+});
+
+papercutApiGateway.route("POST /list-shared-accounts", {
+  handler: "packages/functions/src/list-shared-accounts.handler",
   timeout: "10 seconds",
   permissions: [getPapercutParameterPermission],
   vpc: {
@@ -132,4 +144,13 @@ adjustSharedAccountAccountBalanceQueue.subscribe({
     ),
   },
   link: [adjustSharedAccountAccountBalanceQueue],
+});
+
+export const mockPaperCutApi = new sst.cloudflare.Worker("MockPaperCutApi", {
+  handler: "packages/functions/src/mock-papercut-api.ts",
+  url: true,
+  environment: {
+    IP_WHITELIST: natInstance.publicIp,
+    AUTH_TOKEN: "auth-token",
+  },
 });

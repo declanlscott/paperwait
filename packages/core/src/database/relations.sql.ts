@@ -1,6 +1,8 @@
 import { relations } from "drizzle-orm";
+import { bigint, foreignKey, pgTable } from "drizzle-orm/pg-core";
 
 import { Session } from "../auth/session.sql";
+import { id } from "../drizzle/columns";
 import { Order } from "../order/order.sql";
 import { Organization } from "../organization/organization.sql";
 import {
@@ -8,7 +10,52 @@ import {
   ReplicacheClientGroup,
   ReplicacheClientView,
 } from "../replicache/replicache.sql";
+import { SharedAccount } from "../shared-account/shared-account.sql";
 import { User } from "../user/user.sql";
+
+export const CustomerToSharedAccount = pgTable(
+  "user_to_shared_account",
+  {
+    orgId: id("org_id").notNull(),
+    customerId: id("customer_id").notNull(),
+    sharedAccountId: bigint("shared_account_id", { mode: "number" }).notNull(),
+  },
+  (table) => ({
+    userReference: foreignKey({
+      columns: [table.customerId, table.orgId],
+      foreignColumns: [User.id, User.orgId],
+      name: "user_fk",
+    }),
+    sharedAccountReference: foreignKey({
+      columns: [table.sharedAccountId, table.orgId],
+      foreignColumns: [SharedAccount.id, SharedAccount.orgId],
+      name: "shared_account_fk",
+    }),
+  }),
+);
+export type CustomerToSharedAccount =
+  typeof CustomerToSharedAccount.$inferSelect;
+
+export const ManagerToSharedAccount = pgTable(
+  "manager_to_shared_account",
+  {
+    orgId: id("org_id").notNull(),
+    managerId: id("manager_id").notNull(),
+    sharedAccountId: bigint("shared_account_id", { mode: "number" }).notNull(),
+  },
+  (table) => ({
+    managerReference: foreignKey({
+      columns: [table.managerId, table.orgId],
+      foreignColumns: [User.id, User.orgId],
+      name: "manager_fk",
+    }),
+    sharedAccountReference: foreignKey({
+      columns: [table.sharedAccountId, table.orgId],
+      foreignColumns: [SharedAccount.id, SharedAccount.orgId],
+      name: "shared_account_fk",
+    }),
+  }),
+);
 
 export const organizationRelations = relations(Organization, ({ many }) => ({
   user: many(User, { relationName: "userOrg" }),

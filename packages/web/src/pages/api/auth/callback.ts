@@ -1,25 +1,39 @@
 import { createSession } from "@paperwait/core/auth";
-import { buildSigner } from "@paperwait/core/aws";
-import { db, transact } from "@paperwait/core/database";
+import {
+  CustomerToSharedAccount,
+  db,
+  transact,
+} from "@paperwait/core/database";
+import { buildConflictUpdateColumns } from "@paperwait/core/drizzle";
 import {
   BadRequestError,
   DatabaseError,
+  handlePromiseResult,
   HttpError,
   InternalServerError,
   NotFoundError,
-  UnauthorizedError,
+  NotImplementedError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
+import {
+  getSharedAccountProperties,
+  getUserSharedAccounts,
+  isUserExists,
+} from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
-import { pokeMany } from "@paperwait/core/replicache";
+import {
+  getUsersByRoles,
+  getUsersBySharedAccounts,
+  poke,
+} from "@paperwait/core/replicache";
+import { SharedAccount } from "@paperwait/core/shared-account";
 import { User } from "@paperwait/core/user";
-import { parseSchema } from "@paperwait/core/valibot";
-import { IsUserExistsResultBody } from "@paperwait/core/xml-rpc";
+import { validate } from "@paperwait/core/valibot";
 import { OAuth2RequestError } from "arctic";
-import { and, eq } from "drizzle-orm";
-import ky, { HTTPError as kyHttpError } from "ky";
+import { and, eq, sql } from "drizzle-orm";
+import ky from "ky";
 import { parseJWT } from "oslo/jwt";
-import { Resource } from "sst";
+import { isDeepEqual } from "remeda";
 import { object, string, uuid } from "valibot";
 
 import entraId from "~/lib/auth/entra-id";
@@ -27,7 +41,6 @@ import google from "~/lib/auth/google";
 import { Registration } from "~/lib/schemas";
 
 import type { Provider } from "@paperwait/core/organization";
-import type { IsUserExistsEventBody } from "@paperwait/core/xml-rpc";
 import type { GoogleTokens, MicrosoftEntraIdTokens } from "arctic";
 import type { APIContext } from "astro";
 
@@ -72,7 +85,7 @@ export async function GET(context: APIContext) {
     )
       throw new BadRequestError("Missing required parameters");
 
-    const provider = parseSchema(
+    const provider = validate(
       Registration.entries.authProvider,
       storedProvider.value,
       {
@@ -85,97 +98,44 @@ export async function GET(context: APIContext) {
 
     const idToken = parseJWT(tokens.idToken)!;
 
-    const { orgProviderId, userProviderId, username } = parseIdTokenPayload(
-      provider,
-      idToken.payload,
-    );
+    const idTokenPayload = parseIdTokenPayload(provider, idToken.payload);
 
     const [org] = await db
       .select({ status: Organization.status })
       .from(Organization)
       .where(
         and(
-          eq(Organization.providerId, orgProviderId),
+          eq(Organization.providerId, idTokenPayload.orgProviderId),
           eq(Organization.id, storedOrgId.value),
         ),
       );
     if (!org)
       throw new NotFoundError(`
-        Failed to find organization (${storedOrgId.value}) with providerId: ${orgProviderId}
+        Failed to find organization (${storedOrgId.value}) with providerId: ${idTokenPayload.orgProviderId}
       `);
 
-    await authorizeUser({ orgId: storedOrgId.value, input: { username } });
+    const results = await Promise.allSettled([
+      isUserExists({
+        orgId: storedOrgId.value,
+        input: { username: idTokenPayload.username },
+      }),
+      getUserSharedAccounts({
+        orgId: storedOrgId.value,
+        input: { username: idTokenPayload.username },
+      }),
+      getUserInfo(provider, tokens.accessToken),
+    ]);
 
-    const [existingUser] = await db
-      .select({ id: User.id, username: User.username })
-      .from(User)
-      .where(eq(User.providerId, userProviderId));
+    handlePromiseResult(results[0]);
+    const sharedAccountNames = handlePromiseResult(results[1]);
+    const userInfo = handlePromiseResult(results[2]);
 
-    if (existingUser) {
-      // Update username if it has changed
-      if (existingUser.username !== username) {
-        const userIds = await transact(async (tx) => {
-          const [user] = await tx
-            .update(User)
-            .set({ username })
-            .where(eq(User.id, existingUser.id))
-            .returning({ id: User.id });
+    const userId = await processUser(
+      { id: storedOrgId.value, status: org.status },
+      { idTokenPayload, sharedAccountNames, info: userInfo },
+    );
 
-          const admins = await tx
-            .select({ id: User.id })
-            .from(User)
-            .where(eq(User.role, "administrator"));
-
-          return Array.from(new Set([user.id, ...admins.map(({ id }) => id)]));
-        });
-
-        await pokeMany(userIds);
-      }
-
-      const { cookie } = await createSession(
-        existingUser.id,
-        storedOrgId.value,
-      );
-
-      context.cookies.set(cookie.name, cookie.value, cookie.attributes);
-
-      return context.redirect(redirect);
-    }
-
-    const userInfo = await getUserInfo(provider, tokens.accessToken);
-
-    const { newUser, admins } = await transact(async (tx) => {
-      const isInitializing = org.status === "initializing";
-
-      const admins = await tx
-        .select({ id: User.id })
-        .from(User)
-        .where(eq(User.role, "administrator"));
-
-      const [newUser] = await tx
-        .insert(User)
-        .values({
-          orgId: storedOrgId.value,
-          providerId: userProviderId,
-          role: isInitializing ? "administrator" : "customer",
-          name: userInfo.name,
-          email: userInfo.email,
-          username,
-        })
-        .returning({ id: User.id });
-
-      if (isInitializing)
-        await tx
-          .update(Organization)
-          .set({ status: "active" })
-          .where(eq(Organization.id, storedOrgId.value));
-
-      return { newUser, admins };
-    });
-
-    await pokeMany(admins.map(({ id }) => formatChannel("user", id)));
-
-    const { cookie } = await createSession(newUser.id, storedOrgId.value);
+    const { cookie } = await createSession(userId, storedOrgId.value);
 
     context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
@@ -206,18 +166,27 @@ async function getTokens(
       return await google.validateAuthorizationCode(code, codeVerifier);
     default:
       provider satisfies never;
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      throw new InternalServerError(`Unknown provider: ${provider}`);
+
+      throw new NotImplementedError(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Provider "${provider}" is not implemented`,
+      );
   }
 }
+
+type IdTokenPayload = {
+  userProviderId: string;
+  orgProviderId: string;
+  username: string;
+};
 
 function parseIdTokenPayload(
   provider: Provider,
   payload: unknown,
-): { userProviderId: string; orgProviderId: string; username: string } {
+): IdTokenPayload {
   switch (provider) {
     case "entra-id": {
-      const { tid, oid, preferred_username } = parseSchema(
+      const { tid, oid, preferred_username } = validate(
         object({
           tid: string([uuid()]),
           oid: string([uuid()]),
@@ -237,7 +206,7 @@ function parseIdTokenPayload(
       };
     }
     case "google": {
-      const { hd, sub, name } = parseSchema(
+      const { hd, sub, name } = validate(
         object({ hd: string(), sub: string(), name: string() }),
         payload,
         {
@@ -254,53 +223,21 @@ function parseIdTokenPayload(
     }
     default: {
       provider satisfies never;
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      throw new InternalServerError(`Unknown provider: ${provider}`);
+
+      throw new NotImplementedError(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Provider "${provider}" is not implemented`,
+      );
     }
   }
 }
 
-async function authorizeUser(event: IsUserExistsEventBody) {
-  try {
-    const url = new URL(`${Resource.PapercutApiGateway.url}/is-user-exists`);
+type UserInfo = EntraIdUserInfo | GoogleUserInfo;
 
-    const signer = buildSigner({ service: "execute-api" });
-
-    const requestBody = JSON.stringify(event);
-
-    const { headers } = await signer.sign({
-      hostname: url.hostname,
-      protocol: url.protocol,
-      method: "POST",
-      path: url.pathname,
-      headers: {
-        host: url.hostname,
-        accept: "application/json",
-      },
-      body: requestBody,
-    });
-
-    const responseBody = await ky
-      .post(url, { body: requestBody, headers })
-      .json();
-
-    const { output } = parseSchema(IsUserExistsResultBody, responseBody, {
-      Error: InternalServerError,
-      message: "Failed to parse xml-rpc output",
-    });
-
-    if (!output) throw new UnauthorizedError("User does not exist in PaperCut");
-  } catch (e) {
-    console.error(e);
-
-    if (e instanceof HttpError) throw e;
-    if (e instanceof kyHttpError) throw new InternalServerError(e.message);
-
-    throw new InternalServerError();
-  }
-}
-
-async function getUserInfo(provider: Provider, accessToken: string) {
+async function getUserInfo(
+  provider: Provider,
+  accessToken: string,
+): Promise<UserInfo> {
   switch (provider) {
     case "entra-id":
       return await ky
@@ -320,7 +257,161 @@ async function getUserInfo(provider: Provider, accessToken: string) {
         .json<GoogleUserInfo>();
     default:
       provider satisfies never;
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      throw new InternalServerError(`Unknown provider: ${provider}`);
+
+      throw new NotImplementedError(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        `Provider "${provider}" is not implemented`,
+      );
   }
+}
+
+async function processUser(
+  org: Pick<Organization, "id" | "status">,
+  user: {
+    idTokenPayload: IdTokenPayload;
+    sharedAccountNames: Array<SharedAccount["name"]>;
+    info: UserInfo;
+  },
+): Promise<User["id"]> {
+  const [existingUser] = await db
+    .select({
+      id: User.id,
+      name: User.name,
+      email: User.email,
+      username: User.username,
+    })
+    .from(User)
+    .where(eq(User.providerId, user.idTokenPayload.userProviderId));
+
+  const sharedAccounts = await Promise.all(
+    user.sharedAccountNames.map(async (sharedAccountName) => {
+      const properties = await getSharedAccountProperties({
+        orgId: org.id,
+        input: { sharedAccountName },
+      });
+
+      return {
+        id: properties.accountId,
+        orgId: org.id,
+        name: sharedAccountName,
+      };
+    }),
+  );
+
+  // Create user if it doesn't exist
+  if (!existingUser) {
+    const { channels, newUser } = await transact(async (tx) => {
+      const isInitializing = org.status === "initializing";
+
+      const sharedAccountNameColumn = buildConflictUpdateColumns(
+        SharedAccount,
+        ["name"],
+      );
+
+      const [admins, [newUser], newSharedAccounts] = await Promise.all([
+        // Get all administrators in the organization
+        getUsersByRoles(tx, org.id, ["administrator"]),
+        // Create new user
+        tx
+          .insert(User)
+          .values({
+            orgId: org.id,
+            providerId: user.idTokenPayload.userProviderId,
+            role: isInitializing ? "administrator" : "customer",
+            name: user.info.name,
+            email: user.info.email,
+            username: user.idTokenPayload.username,
+          })
+          .returning({ id: User.id }),
+        // Create shared accounts if they don't already exist
+        // If shared account name has changed, update it
+        // Return upserted (changes or new)
+        tx
+          .insert(SharedAccount)
+          .values(sharedAccounts)
+          .onConflictDoUpdate({
+            target: [SharedAccount.id, SharedAccount.orgId],
+            set: sharedAccountNameColumn,
+            setWhere: sql`${SharedAccount.name} <> ${sharedAccountNameColumn}`,
+          })
+          .returning({ id: SharedAccount.id }),
+        // Update organization status to active if it's still initializing
+        isInitializing
+          ? tx
+              .update(Organization)
+              .set({ status: "active" })
+              .where(eq(Organization.id, org.id))
+          : undefined,
+      ]);
+
+      const [accountUsers] = await Promise.all([
+        // Get users that have access to the shared accounts
+        getUsersBySharedAccounts(
+          tx,
+          org.id,
+          newSharedAccounts.map(({ id }) => id),
+        ),
+        // Create shared accounts relationships if they don't already exist
+        tx
+          .insert(CustomerToSharedAccount)
+          .values(
+            newSharedAccounts.map((sharedAccount) => ({
+              orgId: org.id,
+              customerId: newUser.id,
+              sharedAccountId: sharedAccount.id,
+            })),
+          )
+          .onConflictDoNothing(),
+      ]);
+
+      return {
+        channels: [
+          ...admins.map(({ id }) => formatChannel("user", id)),
+          ...accountUsers.map(({ id }) => formatChannel("user", id)),
+        ],
+        newUser,
+      };
+    });
+
+    await poke(channels);
+
+    return newUser.id;
+  }
+
+  // User already exists, continue processing
+
+  const existingUserInfo = {
+    name: existingUser.name,
+    email: existingUser.email,
+    username: existingUser.username,
+  };
+  const freshUserInfo = {
+    name: user.info.name,
+    email: user.info.email,
+    username: user.idTokenPayload.username,
+  };
+
+  // Update user info if it has changed
+  if (!isDeepEqual(existingUserInfo, freshUserInfo)) {
+    const channels = await transact(async (tx) => {
+      const [admins] = await Promise.all([
+        getUsersByRoles(tx, org.id, ["administrator"]),
+        tx
+          .update(User)
+          .set(freshUserInfo)
+          .where(
+            and(eq(User.id, existingUser.id), eq(Organization.id, org.id)),
+          ),
+      ]);
+
+      return [
+        formatChannel("user", existingUser.id),
+        ...admins.map(({ id }) => formatChannel("user", id)),
+      ];
+    });
+
+    await poke(channels);
+  }
+
+  return existingUser.id;
 }
