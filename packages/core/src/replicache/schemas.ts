@@ -93,5 +93,5 @@ export const PullRequest = variant("pullVersion", [
 ]);
 export type PullRequest = Output<typeof PullRequest>;
 
-export const Domain = picklist(["user", "order", "client"]);
+export const Domain = picklist(["user", "order", "sharedAccount", "client"]);
 export type Domain = Output<typeof Domain>;

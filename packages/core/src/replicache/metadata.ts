@@ -1,5 +1,9 @@
 import { and, eq, sql } from "drizzle-orm";
 
+import {
+  CustomerToSharedAccount,
+  ManagerToSharedAccount,
+} from "../database/relations.sql";
 import { Order } from "../order/order.sql";
 import { SharedAccount } from "../shared-account/shared-account.sql";
 import { User } from "../user/user.sql";
@@ -70,11 +74,58 @@ export async function searchSharedAccounts(tx: Transaction, user: LuciaUser) {
       .select({ id: SharedAccount.id, rowVersion: sql<number>`xmin` })
       .from(SharedAccount);
 
+  const selectCustomerAccounts = async () =>
+    await tx
+      .select({ id: SharedAccount.id, rowVersion: sql<number>`xmin` })
+      .from(CustomerToSharedAccount)
+      .innerJoin(
+        User,
+        and(
+          eq(CustomerToSharedAccount.customerId, User.id),
+          eq(CustomerToSharedAccount.orgId, User.orgId),
+        ),
+      )
+      .innerJoin(
+        SharedAccount,
+        and(
+          eq(CustomerToSharedAccount.sharedAccountId, SharedAccount.id),
+          eq(CustomerToSharedAccount.orgId, SharedAccount.orgId),
+        ),
+      )
+      .where(eq(User.id, user.id));
+
+  const selectManagerAccounts = async () =>
+    await tx
+      .select({ id: SharedAccount.id, rowVersion: sql<number>`xmin` })
+      .from(ManagerToSharedAccount)
+      .innerJoin(
+        User,
+        and(
+          eq(ManagerToSharedAccount.managerId, User.id),
+          eq(ManagerToSharedAccount.orgId, User.orgId),
+        ),
+      )
+      .innerJoin(
+        SharedAccount,
+        and(
+          eq(ManagerToSharedAccount.sharedAccountId, SharedAccount.id),
+          eq(ManagerToSharedAccount.orgId, SharedAccount.orgId),
+        ),
+      )
+      .where(eq(User.id, user.id));
+
   return searchAsRole(user.role, {
     searchAsAdministrator: selectAll,
     searchAsTechnician: selectAll,
-    searchAsManager: async () => [],
-    searchAsCustomer: async () => [],
+    searchAsManager: async () => {
+      const [customerAccounts, managerAccounts] = await Promise.all([
+        selectCustomerAccounts(),
+        selectManagerAccounts(),
+      ]);
+
+      return Array.from(new Set([...customerAccounts, ...managerAccounts]));
+    },
+    searchAsCustomer: selectCustomerAccounts,
   });
 }
 

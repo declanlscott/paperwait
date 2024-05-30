@@ -3,10 +3,16 @@ import { and, eq, sql } from "drizzle-orm";
 import { transact } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
+import { SharedAccount } from "../shared-account/shared-account.sql";
 import { User } from "../user/user.sql";
 import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { getClientGroup, getData } from "./data";
-import { searchClients, searchOrders, searchUsers } from "./metadata";
+import {
+  searchClients,
+  searchOrders,
+  searchSharedAccounts,
+  searchUsers,
+} from "./metadata";
 import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
 
 import type {
@@ -79,6 +85,7 @@ export async function pull(
       ({
         user: {},
         order: {},
+        sharedAccount: {},
         client: {},
       } satisfies ClientViewRecord);
 
@@ -95,9 +102,15 @@ export async function pull(
 
     // 6: Read all domain data, just ids and versions
     // 7: Read all clients in the client group
-    const [usersMetadata, ordersMetadata, clientsMetadata] = await Promise.all([
+    const [
+      usersMetadata,
+      ordersMetadata,
+      sharedAccountsMetadata,
+      clientsMetadata,
+    ] = await Promise.all([
       searchUsers(tx, user),
       searchOrders(tx, user),
+      searchSharedAccounts(tx, user),
       searchClients(tx, baseClientGroup.id),
     ]);
 
@@ -105,6 +118,7 @@ export async function pull(
     const nextCvr = {
       user: buildCvrEntries(usersMetadata),
       order: buildCvrEntries(ordersMetadata),
+      sharedAccount: buildCvrEntries(sharedAccountsMetadata),
       client: buildCvrEntries(clientsMetadata),
     } satisfies ClientViewRecord;
 
@@ -115,7 +129,7 @@ export async function pull(
     if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
     // 11: Get entities
-    const [users, orders] = await Promise.all([
+    const [users, orders, sharedAccounts] = await Promise.all([
       getData(
         tx,
         User,
@@ -127,6 +141,12 @@ export async function pull(
         Order,
         { orgId: Order.orgId, id: Order.id, deletedAt: Order.deletedAt },
         { orgId: user.orgId, ids: diff.order.puts },
+      ),
+      getData(
+        tx,
+        SharedAccount,
+        { orgId: SharedAccount.orgId, id: SharedAccount.id },
+        { orgId: user.orgId, ids: diff.sharedAccount.puts },
       ),
     ]);
 
@@ -171,6 +191,7 @@ export async function pull(
       entities: {
         user: { puts: users, dels: diff.user.dels },
         order: { puts: orders, dels: diff.order.dels },
+        sharedAccount: { puts: sharedAccounts, dels: diff.sharedAccount.dels },
       },
       clients,
       prevCvr: prevClientView?.record,

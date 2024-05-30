@@ -1,11 +1,6 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
-import {
-  CustomerToSharedAccount,
-  ManagerToSharedAccount,
-} from "../database/relations.sql";
 import { ForbiddenError } from "../errors/http";
-import { SharedAccount } from "../shared-account";
 import { User } from "../user/user.sql";
 import { ReplicacheClientGroup } from "./replicache.sql";
 
@@ -22,31 +17,32 @@ export async function getClientGroup(
   tx: Transaction,
   user: LuciaUser,
   id: ClientGroupID,
-): Promise<OmitTimestamps<ReplicacheClientGroup>> {
-  return (
-    (await tx
-      .select({
-        id: ReplicacheClientGroup.id,
-        orgId: ReplicacheClientGroup.orgId,
-        cvrVersion: ReplicacheClientGroup.cvrVersion,
-        userId: ReplicacheClientGroup.userId,
-      })
-      .from(ReplicacheClientGroup)
-      .where(
-        and(
-          eq(ReplicacheClientGroup.id, id),
-          eq(ReplicacheClientGroup.orgId, user.orgId),
-        ),
-      )
-      .execute()
-      .then((rows) => rows.at(0))) ??
-    ({
-      id,
-      orgId: user.orgId,
-      userId: user.id,
-      cvrVersion: 0,
-    } satisfies OmitTimestamps<ReplicacheClientGroup>)
-  );
+) {
+  return await tx
+    .select({
+      id: ReplicacheClientGroup.id,
+      orgId: ReplicacheClientGroup.orgId,
+      cvrVersion: ReplicacheClientGroup.cvrVersion,
+      userId: ReplicacheClientGroup.userId,
+    })
+    .from(ReplicacheClientGroup)
+    .where(
+      and(
+        eq(ReplicacheClientGroup.id, id),
+        eq(ReplicacheClientGroup.orgId, user.orgId),
+      ),
+    )
+    .execute()
+    .then(
+      (rows) =>
+        rows.at(0) ??
+        ({
+          id,
+          orgId: user.orgId,
+          userId: user.id,
+          cvrVersion: 0,
+        } satisfies OmitTimestamps<ReplicacheClientGroup>),
+    );
 }
 
 export async function getData<
@@ -93,53 +89,6 @@ export async function getUsersByRoles(
     .select({ id: User.id })
     .from(User)
     .where(and(inArray(User.role, roles), eq(User.orgId, orgId)));
-}
-
-export async function getUsersBySharedAccounts(
-  tx: Transaction,
-  orgId: Organization["id"],
-  sharedAccountIds: Array<SharedAccount["id"]>,
-) {
-  if (!sharedAccountIds.length) return [];
-
-  const [customerIds, managerIds] = await Promise.all([
-    tx
-      .select({ id: User.id })
-      .from(CustomerToSharedAccount)
-      .leftJoin(
-        User,
-        and(
-          eq(CustomerToSharedAccount.customerId, User.id),
-          eq(CustomerToSharedAccount.orgId, User.orgId),
-        ),
-      )
-      .where(
-        and(
-          inArray(CustomerToSharedAccount.sharedAccountId, sharedAccountIds),
-          eq(SharedAccount.orgId, orgId),
-        ),
-      ),
-    tx
-      .select({ id: User.id })
-      .from(ManagerToSharedAccount)
-      .leftJoin(
-        User,
-        and(
-          eq(ManagerToSharedAccount.managerId, User.id),
-          eq(ManagerToSharedAccount.orgId, User.orgId),
-        ),
-      )
-      .where(
-        and(
-          inArray(ManagerToSharedAccount.sharedAccountId, sharedAccountIds),
-          eq(SharedAccount.orgId, orgId),
-        ),
-      ),
-  ]);
-
-  return [...customerIds, ...managerIds].filter(
-    (row): row is Pick<User, "id"> => row.id !== null,
-  );
 }
 
 // TODO: Implement this function
