@@ -14,6 +14,7 @@ import {
 } from "valibot";
 
 import { PAPERCUT_API_PAGINATION_LIMIT } from "../constants";
+import { SharedAccountId } from "../id";
 
 import type { Output } from "valibot";
 
@@ -28,7 +29,6 @@ const Limit = fallback(
   PAPERCUT_API_PAGINATION_LIMIT,
 );
 
-export const SharedAccountId = number([integer()]);
 
 // api.isUserExists
 export const IsUserExistsInput = object({

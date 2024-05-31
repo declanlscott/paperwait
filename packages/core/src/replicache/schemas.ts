@@ -16,7 +16,7 @@ import {
   variant,
 } from "valibot";
 
-import { NanoId } from "../nano-id";
+import { NanoId } from "../id";
 
 import type { JSONValue } from "replicache";
 import type { BaseSchema, Output } from "valibot";

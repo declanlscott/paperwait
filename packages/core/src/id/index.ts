@@ -1,5 +1,5 @@
 import { customAlphabet } from "nanoid";
-import { regex, string } from "valibot";
+import { integer, number, regex, string } from "valibot";
 
 import { NANOID_CUSTOM_ALPHABET, NANOID_LENGTH } from "../constants";
 
@@ -13,3 +13,6 @@ export const nanoIdPattern = new RegExp(
 
 export const NanoId = string([regex(nanoIdPattern)]);
 export type NanoId = Output<typeof NanoId>;
+
+export const SharedAccountId = number([integer()]);
+export type SharedAccountId = Output<typeof SharedAccountId>;

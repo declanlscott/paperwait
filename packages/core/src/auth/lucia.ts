@@ -2,12 +2,12 @@ import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
 
 import { db } from "../database";
-import { generateId } from "../nano-id";
+import { generateId } from "../id";
 import { User } from "../user/user.sql";
 import { Session } from "./session.sql";
 
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
-import type { NanoId } from "../nano-id";
+import type { NanoId } from "../id";
 
 export const adapter = new DrizzlePostgreSQLAdapter(db, Session, User);
 

@@ -1,11 +1,10 @@
 import { createInsertSchema } from "drizzle-valibot";
 import { literal, merge, object, picklist, undefined_, variant } from "valibot";
 
-import { NanoId } from "../nano-id";
+import { NanoId, SharedAccountId } from "../id";
 import { Order } from "../order/order.sql";
 import { PushRequest } from "../replicache/schemas";
 import { UserRole } from "../user/user.sql";
-import { SharedAccountId } from "../xml-rpc/schemas";
 
 import type { BaseSchema, Output } from "valibot";
 

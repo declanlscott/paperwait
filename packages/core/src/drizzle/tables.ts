@@ -1,7 +1,7 @@
 import { getTableColumns, sql } from "drizzle-orm";
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 
-import { generateId } from "../nano-id";
+import { generateId } from "../id";
 import { Organization } from "../organization/organization.sql";
 import { id, timestamps } from "./columns";
 

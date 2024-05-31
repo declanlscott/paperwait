@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { char, timestamp } from "drizzle-orm/pg-core";
 
 import { NANOID_LENGTH } from "../constants";
-import { generateId } from "../nano-id";
+import { generateId } from "../id";
 
 /**
  * NanoID column
