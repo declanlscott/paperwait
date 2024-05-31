@@ -29,50 +29,31 @@ const Limit = fallback(
   PAPERCUT_API_PAGINATION_LIMIT,
 );
 
-
-// api.isUserExists
-export const IsUserExistsInput = object({
-  username: string(),
+// api.adjustSharedAccountAccountBalance
+export const AdjustSharedAccountAccountBalanceInput = object({
+  sharedAccountName: string(),
+  adjustment: number(),
+  comment: string(),
 });
-export type IsUserExistsInput = Output<typeof IsUserExistsInput>;
-export const IsUserExistsEvent = merge([
+export type AdjustSharedAccountAccountBalanceInput = Output<
+  typeof AdjustSharedAccountAccountBalanceInput
+>;
+export const AdjustSharedAccountAccountBalanceEventRecord = merge([
   BaseEvent,
-  object({ input: IsUserExistsInput }),
+  object({ input: AdjustSharedAccountAccountBalanceInput }),
 ]);
-export type IsUserExistsEvent = Output<typeof IsUserExistsEvent>;
-export const IsUserExistsOutput = boolean();
-export type IsUserExistsOutput = Output<typeof IsUserExistsOutput>;
-export const IsUserExistsResult = object({
-  output: IsUserExistsOutput,
-});
-export type IsUserExistsResult = Output<typeof IsUserExistsResult>;
-
-// api.listUserSharedAccounts
-export const ListUserSharedAccountsInput = object({
-  username: string(),
-  offset: Offset,
-  limit: Limit,
-  ignoreUserAccountSelectionConfig: fallback(optional(boolean()), true),
-});
-export type ListUserSharedAccountsInput = Output<
-  typeof ListUserSharedAccountsInput
+export type AdjustSharedAccountAccountBalanceRecord = Output<
+  typeof AdjustSharedAccountAccountBalanceEventRecord
 >;
-export const ListUserSharedAccountsEvent = merge([
-  BaseEvent,
-  object({ input: ListUserSharedAccountsInput }),
-]);
-export type ListUserSharedAccountsEvent = Output<
-  typeof ListUserSharedAccountsEvent
+export const AdjustSharedAccountAccountBalanceOutput = boolean();
+export type AdjustSharedAccountAccountBalanceOutput = Output<
+  typeof AdjustSharedAccountAccountBalanceOutput
 >;
-export const ListUserSharedAccountsOutput = array(string());
-export type ListUserSharedAccountsOutput = Output<
-  typeof ListUserSharedAccountsOutput
->;
-export const ListUserSharedAccountsResult = object({
-  output: ListUserSharedAccountsOutput,
+export const AdjustSharedAccountAccountBalanceResult = object({
+  output: AdjustSharedAccountAccountBalanceOutput,
 });
-export type ListUserSharedAccountsResult = Output<
-  typeof ListUserSharedAccountsResult
+export type AdjustSharedAccountAccountBalanceResult = Output<
+  typeof AdjustSharedAccountAccountBalanceResult
 >;
 
 // api.getSharedAccountProperties
@@ -127,6 +108,23 @@ export type GetSharedAccountPropertiesResult = Output<
   typeof GetSharedAccountPropertiesResult
 >;
 
+// api.isUserExists
+export const IsUserExistsInput = object({
+  username: string(),
+});
+export type IsUserExistsInput = Output<typeof IsUserExistsInput>;
+export const IsUserExistsEvent = merge([
+  BaseEvent,
+  object({ input: IsUserExistsInput }),
+]);
+export type IsUserExistsEvent = Output<typeof IsUserExistsEvent>;
+export const IsUserExistsOutput = boolean();
+export type IsUserExistsOutput = Output<typeof IsUserExistsOutput>;
+export const IsUserExistsResult = object({
+  output: IsUserExistsOutput,
+});
+export type IsUserExistsResult = Output<typeof IsUserExistsResult>;
+
 // api.listSharedAccounts
 export const ListSharedAccountsInput = object({
   offset: Offset,
@@ -145,29 +143,30 @@ export const ListSharedAccountsResult = object({
 });
 export type ListSharedAccountsResult = Output<typeof ListSharedAccountsResult>;
 
-// api.adjustSharedAccountAccountBalance
-export const AdjustSharedAccountAccountBalanceInput = object({
-  sharedAccountName: string(),
-  adjustment: number(),
-  comment: string(),
+// api.listUserSharedAccounts
+export const ListUserSharedAccountsInput = object({
+  username: string(),
+  offset: Offset,
+  limit: Limit,
+  ignoreUserAccountSelectionConfig: fallback(optional(boolean()), true),
 });
-export type AdjustSharedAccountAccountBalanceInput = Output<
-  typeof AdjustSharedAccountAccountBalanceInput
+export type ListUserSharedAccountsInput = Output<
+  typeof ListUserSharedAccountsInput
 >;
-export const AdjustSharedAccountAccountBalanceEventRecord = merge([
+export const ListUserSharedAccountsEvent = merge([
   BaseEvent,
-  object({ input: AdjustSharedAccountAccountBalanceInput }),
+  object({ input: ListUserSharedAccountsInput }),
 ]);
-export type AdjustSharedAccountAccountBalanceRecord = Output<
-  typeof AdjustSharedAccountAccountBalanceEventRecord
+export type ListUserSharedAccountsEvent = Output<
+  typeof ListUserSharedAccountsEvent
 >;
-export const AdjustSharedAccountAccountBalanceOutput = boolean();
-export type AdjustSharedAccountAccountBalanceOutput = Output<
-  typeof AdjustSharedAccountAccountBalanceOutput
+export const ListUserSharedAccountsOutput = array(string());
+export type ListUserSharedAccountsOutput = Output<
+  typeof ListUserSharedAccountsOutput
 >;
-export const AdjustSharedAccountAccountBalanceResult = object({
-  output: AdjustSharedAccountAccountBalanceOutput,
+export const ListUserSharedAccountsResult = object({
+  output: ListUserSharedAccountsOutput,
 });
-export type AdjustSharedAccountAccountBalanceResult = Output<
-  typeof AdjustSharedAccountAccountBalanceResult
+export type ListUserSharedAccountsResult = Output<
+  typeof ListUserSharedAccountsResult
 >;

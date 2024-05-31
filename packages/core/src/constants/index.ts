@@ -17,11 +17,11 @@ export const CLIENT_RESOURCE_PREFIX = "Client";
 export const COMPOSITE_KEY_DELIMITER = ":";
 
 export const xmlRpcMethod = createPrefixedRecord("api.", [
-  "isUserExists",
-  "listUserSharedAccounts",
-  "getSharedAccountProperties",
-  "listSharedAccounts",
   "adjustSharedAccountAccountBalance",
+  "getSharedAccountProperties",
+  "isUserExists",
+  "listSharedAccounts",
+  "listUserSharedAccounts",
 ]);
 
 export const PAPERCUT_API_PAGINATION_LIMIT = 1000;
