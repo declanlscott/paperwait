@@ -3,14 +3,20 @@ import { and, eq, sql } from "drizzle-orm";
 import { transact } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
-import { SharedAccount } from "../shared-account/shared-account.sql";
+import {
+  PapercutAccount,
+  PapercutAccountCustomerAuthorization,
+  PapercutAccountManagerAuthorization,
+} from "../papercut/account.sql";
 import { User } from "../user/user.sql";
 import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { getClientGroup, getData } from "./data";
 import {
   searchClients,
   searchOrders,
-  searchSharedAccounts,
+  searchPapercutAccountCustomerAuthorizations,
+  searchPapercutAccountManagerAuthorizations,
+  searchPapercutAccounts,
   searchUsers,
 } from "./metadata";
 import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
@@ -85,7 +91,9 @@ export async function pull(
       ({
         user: {},
         order: {},
-        sharedAccount: {},
+        papercutAccount: {},
+        papercutAccountCustomerAuthorization: {},
+        papercutAccountManagerAuthorization: {},
         client: {},
       } satisfies ClientViewRecord);
 
@@ -105,12 +113,16 @@ export async function pull(
     const [
       usersMetadata,
       ordersMetadata,
-      sharedAccountsMetadata,
+      papercutAccountsMetadata,
+      papercutAccountCustomerAuthorizationsMetadata,
+      papercutAccountManagerAuthorizationsMetadata,
       clientsMetadata,
     ] = await Promise.all([
       searchUsers(tx, user),
       searchOrders(tx, user),
-      searchSharedAccounts(tx, user),
+      searchPapercutAccounts(tx, user),
+      searchPapercutAccountCustomerAuthorizations(tx, user),
+      searchPapercutAccountManagerAuthorizations(tx, user),
       searchClients(tx, baseClientGroup.id),
     ]);
 
@@ -118,7 +130,13 @@ export async function pull(
     const nextCvr = {
       user: buildCvrEntries(usersMetadata),
       order: buildCvrEntries(ordersMetadata),
-      sharedAccount: buildCvrEntries(sharedAccountsMetadata),
+      papercutAccount: buildCvrEntries(papercutAccountsMetadata),
+      papercutAccountCustomerAuthorization: buildCvrEntries(
+        papercutAccountCustomerAuthorizationsMetadata,
+      ),
+      papercutAccountManagerAuthorization: buildCvrEntries(
+        papercutAccountManagerAuthorizationsMetadata,
+      ),
       client: buildCvrEntries(clientsMetadata),
     } satisfies ClientViewRecord;
 
@@ -129,7 +147,7 @@ export async function pull(
     if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
     // 11: Get entities
-    const [users, orders, sharedAccounts] = await Promise.all([
+    const [users, orders, papercutAccounts] = await Promise.all([
       getData(
         tx,
         User,
@@ -144,9 +162,33 @@ export async function pull(
       ),
       getData(
         tx,
-        SharedAccount,
-        { orgId: SharedAccount.orgId, id: SharedAccount.id },
-        { orgId: user.orgId, ids: diff.sharedAccount.puts },
+        PapercutAccount,
+        { orgId: PapercutAccount.orgId, id: PapercutAccount.id },
+        { orgId: user.orgId, ids: diff.papercutAccount.puts },
+      ),
+      getData(
+        tx,
+        PapercutAccountCustomerAuthorization,
+        {
+          orgId: PapercutAccountCustomerAuthorization.orgId,
+          id: PapercutAccountCustomerAuthorization.id,
+        },
+        {
+          orgId: user.orgId,
+          ids: diff.papercutAccountCustomerAuthorization.puts,
+        },
+      ),
+      getData(
+        tx,
+        PapercutAccountManagerAuthorization,
+        {
+          orgId: PapercutAccountManagerAuthorization.orgId,
+          id: PapercutAccountManagerAuthorization.id,
+        },
+        {
+          orgId: user.orgId,
+          ids: diff.papercutAccountManagerAuthorization.puts,
+        },
       ),
     ]);
 
@@ -191,7 +233,10 @@ export async function pull(
       entities: {
         user: { puts: users, dels: diff.user.dels },
         order: { puts: orders, dels: diff.order.dels },
-        sharedAccount: { puts: sharedAccounts, dels: diff.sharedAccount.dels },
+        papercutAccount: {
+          puts: papercutAccounts,
+          dels: diff.papercutAccount.dels,
+        },
       },
       clients,
       prevCvr: prevClientView?.record,

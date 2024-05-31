@@ -6,8 +6,8 @@ import {
 } from "@paperwait/core/errors";
 import {
   permissions,
-  syncSharedAccounts,
-  SyncSharedAccountsMutationArgs,
+  syncPapercutAccounts,
+  SyncPapercutAccountsMutationArgs,
 } from "@paperwait/core/mutations";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
@@ -19,16 +19,16 @@ import type { APIContext } from "astro";
 
 export async function PUT(context: APIContext) {
   try {
-    const { user } = authorize(context, permissions.syncSharedAccounts);
+    const { user } = authorize(context, permissions.syncPapercutAccounts);
 
     const requestBody = await context.request.json();
 
     await transact(
       async (tx) =>
-        await syncSharedAccounts(
+        await syncPapercutAccounts(
           tx,
           user.orgId,
-          validate(SyncSharedAccountsMutationArgs, requestBody, {
+          validate(SyncPapercutAccountsMutationArgs, requestBody, {
             Error: BadRequestError,
             message: "Failed to parse request body",
           }),

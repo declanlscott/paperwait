@@ -146,7 +146,7 @@ adjustSharedAccountAccountBalanceQueue.subscribe({
   link: [adjustSharedAccountAccountBalanceQueue],
 });
 
-export const mockPaperCutApi = new sst.cloudflare.Worker("MockPaperCutApi", {
+export const mockPapercutApi = new sst.cloudflare.Worker("MockPapercutApi", {
   handler: "packages/functions/src/mock-papercut-api.ts",
   url: true,
   environment: {

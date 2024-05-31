@@ -14,7 +14,7 @@ import {
 } from "valibot";
 
 import { PAPERCUT_API_PAGINATION_LIMIT } from "../constants";
-import { SharedAccountId } from "../id";
+import { PapercutAccountId } from "../id";
 
 import type { Output } from "valibot";
 
@@ -74,7 +74,7 @@ export const GetSharedAccountPropertiesOutput = transform(
   tuple([
     string(), // access-groups
     string(), // access-users
-    SharedAccountId, // account-id
+    PapercutAccountId, // account-id
     number(), // balance
     string(), // comment-option
     boolean(), // disabled

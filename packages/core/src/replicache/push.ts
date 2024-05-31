@@ -5,7 +5,7 @@ import { BadRequestError, NotImplementedError } from "../errors/http";
 import {
   createOrder,
   deleteOrder,
-  deleteSharedAccount,
+  deletePapercutAccount,
   deleteUser,
   updateUserRole,
 } from "../mutations/authoritative";
@@ -211,12 +211,12 @@ async function mutate(
       return await createOrder(tx, user, mutation.args);
     case "deleteOrder":
       return await deleteOrder(tx, user, mutation.args);
-    case "syncSharedAccounts":
+    case "syncPapercutAccounts":
       throw new NotImplementedError(
-        `Mutation "syncSharedAccounts" is not implemented with replicache, call directly instead (PUT api/shared-accounts)`,
+        `Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT api/shared-accounts)`,
       );
-    case "deleteSharedAccount":
-      return await deleteSharedAccount(tx, user, mutation.args);
+    case "deletePapercutAccount":
+      return await deletePapercutAccount(tx, user, mutation.args);
     default:
       mutationName satisfies never;
 

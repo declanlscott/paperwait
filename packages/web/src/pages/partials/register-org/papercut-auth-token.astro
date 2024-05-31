@@ -1,7 +1,7 @@
 ---
 import { boolean, fallback, parse, pick } from "valibot";
 
-import RegisterOrgPaperCutAuthToken from "~/components/register-org/papercut-auth-token.astro";
+import RegisterOrgPapercutAuthToken from "~/components/register-org/papercut-auth-token.astro";
 import { Registration } from "~/lib/schemas";
 
 export const partial = true;
@@ -18,4 +18,4 @@ const show = parse(
 );
 ---
 
-<RegisterOrgPaperCutAuthToken {value} {show} />
+<RegisterOrgPapercutAuthToken {value} {show} />

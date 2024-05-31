@@ -1,7 +1,7 @@
 import { createInsertSchema } from "drizzle-valibot";
 import { literal, merge, object, picklist, undefined_, variant } from "valibot";
 
-import { NanoId, SharedAccountId } from "../id";
+import { NanoId, PapercutAccountId } from "../id";
 import { Order } from "../order/order.sql";
 import { PushRequest } from "../replicache/schemas";
 import { UserRole } from "../user/user.sql";
@@ -27,14 +27,16 @@ export type CreateOrderMutationArgs = Output<typeof CreateOrderMutationArgs>;
 export const DeleteOrderMutationArgs = object({ id: NanoId });
 export type DeleteOrderMutationArgs = Output<typeof DeleteOrderMutationArgs>;
 
-export const SyncSharedAccountsMutationArgs = undefined_();
-export type SyncSharedAccountsMutationArgs = Output<
-  typeof SyncSharedAccountsMutationArgs
+export const SyncPapercutAccountsMutationArgs = undefined_();
+export type SyncPapercutAccountsMutationArgs = Output<
+  typeof SyncPapercutAccountsMutationArgs
 >;
 
-export const DeleteSharedAccountMutationArgs = object({ id: SharedAccountId });
-export type DeleteSharedAccountMutationArgs = Output<
-  typeof DeleteSharedAccountMutationArgs
+export const DeletePapercutAccountMutationArgs = object({
+  id: PapercutAccountId,
+});
+export type DeletePapercutAccountMutationArgs = Output<
+  typeof DeletePapercutAccountMutationArgs
 >;
 
 export const BaseMutation = PushRequest.options[1].entries.mutations.item;
@@ -57,8 +59,8 @@ export const Mutation = variant("name", [
   mutation("updateUserRole", UpdateUserRoleMutationArgs),
   mutation("createOrder", CreateOrderMutationArgs),
   mutation("deleteOrder", DeleteOrderMutationArgs),
-  mutation("syncSharedAccounts", SyncSharedAccountsMutationArgs),
-  mutation("deleteSharedAccount", DeleteSharedAccountMutationArgs),
+  mutation("syncPapercutAccounts", SyncPapercutAccountsMutationArgs),
+  mutation("deletePapercutAccount", DeletePapercutAccountMutationArgs),
 ]);
 export type Mutation = Output<typeof Mutation>;
 
@@ -67,6 +69,6 @@ export const permissions = {
   deleteUser: ["administrator"],
   createOrder: ["administrator", "technician", "manager", "customer"],
   deleteOrder: ["administrator", "technician"],
-  syncSharedAccounts: ["administrator"],
-  deleteSharedAccount: ["administrator"],
+  syncPapercutAccounts: ["administrator"],
+  deletePapercutAccount: ["administrator"],
 } as const satisfies Record<Mutation["name"], Array<UserRole>>;

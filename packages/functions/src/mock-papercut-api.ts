@@ -1,3 +1,9 @@
+/**
+ * Mock PaperCut API
+ * Based on the PaperCut Public XML Web Services API
+ * https://www.papercut.com/help/manuals/ng-mf/common/tools-web-services/
+ */
+
 import { xmlRpcMethod } from "@paperwait/core/constants";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { Hono } from "hono";

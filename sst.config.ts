@@ -31,7 +31,7 @@ export default $config({
     return {
       url: infra.astro.url,
       whitelistIp: infra.natInstance.publicIp,
-      mockPaperCutApi: infra.mockPaperCutApi.url,
+      mockPapercutApi: infra.mockPapercutApi.url,
     };
   },
 });

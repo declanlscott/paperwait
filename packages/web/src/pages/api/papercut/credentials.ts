@@ -1,10 +1,6 @@
 import { putParameter } from "@paperwait/core/aws";
-import {
-  BadRequestError,
-  ForbiddenError,
-  HttpError,
-} from "@paperwait/core/errors";
-import { PaperCutParameter } from "@paperwait/core/papercut";
+import { BadRequestError, HttpError } from "@paperwait/core/errors";
+import { PapercutParameter } from "@paperwait/core/papercut";
 import { validate } from "@paperwait/core/valibot";
 
 import { authorize } from "~/lib/auth/authorize";
@@ -15,10 +11,8 @@ export async function POST(context: APIContext) {
   try {
     const { user } = authorize(context, ["administrator"]);
 
-    if (context.params.id! !== user.orgId) throw new ForbiddenError();
-
     const body = await context.request.json();
-    const data = validate(PaperCutParameter, body, {
+    const data = validate(PapercutParameter, body, {
       Error: BadRequestError,
       message: "Failed to parse PaperCut parameter",
     });

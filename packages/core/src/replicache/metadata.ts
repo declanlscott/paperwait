@@ -1,11 +1,11 @@
 import { and, eq, sql } from "drizzle-orm";
 
-import {
-  CustomerToSharedAccount,
-  ManagerToSharedAccount,
-} from "../database/relations.sql";
 import { Order } from "../order/order.sql";
-import { SharedAccount } from "../shared-account/shared-account.sql";
+import {
+  PapercutAccount,
+  PapercutAccountCustomerAuthorization,
+  PapercutAccountManagerAuthorization,
+} from "../papercut/account.sql";
 import { User } from "../user/user.sql";
 import { ReplicacheClient } from "./replicache.sql";
 
@@ -68,48 +68,55 @@ export async function searchOrders(tx: Transaction, user: LuciaUser) {
   });
 }
 
-export async function searchSharedAccounts(tx: Transaction, user: LuciaUser) {
+export async function searchPapercutAccounts(tx: Transaction, user: LuciaUser) {
   const selectAll = async () =>
     await tx
-      .select({ id: SharedAccount.id, rowVersion: sql<number>`xmin` })
-      .from(SharedAccount);
+      .select({ id: PapercutAccount.id, rowVersion: sql<number>`xmin` })
+      .from(PapercutAccount)
+      .where(eq(PapercutAccount.orgId, user.orgId));
 
   const selectCustomerAccounts = async () =>
     await tx
-      .select({ id: SharedAccount.id, rowVersion: sql<number>`xmin` })
-      .from(CustomerToSharedAccount)
+      .select({ id: PapercutAccount.id, rowVersion: sql<number>`xmin` })
+      .from(PapercutAccountCustomerAuthorization)
       .innerJoin(
         User,
         and(
-          eq(CustomerToSharedAccount.customerId, User.id),
-          eq(CustomerToSharedAccount.orgId, User.orgId),
+          eq(PapercutAccountCustomerAuthorization.customerId, User.id),
+          eq(PapercutAccountCustomerAuthorization.orgId, User.orgId),
         ),
       )
       .innerJoin(
-        SharedAccount,
+        PapercutAccount,
         and(
-          eq(CustomerToSharedAccount.sharedAccountId, SharedAccount.id),
-          eq(CustomerToSharedAccount.orgId, SharedAccount.orgId),
+          eq(
+            PapercutAccountCustomerAuthorization.papercutAccountId,
+            PapercutAccount.id,
+          ),
+          eq(PapercutAccountCustomerAuthorization.orgId, PapercutAccount.orgId),
         ),
       )
       .where(eq(User.id, user.id));
 
   const selectManagerAccounts = async () =>
     await tx
-      .select({ id: SharedAccount.id, rowVersion: sql<number>`xmin` })
-      .from(ManagerToSharedAccount)
+      .select({ id: PapercutAccount.id, rowVersion: sql<number>`xmin` })
+      .from(PapercutAccountManagerAuthorization)
       .innerJoin(
         User,
         and(
-          eq(ManagerToSharedAccount.managerId, User.id),
-          eq(ManagerToSharedAccount.orgId, User.orgId),
+          eq(PapercutAccountManagerAuthorization.managerId, User.id),
+          eq(PapercutAccountManagerAuthorization.orgId, User.orgId),
         ),
       )
       .innerJoin(
-        SharedAccount,
+        PapercutAccount,
         and(
-          eq(ManagerToSharedAccount.sharedAccountId, SharedAccount.id),
-          eq(ManagerToSharedAccount.orgId, SharedAccount.orgId),
+          eq(
+            PapercutAccountManagerAuthorization.papercutAccountId,
+            PapercutAccount.id,
+          ),
+          eq(PapercutAccountManagerAuthorization.orgId, PapercutAccount.orgId),
         ),
       )
       .where(eq(User.id, user.id));
@@ -126,6 +133,74 @@ export async function searchSharedAccounts(tx: Transaction, user: LuciaUser) {
       return Array.from(new Set([...customerAccounts, ...managerAccounts]));
     },
     searchAsCustomer: selectCustomerAccounts,
+  });
+}
+
+export async function searchPapercutAccountCustomerAuthorizations(
+  tx: Transaction,
+  user: LuciaUser,
+) {
+  const selectAll = async () =>
+    await tx
+      .select({
+        id: PapercutAccountCustomerAuthorization.id,
+        rowVersion: sql<number>`xmin`,
+      })
+      .from(PapercutAccountCustomerAuthorization)
+      .where(eq(PapercutAccountCustomerAuthorization.orgId, user.orgId));
+
+  const selectCustomerAuthorizations = async () =>
+    await tx
+      .select({
+        id: PapercutAccountCustomerAuthorization.id,
+        rowVersion: sql<number>`xmin`,
+      })
+      .from(PapercutAccountCustomerAuthorization)
+      .where(
+        and(
+          eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
+          eq(PapercutAccountCustomerAuthorization.customerId, user.id),
+        ),
+      );
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsTechnician: selectAll,
+    searchAsManager: selectCustomerAuthorizations,
+    searchAsCustomer: selectCustomerAuthorizations,
+  });
+}
+
+export async function searchPapercutAccountManagerAuthorizations(
+  tx: Transaction,
+  user: LuciaUser,
+) {
+  const selectAll = async () =>
+    await tx
+      .select({
+        id: PapercutAccountManagerAuthorization.id,
+        rowVersion: sql<number>`xmin`,
+      })
+      .from(PapercutAccountManagerAuthorization)
+      .where(eq(PapercutAccountManagerAuthorization.orgId, user.orgId));
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsTechnician: selectAll,
+    searchAsManager: async () =>
+      await tx
+        .select({
+          id: PapercutAccountManagerAuthorization.id,
+          rowVersion: sql<number>`xmin`,
+        })
+        .from(PapercutAccountManagerAuthorization)
+        .where(
+          and(
+            eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
+            eq(PapercutAccountManagerAuthorization.managerId, user.id),
+          ),
+        ),
+    searchAsCustomer: async () => [],
   });
 }
 

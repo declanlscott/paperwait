@@ -1,16 +1,23 @@
-import { foreignKey, text } from "drizzle-orm/pg-core";
+import { foreignKey, pgEnum } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
-import { SharedAccount } from "../shared-account";
+import { PapercutAccount } from "../papercut/account.sql";
 import { User } from "../user/user.sql";
+
+export const orderStatus = pgEnum("order_status", [
+  "pending_approval",
+  "new",
+  "in_progress",
+  "completed",
+]);
 
 export const Order = orgTable(
   "order",
   {
     customerId: id("customer_id").notNull(),
-    sharedAccountId: id("shared_account_id").notNull(),
-    status: text("status").notNull(),
+    papercutAccountId: id("papercut_account_id").notNull(),
+    status: orderStatus("status").notNull(),
   },
   (table) => ({
     customerReference: foreignKey({
@@ -18,10 +25,10 @@ export const Order = orgTable(
       foreignColumns: [User.id, User.orgId],
       name: "customer_fk",
     }),
-    sharedAccountReference: foreignKey({
-      columns: [table.sharedAccountId, table.orgId],
-      foreignColumns: [SharedAccount.id, SharedAccount.orgId],
-      name: "shared_account_fk",
+    papercutAccountReference: foreignKey({
+      columns: [table.papercutAccountId, table.orgId],
+      foreignColumns: [PapercutAccount.id, PapercutAccount.orgId],
+      name: "papercut_account_fk",
     }),
   }),
 );

@@ -1,5 +1,5 @@
 import { provider } from "@paperwait/core/organization";
-import { PaperCutParameter } from "@paperwait/core/papercut";
+import { PapercutParameter } from "@paperwait/core/papercut";
 import {
   boolean,
   custom,
@@ -33,7 +33,7 @@ export const Registration = merge([
       }),
     ],
   ),
-  PaperCutParameter,
+  PapercutParameter,
 ]);
 export type Registration = Output<typeof Registration>;
 

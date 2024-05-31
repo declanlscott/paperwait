@@ -14,5 +14,5 @@ export const nanoIdPattern = new RegExp(
 export const NanoId = string([regex(nanoIdPattern)]);
 export type NanoId = Output<typeof NanoId>;
 
-export const SharedAccountId = number([integer()]);
-export type SharedAccountId = Output<typeof SharedAccountId>;
+export const PapercutAccountId = number([integer()]);
+export type PapercutAccountId = Output<typeof PapercutAccountId>;

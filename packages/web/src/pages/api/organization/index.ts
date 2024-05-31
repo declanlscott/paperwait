@@ -5,7 +5,7 @@ import {
   DatabaseError,
   HttpError,
 } from "@paperwait/core/errors";
-import { syncSharedAccounts } from "@paperwait/core/mutations";
+import { syncPapercutAccounts } from "@paperwait/core/mutations";
 import { Organization } from "@paperwait/core/organization";
 import { validate } from "@paperwait/core/valibot";
 
@@ -43,7 +43,7 @@ export async function POST(context: APIContext) {
         Overwrite: false,
       });
 
-      await syncSharedAccounts(tx, org.id, undefined);
+      await syncPapercutAccounts(tx, org.id, undefined);
 
       return org;
     });

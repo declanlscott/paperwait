@@ -1,9 +1,5 @@
 import { createSession } from "@paperwait/core/auth";
-import {
-  CustomerToSharedAccount,
-  db,
-  transact,
-} from "@paperwait/core/database";
+import { db, transact } from "@paperwait/core/database";
 import {
   BadRequestError,
   DatabaseError,
@@ -19,6 +15,7 @@ import {
   getSharedAccountProperties,
   isUserExists,
   listUserSharedAccounts,
+  PapercutAccountCustomerAuthorization,
 } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { getUsersByRoles, poke } from "@paperwait/core/replicache";
@@ -36,6 +33,7 @@ import google from "~/lib/auth/google";
 import { Registration } from "~/lib/schemas";
 
 import type { Provider } from "@paperwait/core/organization";
+import type { OmitTimestamps } from "@paperwait/core/types";
 import type { GoogleTokens, MicrosoftEntraIdTokens } from "arctic";
 import type { APIContext } from "astro";
 
@@ -311,8 +309,8 @@ async function processUser(
           : undefined,
       ]);
 
-      // Build the join table entries, concurrently
-      const joinEntries = await Promise.all(
+      // Build the customer authorization entries, concurrently
+      const customerAuthorizations = await Promise.all(
         sharedAccountNames.map(async (sharedAccountName) => {
           const sharedAccount = await getSharedAccountProperties({
             orgId: org.id,
@@ -322,15 +320,18 @@ async function processUser(
           return {
             orgId: org.id,
             customerId: newUser.id,
-            sharedAccountId: sharedAccount.accountId,
-          } satisfies CustomerToSharedAccount;
+            papercutAccountId: sharedAccount.accountId,
+          } satisfies Omit<
+            OmitTimestamps<PapercutAccountCustomerAuthorization>,
+            "id"
+          >;
         }),
       );
 
-      // Insert the join table entries
+      // Insert the customer authorizations
       await tx
-        .insert(CustomerToSharedAccount)
-        .values(joinEntries)
+        .insert(PapercutAccountCustomerAuthorization)
+        .values(customerAuthorizations)
         .onConflictDoNothing();
 
       return {

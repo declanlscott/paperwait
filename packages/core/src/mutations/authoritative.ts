@@ -1,11 +1,14 @@
 import { and, eq } from "drizzle-orm";
 
-import { CustomerToSharedAccount, ManagerToSharedAccount } from "../database";
 import { Order } from "../order/order.sql";
 import { Organization } from "../organization/organization.sql";
+import {
+  PapercutAccount,
+  PapercutAccountCustomerAuthorization,
+  PapercutAccountManagerAuthorization,
+} from "../papercut/account.sql";
 import { formatChannel } from "../realtime";
 import { getUsersByRoles, requireAccessToOrder } from "../replicache/data";
-import { SharedAccount } from "../shared-account/shared-account.sql";
 import { assertRole } from "../user/assert";
 import { User } from "../user/user.sql";
 import { permissions } from "./schemas";
@@ -15,7 +18,7 @@ import type { Transaction } from "../database/transaction";
 import type {
   CreateOrderMutationArgs,
   DeleteOrderMutationArgs,
-  DeleteSharedAccountMutationArgs,
+  DeletePapercutAccountMutationArgs,
   DeleteUserMutationArgs,
   UpdateUserRoleMutationArgs,
 } from "./schemas";
@@ -98,38 +101,41 @@ export async function deleteOrder(
   return adminsTechs.map(({ id }) => formatChannel("user", id));
 }
 
-export async function deleteSharedAccount(
+export async function deletePapercutAccount(
   tx: Transaction,
   user: LuciaUser,
-  args: DeleteSharedAccountMutationArgs,
+  args: DeletePapercutAccountMutationArgs,
 ) {
-  assertRole(user, permissions.deleteSharedAccount);
+  assertRole(user, permissions.deletePapercutAccount);
 
   const [adminsTechs, customers, managers] = await Promise.all([
     getUsersByRoles(tx, user.orgId, ["administrator", "technician"]),
     tx
-      .select({ customerId: CustomerToSharedAccount.customerId })
-      .from(CustomerToSharedAccount)
+      .select({ customerId: PapercutAccountCustomerAuthorization.customerId })
+      .from(PapercutAccountCustomerAuthorization)
       .where(
         and(
-          eq(CustomerToSharedAccount.sharedAccountId, args.id),
-          eq(CustomerToSharedAccount.orgId, user.orgId),
+          eq(PapercutAccountCustomerAuthorization.papercutAccountId, args.id),
+          eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
         ),
       ),
     tx
-      .select({ managerId: ManagerToSharedAccount.managerId })
-      .from(ManagerToSharedAccount)
+      .select({ managerId: PapercutAccountManagerAuthorization.managerId })
+      .from(PapercutAccountManagerAuthorization)
       .where(
         and(
-          eq(ManagerToSharedAccount.sharedAccountId, args.id),
-          eq(ManagerToSharedAccount.orgId, user.orgId),
+          eq(PapercutAccountManagerAuthorization.papercutAccountId, args.id),
+          eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
         ),
       ),
     tx
-      .update(SharedAccount)
+      .update(PapercutAccount)
       .set({ deletedAt: new Date().toISOString() })
       .where(
-        and(eq(SharedAccount.id, args.id), eq(SharedAccount.orgId, user.orgId)),
+        and(
+          eq(PapercutAccount.id, args.id),
+          eq(PapercutAccount.orgId, user.orgId),
+        ),
       ),
   ]);
 

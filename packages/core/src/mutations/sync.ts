@@ -1,23 +1,26 @@
 import { eq } from "drizzle-orm";
 
-import { CustomerToSharedAccount } from "../database/relations.sql";
 import { buildConflictUpdateColumns } from "../drizzle/tables";
+import {
+  PapercutAccount,
+  PapercutAccountCustomerAuthorization,
+} from "../papercut/account.sql";
 import {
   getSharedAccountProperties,
   listSharedAccounts,
   listUserSharedAccounts,
 } from "../papercut/api";
-import { SharedAccount } from "../shared-account/shared-account.sql";
+import { OmitTimestamps } from "../types";
 import { User } from "../user/user.sql";
 
 import type { Transaction } from "../database/transaction";
-import type { SyncSharedAccountsMutationArgs } from "../mutations/schemas";
+import type { SyncPapercutAccountsMutationArgs } from "../mutations/schemas";
 import type { Organization } from "../organization";
 
-export async function syncSharedAccounts(
+export async function syncPapercutAccounts(
   tx: Transaction,
   orgId: Organization["id"],
-  _args: SyncSharedAccountsMutationArgs,
+  _args: SyncPapercutAccountsMutationArgs,
 ) {
   const allNames = await listSharedAccounts({ orgId, input: {} });
 
@@ -40,8 +43,8 @@ export async function syncSharedAccounts(
       .where(eq(User.orgId, orgId)),
   ]);
 
-  const [joinEntries] = await Promise.all([
-    // Build the join table entries
+  const [customerAuthorizations] = await Promise.all([
+    // Build the customer authorization entries
     Promise.all(
       allUsers.map(async (user) => {
         const names = await listUserSharedAccounts({
@@ -62,24 +65,28 @@ export async function syncSharedAccounts(
             ({
               orgId,
               customerId: user.id,
-              sharedAccountId: sharedAccount.id,
-            }) satisfies CustomerToSharedAccount,
+              papercutAccountId: sharedAccount.id,
+            }) satisfies Omit<
+              OmitTimestamps<PapercutAccountCustomerAuthorization>,
+              "id"
+            >,
         );
       }),
     ).then((result) => result.flat()),
-    // Upsert the shared accounts
+    // Upsert the papercut accounts
     tx
-      .insert(SharedAccount)
+      .insert(PapercutAccount)
       .values(allSharedAccounts)
       .onConflictDoUpdate({
-        target: [SharedAccount.id, SharedAccount.orgId],
-        set: buildConflictUpdateColumns(SharedAccount, ["name"]),
+        target: [PapercutAccount.id, PapercutAccount.orgId],
+        // TODO: Set `updatedAt`
+        set: buildConflictUpdateColumns(PapercutAccount, ["name"]),
       }),
   ]);
 
-  // Insert the join table entries
+  // Insert the customer authorizations
   await tx
-    .insert(CustomerToSharedAccount)
-    .values(joinEntries)
+    .insert(PapercutAccountCustomerAuthorization)
+    .values(customerAuthorizations)
     .onConflictDoNothing();
 }
