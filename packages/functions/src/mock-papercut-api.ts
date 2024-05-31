@@ -19,6 +19,8 @@ import {
 const xmlParser = new XMLParser();
 const xmlBuilder = new XMLBuilder();
 
+const sharedAccountPrefix = "shared-account-";
+
 type Bindings = {
   IP_WHITELIST: string;
   AUTH_TOKEN: string;
@@ -53,6 +55,21 @@ const doubleParamSchema = object({ value: object({ double: number() }) });
 const schema = object({
   methodCall: variant("methodName", [
     object({
+      methodName: literal(xmlRpcMethod.adjustSharedAccountAccountBalance),
+      params: object({
+        param: tuple([
+          // auth token
+          stringParamSchema,
+
+          // shared account name
+          stringParamSchema,
+
+          // adjustment
+          doubleParamSchema,
+        ]),
+      }),
+    }),
+    object({
       methodName: literal(xmlRpcMethod.isUserExists),
       params: object({
         param: tuple([
@@ -61,6 +78,21 @@ const schema = object({
 
           // username
           stringParamSchema,
+        ]),
+      }),
+    }),
+    object({
+      methodName: literal(xmlRpcMethod.listSharedAccounts),
+      params: object({
+        param: tuple([
+          // auth token
+          stringParamSchema,
+
+          // offset
+          intParamSchema,
+
+          // limit
+          intParamSchema,
         ]),
       }),
     }),
@@ -86,7 +118,7 @@ const schema = object({
       }),
     }),
     object({
-      methodName: literal(xmlRpcMethod.adjustSharedAccountAccountBalance),
+      methodName: literal(xmlRpcMethod.getSharedAccountProperties),
       params: object({
         param: tuple([
           // auth token
@@ -94,9 +126,6 @@ const schema = object({
 
           // shared account name
           stringParamSchema,
-
-          // adjustment
-          doubleParamSchema,
         ]),
       }),
     }),
@@ -113,7 +142,7 @@ api.post("/", async (c) => {
 
   const methodName = rpc.methodCall.methodName;
   switch (methodName) {
-    case "api.isUserExists":
+    case xmlRpcMethod.adjustSharedAccountAccountBalance:
       return c.body(
         `<?xml version="1.0"?>${xmlBuilder.build({
           methodResponse: {
@@ -128,7 +157,13 @@ api.post("/", async (c) => {
         })}`,
         200,
       );
-    case "api.listUserSharedAccounts":
+    case xmlRpcMethod.getSharedAccountProperties: {
+      const num = Number(
+        rpc.methodCall.params.param[1].value.string.split("shared-account-")[1],
+      );
+
+      if (isNaN(num)) throw new Error("Invalid shared account name");
+
       return c.body(
         `<?xml version="1.0"?>${xmlBuilder.build({
           methodResponse: {
@@ -136,8 +171,17 @@ api.post("/", async (c) => {
               param: {
                 value: {
                   data: [
-                    { value: "shared-account-1" },
-                    { value: "shared-account-2" },
+                    { value: "access-groups" },
+                    { value: "access-users" },
+                    { value: `${sharedAccountPrefix}${num}` },
+                    { value: 0 },
+                    { value: "comment-option" },
+                    { value: false },
+                    { value: "invoice-option" },
+                    { value: "notes" },
+                    { value: 0 },
+                    { value: "pin" },
+                    { value: false },
                   ],
                 },
               },
@@ -146,7 +190,8 @@ api.post("/", async (c) => {
         })}`,
         200,
       );
-    case "api.adjustSharedAccountAccountBalance":
+    }
+    case xmlRpcMethod.isUserExists:
       return c.body(
         `<?xml version="1.0"?>${xmlBuilder.build({
           methodResponse: {
@@ -154,6 +199,43 @@ api.post("/", async (c) => {
               param: {
                 value: {
                   boolean: 1,
+                },
+              },
+            },
+          },
+        })}`,
+        200,
+      );
+    case xmlRpcMethod.listSharedAccounts:
+      return c.body(
+        `<?xml version="1.0"?>${xmlBuilder.build({
+          methodResponse: {
+            params: {
+              param: {
+                value: {
+                  data: [
+                    { value: `${sharedAccountPrefix}-1` },
+                    { value: `${sharedAccountPrefix}-2` },
+                    { value: `${sharedAccountPrefix}-3` },
+                  ],
+                },
+              },
+            },
+          },
+        })}`,
+        200,
+      );
+    case xmlRpcMethod.listUserSharedAccounts:
+      return c.body(
+        `<?xml version="1.0"?>${xmlBuilder.build({
+          methodResponse: {
+            params: {
+              param: {
+                value: {
+                  data: [
+                    { value: `${sharedAccountPrefix}-1` },
+                    { value: `${sharedAccountPrefix}-3` },
+                  ],
                 },
               },
             },
