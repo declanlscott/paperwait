@@ -95,10 +95,13 @@ export type PullRequest = Output<typeof PullRequest>;
 
 export const Domain = picklist([
   "user",
-  "order",
   "papercutAccount",
   "papercutAccountCustomerAuthorization",
   "papercutAccountManagerAuthorization",
+  "room",
+  "product",
+  "order",
+  "comment",
   "client",
 ]);
 export type Domain = Output<typeof Domain>;

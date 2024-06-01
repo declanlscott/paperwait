@@ -1,11 +1,14 @@
 import { and, eq, sql } from "drizzle-orm";
 
+import { Comment } from "../comment/comment.sql";
 import { Order } from "../order/order.sql";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
   PapercutAccountManagerAuthorization,
 } from "../papercut/account.sql";
+import { Product } from "../product/product.sql";
+import { Room } from "../room/room.sql";
 import { User } from "../user/user.sql";
 import { ReplicacheClient } from "./replicache.sql";
 
@@ -16,19 +19,6 @@ export type Metadata = {
   id: string | number;
   rowVersion: number;
 };
-
-export async function searchClients(
-  tx: Transaction,
-  clientGroupId: ReplicacheClient["clientGroupId"],
-) {
-  return await tx
-    .select({
-      id: ReplicacheClient.id,
-      rowVersion: ReplicacheClient.lastMutationId,
-    })
-    .from(ReplicacheClient)
-    .where(eq(ReplicacheClient.clientGroupId, clientGroupId));
-}
 
 export async function searchUsers(tx: Transaction, user: LuciaUser) {
   const selectSelf = async () =>
@@ -46,25 +36,6 @@ export async function searchUsers(tx: Transaction, user: LuciaUser) {
     searchAsTechnician: selectSelf,
     searchAsManager: selectSelf,
     searchAsCustomer: selectSelf,
-  });
-}
-
-export async function searchOrders(tx: Transaction, user: LuciaUser) {
-  const selectAll = async () =>
-    await tx
-      .select({ id: Order.id, rowVersion: sql<number>`xmin` })
-      .from(Order)
-      .where(eq(Order.orgId, user.orgId));
-
-  return searchAsRole(user.role, {
-    searchAsAdministrator: selectAll,
-    searchAsTechnician: selectAll,
-    searchAsManager: async () => [],
-    searchAsCustomer: async () =>
-      await tx
-        .select({ id: Order.id, rowVersion: sql<number>`xmin` })
-        .from(Order)
-        .where(and(eq(Order.orgId, user.orgId), eq(Order.customerId, user.id))),
   });
 }
 
@@ -204,6 +175,93 @@ export async function searchPapercutAccountManagerAuthorizations(
   });
 }
 
+export async function searchRooms(tx: Transaction, user: LuciaUser) {
+  const selectAll = async () =>
+    await tx
+      .select({ id: Room.id, rowVersion: sql<number>`xmin` })
+      .from(Room)
+      .where(eq(Room.orgId, user.orgId));
+
+  const selectPublished = async () =>
+    await tx
+      .select({ id: Room.id, rowVersion: sql<number>`xmin` })
+      .from(Room)
+      .where(and(eq(Room.orgId, user.orgId), eq(Room.status, "published")));
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsTechnician: selectAll,
+    searchAsManager: selectPublished,
+    searchAsCustomer: selectPublished,
+  });
+}
+
+export async function searchProducts(tx: Transaction, user: LuciaUser) {
+  const selectAll = async () =>
+    await tx
+      .select({ id: Product.id, rowVersion: sql<number>`xmin` })
+      .from(Product)
+      .where(eq(Product.orgId, user.orgId));
+
+  const selectPublished = async () =>
+    await tx
+      .select({ id: Product.id, rowVersion: sql<number>`xmin` })
+      .from(Product)
+      .where(
+        and(eq(Product.orgId, user.orgId), eq(Product.status, "published")),
+      );
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsTechnician: selectAll,
+    searchAsManager: selectPublished,
+    searchAsCustomer: selectPublished,
+  });
+}
+
+export async function searchOrders(tx: Transaction, user: LuciaUser) {
+  const selectAll = async () =>
+    await tx
+      .select({ id: Order.id, rowVersion: sql<number>`xmin` })
+      .from(Order)
+      .where(eq(Order.orgId, user.orgId));
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsTechnician: selectAll,
+    searchAsManager: async () => [],
+    searchAsCustomer: async () =>
+      await tx
+        .select({ id: Order.id, rowVersion: sql<number>`xmin` })
+        .from(Order)
+        .where(and(eq(Order.orgId, user.orgId), eq(Order.customerId, user.id))),
+  });
+}
+
+export async function searchComments(tx: Transaction, user: LuciaUser) {
+  const selectAll = async () =>
+    await tx
+      .select({ id: Comment.id, rowVersion: sql<number>`xmin` })
+      .from(Comment)
+      .where(eq(Comment.orgId, user.orgId));
+
+  // TODO: Require access to the order to view comments
+  const selectPublic = async () =>
+    await tx
+      .select({ id: Comment.id, rowVersion: sql<number>`xmin` })
+      .from(Comment)
+      .where(
+        and(eq(Comment.orgId, user.orgId), eq(Comment.visibility, "public")),
+      );
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsTechnician: selectAll,
+    searchAsManager: async () => [],
+    searchAsCustomer: async () => [],
+  });
+}
+
 async function searchAsRole(
   role: LuciaUser["role"],
   callbacks: Record<
@@ -224,4 +282,17 @@ async function searchAsRole(
       role satisfies never;
       return [];
   }
+}
+
+export async function searchClients(
+  tx: Transaction,
+  clientGroupId: ReplicacheClient["clientGroupId"],
+) {
+  return await tx
+    .select({
+      id: ReplicacheClient.id,
+      rowVersion: ReplicacheClient.lastMutationId,
+    })
+    .from(ReplicacheClient)
+    .where(eq(ReplicacheClient.clientGroupId, clientGroupId));
 }

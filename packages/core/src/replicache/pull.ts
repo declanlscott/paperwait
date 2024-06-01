@@ -1,5 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 
+import { Comment } from "../comment/comment.sql";
 import { transact } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
@@ -8,15 +9,20 @@ import {
   PapercutAccountCustomerAuthorization,
   PapercutAccountManagerAuthorization,
 } from "../papercut/account.sql";
+import { Product } from "../product/product.sql";
+import { Room } from "../room/room.sql";
 import { User } from "../user/user.sql";
 import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { getClientGroup, getData } from "./data";
 import {
   searchClients,
+  searchComments,
   searchOrders,
   searchPapercutAccountCustomerAuthorizations,
   searchPapercutAccountManagerAuthorizations,
   searchPapercutAccounts,
+  searchProducts,
+  searchRooms,
   searchUsers,
 } from "./metadata";
 import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
@@ -90,10 +96,13 @@ export async function pull(
       prevClientView?.record ??
       ({
         user: {},
-        order: {},
         papercutAccount: {},
         papercutAccountCustomerAuthorization: {},
         papercutAccountManagerAuthorization: {},
+        room: {},
+        product: {},
+        order: {},
+        comment: {},
         client: {},
       } satisfies ClientViewRecord);
 
@@ -112,24 +121,29 @@ export async function pull(
     // 7: Read all clients in the client group
     const [
       usersMetadata,
-      ordersMetadata,
       papercutAccountsMetadata,
       papercutAccountCustomerAuthorizationsMetadata,
       papercutAccountManagerAuthorizationsMetadata,
+      roomsMetadata,
+      productsMetadata,
+      ordersMetadata,
+      commentsMetadata,
       clientsMetadata,
     ] = await Promise.all([
       searchUsers(tx, user),
-      searchOrders(tx, user),
       searchPapercutAccounts(tx, user),
       searchPapercutAccountCustomerAuthorizations(tx, user),
       searchPapercutAccountManagerAuthorizations(tx, user),
+      searchRooms(tx, user),
+      searchProducts(tx, user),
+      searchOrders(tx, user),
+      searchComments(tx, user),
       searchClients(tx, baseClientGroup.id),
     ]);
 
     // 8: Build next client view record
     const nextCvr = {
       user: buildCvrEntries(usersMetadata),
-      order: buildCvrEntries(ordersMetadata),
       papercutAccount: buildCvrEntries(papercutAccountsMetadata),
       papercutAccountCustomerAuthorization: buildCvrEntries(
         papercutAccountCustomerAuthorizationsMetadata,
@@ -137,6 +151,10 @@ export async function pull(
       papercutAccountManagerAuthorization: buildCvrEntries(
         papercutAccountManagerAuthorizationsMetadata,
       ),
+      room: buildCvrEntries(roomsMetadata),
+      product: buildCvrEntries(productsMetadata),
+      order: buildCvrEntries(ordersMetadata),
+      comment: buildCvrEntries(commentsMetadata),
       client: buildCvrEntries(clientsMetadata),
     } satisfies ClientViewRecord;
 
@@ -147,7 +165,16 @@ export async function pull(
     if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
     // 11: Get entities
-    const [users, orders, papercutAccounts] = await Promise.all([
+    const [
+      users,
+      papercutAccounts,
+      papercutAccountCustomerAuthorizations,
+      papercutAccountManagerAuthorizations,
+      rooms,
+      products,
+      orders,
+      comments,
+    ] = await Promise.all([
       getData(
         tx,
         User,
@@ -156,14 +183,12 @@ export async function pull(
       ),
       getData(
         tx,
-        Order,
-        { orgId: Order.orgId, id: Order.id, deletedAt: Order.deletedAt },
-        { orgId: user.orgId, ids: diff.order.puts },
-      ),
-      getData(
-        tx,
         PapercutAccount,
-        { orgId: PapercutAccount.orgId, id: PapercutAccount.id },
+        {
+          orgId: PapercutAccount.orgId,
+          id: PapercutAccount.id,
+          deletedAt: PapercutAccount.deletedAt,
+        },
         { orgId: user.orgId, ids: diff.papercutAccount.puts },
       ),
       getData(
@@ -172,6 +197,7 @@ export async function pull(
         {
           orgId: PapercutAccountCustomerAuthorization.orgId,
           id: PapercutAccountCustomerAuthorization.id,
+          deletedAt: PapercutAccountCustomerAuthorization.deletedAt,
         },
         {
           orgId: user.orgId,
@@ -184,11 +210,36 @@ export async function pull(
         {
           orgId: PapercutAccountManagerAuthorization.orgId,
           id: PapercutAccountManagerAuthorization.id,
+          deletedAt: PapercutAccountManagerAuthorization.deletedAt,
         },
         {
           orgId: user.orgId,
           ids: diff.papercutAccountManagerAuthorization.puts,
         },
+      ),
+      getData(
+        tx,
+        Room,
+        { orgId: Room.orgId, id: Room.id, deletedAt: Room.deletedAt },
+        { orgId: user.orgId, ids: diff.room.puts },
+      ),
+      getData(
+        tx,
+        Product,
+        { orgId: Product.orgId, id: Product.id, deletedAt: Product.deletedAt },
+        { orgId: user.orgId, ids: diff.product.puts },
+      ),
+      getData(
+        tx,
+        Order,
+        { orgId: Order.orgId, id: Order.id, deletedAt: Order.deletedAt },
+        { orgId: user.orgId, ids: diff.order.puts },
+      ),
+      getData(
+        tx,
+        Comment,
+        { orgId: Comment.orgId, id: Comment.id, deletedAt: Comment.deletedAt },
+        { orgId: user.orgId, ids: diff.comment.puts },
       ),
     ]);
 
@@ -232,11 +283,22 @@ export async function pull(
     return {
       entities: {
         user: { puts: users, dels: diff.user.dels },
-        order: { puts: orders, dels: diff.order.dels },
         papercutAccount: {
           puts: papercutAccounts,
           dels: diff.papercutAccount.dels,
         },
+        papercutAccountCustomerAuthorization: {
+          puts: papercutAccountCustomerAuthorizations,
+          dels: diff.papercutAccountCustomerAuthorization.dels,
+        },
+        papercutAccountManagerAuthorization: {
+          puts: papercutAccountManagerAuthorizations,
+          dels: diff.papercutAccountManagerAuthorization.dels,
+        },
+        room: { puts: rooms, dels: diff.room.dels },
+        product: { puts: products, dels: diff.product.dels },
+        order: { puts: orders, dels: diff.order.dels },
+        comment: { puts: comments, dels: diff.comment.dels },
       },
       clients,
       prevCvr: prevClientView?.record,
