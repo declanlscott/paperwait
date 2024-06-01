@@ -7,7 +7,7 @@ import { authorize } from "~/lib/auth/authorize";
 
 import type { APIContext } from "astro";
 
-export async function POST(context: APIContext) {
+export async function PUT(context: APIContext) {
   try {
     const { user } = authorize(context, ["administrator"]);
 
