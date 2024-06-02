@@ -1,3 +1,4 @@
+import { unique } from "remeda";
 import { array, parse } from "valibot";
 
 import { Domain } from "./schemas";
@@ -18,45 +19,28 @@ export type ClientViewRecordDiffEntry = {
 export function buildCvrEntries(domainMetadata: Array<Metadata>) {
   return domainMetadata.reduce((entries, { id, rowVersion }) => {
     entries[id] = rowVersion;
+
     return entries;
   }, {} as ClientViewRecordEntries);
 }
 
-type ClientViewRecordEntryRowVersion =
-  ClientViewRecordEntries[keyof ClientViewRecordEntries];
-
 export function diffCvr(prev: ClientViewRecord, next: ClientViewRecord) {
-  const domains = new Set<Domain>([
+  return unique([
     ...parse(array(Domain), Object.keys(prev)),
     ...parse(array(Domain), Object.keys(next)),
-  ]);
-
-  let prevEntries: ClientViewRecordEntries;
-  let nextEntries: ClientViewRecordEntries;
-  const diff = {} as ClientViewRecordDiff;
-  let prevRowVersion: ClientViewRecordEntryRowVersion;
-  let nextRowVersion: ClientViewRecordEntryRowVersion;
-  for (const domain of domains) {
-    prevEntries = prev[domain];
-    nextEntries = next[domain];
-
+  ]).reduce((diff, domain) => {
     diff[domain] = {
-      puts: Object.keys(nextEntries).filter((id) => {
-        prevRowVersion = prevEntries[id];
-        nextRowVersion = nextEntries[id];
-
-        return prevRowVersion === undefined || prevRowVersion < nextRowVersion;
-      }),
-      dels: Object.keys(prevEntries).filter((id) => {
-        prevRowVersion = prevEntries[id];
-        nextRowVersion = nextEntries[id];
-
-        return nextRowVersion === undefined;
-      }),
+      puts: Object.keys(next[domain]).filter(
+        (id) =>
+          prev[domain][id] === undefined || prev[domain][id] < next[domain][id],
+      ),
+      dels: Object.keys(prev[domain]).filter(
+        (id) => next[domain][id] === undefined,
+      ),
     };
-  }
 
-  return diff;
+    return diff;
+  }, {} as ClientViewRecordDiff);
 }
 
 export function isCvrDiffEmpty(diff: ClientViewRecordDiff) {

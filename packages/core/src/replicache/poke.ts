@@ -1,14 +1,15 @@
 import ky from "ky";
+import { unique } from "remeda";
 import { Resource } from "sst";
 
 import type { Channel } from "../realtime";
 
 export async function poke(channels: Array<Channel>) {
-  const channelsSet = Array.from(new Set(channels));
-  if (channelsSet.length === 0) return;
+  const uniqueChannels = unique(channels);
+  if (uniqueChannels.length === 0) return;
 
   const results = await Promise.allSettled(
-    channelsSet.map(async (channel) => {
+    uniqueChannels.map(async (channel) => {
       try {
         await ky.post(
           `http${Resource.ClientIsDev ? "://localhost:4321" : `s://${Resource.ClientDomain.value}`}`,

@@ -1,6 +1,9 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
+import { uniqueBy } from "remeda";
 
-import { ForbiddenError } from "../errors/http";
+import { OrderAccessDeniedError } from "../errors/application";
+import { Order } from "../order/order.sql";
+import { PapercutAccountManagerAuthorization } from "../papercut";
 import { User } from "../user/user.sql";
 import { ReplicacheClientGroup } from "./replicache.sql";
 
@@ -8,7 +11,6 @@ import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { ClientGroupID } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
-import type { Order } from "../order/order.sql";
 import type { Organization } from "../organization";
 import type { OmitTimestamps } from "../types/drizzle";
 import type { UserRole } from "../user/user.sql";
@@ -49,35 +51,21 @@ export async function getData<
   TTable extends PgTable,
   TOrgIdColumn extends PgColumn,
   TIdColumn extends PgColumn,
-  TDeletedAtColumn extends PgColumn,
 >(
   tx: Transaction,
-  table: TTable,
+  Table: TTable,
   column: {
-    orgId: TOrgIdColumn;
     id: TIdColumn;
-    deletedAt?: TDeletedAtColumn;
+    orgId: TOrgIdColumn;
   },
   data: { orgId: Organization["id"]; ids: unknown[] },
 ) {
   if (!data.ids.length) return [];
 
-  if (!column.deletedAt)
-    return tx
-      .select()
-      .from(table)
-      .where(and(inArray(column.id, data.ids), eq(column.orgId, data.orgId)));
-
   return tx
     .select()
-    .from(table)
-    .where(
-      and(
-        inArray(column.id, data.ids),
-        eq(column.orgId, data.orgId),
-        isNull(column.deletedAt),
-      ),
-    );
+    .from(Table)
+    .where(and(inArray(column.id, data.ids), eq(column.orgId, data.orgId)));
 }
 
 export async function getUsersByRoles(
@@ -91,11 +79,45 @@ export async function getUsersByRoles(
     .where(and(inArray(User.role, roles), eq(User.orgId, orgId)));
 }
 
-// TODO: Implement this function
 export async function requireAccessToOrder(
   tx: Transaction,
-  userId: User["id"],
+  user: LuciaUser,
   orderId: Order["id"],
 ) {
-  throw new ForbiddenError("User does not have access to this order");
+  const [managers, [customer]] = await Promise.all([
+    tx
+      .select({ id: User.id })
+      .from(User)
+      .innerJoin(
+        PapercutAccountManagerAuthorization,
+        and(
+          eq(User.id, PapercutAccountManagerAuthorization.managerId),
+          eq(User.orgId, PapercutAccountManagerAuthorization.orgId),
+        ),
+      )
+      .innerJoin(
+        Order,
+        and(
+          eq(
+            PapercutAccountManagerAuthorization.papercutAccountId,
+            Order.papercutAccountId,
+          ),
+          eq(PapercutAccountManagerAuthorization.orgId, Order.orgId),
+        ),
+      )
+      .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId))),
+    tx
+      .select({ id: Order.customerId })
+      .from(Order)
+      .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId))),
+  ]);
+
+  if (
+    !uniqueBy([...managers, customer], ({ id }) => id)
+      .map(({ id }) => id)
+      .includes(user.id)
+  )
+    throw new OrderAccessDeniedError(
+      `User ${user.id} does not have access to order ${orderId}`,
+    );
 }

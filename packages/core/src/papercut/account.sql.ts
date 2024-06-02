@@ -45,6 +45,9 @@ export const PapercutAccountCustomerAuthorization = orgTable(
       foreignColumns: [PapercutAccount.id, PapercutAccount.orgId],
       name: "papercut_account_fk",
     }),
+    uniquePapercutAccountCustomer: unique(
+      "unique_papercut_account_customer",
+    ).on(table.papercutAccountId, table.customerId),
   }),
 );
 export type PapercutAccountCustomerAuthorization =
@@ -69,6 +72,10 @@ export const PapercutAccountManagerAuthorization = orgTable(
       foreignColumns: [PapercutAccount.id, PapercutAccount.orgId],
       name: "papercut_account_fk",
     }),
+    uniquePapercutAccountManager: unique("unique_papercut_account_manager").on(
+      table.papercutAccountId,
+      table.managerId,
+    ),
   }),
 );
 export type PapercutAccountManagerAuthorization =

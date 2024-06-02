@@ -15,7 +15,9 @@ import {
   getSharedAccountProperties,
   isUserExists,
   listUserSharedAccounts,
+  PapercutAccount,
   PapercutAccountCustomerAuthorization,
+  PapercutAccountManagerAuthorization,
 } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { getUsersByRoles, poke } from "@paperwait/core/replicache";
@@ -271,9 +273,15 @@ async function processUser(
       name: User.name,
       email: User.email,
       username: User.username,
+      deletedAt: User.deletedAt,
     })
     .from(User)
-    .where(eq(User.providerId, user.idTokenPayload.userProviderId));
+    .where(
+      and(
+        eq(User.providerId, user.idTokenPayload.userProviderId),
+        eq(User.orgId, org.id),
+      ),
+    );
 
   // Create user if it doesn't exist
   if (!existingUser) {
@@ -281,8 +289,8 @@ async function processUser(
       const isInitializing = org.status === "initializing";
 
       const [recipients, [newUser], sharedAccountNames] = await Promise.all([
-        // Get administrators and technicians in the organization
-        getUsersByRoles(tx, org.id, ["administrator", "technician"]),
+        // Get administrators and operators in the organization
+        getUsersByRoles(tx, org.id, ["administrator", "operator"]),
         // Create new user
         tx
           .insert(User)
@@ -347,6 +355,8 @@ async function processUser(
 
   // User already exists, continue processing
 
+  if (existingUser.deletedAt) throw new UnauthorizedError("User is deleted");
+
   const existingUserInfo = {
     name: existingUser.name,
     email: existingUser.email,
@@ -360,18 +370,55 @@ async function processUser(
 
   if (!isDeepEqual(existingUserInfo, freshUserInfo)) {
     const channels = await transact(async (tx) => {
-      // TODO: Get manager recipients
-      const [recipients] = await Promise.all([
-        getUsersByRoles(tx, org.id, ["administrator", "technician"]),
+      const [adminsOps, managers] = await Promise.all([
+        getUsersByRoles(tx, org.id, ["administrator", "operator"]),
+        tx
+          .select({ id: User.id })
+          .from(User)
+          .innerJoin(
+            PapercutAccountCustomerAuthorization,
+            and(
+              eq(User.id, PapercutAccountCustomerAuthorization.customerId),
+              eq(User.orgId, PapercutAccountCustomerAuthorization.orgId),
+            ),
+          )
+          .innerJoin(
+            PapercutAccount,
+            and(
+              eq(
+                PapercutAccountCustomerAuthorization.papercutAccountId,
+                PapercutAccount.id,
+              ),
+              eq(
+                PapercutAccountCustomerAuthorization.orgId,
+                PapercutAccount.orgId,
+              ),
+            ),
+          )
+          .innerJoin(
+            PapercutAccountManagerAuthorization,
+            and(
+              eq(
+                PapercutAccount.id,
+                PapercutAccountManagerAuthorization.papercutAccountId,
+              ),
+              eq(
+                PapercutAccount.orgId,
+                PapercutAccountManagerAuthorization.orgId,
+              ),
+            ),
+          )
+          .where(and(eq(User.id, existingUser.id), eq(User.orgId, org.id))),
         tx
           .update(User)
           .set(freshUserInfo)
-          .where(
-            and(eq(User.id, existingUser.id), eq(Organization.id, org.id)),
-          ),
+          .where(and(eq(User.id, existingUser.id), eq(User.orgId, org.id))),
       ]);
 
-      return recipients.map(({ id }) => formatChannel("user", id));
+      return [
+        ...adminsOps.map(({ id }) => formatChannel("user", id)),
+        ...managers.map(({ id }) => formatChannel("user", id)),
+      ];
     });
 
     await poke(channels);

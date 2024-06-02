@@ -4,14 +4,15 @@ import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
 import { Room } from "../room/room.sql";
 
-export const productStatus = pgEnum("product_status", ["draft", "published"]);
+export const ProductStatus = pgEnum("product_status", ["draft", "published"]);
+export type ProductStatus = (typeof ProductStatus.enumValues)[number];
 
 // TODO: Finish implementation
 export const Product = orgTable(
   "product",
   {
     name: text("name").notNull(),
-    status: productStatus("status").notNull(),
+    status: ProductStatus("status").notNull(),
     roomId: id("room_id").notNull(),
   },
   (table) => ({

@@ -3,6 +3,7 @@ import { literal, merge, object, picklist, undefined_, variant } from "valibot";
 
 import { NanoId, PapercutAccountId } from "../id";
 import { Order } from "../order/order.sql";
+import { PapercutAccountManagerAuthorization } from "../papercut";
 import { PushRequest } from "../replicache/schemas";
 import { UserRole } from "../user/user.sql";
 
@@ -39,6 +40,12 @@ export type DeletePapercutAccountMutationArgs = Output<
   typeof DeletePapercutAccountMutationArgs
 >;
 
+export const CreatePapercutAccountManagerAuthorizationMutationArgs =
+  createInsertSchema(PapercutAccountManagerAuthorization);
+export type CreatePapercutAccountManagerAuthorizationMutationArgs = Output<
+  typeof CreatePapercutAccountManagerAuthorizationMutationArgs
+>;
+
 export const BaseMutation = PushRequest.options[1].entries.mutations.item;
 
 function mutation<TName extends string, TArgs extends BaseSchema>(
@@ -61,14 +68,19 @@ export const Mutation = variant("name", [
   mutation("deleteOrder", DeleteOrderMutationArgs),
   mutation("syncPapercutAccounts", SyncPapercutAccountsMutationArgs),
   mutation("deletePapercutAccount", DeletePapercutAccountMutationArgs),
+  mutation(
+    "createPapercutAccountManagerAuthorization",
+    CreatePapercutAccountManagerAuthorizationMutationArgs,
+  ),
 ]);
 export type Mutation = Output<typeof Mutation>;
 
 export const permissions = {
   updateUserRole: ["administrator"],
   deleteUser: ["administrator"],
-  createOrder: ["administrator", "technician", "manager", "customer"],
-  deleteOrder: ["administrator", "technician"],
+  createOrder: ["administrator", "operator", "manager", "customer"],
+  deleteOrder: ["administrator", "operator"],
   syncPapercutAccounts: ["administrator"],
   deletePapercutAccount: ["administrator"],
+  createPapercutAccountManagerAuthorization: ["administrator"],
 } as const satisfies Record<Mutation["name"], Array<UserRole>>;

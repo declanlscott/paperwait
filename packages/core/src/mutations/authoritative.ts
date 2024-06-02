@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 
+import { ApplicationError } from "../errors";
 import { Order } from "../order/order.sql";
 import { Organization } from "../organization/organization.sql";
 import {
@@ -17,6 +18,7 @@ import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
 import type {
   CreateOrderMutationArgs,
+  CreatePapercutAccountManagerAuthorizationMutationArgs,
   DeleteOrderMutationArgs,
   DeletePapercutAccountMutationArgs,
   DeleteUserMutationArgs,
@@ -30,8 +32,8 @@ export async function updateUserRole(
 ) {
   assertRole(user, permissions.updateUserRole);
 
-  const [adminsTechsManagers] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "technician", "manager"]),
+  const [adminsOpsManagers] = await Promise.all([
+    getUsersByRoles(tx, user.orgId, ["administrator", "operator", "manager"]),
     tx
       .update(User)
       .set({ role: args.role })
@@ -40,7 +42,7 @@ export async function updateUserRole(
 
   return [
     formatChannel("user", args.id),
-    ...adminsTechsManagers.map(({ id }) => formatChannel("user", id)),
+    ...adminsOpsManagers.map(({ id }) => formatChannel("user", id)),
   ];
 }
 
@@ -51,15 +53,15 @@ export async function deleteUser(
 ) {
   assertRole(user, permissions.deleteUser);
 
-  const [adminsTechsManagers] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "technician", "manager"]),
+  const [adminsOpsManagers] = await Promise.all([
+    getUsersByRoles(tx, user.orgId, ["administrator", "operator", "manager"]),
     tx
       .update(User)
       .set({ deletedAt: new Date().toISOString() })
       .where(and(eq(User.id, args.id), eq(Organization.id, user.orgId))),
   ]);
 
-  return adminsTechsManagers.map(({ id }) => formatChannel("user", id));
+  return adminsOpsManagers.map(({ id }) => formatChannel("user", id));
 }
 
 export async function createOrder(
@@ -69,13 +71,47 @@ export async function createOrder(
 ) {
   assertRole(user, permissions.createOrder);
 
-  // TODO: Get managers who have access to the order
-  const [adminsTechs] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "technician"]),
-    tx.insert(Order).values(args),
+  const [order] = await tx
+    .insert(Order)
+    .values(args)
+    .returning({ id: Order.id });
+
+  const [adminsOps, managers] = await Promise.all([
+    getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
+    tx
+      .select({ id: User.id })
+      .from(User)
+      .innerJoin(
+        PapercutAccountManagerAuthorization,
+        and(
+          eq(User.id, PapercutAccountManagerAuthorization.managerId),
+          eq(User.orgId, PapercutAccountManagerAuthorization.orgId),
+        ),
+      )
+      .innerJoin(
+        PapercutAccount,
+        and(
+          eq(
+            PapercutAccountManagerAuthorization.papercutAccountId,
+            PapercutAccount.id,
+          ),
+          eq(PapercutAccount.orgId, PapercutAccountManagerAuthorization.orgId),
+        ),
+      )
+      .innerJoin(
+        Order,
+        and(
+          eq(PapercutAccount.id, Order.papercutAccountId),
+          eq(PapercutAccount.orgId, Order.orgId),
+        ),
+      )
+      .where(and(eq(Order.id, order.id), eq(Order.orgId, user.orgId))),
   ]);
 
-  return adminsTechs.map(({ id }) => formatChannel("user", id));
+  return [
+    ...adminsOps.map(({ id }) => formatChannel("user", id)),
+    ...managers.map(({ id }) => formatChannel("user", id)),
+  ];
 }
 
 export async function deleteOrder(
@@ -86,19 +122,62 @@ export async function deleteOrder(
   try {
     assertRole(user, permissions.deleteOrder);
   } catch (e) {
-    await requireAccessToOrder(tx, user.orgId, args.id);
+    let errorHandled = false;
+
+    if (e instanceof ApplicationError) {
+      errorHandled = true;
+      await requireAccessToOrder(tx, user, args.id);
+    }
+
+    if (!errorHandled) throw e;
   }
 
-  // TODO: Get managers who have access to the order
-  const [adminsTechs] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "technician"]),
+  const [adminsOps, managers, [customer]] = await Promise.all([
+    getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
+    tx
+      .select({ id: User.id })
+      .from(User)
+      .innerJoin(
+        PapercutAccountManagerAuthorization,
+        and(
+          eq(User.id, PapercutAccountManagerAuthorization.managerId),
+          eq(User.orgId, PapercutAccountManagerAuthorization.orgId),
+        ),
+      )
+      .innerJoin(
+        PapercutAccount,
+        and(
+          eq(
+            PapercutAccountManagerAuthorization.papercutAccountId,
+            PapercutAccount.id,
+          ),
+          eq(PapercutAccount.orgId, PapercutAccountManagerAuthorization.orgId),
+        ),
+      )
+      .innerJoin(
+        Order,
+        and(
+          eq(PapercutAccount.id, Order.papercutAccountId),
+          eq(PapercutAccount.orgId, Order.orgId),
+        ),
+      )
+      .where(and(eq(Order.id, args.id), eq(Order.orgId, user.orgId))),
+    tx
+      .select({ id: User.id })
+      .from(User)
+      .innerJoin(Order, eq(User.id, Order.customerId))
+      .where(and(eq(Order.id, args.id), eq(Order.orgId, user.orgId))),
     tx
       .update(Order)
       .set({ deletedAt: new Date().toISOString() })
       .where(and(eq(Order.id, args.id), eq(Organization.id, user.orgId))),
   ]);
 
-  return adminsTechs.map(({ id }) => formatChannel("user", id));
+  return [
+    ...adminsOps.map(({ id }) => formatChannel("user", id)),
+    ...managers.map(({ id }) => formatChannel("user", id)),
+    formatChannel("user", customer.id),
+  ];
 }
 
 export async function deletePapercutAccount(
@@ -108,17 +187,8 @@ export async function deletePapercutAccount(
 ) {
   assertRole(user, permissions.deletePapercutAccount);
 
-  const [adminsTechs, customers, managers] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "technician"]),
-    tx
-      .select({ customerId: PapercutAccountCustomerAuthorization.customerId })
-      .from(PapercutAccountCustomerAuthorization)
-      .where(
-        and(
-          eq(PapercutAccountCustomerAuthorization.papercutAccountId, args.id),
-          eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
-        ),
-      ),
+  const [adminsOps, managers, customers] = await Promise.all([
+    getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
     tx
       .select({ managerId: PapercutAccountManagerAuthorization.managerId })
       .from(PapercutAccountManagerAuthorization)
@@ -126,6 +196,15 @@ export async function deletePapercutAccount(
         and(
           eq(PapercutAccountManagerAuthorization.papercutAccountId, args.id),
           eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
+        ),
+      ),
+    tx
+      .select({ customerId: PapercutAccountCustomerAuthorization.customerId })
+      .from(PapercutAccountCustomerAuthorization)
+      .where(
+        and(
+          eq(PapercutAccountCustomerAuthorization.papercutAccountId, args.id),
+          eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
         ),
       ),
     tx
@@ -140,8 +219,26 @@ export async function deletePapercutAccount(
   ]);
 
   return [
-    ...adminsTechs.map(({ id }) => formatChannel("user", id)),
+    ...adminsOps.map(({ id }) => formatChannel("user", id)),
     ...customers.map(({ customerId }) => formatChannel("user", customerId)),
     ...managers.map(({ managerId }) => formatChannel("user", managerId)),
   ];
+}
+
+export async function createPapercutAccountManagerAuthorization(
+  tx: Transaction,
+  user: LuciaUser,
+  args: CreatePapercutAccountManagerAuthorizationMutationArgs,
+) {
+  assertRole(user, permissions.createPapercutAccountManagerAuthorization);
+
+  const [managerAuthorization] = await tx
+    .insert(PapercutAccountManagerAuthorization)
+    .values(args)
+    .onConflictDoNothing()
+    .returning({ id: PapercutAccountManagerAuthorization.id });
+
+  if (!managerAuthorization) return [];
+
+  return [];
 }

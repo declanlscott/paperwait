@@ -1,26 +1,28 @@
-import { foreignKey, pgEnum, text } from "drizzle-orm/pg-core";
+import { foreignKey, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
 import { Order } from "../order/order.sql";
-
-export const commentVisibility = pgEnum("comment_visibility", [
-  "private",
-  "public",
-]);
+import { UserRole } from "../user";
 
 export const Comment = orgTable(
   "comment",
   {
     orderId: id("order_id").notNull(),
+    roomId: id("room_id").notNull(),
     content: text("content").notNull(),
-    visibility: commentVisibility("visibility").notNull(),
+    visibleTo: UserRole("visible_to").array().notNull(),
   },
   (table) => ({
     orderReference: foreignKey({
       columns: [table.orderId, table.orgId],
       foreignColumns: [Order.id, Order.orgId],
       name: "order_fk",
+    }),
+    roomReference: foreignKey({
+      columns: [table.roomId, table.orgId],
+      foreignColumns: [Order.roomId, Order.orgId],
+      name: "room_fk",
     }),
   }),
 );

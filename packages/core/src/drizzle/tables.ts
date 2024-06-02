@@ -1,14 +1,12 @@
-import { getTableColumns, sql } from "drizzle-orm";
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 
 import { generateId } from "../id";
 import { Organization } from "../organization/organization.sql";
 import { id, timestamps } from "./columns";
 
-import type { BuildColumns, SQL } from "drizzle-orm";
+import type { BuildColumns } from "drizzle-orm";
 import type {
   PgColumnBuilderBase,
-  PgTable,
   PgTableExtraConfig,
 } from "drizzle-orm/pg-core";
 
@@ -50,23 +48,5 @@ export function orgTable<
       primary: primaryKey({ columns: [table.id, table.orgId] }),
       ...extraConfig,
     }),
-  );
-}
-
-export function buildConflictUpdateColumns<
-  TTable extends PgTable,
-  TColumnName extends keyof TTable["_"]["columns"],
->(table: TTable, columnNames: TColumnName[]) {
-  const tableColumns = getTableColumns(table);
-
-  return columnNames.reduce(
-    (updateColumns, column) => {
-      const columnName = tableColumns[column].name;
-
-      updateColumns[column] = sql.raw(`excluded.${columnName}`);
-
-      return updateColumns;
-    },
-    {} as Record<TColumnName, SQL>,
   );
 }

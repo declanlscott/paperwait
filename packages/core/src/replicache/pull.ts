@@ -178,17 +178,13 @@ export async function pull(
       getData(
         tx,
         User,
-        { orgId: User.orgId, id: User.id, deletedAt: User.deletedAt },
+        { orgId: User.orgId, id: User.id },
         { orgId: user.orgId, ids: diff.user.puts },
       ),
       getData(
         tx,
         PapercutAccount,
-        {
-          orgId: PapercutAccount.orgId,
-          id: PapercutAccount.id,
-          deletedAt: PapercutAccount.deletedAt,
-        },
+        { orgId: PapercutAccount.orgId, id: PapercutAccount.id },
         { orgId: user.orgId, ids: diff.papercutAccount.puts },
       ),
       getData(
@@ -197,7 +193,6 @@ export async function pull(
         {
           orgId: PapercutAccountCustomerAuthorization.orgId,
           id: PapercutAccountCustomerAuthorization.id,
-          deletedAt: PapercutAccountCustomerAuthorization.deletedAt,
         },
         {
           orgId: user.orgId,
@@ -210,7 +205,6 @@ export async function pull(
         {
           orgId: PapercutAccountManagerAuthorization.orgId,
           id: PapercutAccountManagerAuthorization.id,
-          deletedAt: PapercutAccountManagerAuthorization.deletedAt,
         },
         {
           orgId: user.orgId,
@@ -220,25 +214,25 @@ export async function pull(
       getData(
         tx,
         Room,
-        { orgId: Room.orgId, id: Room.id, deletedAt: Room.deletedAt },
+        { orgId: Room.orgId, id: Room.id },
         { orgId: user.orgId, ids: diff.room.puts },
       ),
       getData(
         tx,
         Product,
-        { orgId: Product.orgId, id: Product.id, deletedAt: Product.deletedAt },
+        { orgId: Product.orgId, id: Product.id },
         { orgId: user.orgId, ids: diff.product.puts },
       ),
       getData(
         tx,
         Order,
-        { orgId: Order.orgId, id: Order.id, deletedAt: Order.deletedAt },
+        { orgId: Order.orgId, id: Order.id },
         { orgId: user.orgId, ids: diff.order.puts },
       ),
       getData(
         tx,
         Comment,
-        { orgId: Comment.orgId, id: Comment.id, deletedAt: Comment.deletedAt },
+        { orgId: Comment.orgId, id: Comment.id },
         { orgId: user.orgId, ids: diff.comment.puts },
       ),
     ]);

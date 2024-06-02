@@ -8,7 +8,7 @@ export function authorize(
   context: APIContext,
   roleSet: Array<UserRole> = [
     "administrator",
-    "technician",
+    "operator",
     "manager",
     "customer",
   ],

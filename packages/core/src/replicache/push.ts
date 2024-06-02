@@ -4,6 +4,7 @@ import { transact } from "../database/transaction";
 import { BadRequestError, NotImplementedError } from "../errors/http";
 import {
   createOrder,
+  createPapercutAccountManagerAuthorization,
   deleteOrder,
   deletePapercutAccount,
   deleteUser,
@@ -217,6 +218,12 @@ async function mutate(
       );
     case "deletePapercutAccount":
       return await deletePapercutAccount(tx, user, mutation.args);
+    case "createPapercutAccountManagerAuthorization":
+      return await createPapercutAccountManagerAuthorization(
+        tx,
+        user,
+        mutation.args,
+      );
     default:
       mutationName satisfies never;
 

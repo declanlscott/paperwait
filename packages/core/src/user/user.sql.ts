@@ -4,7 +4,7 @@ import { orgTable } from "../drizzle/tables";
 
 export const UserRole = pgEnum("user_role", [
   "administrator",
-  "technician",
+  "operator",
   "manager",
   "customer",
 ]);

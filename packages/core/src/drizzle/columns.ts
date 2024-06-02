@@ -1,8 +1,11 @@
-import { sql } from "drizzle-orm";
+import { getTableColumns, getTableName, sql } from "drizzle-orm";
 import { char, timestamp } from "drizzle-orm/pg-core";
 
 import { NANOID_LENGTH } from "../constants";
 import { generateId } from "../id";
+
+import type { SQL } from "drizzle-orm";
+import type { PgTable } from "drizzle-orm/pg-core";
 
 /**
  * NanoID column
@@ -38,3 +41,28 @@ export const timestamps = {
   },
 };
 export type Timestamp = keyof typeof timestamps;
+
+export function buildConflictUpdateColumns<
+  TTable extends PgTable,
+  TColumnName extends keyof TTable["_"]["columns"],
+>(table: TTable, columnNames: TColumnName[]) {
+  const tableColumns = getTableColumns(table);
+
+  return columnNames.reduce(
+    (updateColumns, column) => {
+      const columnName = tableColumns[column].name;
+
+      updateColumns[column] = sql.raw(`excluded.${columnName}`);
+
+      return updateColumns;
+    },
+    {} as Record<TColumnName, SQL>,
+  );
+}
+
+export function buildMetadataColumns<TTable extends PgTable, TIdColumn>(
+  table: TTable,
+  idColumn: TIdColumn,
+) {
+  return { id: idColumn, rowVersion: sql<number>`${getTableName(table)}.xmin` };
+}

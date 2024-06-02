@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 
-import { buildConflictUpdateColumns } from "../drizzle/tables";
+import { buildConflictUpdateColumns } from "../drizzle/columns";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -10,12 +10,12 @@ import {
   listSharedAccounts,
   listUserSharedAccounts,
 } from "../papercut/api";
-import { OmitTimestamps } from "../types";
 import { User } from "../user/user.sql";
 
 import type { Transaction } from "../database/transaction";
 import type { SyncPapercutAccountsMutationArgs } from "../mutations/schemas";
 import type { Organization } from "../organization";
+import type { OmitTimestamps } from "../types";
 
 export async function syncPapercutAccounts(
   tx: Transaction,
@@ -79,8 +79,10 @@ export async function syncPapercutAccounts(
       .values(allSharedAccounts)
       .onConflictDoUpdate({
         target: [PapercutAccount.id, PapercutAccount.orgId],
-        // TODO: Set `updatedAt`
-        set: buildConflictUpdateColumns(PapercutAccount, ["name"]),
+        set: {
+          ...buildConflictUpdateColumns(PapercutAccount, ["name"]),
+          updatedAt: new Date().toISOString(),
+        },
       }),
   ]);
 
