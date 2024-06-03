@@ -23,6 +23,7 @@ export default $config({
         "@pulumiverse/time": true,
         tls: true,
       },
+      version: ">= 0.0.399",
     };
   },
   async run() {

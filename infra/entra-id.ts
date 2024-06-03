@@ -2,21 +2,17 @@ import { AUTH_CALLBACK_PATH } from "@paperwait/core/constants";
 
 import { domain } from "./secrets";
 
-$linkable(azuread.Application, function () {
-  return {
-    properties: {
-      clientId: this.clientId,
-    },
-  };
-});
+$linkable(azuread.Application, (resource) => ({
+  properties: {
+    clientId: resource.clientId,
+  },
+}));
 
-$linkable(azuread.ApplicationPassword, function () {
-  return {
-    properties: {
-      value: this.value,
-    },
-  };
-});
+$linkable(azuread.ApplicationPassword, (resource) => ({
+  properties: {
+    value: resource.value,
+  },
+}));
 
 export const entraIdApp = new azuread.Application("EntraIdApplication", {
   displayName: "Paperwait",

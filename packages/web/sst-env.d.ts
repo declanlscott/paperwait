@@ -3,6 +3,14 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
+    AdjustSharedAccountAccountBalanceDeadLetterQueue: {
+      type: "sst.aws.Queue"
+      url: string
+    }
+    AdjustSharedAccountAccountBalanceQueue: {
+      type: "sst.aws.Queue"
+      url: string
+    }
     ClientDomain: {
       type: "sst.sst.Secret"
       value: string
@@ -35,8 +43,16 @@ declare module "sst" {
       type: "sst.sst.Secret"
       value: string
     }
+    MockPapercutApi: {
+      type: "sst.cloudflare.Worker"
+      url: string
+    }
     PapercutApiGateway: {
       type: "sst.aws.ApiGatewayV2"
+      url: string
+    }
+    Paperwait: {
+      type: "sst.aws.Astro"
       url: string
     }
     PartyKitApiKey: {
