@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Replicache } from "replicache";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
-import { useAuthedContext, useLogout } from "~/app/lib/hooks/auth";
+import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useMutators } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 
@@ -16,7 +16,7 @@ export function ReplicacheProvider(props: PropsWithChildren) {
     }),
   );
 
-  const { user } = useAuthedContext();
+  const { user } = useAuthed();
 
   const { ReplicacheLicenseKey, IsDev } = useResource();
 

@@ -2,6 +2,7 @@ import { useCallback, useContext } from "react";
 import { optimistic, permissions } from "@paperwait/core/mutations";
 import { generateId } from "@paperwait/core/nano-id";
 import { assertRole } from "@paperwait/core/user";
+import { MissingContextProviderError } from "@paperwait/core/errors";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthedContext } from "~/app/lib/hooks/auth";
@@ -15,8 +16,7 @@ import type { WriteTransaction } from "replicache";
 export function useReplicache() {
   const context = useContext(ReplicacheContext);
 
-  if (!context)
-    throw new Error("useReplicache must be used within a ReplicacheProvider");
+  if (!context) throw new MissingContextProviderError("Replicache");
 
   return context.replicache;
 }

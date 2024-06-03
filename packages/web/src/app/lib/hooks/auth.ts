@@ -1,4 +1,5 @@
 import { useCallback, useContext } from "react";
+import { MissingContextProviderError } from "@paperwait/core/errors";
 import { useRouter } from "@tanstack/react-router";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -12,13 +13,12 @@ import type { Authed, UnAuthed } from "~/app/types";
 export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
   const store = useContext(AuthContext);
 
-  if (!store)
-    throw new Error("useAuthStore must be used within an AuthProvider");
+  if (!store) throw new MissingContextProviderError("AuthStore");
 
   return useStore(store, selector);
 }
 
-export const useAuthContext = () =>
+export const useAuth = () =>
   useAuthStore(
     useShallow(({ user, session, org }) => {
       if (!user || !session || !org)
@@ -36,11 +36,10 @@ export const useAuthContext = () =>
 export const useAuthActions = () =>
   useAuthStore(useShallow(({ actions }) => actions));
 
-export function useAuthedContext() {
+export function useAuthed() {
   const auth = useContext(AuthedContext);
 
-  if (!auth)
-    throw new Error("useAuthedContext must be used within an AuthedProvider");
+  if (!auth) throw new MissingContextProviderError("Authed");
 
   return auth;
 }
@@ -48,7 +47,7 @@ export function useAuthedContext() {
 export function useLogout() {
   const { logout } = useAuthActions();
   const { invalidate, navigate } = useRouter();
-  const { org } = useAuthedContext();
+  const { org } = useAuthed();
 
   return useCallback(async () => {
     await logout();

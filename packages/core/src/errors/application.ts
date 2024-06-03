@@ -12,9 +12,32 @@ export class InvalidUserRoleError extends ApplicationError {
   }
 }
 
+export class EntityNotFoundError extends ApplicationError {
+  constructor(entity?: string, entityId?: string | number) {
+    super(
+      `${entity ? entity : "entity"} not found${entityId ? `: ${entityId}` : ""}`,
+    );
+    this.name = "UserNotFoundError";
+  }
+}
+
 export class OrderAccessDeniedError extends ApplicationError {
-  constructor(message = "Order access denied") {
-    super(message);
+  constructor(info?: { orderId: string; userId: string }) {
+    super(
+      info
+        ? `User "${info.userId}" does not have access to order "${info.orderId}"`
+        : "Order access denied",
+    );
     this.name = "OrderAccessDeniedError";
+  }
+}
+
+export class MissingContextProviderError extends ApplicationError {
+  constructor(context?: string) {
+    const message = context
+      ? `"use${context}" must be used within a "${context}Provider"`
+      : "This hook must be used within a corresponding context provider";
+    super(message);
+    this.name = "MissingContextProviderError";
   }
 }

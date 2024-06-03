@@ -5,7 +5,7 @@ import ky from "ky";
 import { createStore } from "zustand";
 
 import { AuthContext, AuthedContext } from "~/app/lib/contexts";
-import { useAuthContext } from "~/app/lib/hooks/auth";
+import { useAuth } from "~/app/lib/hooks/auth";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
@@ -13,11 +13,11 @@ import type { PropsWithChildren } from "react";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { Auth } from "~/app/types";
 
-interface AuthProviderProps extends PropsWithChildren {
+interface AuthStoreProviderProps extends PropsWithChildren {
   initialAuth: Auth;
 }
 
-export function AuthProvider(props: AuthProviderProps) {
+export function AuthStoreProvider(props: AuthStoreProviderProps) {
   const [store] = useState(() =>
     createStore<AuthStore>((set, get) => ({
       user: props.initialAuth.user,
@@ -52,7 +52,7 @@ export function AuthProvider(props: AuthProviderProps) {
 }
 
 export function AuthedProvider(props: PropsWithChildren) {
-  const auth = useAuthContext();
+  const auth = useAuth();
 
   const { loadingIndicator } = useSlot();
 

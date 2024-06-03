@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
-import { AuthProvider } from "~/app/components/providers/auth";
+import { AuthStoreProvider } from "~/app/components/providers/auth";
 import { ResourceProvider } from "~/app/components/providers/resource";
 import { SlotProvider } from "~/app/components/providers/slot";
 import { useAuthStore } from "~/app/lib/hooks/auth";
@@ -49,11 +49,11 @@ export function App(props: AppProps) {
 
   return (
     <ResourceProvider resource={clientResource}>
-      <AuthProvider initialAuth={initialAuth}>
+      <AuthStoreProvider initialAuth={initialAuth}>
         <SlotProvider slot={{ loadingIndicator }}>
           <AppRouter router={router} />
         </SlotProvider>
-      </AuthProvider>
+      </AuthStoreProvider>
     </ResourceProvider>
   );
 }

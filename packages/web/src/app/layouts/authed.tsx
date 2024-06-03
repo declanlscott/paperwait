@@ -4,7 +4,7 @@ import { Outlet } from "@tanstack/react-router";
 
 import { AuthedProvider } from "~/app/components/providers/auth";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
-import { useAuthedContext, useLogout } from "~/app/lib/hooks/auth";
+import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useRealtime } from "~/app/lib/hooks/realtime";
 
 import type { PropsWithChildren } from "react";
@@ -24,7 +24,7 @@ export function AuthedLayout() {
 }
 
 function Realtime(props: PropsWithChildren) {
-  const { user } = useAuthedContext();
+  const { user } = useAuthed();
 
   useRealtime({ channel: formatChannel("org", user.orgId) });
   useRealtime({ channel: formatChannel("user", user.id) });
