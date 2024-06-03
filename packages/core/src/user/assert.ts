@@ -1,4 +1,4 @@
-import { InvalidUserRoleError } from "../errors";
+import { InvalidUserRoleError } from "../errors/application";
 
 import type { User } from "lucia";
 import type { UserRole } from "./user.sql";

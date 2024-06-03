@@ -1,4 +1,4 @@
-import { and, arrayOverlaps, eq, isNull, not } from "drizzle-orm";
+import { and, arrayOverlaps, eq, isNull } from "drizzle-orm";
 import { uniqueBy } from "remeda";
 
 import { Comment } from "../comment/comment.sql";
@@ -25,11 +25,11 @@ export type Metadata = {
 export async function searchUsers(tx: Transaction, user: LuciaUser) {
   const metadataColumns = buildMetadataColumns(User, User.id);
 
-  const selectSelf = async () =>
+  const selectAll = async () =>
     await tx
       .select(metadataColumns)
       .from(User)
-      .where(and(eq(User.id, user.id), eq(User.orgId, user.orgId)));
+      .where(and(eq(User.orgId, user.orgId), isNull(User.deletedAt)));
 
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
@@ -37,120 +37,9 @@ export async function searchUsers(tx: Transaction, user: LuciaUser) {
         .select(metadataColumns)
         .from(User)
         .where(eq(User.orgId, user.orgId)),
-    searchAsOperator: async () =>
-      await tx
-        .select(metadataColumns)
-        .from(User)
-        .where(and(eq(User.orgId, user.orgId), isNull(User.deletedAt))),
-    searchAsManager: async () => {
-      const PapercutAccountCte = tx.$with("papercut_account_cte").as(
-        tx
-          .select({
-            id: PapercutAccountManagerAuthorization.papercutAccountId,
-            orgId: PapercutAccountManagerAuthorization.orgId,
-          })
-          .from(PapercutAccountManagerAuthorization)
-          .where(
-            and(
-              eq(PapercutAccountManagerAuthorization.managerId, user.id),
-              eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
-            ),
-          ),
-      );
-
-      const PapercutAccountManagerAuthorizationCte = tx
-        .$with("papercut_account_manager_authorization_cte")
-        .as(
-          tx
-            .select({
-              managerId: PapercutAccountManagerAuthorization.managerId,
-              orgId: PapercutAccountManagerAuthorization.orgId,
-            })
-            .from(PapercutAccountCte)
-            .innerJoin(
-              PapercutAccountManagerAuthorization,
-              and(
-                eq(
-                  PapercutAccountCte.id,
-                  PapercutAccountManagerAuthorization.papercutAccountId,
-                ),
-                eq(
-                  PapercutAccountCte.orgId,
-                  PapercutAccountManagerAuthorization.orgId,
-                ),
-              ),
-            )
-            .where(
-              not(eq(PapercutAccountManagerAuthorization.managerId, user.id)),
-            ),
-        );
-
-      const PapercutAccountCustomerAuthorizationCte = tx
-        .$with("papercut_account_customer_authorization_cte")
-        .as(
-          tx
-            .select({
-              customerId: PapercutAccountCustomerAuthorization.customerId,
-              orgId: PapercutAccountCustomerAuthorization.orgId,
-            })
-            .from(PapercutAccountCte)
-            .innerJoin(
-              PapercutAccountCustomerAuthorization,
-              and(
-                eq(
-                  PapercutAccountCte.id,
-                  PapercutAccountCustomerAuthorization.papercutAccountId,
-                ),
-                eq(
-                  PapercutAccountCte.orgId,
-                  PapercutAccountCustomerAuthorization.orgId,
-                ),
-              ),
-            ),
-        );
-
-      const [self, otherManagers, managedCustomers] = await Promise.all([
-        selectSelf(),
-        tx
-          .select(metadataColumns)
-          .from(User)
-          .innerJoin(
-            PapercutAccountManagerAuthorizationCte,
-            and(
-              eq(User.id, PapercutAccountManagerAuthorizationCte.managerId),
-              eq(User.orgId, PapercutAccountManagerAuthorizationCte.orgId),
-            ),
-          ),
-        tx
-          .select(metadataColumns)
-          .from(User)
-          .innerJoin(
-            PapercutAccountCustomerAuthorizationCte,
-            and(
-              eq(User.id, PapercutAccountCustomerAuthorizationCte.customerId),
-              eq(User.orgId, PapercutAccountCustomerAuthorizationCte.orgId),
-            ),
-          )
-          .where(and(eq(User.orgId, user.orgId), isNull(User.deletedAt))),
-        tx
-          .select(metadataColumns)
-          .from(User)
-          .innerJoin(
-            PapercutAccountCustomerAuthorization,
-            and(
-              eq(User.id, PapercutAccountCustomerAuthorization.customerId),
-              eq(User.orgId, PapercutAccountCustomerAuthorization.orgId),
-            ),
-          )
-          .where(and(eq(User.orgId, user.orgId), isNull(User.deletedAt))),
-      ]);
-
-      return uniqueBy(
-        [...self, ...otherManagers, ...managedCustomers],
-        ({ id }) => id,
-      );
-    },
-    searchAsCustomer: selectSelf,
+    searchAsOperator: selectAll,
+    searchAsManager: selectAll,
+    searchAsCustomer: selectAll,
   });
 }
 
@@ -160,80 +49,26 @@ export async function searchPapercutAccounts(tx: Transaction, user: LuciaUser) {
     PapercutAccount.id,
   );
 
-  const selectCustomerAccounts = async () =>
+  const selectAll = async () =>
     await tx
       .select(metadataColumns)
       .from(PapercutAccount)
-      .innerJoin(
-        PapercutAccountCustomerAuthorization,
+      .where(
         and(
-          eq(
-            PapercutAccount.id,
-            PapercutAccountCustomerAuthorization.papercutAccountId,
-          ),
-          eq(PapercutAccount.orgId, PapercutAccountCustomerAuthorization.orgId),
+          eq(PapercutAccount.orgId, user.orgId),
+          isNull(PapercutAccount.deletedAt),
         ),
-      )
-      .innerJoin(
-        User,
-        and(
-          eq(PapercutAccountCustomerAuthorization.customerId, User.id),
-          eq(PapercutAccountCustomerAuthorization.orgId, User.orgId),
-        ),
-      )
-      .where(and(eq(User.id, user.id), isNull(PapercutAccount.deletedAt)));
-
-  const selectManagerAccounts = async () =>
-    await tx
-      .select(metadataColumns)
-      .from(PapercutAccount)
-      .innerJoin(
-        PapercutAccountManagerAuthorization,
-        and(
-          eq(
-            PapercutAccount.id,
-            PapercutAccountManagerAuthorization.papercutAccountId,
-          ),
-          eq(PapercutAccount.orgId, PapercutAccountManagerAuthorization.orgId),
-        ),
-      )
-      .innerJoin(
-        User,
-        and(
-          eq(PapercutAccountManagerAuthorization.managerId, User.id),
-          eq(PapercutAccountManagerAuthorization.orgId, User.orgId),
-        ),
-      )
-      .where(and(eq(User.id, user.id), isNull(PapercutAccount.deletedAt)));
+      );
 
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
         .select(metadataColumns)
         .from(PapercutAccount)
-        .where(eq(PapercutAccount.orgId, user.orgId)),
-    searchAsOperator: async () =>
-      await tx
-        .select(metadataColumns)
-        .from(PapercutAccount)
-        .where(
-          and(
-            eq(PapercutAccount.orgId, user.orgId),
-            isNull(PapercutAccount.deletedAt),
-          ),
-        ),
-    searchAsManager: async () => {
-      const [customerAccounts, managerAccounts] = await Promise.all([
-        selectCustomerAccounts(),
-        selectManagerAccounts(),
-      ]);
-
-      return uniqueBy(
-        [...customerAccounts, ...managerAccounts],
-        ({ id }) => id,
-      );
-    },
-    searchAsCustomer: selectCustomerAccounts,
+        .where(and(eq(PapercutAccount.orgId, user.orgId))),
+    searchAsOperator: selectAll,
+    searchAsManager: selectAll,
+    searchAsCustomer: selectAll,
   });
 }
 
@@ -246,14 +81,13 @@ export async function searchPapercutAccountCustomerAuthorizations(
     PapercutAccountCustomerAuthorization.id,
   );
 
-  const selectCustomerAuthorizations = async () =>
+  const selectAll = async () =>
     await tx
       .select(metadataColumns)
       .from(PapercutAccountCustomerAuthorization)
       .where(
         and(
           eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
-          eq(PapercutAccountCustomerAuthorization.customerId, user.id),
           isNull(PapercutAccountCustomerAuthorization.deletedAt),
         ),
       );
@@ -264,18 +98,9 @@ export async function searchPapercutAccountCustomerAuthorizations(
         .select(metadataColumns)
         .from(PapercutAccountCustomerAuthorization)
         .where(eq(PapercutAccountCustomerAuthorization.orgId, user.orgId)),
-    searchAsOperator: async () =>
-      await tx
-        .select(metadataColumns)
-        .from(PapercutAccountCustomerAuthorization)
-        .where(
-          and(
-            eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
-            isNull(PapercutAccountCustomerAuthorization.deletedAt),
-          ),
-        ),
-    searchAsManager: selectCustomerAuthorizations,
-    searchAsCustomer: selectCustomerAuthorizations,
+    searchAsOperator: selectAll,
+    searchAsManager: selectAll,
+    searchAsCustomer: selectAll,
   });
 }
 
@@ -288,34 +113,26 @@ export async function searchPapercutAccountManagerAuthorizations(
     PapercutAccountManagerAuthorization.id,
   );
 
+  const selectAll = async () =>
+    await tx
+      .select(metadataColumns)
+      .from(PapercutAccountManagerAuthorization)
+      .where(
+        and(
+          eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
+          isNull(PapercutAccountManagerAuthorization.deletedAt),
+        ),
+      );
+
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
         .select(metadataColumns)
         .from(PapercutAccountManagerAuthorization)
         .where(eq(PapercutAccountManagerAuthorization.orgId, user.orgId)),
-    searchAsOperator: async () =>
-      await tx
-        .select(metadataColumns)
-        .from(PapercutAccountManagerAuthorization)
-        .where(
-          and(
-            eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
-            isNull(PapercutAccountManagerAuthorization.deletedAt),
-          ),
-        ),
-    searchAsManager: async () =>
-      await tx
-        .select(metadataColumns)
-        .from(PapercutAccountManagerAuthorization)
-        .where(
-          and(
-            eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
-            eq(PapercutAccountManagerAuthorization.managerId, user.id),
-            isNull(PapercutAccountManagerAuthorization.deletedAt),
-          ),
-        ),
-    searchAsCustomer: async () => [],
+    searchAsOperator: selectAll,
+    searchAsManager: selectAll,
+    searchAsCustomer: selectAll,
   });
 }
 

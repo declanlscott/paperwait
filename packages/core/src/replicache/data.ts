@@ -3,7 +3,10 @@ import { uniqueBy } from "remeda";
 
 import { OrderAccessDeniedError } from "../errors/application";
 import { Order } from "../order/order.sql";
-import { PapercutAccountManagerAuthorization } from "../papercut";
+import {
+  PapercutAccount,
+  PapercutAccountManagerAuthorization,
+} from "../papercut";
 import { User } from "../user/user.sql";
 import { ReplicacheClientGroup } from "./replicache.sql";
 
@@ -84,7 +87,21 @@ export async function requireAccessToOrder(
   user: LuciaUser,
   orderId: Order["id"],
 ) {
-  const [managers, [customer]] = await Promise.all([
+  const users = await getUsersWithAccessToOrder(tx, orderId, user.orgId);
+
+  if (!users.map(({ id }) => id).includes(user.id))
+    throw new OrderAccessDeniedError({ orderId, userId: user.id });
+
+  return users;
+}
+
+export async function getUsersWithAccessToOrder(
+  tx: Transaction,
+  orderId: Order["id"],
+  orgId: Order["orgId"],
+) {
+  const [adminsOps, managers, [customer]] = await Promise.all([
+    getUsersByRoles(tx, orgId, ["administrator", "operator"]),
     tx
       .select({ id: User.id })
       .from(User)
@@ -102,22 +119,16 @@ export async function requireAccessToOrder(
             PapercutAccountManagerAuthorization.papercutAccountId,
             Order.papercutAccountId,
           ),
-          eq(PapercutAccountManagerAuthorization.orgId, Order.orgId),
+          eq(PapercutAccount.orgId, Order.orgId),
         ),
       )
-      .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId))),
+      .where(and(eq(Order.id, orderId), eq(Order.orgId, orgId))),
     tx
-      .select({ id: Order.customerId })
-      .from(Order)
-      .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId))),
+      .select({ id: User.id })
+      .from(User)
+      .innerJoin(Order, eq(User.id, Order.customerId))
+      .where(and(eq(Order.id, orderId), eq(Order.orgId, orgId))),
   ]);
 
-  if (
-    !uniqueBy([...managers, customer], ({ id }) => id)
-      .map(({ id }) => id)
-      .includes(user.id)
-  )
-    throw new OrderAccessDeniedError(
-      `User ${user.id} does not have access to order ${orderId}`,
-    );
+  return uniqueBy([...adminsOps, ...managers, customer], ({ id }) => id);
 }

@@ -1,4 +1,4 @@
-import { foreignKey, pgEnum } from "drizzle-orm/pg-core";
+import { bigint, foreignKey, pgEnum } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
@@ -21,7 +21,9 @@ export const Order = orgTable(
     managerId: id("manager_id"),
     operatorId: id("operator_id"),
     roomId: id("room_id").notNull(),
-    papercutAccountId: id("papercut_account_id").notNull(),
+    papercutAccountId: bigint("papercut_account_id", {
+      mode: "number",
+    }).notNull(),
     status: OrderStatus("status").notNull(),
   },
   (table) => ({

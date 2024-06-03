@@ -60,9 +60,6 @@ importers:
       '@neondatabase/serverless':
         specifier: ^0.9.3
         version: 0.9.3
-      '@rocicorp/rails':
-        specifier: ^0.10.0
-        version: 0.10.0
       '@smithy/signature-v4':
         specifier: ^2.3.0
         version: 2.3.0
@@ -2375,9 +2372,6 @@ packages:
 
   '@rocicorp/logger@5.2.1':
     resolution: {integrity: sha512-/co4DJq3opjULOHe7hMAho/E2WJuv6rMOJ1QDlCKsPHZ09XkkKHDM8dPu+odmDHWBb5aMnnzC92WQLd05CTxnA==}
-
-  '@rocicorp/rails@0.10.0':
-    resolution: {integrity: sha512-PfMf4z6H8lqQlvCWg8b+HCZKOQKrSQNXoU4br2LFQzBQILiV0cWdBQP7WgTt/LYbM+9EzfWtN581SiSY5sNI3w==}
 
   '@rocicorp/resolver@1.0.1':
     resolution: {integrity: sha512-9+IK9C/du8Nrqn3LaKBxJwV4H2HyIpa7HlTuc4eQ938lL4faxN6TuQV+IpvX6PxQeR14X7yMtz1f9dfiS5fvlw==}
@@ -8594,8 +8588,6 @@ snapshots:
       '@rocicorp/resolver': 1.0.1
 
   '@rocicorp/logger@5.2.1': {}
-
-  '@rocicorp/rails@0.10.0': {}
 
   '@rocicorp/resolver@1.0.1': {}
 

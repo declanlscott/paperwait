@@ -2,14 +2,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { transact } from "../database/transaction";
 import { BadRequestError, NotImplementedError } from "../errors/http";
-import {
-  createOrder,
-  createPapercutAccountManagerAuthorization,
-  deleteOrder,
-  deletePapercutAccount,
-  deleteUser,
-  updateUserRole,
-} from "../mutations/authoritative";
+import { authoritative } from "../mutations/authoritative";
 import { Mutation } from "../mutations/schemas";
 import { validate } from "../valibot";
 import { poke } from "./poke";
@@ -205,25 +198,57 @@ async function mutate(
 
   switch (mutationName) {
     case "updateUserRole":
-      return await updateUserRole(tx, user, mutation.args);
+      return await authoritative.updateUserRole(tx, user, mutation.args);
     case "deleteUser":
-      return await deleteUser(tx, user, mutation.args);
-    case "createOrder":
-      return await createOrder(tx, user, mutation.args);
-    case "deleteOrder":
-      return await deleteOrder(tx, user, mutation.args);
+      return await authoritative.deleteUser(tx, user, mutation.args);
     case "syncPapercutAccounts":
       throw new NotImplementedError(
-        `Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT api/shared-accounts)`,
+        `Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT api/papercut/accounts)`,
       );
     case "deletePapercutAccount":
-      return await deletePapercutAccount(tx, user, mutation.args);
+      return await authoritative.deletePapercutAccount(tx, user, mutation.args);
     case "createPapercutAccountManagerAuthorization":
-      return await createPapercutAccountManagerAuthorization(
+      return await authoritative.createPapercutAccountManagerAuthorization(
         tx,
         user,
         mutation.args,
       );
+    case "deletePapercutAccountManagerAuthorization":
+      return await authoritative.deletePapercutAccountManagerAuthorization(
+        tx,
+        user,
+        mutation.args,
+      );
+    case "createRoom":
+      return await authoritative.createRoom(tx, user, mutation.args);
+    case "updateRoom":
+      return await authoritative.updateRoom(tx, user, mutation.args);
+    case "deleteRoom":
+      return await authoritative.deleteRoom(tx, user, mutation.args);
+    case "createAnnouncement":
+      return await authoritative.createAnnouncement(tx, user, mutation.args);
+    case "updateAnnouncement":
+      return await authoritative.updateAnnouncement(tx, user, mutation.args);
+    case "deleteAnnouncement":
+      return await authoritative.deleteAnnouncement(tx, user, mutation.args);
+    case "createProduct":
+      return await authoritative.createProduct(tx, user, mutation.args);
+    case "updateProduct":
+      return await authoritative.updateProduct(tx, user, mutation.args);
+    case "deleteProduct":
+      return await authoritative.deleteProduct(tx, user, mutation.args);
+    case "createOrder":
+      return await authoritative.createOrder(tx, user, mutation.args);
+    case "updateOrder":
+      return await authoritative.updateOrder(tx, user, mutation.args);
+    case "deleteOrder":
+      return await authoritative.deleteOrder(tx, user, mutation.args);
+    case "createComment":
+      return await authoritative.createComment(tx, user, mutation.args);
+    case "updateComment":
+      return await authoritative.updateComment(tx, user, mutation.args);
+    case "deleteComment":
+      return await authoritative.deleteComment(tx, user, mutation.args);
     default:
       mutationName satisfies never;
 

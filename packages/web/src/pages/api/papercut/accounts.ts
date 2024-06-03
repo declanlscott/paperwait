@@ -5,7 +5,7 @@ import {
   HttpError,
 } from "@paperwait/core/errors";
 import {
-  permissions,
+  globalPermissions,
   syncPapercutAccounts,
   SyncPapercutAccountsMutationArgs,
 } from "@paperwait/core/mutations";
@@ -19,7 +19,7 @@ import type { APIContext } from "astro";
 
 export async function PUT(context: APIContext) {
   try {
-    const { user } = authorize(context, permissions.syncPapercutAccounts);
+    const { user } = authorize(context, globalPermissions.syncPapercutAccounts);
 
     const requestBody = await context.request.json();
 
