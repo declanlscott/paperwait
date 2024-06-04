@@ -19,7 +19,7 @@ import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
 import { NanoId, PapercutAccountId } from "../id";
 import { Order } from "../order/order.sql";
-import { PapercutAccountManagerAuthorization } from "../papercut";
+import { PapercutAccountManagerAuthorization } from "../papercut/account.sql";
 import { Product } from "../product/product.sql";
 import { PushRequest } from "../replicache/schemas";
 import { Room } from "../room/room.sql";

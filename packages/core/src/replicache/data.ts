@@ -6,7 +6,7 @@ import { Order } from "../order/order.sql";
 import {
   PapercutAccount,
   PapercutAccountManagerAuthorization,
-} from "../papercut";
+} from "../papercut/account.sql";
 import { User } from "../user/user.sql";
 import { ReplicacheClientGroup } from "./replicache.sql";
 

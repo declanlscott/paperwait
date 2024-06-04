@@ -20,6 +20,18 @@ const getPapercutParameterPermission = {
   ],
 } satisfies sst.aws.FunctionPermissionArgs;
 
+papercutApiGateway.route("POST /get-shared-account-properties", {
+  handler: "packages/functions/src/get-shared-account-properties.handler",
+  timeout: "10 seconds",
+  permissions: [getPapercutParameterPermission],
+  vpc: {
+    securityGroups: [natSecurityGroup.id],
+    subnets: privateSubnetsOutput.apply((subnets) =>
+      subnets.map((subnet) => subnet.id),
+    ),
+  },
+});
+
 papercutApiGateway.route("POST /is-user-exists", {
   handler: "packages/functions/src/is-user-exists.handler",
   timeout: "10 seconds",

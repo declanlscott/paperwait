@@ -1,6 +1,7 @@
 import {
   array,
   boolean,
+  custom,
   fallback,
   integer,
   merge,
@@ -8,13 +9,11 @@ import {
   object,
   optional,
   string,
-  transform,
   tuple,
   unknown,
 } from "valibot";
 
 import { PAPERCUT_API_PAGINATION_LIMIT } from "../constants";
-import { PapercutAccountId } from "../id";
 
 import type { Output } from "valibot";
 
@@ -70,34 +69,30 @@ export const GetSharedAccountPropertiesEvent = merge([
 export type GetSharedAccountPropertiesEvent = Output<
   typeof GetSharedAccountPropertiesEvent
 >;
-export const GetSharedAccountPropertiesOutput = transform(
-  tuple([
-    string(), // access-groups
-    string(), // access-users
-    PapercutAccountId, // account-id
-    number(), // balance
-    string(), // comment-option
-    boolean(), // disabled
-    string(), // invoice-option
-    string(), // notes
-    number(), // overdraft-amount
-    string(), // pin
-    boolean(), // restricted
-  ]),
-  (properties) => ({
-    accessGroups: properties[0],
-    accessUsers: properties[1],
-    accountId: properties[2],
-    balance: properties[3],
-    commentOption: properties[4],
-    disabled: properties[5],
-    invoiceOption: properties[6],
-    notes: properties[7],
-    overdraftAmount: properties[8],
-    pin: properties[9],
-    restricted: properties[10],
-  }),
-);
+export const GetSharedAccountPropertiesOutput = tuple([
+  string(), // access-groups
+  string(), // access-users
+  string([
+    custom((value) => {
+      const accountId = JSON.parse(value);
+
+      // Validate that the account id is an integer
+      return typeof accountId === "number" && accountId % 1 === 0;
+    }),
+  ]), // account-id
+  string([custom((value) => typeof JSON.parse(value) === "number")]), // balance
+  string(), // comment-option
+  string([
+    custom((value) => typeof JSON.parse(value.toLowerCase()) === "boolean"),
+  ]), // disabled
+  string(), // invoice-option
+  string(), // notes
+  string([custom((value) => typeof JSON.parse(value) === "number")]), // overdraft-amount
+  string(), // pin
+  string([
+    custom((value) => typeof JSON.parse(value.toLowerCase()) === "boolean"),
+  ]), // restricted
+]);
 export type GetSharedAccountPropertiesOutput = Output<
   typeof GetSharedAccountPropertiesOutput
 >;

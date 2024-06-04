@@ -165,7 +165,9 @@ api.post("/", async (c) => {
       );
     case xmlRpcMethod.getSharedAccountProperties: {
       const num = Number(
-        rpc.methodCall.params.param[1].value.string.split("shared-account-")[1],
+        rpc.methodCall.params.param[1].value.string.split(
+          sharedAccountPrefix,
+        )[1],
       );
 
       if (isNaN(num)) throw new Error("Invalid shared account name");
@@ -176,19 +178,23 @@ api.post("/", async (c) => {
             params: {
               param: {
                 value: {
-                  data: [
-                    { value: "access-groups" },
-                    { value: "access-users" },
-                    { value: `${sharedAccountPrefix}${num}` },
-                    { value: 0 },
-                    { value: "comment-option" },
-                    { value: false },
-                    { value: "invoice-option" },
-                    { value: "notes" },
-                    { value: 0 },
-                    { value: "pin" },
-                    { value: false },
-                  ],
+                  array: {
+                    data: {
+                      value: [
+                        "access-groups",
+                        "access-users",
+                        num,
+                        0,
+                        "comment-option",
+                        false,
+                        "invoice-option",
+                        "notes",
+                        0,
+                        "pin",
+                        false,
+                      ],
+                    },
+                  },
                 },
               },
             },
@@ -219,11 +225,15 @@ api.post("/", async (c) => {
             params: {
               param: {
                 value: {
-                  data: [
-                    { value: `${sharedAccountPrefix}-1` },
-                    { value: `${sharedAccountPrefix}-2` },
-                    { value: `${sharedAccountPrefix}-3` },
-                  ],
+                  array: {
+                    data: {
+                      value: [
+                        `${sharedAccountPrefix}1`,
+                        `${sharedAccountPrefix}2`,
+                        `${sharedAccountPrefix}3`,
+                      ],
+                    },
+                  },
                 },
               },
             },
@@ -238,10 +248,14 @@ api.post("/", async (c) => {
             params: {
               param: {
                 value: {
-                  data: [
-                    { value: `${sharedAccountPrefix}-1` },
-                    { value: `${sharedAccountPrefix}-3` },
-                  ],
+                  array: {
+                    data: {
+                      value: [
+                        `${sharedAccountPrefix}1`,
+                        `${sharedAccountPrefix}3`,
+                      ],
+                    },
+                  },
                 },
               },
             },

@@ -1,4 +1,4 @@
-import { getTableColumns, getTableName, sql } from "drizzle-orm";
+import { getTableColumns, sql } from "drizzle-orm";
 import { char, timestamp } from "drizzle-orm/pg-core";
 
 import { NANOID_LENGTH } from "../constants";
@@ -58,11 +58,4 @@ export function buildConflictUpdateColumns<
     },
     {} as Record<TColumnName, SQL>,
   );
-}
-
-export function buildMetadataColumns<TTable extends PgTable, TIdColumn>(
-  table: TTable,
-  idColumn: TIdColumn,
-) {
-  return { id: idColumn, rowVersion: sql<number>`${getTableName(table)}.xmin` };
 }

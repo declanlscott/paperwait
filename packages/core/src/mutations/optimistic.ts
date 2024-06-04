@@ -417,11 +417,11 @@ async function getUsersWithAccessToOrder(
   const [admins, operators, papercutAccountManagerAuthorizations] =
     await Promise.all([
       tx
-        .scan<User>({ prefix: "/user/" })
+        .scan<User>({ prefix: "user/" })
         .toArray()
         .then((users) => users.filter((user) => user.role === "administrator")),
       tx
-        .scan<User>({ prefix: "/user/" })
+        .scan<User>({ prefix: "user/" })
         .toArray()
         .then((users) => users.filter((user) => user.role === "operator")),
       tx

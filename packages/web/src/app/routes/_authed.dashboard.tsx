@@ -13,7 +13,7 @@ function Component() {
   const replicache = useReplicache();
 
   const users = useSubscribe(replicache, async (tx) =>
-    tx.scan({ prefix: "user/" }).entries().toArray(),
+    tx.scan({ prefix: "user/" }).toArray(),
   );
 
   console.log({ users });

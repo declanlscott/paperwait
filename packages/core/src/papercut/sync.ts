@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 
+import { getSharedAccountPropertiesOutputIndex } from "../constants";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import {
   PapercutAccount,
@@ -23,6 +24,7 @@ export async function syncPapercutAccounts(
   _args: SyncPapercutAccountsMutationArgs,
 ) {
   const allNames = await listSharedAccounts({ orgId, input: {} });
+  if (allNames.length === 0) return;
 
   const [allSharedAccounts, allUsers] = await Promise.all([
     // Fetch all shared accounts
@@ -33,7 +35,13 @@ export async function syncPapercutAccounts(
           input: { sharedAccountName: name },
         });
 
-        return { id: properties.accountId, orgId, name };
+        return {
+          id: Number(
+            properties[getSharedAccountPropertiesOutputIndex.accountId],
+          ),
+          orgId,
+          name,
+        } satisfies OmitTimestamps<PapercutAccount>;
       }),
     ),
     // Fetch all users
@@ -42,6 +50,7 @@ export async function syncPapercutAccounts(
       .from(User)
       .where(eq(User.orgId, orgId)),
   ]);
+  if (allSharedAccounts.length === 0) return;
 
   const [customerAuthorizations] = await Promise.all([
     // Build the customer authorization entries
@@ -49,7 +58,10 @@ export async function syncPapercutAccounts(
       allUsers.map(async (user) => {
         const names = await listUserSharedAccounts({
           orgId,
-          input: { username: user.username },
+          input: {
+            username: user.username,
+            ignoreUserAccountSelectionConfig: true,
+          },
         });
 
         const sharedAccounts = names
@@ -85,6 +97,7 @@ export async function syncPapercutAccounts(
         },
       }),
   ]);
+  if (customerAuthorizations.length === 0) return;
 
   // Insert the customer authorizations
   await tx

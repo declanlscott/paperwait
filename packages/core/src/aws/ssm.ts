@@ -1,4 +1,5 @@
 import {
+  DeleteParameterCommand,
   GetParameterCommand,
   ParameterAlreadyExists,
   ParameterNotFound,
@@ -11,6 +12,7 @@ import { AWS_REGION } from "../constants";
 import { ConflictError, NotFoundError } from "../errors/http";
 
 import type {
+  DeleteParameterCommandInput,
   GetParameterCommandInput,
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
@@ -34,6 +36,17 @@ export async function putParameter(input: PutParameterCommandInput) {
 export async function getParameter(input: GetParameterCommandInput) {
   try {
     return await ssmClient.send(new GetParameterCommand(input));
+  } catch (e) {
+    if (e instanceof ParameterNotFound)
+      throw new NotFoundError("Parameter not found");
+
+    throw e;
+  }
+}
+
+export async function deleteParameter(input: DeleteParameterCommandInput) {
+  try {
+    return await ssmClient.send(new DeleteParameterCommand(input));
   } catch (e) {
     if (e instanceof ParameterNotFound)
       throw new NotFoundError("Parameter not found");

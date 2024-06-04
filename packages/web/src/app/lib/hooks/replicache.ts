@@ -1,4 +1,4 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import { MissingContextProviderError } from "@paperwait/core/errors";
 import { optimistic } from "@paperwait/core/mutations";
 
@@ -174,43 +174,67 @@ export function useMutators() {
     [authed.user],
   );
 
-  return {
-    // User
-    updateUserRole,
-    deleteUser,
+  return useMemo(
+    () => ({
+      // User
+      updateUserRole,
+      deleteUser,
 
-    // Papercut Account
-    deletePapercutAccount,
+      // Papercut Account
+      deletePapercutAccount,
 
-    // Papercut Account Manager Authorization
-    createPapercutAccountManagerAuthorization,
-    deletePapercutAccountManagerAuthorization,
+      // Papercut Account Manager Authorization
+      createPapercutAccountManagerAuthorization,
+      deletePapercutAccountManagerAuthorization,
 
-    // Room
-    createRoom,
-    updateRoom,
-    deleteRoom,
+      // Room
+      createRoom,
+      updateRoom,
+      deleteRoom,
 
-    // Announcement
-    createAnnouncement,
-    updateAnnouncement,
-    deleteAnnouncement,
+      // Announcement
+      createAnnouncement,
+      updateAnnouncement,
+      deleteAnnouncement,
 
-    // Product
-    createProduct,
-    updateProduct,
-    deleteProduct,
+      // Product
+      createProduct,
+      updateProduct,
+      deleteProduct,
 
-    // Order
-    createOrder,
-    updateOrder,
-    deleteOrder,
+      // Order
+      createOrder,
+      updateOrder,
+      deleteOrder,
 
-    // Comment
-    createComment,
-    updateComment,
-    deleteComment,
-  };
+      // Comment
+      createComment,
+      updateComment,
+      deleteComment,
+    }),
+    [
+      createAnnouncement,
+      createComment,
+      createOrder,
+      createPapercutAccountManagerAuthorization,
+      createProduct,
+      createRoom,
+      deleteAnnouncement,
+      deleteComment,
+      deleteOrder,
+      deletePapercutAccount,
+      deletePapercutAccountManagerAuthorization,
+      deleteProduct,
+      deleteRoom,
+      deleteUser,
+      updateAnnouncement,
+      updateComment,
+      updateOrder,
+      updateProduct,
+      updateRoom,
+      updateUserRole,
+    ],
+  );
 }
 
 export type Mutators = ReturnType<typeof useMutators>;

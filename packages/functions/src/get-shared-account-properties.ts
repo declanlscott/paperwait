@@ -16,10 +16,14 @@ import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    const { orgId, input } = validate(GetSharedAccountPropertiesEvent, event, {
-      Error: BadRequestError,
-      message: "Failed to parse event",
-    });
+    const { orgId, input } = validate(
+      GetSharedAccountPropertiesEvent,
+      JSON.parse(event.body ?? "{}"),
+      {
+        Error: BadRequestError,
+        message: "Failed to parse event",
+      },
+    );
 
     const { client, authToken } = await buildClient(orgId);
 

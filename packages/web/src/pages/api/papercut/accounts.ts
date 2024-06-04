@@ -6,9 +6,9 @@ import {
 } from "@paperwait/core/errors";
 import {
   globalPermissions,
-  syncPapercutAccounts,
   SyncPapercutAccountsMutationArgs,
 } from "@paperwait/core/mutations";
+import { syncPapercutAccounts } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
 import { validate } from "@paperwait/core/valibot";

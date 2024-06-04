@@ -1,8 +1,7 @@
-import { and, arrayOverlaps, eq, isNull } from "drizzle-orm";
+import { and, arrayOverlaps, eq, isNull, sql } from "drizzle-orm";
 import { uniqueBy } from "remeda";
 
 import { Comment } from "../comment/comment.sql";
-import { buildMetadataColumns } from "../drizzle/columns";
 import { Order } from "../order/order.sql";
 import {
   PapercutAccount,
@@ -23,18 +22,19 @@ export type Metadata = {
 };
 
 export async function searchUsers(tx: Transaction, user: LuciaUser) {
-  const metadataColumns = buildMetadataColumns(User, User.id);
-
   const selectAll = async () =>
     await tx
-      .select(metadataColumns)
+      .select({ id: User.id, rowVersion: sql<number>`"user.xmin"` })
       .from(User)
       .where(and(eq(User.orgId, user.orgId), isNull(User.deletedAt)));
 
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({
+          id: User.id,
+          rowVersion: sql<number>`"user"."xmin"`,
+        })
         .from(User)
         .where(eq(User.orgId, user.orgId)),
     searchAsOperator: selectAll,
@@ -44,14 +44,12 @@ export async function searchUsers(tx: Transaction, user: LuciaUser) {
 }
 
 export async function searchPapercutAccounts(tx: Transaction, user: LuciaUser) {
-  const metadataColumns = buildMetadataColumns(
-    PapercutAccount,
-    PapercutAccount.id,
-  );
-
   const selectAll = async () =>
     await tx
-      .select(metadataColumns)
+      .select({
+        id: PapercutAccount.id,
+        rowVersion: sql<number>`"papercut_account"."xmin"`,
+      })
       .from(PapercutAccount)
       .where(
         and(
@@ -63,7 +61,10 @@ export async function searchPapercutAccounts(tx: Transaction, user: LuciaUser) {
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({
+          id: PapercutAccount.id,
+          rowVersion: sql<number>`"papercut_account"."xmin"`,
+        })
         .from(PapercutAccount)
         .where(and(eq(PapercutAccount.orgId, user.orgId))),
     searchAsOperator: selectAll,
@@ -76,14 +77,12 @@ export async function searchPapercutAccountCustomerAuthorizations(
   tx: Transaction,
   user: LuciaUser,
 ) {
-  const metadataColumns = buildMetadataColumns(
-    PapercutAccountCustomerAuthorization,
-    PapercutAccountCustomerAuthorization.id,
-  );
-
   const selectAll = async () =>
     await tx
-      .select(metadataColumns)
+      .select({
+        id: PapercutAccountCustomerAuthorization.id,
+        rowVersion: sql<number>`"papercut_account_customer_authorization"."xmin"`,
+      })
       .from(PapercutAccountCustomerAuthorization)
       .where(
         and(
@@ -95,7 +94,10 @@ export async function searchPapercutAccountCustomerAuthorizations(
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({
+          id: PapercutAccountCustomerAuthorization.id,
+          rowVersion: sql<number>`"papercut_account_customer_authorization"."xmin"`,
+        })
         .from(PapercutAccountCustomerAuthorization)
         .where(eq(PapercutAccountCustomerAuthorization.orgId, user.orgId)),
     searchAsOperator: selectAll,
@@ -108,14 +110,12 @@ export async function searchPapercutAccountManagerAuthorizations(
   tx: Transaction,
   user: LuciaUser,
 ) {
-  const metadataColumns = buildMetadataColumns(
-    PapercutAccountManagerAuthorization,
-    PapercutAccountManagerAuthorization.id,
-  );
-
   const selectAll = async () =>
     await tx
-      .select(metadataColumns)
+      .select({
+        id: PapercutAccountManagerAuthorization.id,
+        rowVersion: sql<number>`"papercut_account_manager_authorization"."xmin"`,
+      })
       .from(PapercutAccountManagerAuthorization)
       .where(
         and(
@@ -127,7 +127,10 @@ export async function searchPapercutAccountManagerAuthorizations(
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({
+          id: PapercutAccountManagerAuthorization.id,
+          rowVersion: sql<number>`"papercut_account_manager_authorization"."xmin"`,
+        })
         .from(PapercutAccountManagerAuthorization)
         .where(eq(PapercutAccountManagerAuthorization.orgId, user.orgId)),
     searchAsOperator: selectAll,
@@ -137,11 +140,9 @@ export async function searchPapercutAccountManagerAuthorizations(
 }
 
 export async function searchRooms(tx: Transaction, user: LuciaUser) {
-  const metadataColumns = buildMetadataColumns(Room, Room.id);
-
   const selectPublished = async () =>
     await tx
-      .select(metadataColumns)
+      .select({ id: Room.id, rowVersion: sql<number>`"room"."xmin"` })
       .from(Room)
       .where(
         and(
@@ -154,12 +155,12 @@ export async function searchRooms(tx: Transaction, user: LuciaUser) {
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Room.id, rowVersion: sql<number>`"room"."xmin"` })
         .from(Room)
         .where(eq(Room.orgId, user.orgId)),
     searchAsOperator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Room.id, rowVersion: sql<number>`"room"."xmin"` })
         .from(Room)
         .where(and(eq(Room.orgId, user.orgId), isNull(Room.deletedAt))),
     searchAsManager: selectPublished,
@@ -168,11 +169,9 @@ export async function searchRooms(tx: Transaction, user: LuciaUser) {
 }
 
 export async function searchProducts(tx: Transaction, user: LuciaUser) {
-  const metadataColumns = buildMetadataColumns(Product, Product.id);
-
   const selectPublished = async () =>
     await tx
-      .select(metadataColumns)
+      .select({ id: Product.id, rowVersion: sql<number>`"product"."xmin"` })
       .from(Product)
       .where(
         and(
@@ -185,12 +184,12 @@ export async function searchProducts(tx: Transaction, user: LuciaUser) {
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Product.id, rowVersion: sql<number>`"product"."xmin"` })
         .from(Product)
         .where(eq(Product.orgId, user.orgId)),
     searchAsOperator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Product.id, rowVersion: sql<number>`"product"."xmin"` })
         .from(Product)
         .where(and(eq(Product.orgId, user.orgId), isNull(Product.deletedAt))),
     searchAsManager: selectPublished,
@@ -199,11 +198,9 @@ export async function searchProducts(tx: Transaction, user: LuciaUser) {
 }
 
 export async function searchOrders(tx: Transaction, user: LuciaUser) {
-  const metadataColumns = buildMetadataColumns(Order, Order.id);
-
   const selectCustomerOrders = async () =>
     await tx
-      .select(metadataColumns)
+      .select({ id: Order.id, rowVersion: sql<number>`"order"."xmin"` })
       .from(Order)
       .where(
         and(
@@ -216,19 +213,19 @@ export async function searchOrders(tx: Transaction, user: LuciaUser) {
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Order.id, rowVersion: sql<number>`"order"."xmin"` })
         .from(Order)
         .where(eq(Order.orgId, user.orgId)),
     searchAsOperator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Order.id, rowVersion: sql<number>`"order"."xmin"` })
         .from(Order)
         .where(and(eq(Order.orgId, user.orgId), isNull(Order.deletedAt))),
     searchAsManager: async () => {
       const [customerOrders, managerOrders] = await Promise.all([
         selectCustomerOrders(),
         tx
-          .select(metadataColumns)
+          .select({ id: Order.id, rowVersion: sql<number>`"order"."xmin"` })
           .from(Order)
           .innerJoin(
             PapercutAccount,
@@ -260,17 +257,15 @@ export async function searchOrders(tx: Transaction, user: LuciaUser) {
 }
 
 export async function searchComments(tx: Transaction, user: LuciaUser) {
-  const metadataColumns = buildMetadataColumns(Comment, Comment.id);
-
   return searchAsRole(user.role, {
     searchAsAdministrator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Comment.id, rowVersion: sql<number>`"comment"."xmin"` })
         .from(Comment)
         .where(eq(Comment.orgId, user.orgId)),
     searchAsOperator: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Comment.id, rowVersion: sql<number>`"comment"."xmin"` })
         .from(Comment)
         .where(
           and(
@@ -285,7 +280,7 @@ export async function searchComments(tx: Transaction, user: LuciaUser) {
         ),
     searchAsManager: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Comment.id, rowVersion: sql<number>`"comment"."xmin"` })
         .from(Comment)
         .innerJoin(
           Order,
@@ -320,7 +315,7 @@ export async function searchComments(tx: Transaction, user: LuciaUser) {
         ),
     searchAsCustomer: async () =>
       await tx
-        .select(metadataColumns)
+        .select({ id: Comment.id, rowVersion: sql<number>`"comment"."xmin"` })
         .from(Comment)
         .innerJoin(
           Order,

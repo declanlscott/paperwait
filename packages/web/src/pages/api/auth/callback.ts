@@ -1,4 +1,5 @@
 import { createSession } from "@paperwait/core/auth";
+import { getSharedAccountPropertiesOutputIndex } from "@paperwait/core/constants";
 import { db, transact } from "@paperwait/core/database";
 import {
   BadRequestError,
@@ -320,7 +321,7 @@ async function processUser(
       // Build the customer authorization entries, concurrently
       const customerAuthorizations = await Promise.all(
         sharedAccountNames.map(async (sharedAccountName) => {
-          const sharedAccount = await getSharedAccountProperties({
+          const properties = await getSharedAccountProperties({
             orgId: org.id,
             input: { sharedAccountName },
           });
@@ -328,7 +329,9 @@ async function processUser(
           return {
             orgId: org.id,
             customerId: newUser.id,
-            papercutAccountId: sharedAccount.accountId,
+            papercutAccountId: Number(
+              properties[getSharedAccountPropertiesOutputIndex.accountId],
+            ),
           } satisfies Omit<
             OmitTimestamps<PapercutAccountCustomerAuthorization>,
             "id"

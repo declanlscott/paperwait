@@ -1,12 +1,13 @@
-import { putParameter } from "@paperwait/core/aws";
+import { deleteParameter, putParameter } from "@paperwait/core/aws";
 import { db } from "@paperwait/core/database";
 import {
   BadRequestError,
   DatabaseError,
   HttpError,
 } from "@paperwait/core/errors";
-import { syncPapercutAccounts } from "@paperwait/core/mutations";
 import { Organization } from "@paperwait/core/organization";
+import { syncPapercutAccounts } from "@paperwait/core/papercut";
+import { Room } from "@paperwait/core/room";
 import { validate } from "@paperwait/core/valibot";
 
 import { Registration } from "~/lib/schemas";
@@ -14,6 +15,12 @@ import { Registration } from "~/lib/schemas";
 import type { APIContext } from "astro";
 
 export async function POST(context: APIContext) {
+  let putParameterCommandOutput:
+    | Awaited<ReturnType<typeof putParameter>>
+    | undefined;
+
+  let org: Pick<Organization, "id" | "slug"> | undefined;
+
   try {
     const formData = await context.request.formData();
     const registration = validate(
@@ -22,8 +29,8 @@ export async function POST(context: APIContext) {
       { Error: BadRequestError, message: "Failed to parse registration" },
     );
 
-    const org = await db.transaction(async (tx) => {
-      const [org] = await tx
+    org = await db.transaction(async (tx) => {
+      [org] = await tx
         .insert(Organization)
         .values({
           name: registration.name,
@@ -33,15 +40,22 @@ export async function POST(context: APIContext) {
         })
         .returning({ id: Organization.id, slug: Organization.slug });
 
-      await putParameter({
-        Name: `/paperwait/org/${org.id}/papercut`,
-        Value: JSON.stringify({
-          serverUrl: registration.serverUrl,
-          authToken: registration.authToken,
+      [putParameterCommandOutput] = await Promise.all([
+        // Store the PaperCut server details in SSM
+        putParameter({
+          Name: `/paperwait/org/${org.id}/papercut`,
+          Value: JSON.stringify({
+            serverUrl: registration.serverUrl,
+            authToken: registration.authToken,
+          }),
+          Type: "SecureString",
+          Overwrite: false,
         }),
-        Type: "SecureString",
-        Overwrite: false,
-      });
+        // Create a default room for the organization
+        tx
+          .insert(Room)
+          .values({ name: "Default", status: "draft", orgId: org.id }),
+      ]);
 
       await syncPapercutAccounts(tx, org.id, undefined);
 
@@ -53,6 +67,12 @@ export async function POST(context: APIContext) {
     );
   } catch (e) {
     console.error(e);
+
+    // Rollback the parameter if the transaction fails
+    if (org && putParameterCommandOutput)
+      await deleteParameter({
+        Name: `/paperwait/org/${org.id}/papercut`,
+      });
 
     if (e instanceof HttpError)
       return new Response(e.message, { status: e.statusCode });
