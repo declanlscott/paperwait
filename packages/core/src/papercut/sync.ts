@@ -2,16 +2,16 @@ import { eq } from "drizzle-orm";
 
 import { getSharedAccountPropertiesOutputIndex } from "../constants";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
+import { User } from "../user/user.sql";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
-} from "../papercut/account.sql";
+} from "./account.sql";
 import {
   getSharedAccountProperties,
   listSharedAccounts,
   listUserSharedAccounts,
-} from "../papercut/api";
-import { User } from "../user/user.sql";
+} from "./api";
 
 import type { Transaction } from "../database/transaction";
 import type { SyncPapercutAccountsMutationArgs } from "../mutations/schemas";
