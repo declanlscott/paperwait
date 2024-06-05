@@ -1,5 +1,5 @@
 import { BadRequestError, HttpError } from "@paperwait/core/errors";
-import { pingPapercut } from "@paperwait/core/papercut";
+import { testPapercut } from "@paperwait/core/papercut";
 import { validate } from "@paperwait/core/valibot";
 import { object, string } from "valibot";
 
@@ -18,7 +18,7 @@ export async function POST(context: APIContext) {
       { Error: BadRequestError },
     );
 
-    await pingPapercut({ orgId, input: { authToken } });
+    await testPapercut({ orgId, input: { authToken } });
 
     return new Response(undefined, { status: 204 });
   } catch (e) {

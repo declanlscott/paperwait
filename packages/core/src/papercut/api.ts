@@ -2,8 +2,22 @@ import ky, { HTTPError as kyHttpError } from "ky";
 import { Resource } from "sst";
 
 import { apiGatewaySigner } from "../aws/signature-v4";
-import { PAPERCUT_API_PAGINATION_LIMIT } from "../constants";
-import { HttpError, InternalServerError } from "../errors/http";
+import {
+  PAPERCUT_API_PAGINATION_LIMIT,
+  PAPERCUT_API_TIMEOUT_MS,
+} from "../constants";
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  HttpError,
+  InternalServerError,
+  MethodNotAllowedError,
+  NotFoundError,
+  NotImplementedError,
+  RequestTimeoutError,
+  UnauthorizedError,
+} from "../errors/http";
 import { validate } from "../valibot";
 import {
   GetSharedAccountPropertiesResult,
@@ -19,7 +33,7 @@ import type {
   ListSharedAccountsOutput,
   ListUserSharedAccountsEvent,
   ListUserSharedAccountsOutput,
-  PingPapercutEvent,
+  TestPapercutEvent,
 } from "../xml-rpc/schemas";
 
 export async function isUserExists(event: IsUserExistsEvent) {
@@ -36,7 +50,7 @@ export async function isUserExists(event: IsUserExistsEvent) {
 
     return output;
   } catch (e) {
-    throw httpError(e);
+    throw await httpError(e);
   }
 }
 
@@ -64,7 +78,7 @@ export async function listSharedAccounts(event: ListSharedAccountsEvent) {
 
       sharedAccounts.push(...page);
     } catch (e) {
-      throw httpError(e);
+      throw await httpError(e);
     }
   } while (page.length === PAPERCUT_API_PAGINATION_LIMIT);
 
@@ -97,7 +111,7 @@ export async function listUserSharedAccounts(
 
       userSharedAccounts.push(...page);
     } catch (e) {
-      throw httpError(e);
+      throw await httpError(e);
     }
   } while (page.length === PAPERCUT_API_PAGINATION_LIMIT);
 
@@ -122,22 +136,26 @@ export async function getSharedAccountProperties(
 
     return output;
   } catch (e) {
-    throw httpError(e);
+    throw await httpError(e);
   }
 }
 
-export async function pingPapercut(event: PingPapercutEvent) {
+export async function testPapercut(event: TestPapercutEvent) {
   try {
     await invokeApi(
-      new URL(`${Resource.PapercutApiGateway.url}/ping-papercut`),
+      new URL(`${Resource.PapercutApiGateway.url}/test-papercut`),
       event,
     );
   } catch (e) {
-    throw httpError(e);
+    throw await httpError(e);
   }
 }
 
 async function invokeApi(url: URL, event: unknown) {
+  const controller = new AbortController();
+
+  setTimeout(() => controller.abort(), PAPERCUT_API_TIMEOUT_MS);
+
   const body = JSON.stringify(event);
 
   const { headers } = await apiGatewaySigner.sign({
@@ -152,14 +170,41 @@ async function invokeApi(url: URL, event: unknown) {
     body,
   });
 
-  return await ky.post(url, { body, headers }).json();
+  return await ky
+    .post(url, { body, headers, signal: controller.signal })
+    .json();
 }
 
-function httpError(e: unknown): HttpError {
+async function httpError(e: unknown): Promise<HttpError> {
   console.error(e);
 
   if (e instanceof HttpError) return e;
-  if (e instanceof kyHttpError) return new InternalServerError(e.message);
+  if (e instanceof kyHttpError) {
+    const message = await e.response.text();
+
+    switch (e.response.status) {
+      case 400:
+        return new BadRequestError(message);
+      case 401:
+        return new UnauthorizedError(message);
+      case 403:
+        return new ForbiddenError(message);
+      case 404:
+        return new NotFoundError(message);
+      case 405:
+        return new MethodNotAllowedError(message);
+      case 408:
+        return new RequestTimeoutError(message);
+      case 409:
+        return new ConflictError(message);
+      case 501:
+        return new NotImplementedError(message);
+      default:
+        return new InternalServerError(message);
+    }
+  }
+  if (e instanceof Error && e.name === "AbortError")
+    return new RequestTimeoutError();
 
   return new InternalServerError();
 }

@@ -43,6 +43,13 @@ export class MethodNotAllowedError extends HttpError {
   }
 }
 
+export class RequestTimeoutError extends HttpError {
+  constructor(message = "Request timeout", statusCode = 408) {
+    super(message, statusCode);
+    this.name = "RequestTimeoutError";
+  }
+}
+
 export class ConflictError extends HttpError {
   constructor(message = "Conflict", statusCode = 409) {
     super(message, statusCode);

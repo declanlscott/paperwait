@@ -1,0 +1,139 @@
+---
+import { db } from "@paperwait/core/database";
+import { Organization } from "@paperwait/core/organization";
+import { eq } from "drizzle-orm";
+import Logo from "~/components/logo.astro";
+
+import PapercutAuthToken from "~/components/papercut/auth-token.astro";
+import TestPapercut from "~/components/papercut/test.astro";
+import Layout from "~/layouts/layout.astro";
+import { buttonStyles } from "~/styles/components/button";
+import { labelStyles } from "~/styles/components/label";
+
+const { slug } = Astro.params;
+
+const [org] = slug
+  ? await db
+      .select({
+        id: Organization.id,
+        name: Organization.name,
+        slug: Organization.slug,
+        provider: Organization.provider,
+        createdAt: Organization.createdAt,
+        status: Organization.status,
+      })
+      .from(Organization)
+      .where(eq(Organization.slug, slug))
+  : [undefined];
+
+if (!org) return new Response("Organization not found", { status: 404 });
+
+const title =
+  org.status === "initializing"
+    ? "Registration successful!"
+    : "Test Connection";
+---
+
+<Layout {title} htmx>
+  <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
+    <div class="hidden bg-muted lg:block lg:max-h-screen topography">
+    </div>
+
+    <form
+      class="flex items-center justify-center py-12"
+      hx-post="/partials/papercut/test"
+      hx-target="#test-papercut"
+      hx-indicator="#status-indicator"
+      hx-disabled-elt="input, button[type=submit]"
+    >
+      <div class="mx-auto grid w-[350px] gap-6">
+        <div class="flex justify-center">
+          <a href="/">
+            <div class="flex h-24 w-20 items-center overflow-hidden">
+              <Logo />
+            </div>
+          </a>
+        </div>
+
+        <div class="grid gap-2">
+          <h1 class="text-2xl font-bold text-center">
+            {
+              org.status === "initializing"
+                ? "Registration successful!"
+                : "Test Connection"
+            }
+          </h1>
+
+          {
+            org.status === "initializing" ? (
+              <p class="text-sm text-muted-foreground">
+                Your organization has been successfully registered. The first
+                user that logs in will be assigned the administrator role, and
+                all future users will be assigned as customers.
+              </p>
+            ) : null
+          }
+
+          <p class="text-sm text-muted-foreground">
+            Paperwait connects to your PaperCut server to perform various tasks
+            and is required for the application to function properly.
+          </p>
+
+          <p class="text-sm text-muted-foreground">
+            Before continuing with the application, test the connection to your
+            PaperCut server.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="flex justify-between gap-2">
+            <span class={labelStyles()}>Full Name</span>
+            <span class="text-sm">{org.name}</span>
+          </div>
+
+          <div class="flex justify-between gap-2">
+            <span class={labelStyles()}>Short Name</span>
+            <span class="text-sm">{org.slug}</span>
+          </div>
+
+          <div class="flex justify-between gap-2">
+            <span class={labelStyles()}>Provider</span>
+            <span class="text-sm">{org.provider}</span>
+          </div>
+
+          <div class="flex justify-between gap-2">
+            <span class={labelStyles()}>Registered</span>
+            <span class="text-sm">
+              {new Date(org.createdAt).toLocaleDateString()}
+            </span>
+          </div>
+
+          <div class="flex justify-between gap-2">
+            <span class={labelStyles()}>Status</span>
+            <span class="text-sm">{org.status}</span>
+          </div>
+        </div>
+
+        <input type="hidden" name="orgId" value={org.id} />
+
+        <PapercutAuthToken />
+
+        <TestPapercut status="initial" />
+
+        <a
+          href={`/login?org=${org.slug}`}
+          class={buttonStyles({ variant: "secondary" })}
+        >
+          Login
+        </a>
+      </div>
+    </form>
+  </div>
+</Layout>
+
+<style>
+  .topography {
+    background-image: url("/topography.svg");
+    background-repeat: repeat;
+  }
+</style>

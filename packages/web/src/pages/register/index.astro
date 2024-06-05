@@ -1,10 +1,10 @@
 ---
-import RegisterOrgPapercutAuthToken from "~/components/register-org/papercut-auth-token.astro";
-import RegisterOrgProviderId from "~/components/register-org/provider-id.astro";
-import RegisterOrgSlug from "~/components/register-org/slug.astro";
+import Logo from "~/components/logo.astro";
+import OrgProviderId from "~/components/org/provider-id.astro";
+import OrgSlug from "~/components/org/slug.astro";
+import PapercutAuthToken from "~/components/papercut/auth-token.astro";
 import Layout from "~/layouts/layout.astro";
 import { buttonStyles } from "~/styles/components/button";
-import { boxStyles, checkboxStyles } from "~/styles/components/checkbox";
 import { inputStyles } from "~/styles/components/input";
 import { labelStyles } from "~/styles/components/label";
 import { selectStyles } from "~/styles/components/select";
@@ -20,7 +20,9 @@ import { selectStyles } from "~/styles/components/select";
       <div class="mx-auto grid w-[350px] gap-6">
         <div class="flex justify-center">
           <a href="/">
-            <img src="./logo.svg" class="size-20" />
+            <div class="flex h-24 w-20 items-center overflow-hidden">
+              <Logo />
+            </div>
           </a>
         </div>
 
@@ -43,7 +45,7 @@ import { selectStyles } from "~/styles/components/select";
             />
           </div>
 
-          <RegisterOrgSlug />
+          <OrgSlug />
 
           <div class="grid gap-2">
             <label class={labelStyles()} for="auth-provider"
@@ -57,7 +59,7 @@ import { selectStyles } from "~/styles/components/select";
                   "border-0 border-r-8 border-transparent outline-input outline-1 outline",
               })}
               required
-              hx-get="/partials/register-org/provider-id"
+              hx-get="/partials/org/provider-id"
               hx-target="#provider-id"
               hx-swap-oob="outerHTML"
             >
@@ -66,7 +68,7 @@ import { selectStyles } from "~/styles/components/select";
             </select>
           </div>
 
-          <RegisterOrgProviderId />
+          <OrgProviderId />
 
           <div class="grid gap-2">
             <label class={labelStyles()} for="server-url"
@@ -81,20 +83,7 @@ import { selectStyles } from "~/styles/components/select";
             />
           </div>
 
-          <RegisterOrgPapercutAuthToken />
-
-          <div class={checkboxStyles()}>
-            <input
-              id="sync-papercut-accounts"
-              name="syncPapercutAccounts"
-              type="checkbox"
-              class={boxStyles()}
-              value="true"
-            />
-            <label for="sync-papercut-accounts" class={labelStyles()}>
-              Sync PaperCut shared accounts
-            </label>
-          </div>
+          <PapercutAuthToken />
 
           <button
             type="submit"
@@ -133,14 +122,13 @@ import { selectStyles } from "~/styles/components/select";
       </div>
     </form>
 
-    <div class="hidden bg-muted lg:block lg:max-h-screen">
-      <img
-        src="/placeholder.svg"
-        alt="placeholder"
-        width="1920"
-        height="1080"
-        class="size-full object-cover"
-      />
-    </div>
+    <div class="hidden bg-muted lg:block lg:max-h-screen topography"></div>
   </div>
 </Layout>
+
+<style>
+  .topography {
+    background-image: url("/topography.svg");
+    background-repeat: repeat;
+  }
+</style>

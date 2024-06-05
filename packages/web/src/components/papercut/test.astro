@@ -1,0 +1,95 @@
+---
+import LoadingIndicator from "~/components/loading-indicator.astro";
+import { buttonStyles } from "~/styles/components/button";
+
+type Props =
+  | { status: "initial" }
+  | { status: "success" }
+  | { status: "error"; reason: string };
+
+const props = Astro.props;
+---
+
+<div id="test-papercut" class="grid gap-2">
+  <button class={buttonStyles({ class: "gap-2" })} type="submit">
+    <div id="status-indicator" class="loading-indicator">
+      <div class="size-6 flex items-center">
+        <LoadingIndicator color="#fff" />
+      </div>
+    </div>
+
+    {
+      props.status === "success" && (
+        <svg
+          id="status-indicator"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="test-indicator text-green-400 size-5"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <path d="m9 11 3 3L22 4" />
+        </svg>
+      )
+    }
+
+    {
+      props.status === "error" && (
+        <svg
+          id="status-indicator"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="test-indicator text-red-500 size-5"
+        >
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      )
+    }
+
+    Test Connection
+  </button>
+
+  {
+    props.status === "success" && (
+      <p class="text-green-700 text-sm">Connection successful!</p>
+    )
+  }
+
+  {
+    props.status === "error" && (
+      <p class="text-red-500 text-sm">{props.reason}</p>
+    )
+  }
+</div>
+
+<style>
+  .loading-indicator {
+    display: none;
+  }
+
+  .htmx-request .loading-indicator {
+    display: inline;
+  }
+
+  .htmx-request.loading-indicator {
+    display: inline;
+  }
+
+  .htmx-request.test-indicator {
+    display: none;
+  }
+</style>

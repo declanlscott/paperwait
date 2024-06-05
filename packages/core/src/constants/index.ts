@@ -38,3 +38,4 @@ export const getSharedAccountPropertiesOutputIndex = {
 } as const;
 
 export const PAPERCUT_API_PAGINATION_LIMIT = 1000;
+export const PAPERCUT_API_TIMEOUT_MS = 8000;

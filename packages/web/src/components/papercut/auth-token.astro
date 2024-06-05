@@ -28,7 +28,7 @@ const { value, show = false } = Astro.props;
     <button
       class={buttonStyles({ variant: "ghost", size: "icon" })}
       type="button"
-      hx-post=`/partials/register-org/papercut-auth-token?show=${!show}`
+      hx-post=`/partials/papercut/auth-token?show=${!show}`
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

@@ -1,0 +1,16 @@
+---
+import TestPapercut from "~/components/papercut/test.astro";
+import { POST } from "~/pages/api/papercut/test";
+
+export const partial = true;
+
+const response = await POST(Astro);
+---
+
+{
+  response.status === 204 ? (
+    <TestPapercut status="success" />
+  ) : (
+    <TestPapercut status="error" reason={await response.text()} />
+  )
+}

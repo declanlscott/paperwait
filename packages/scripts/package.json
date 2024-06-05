@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
-    "tsx": "^4.11.0"
+    "tsx": "^4.11.2"
   }
 }

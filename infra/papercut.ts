@@ -68,8 +68,8 @@ papercutApiGateway.route("POST /list-user-shared-accounts", {
   },
 });
 
-papercutApiGateway.route("POST /ping-papercut", {
-  handler: "packages/functions/src/ping-papercut.handler",
+papercutApiGateway.route("POST /test-papercut", {
+  handler: "packages/functions/src/test-papercut.handler",
   timeout: "10 seconds",
   permissions: [getPapercutParameterPermission],
   vpc: {

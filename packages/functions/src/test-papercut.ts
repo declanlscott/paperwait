@@ -8,7 +8,7 @@ import { validate } from "@paperwait/core/valibot";
 import {
   buildClient,
   IsUserExistsOutput,
-  PingPapercutEvent,
+  TestPapercutEvent,
   XmlRpcFault,
 } from "@paperwait/core/xml-rpc";
 
@@ -17,7 +17,7 @@ import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     const { orgId, input } = validate(
-      PingPapercutEvent,
+      TestPapercutEvent,
       JSON.parse(event.body ?? "{}"),
       {
         Error: BadRequestError,
@@ -32,7 +32,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     const value = await client.methodCall(xmlRpcMethod.isUserExists, [
       authToken,
-      "ping",
+      "test",
     ]);
 
     validate(IsUserExistsOutput, value, {

@@ -1,4 +1,5 @@
 ---
+import LoadingIndicator from "~/components/loading-indicator.astro";
 import { inputStyles } from "~/styles/components/input";
 import { labelStyles } from "~/styles/components/label";
 
@@ -23,17 +24,16 @@ const variant =
       class={inputStyles({ variant })}
       placeholder="my-org"
       required
-      hx-post="/partials/register-org/slug"
+      hx-post="/partials/org/slug"
       hx-indicator="#status-indicator"
       {value}
     />
 
-    <img
-      id="status-indicator"
-      src="/loading-indicator.svg"
-      alt="Loading..."
-      class="loading-indicator size-6"
-    />
+    <div id="status-indicator" class="loading-indicator">
+      <div class="size-6 flex items-center">
+        <LoadingIndicator />
+      </div>
+    </div>
 
     {
       isValid && (

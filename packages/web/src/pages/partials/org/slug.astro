@@ -1,7 +1,7 @@
 ---
 import { parse } from "valibot";
 
-import RegisterOrgSlug from "~/components/register-org/slug.astro";
+import OrgSlug from "~/components/org/slug.astro";
 import { IsOrgSlugValid } from "~/lib/schemas";
 import { POST } from "~/pages/api/organization/slug";
 
@@ -12,4 +12,4 @@ const data = await response.json();
 const props = parse(IsOrgSlugValid, data);
 ---
 
-<RegisterOrgSlug {...props} />
+<OrgSlug {...props} />
