@@ -3,6 +3,7 @@ import { PapercutParameter } from "@paperwait/core/papercut";
 import {
   boolean,
   custom,
+  fallback,
   literal,
   merge,
   minLength,
@@ -10,6 +11,7 @@ import {
   safeParse,
   string,
   toTrimmed,
+  transform,
   union,
   uuid,
 } from "valibot";
@@ -23,6 +25,10 @@ export const Registration = merge([
       slug: string([toTrimmed(), minLength(1)]),
       authProvider: union(provider.enumValues.map((value) => literal(value))),
       providerId: string(),
+      syncPapercutAccounts: fallback(
+        transform(literal("true"), (value) => value === "true"),
+        false,
+      ),
     },
     [
       custom(({ authProvider, providerId }) => {

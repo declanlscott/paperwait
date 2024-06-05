@@ -4,6 +4,7 @@ import RegisterOrgProviderId from "~/components/register-org/provider-id.astro";
 import RegisterOrgSlug from "~/components/register-org/slug.astro";
 import Layout from "~/layouts/layout.astro";
 import { buttonStyles } from "~/styles/components/button";
+import { boxStyles, checkboxStyles } from "~/styles/components/checkbox";
 import { inputStyles } from "~/styles/components/input";
 import { labelStyles } from "~/styles/components/label";
 import { selectStyles } from "~/styles/components/select";
@@ -82,7 +83,23 @@ import { selectStyles } from "~/styles/components/select";
 
           <RegisterOrgPapercutAuthToken />
 
-          <button type="submit" class={buttonStyles({ class: "w-full gap-2" })}>
+          <div class={checkboxStyles()}>
+            <input
+              id="sync-papercut-accounts"
+              name="syncPapercutAccounts"
+              type="checkbox"
+              class={boxStyles()}
+              value="true"
+            />
+            <label for="sync-papercut-accounts" class={labelStyles()}>
+              Sync PaperCut shared accounts
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            class={buttonStyles({ class: "w-full gap-2 mt-4" })}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"

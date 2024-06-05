@@ -3,8 +3,8 @@ import { LogIn } from "lucide-react";
 import { fallback, parse, safeParse } from "valibot";
 
 import { Button } from "~/app/components/ui/primitives/button";
+import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
-import { Label } from "~/app/components/ui/primitives/label";
 import { initialLoginSearchParams, loginSearchParams } from "~/app/lib/schemas";
 import { buttonStyles } from "~/styles/components/button";
 

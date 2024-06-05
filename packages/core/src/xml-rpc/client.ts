@@ -12,7 +12,7 @@ export async function buildClient(orgId: string) {
     JSON.parse(config),
     {
       Error: InternalServerError,
-      message: "Failed to parse papercut config",
+      message: "Failed to parse PaperCut parameter",
     },
   );
 

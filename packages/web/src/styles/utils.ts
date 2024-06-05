@@ -12,10 +12,21 @@ export const focusRing = tv({
       default: "focus-visible:ring-ring",
       error: "focus-visible:ring-red-500",
     },
+    isFocusVisible: {
+      false: "ring-0",
+      true: "ring-2 ring-ring ring-offset-2",
+    },
   },
   defaultVariants: {
     variant: "default",
   },
+  compoundVariants: [
+    {
+      variant: "error",
+      isFocusVisible: true,
+      className: "ring-red-500",
+    },
+  ],
 });
 
 export function composeTwRenderProps<T>(

@@ -340,10 +340,11 @@ async function processUser(
       );
 
       // Insert the customer authorizations
-      await tx
-        .insert(PapercutAccountCustomerAuthorization)
-        .values(customerAuthorizations)
-        .onConflictDoNothing();
+      if (customerAuthorizations.length > 0)
+        await tx
+          .insert(PapercutAccountCustomerAuthorization)
+          .values(customerAuthorizations)
+          .onConflictDoNothing();
 
       return {
         channels: recipients.map(({ id }) => formatChannel("user", id)),

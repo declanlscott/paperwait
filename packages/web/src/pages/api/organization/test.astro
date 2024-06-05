@@ -1,0 +1,32 @@
+---
+import Layout from "~/layouts/layout.astro";
+---
+
+<Layout title="Registration successful!" htmx>
+  <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
+    <div class="hidden bg-muted lg:block lg:max-h-screen">
+      <img
+        src="/placeholder.svg"
+        alt="placeholder"
+        width="1920"
+        height="1080"
+        class="size-full object-cover"
+      />
+    </div>
+
+    <div class="flex items-center justify-center py-12">
+      <div class="mx-auto grid w-[350px] gap-6">
+        <div class="flex justify-center">
+          <img src="/logo.svg" class="size-20" />
+        </div>
+
+        <div class="grid gap-2 text-center">
+          <h1 class="text-2xl font-bold">Registration successful!</h1>
+          <p class="text-sm text-muted-foreground">
+            Your organization has been successfully registered.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -19,6 +19,7 @@ import type {
   ListSharedAccountsOutput,
   ListUserSharedAccountsEvent,
   ListUserSharedAccountsOutput,
+  PingPapercutEvent,
 } from "../xml-rpc/schemas";
 
 export async function isUserExists(event: IsUserExistsEvent) {
@@ -120,6 +121,17 @@ export async function getSharedAccountProperties(
     });
 
     return output;
+  } catch (e) {
+    throw httpError(e);
+  }
+}
+
+export async function pingPapercut(event: PingPapercutEvent) {
+  try {
+    await invokeApi(
+      new URL(`${Resource.PapercutApiGateway.url}/ping-papercut`),
+      event,
+    );
   } catch (e) {
     throw httpError(e);
   }

@@ -1,0 +1,96 @@
+---
+import { inputStyles } from "~/styles/components/input";
+import { labelStyles } from "~/styles/components/label";
+
+type Props = {
+  orgId: string;
+  success?: boolean;
+};
+
+const { orgId, success } = Astro.props;
+---
+
+<form class="flex flex-col gap-4">
+  <input type="hidden" name="orgId" value={orgId} />
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="auth-token">Auth Token</label>
+
+    <input
+      id="auth-token"
+      name="authToken"
+      class={inputStyles()}
+      required
+      type="password"
+    />
+  </div>
+
+  <button class="flex gap-2" hx-indicator="#status-indicator">
+    <img
+      id="status-indicator"
+      src="/loading-indicator.svg"
+      alt="Loading..."
+      class="loading-indicator size-6"
+    />
+
+    {
+      typeof success === "boolean" ? (
+        success ? (
+          <svg
+            id="status-indicator"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="ping-indicator text-green-500 size-6"
+          >
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <path d="m9 11 3 3L22 4" />
+          </svg>
+        ) : (
+          <svg
+            id="status-indicator"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="ping-indicator text-red-500 size-6"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        )
+      ) : null
+    }
+
+    Ping PaperCut Server
+  </button>
+</form>
+
+<style>
+  .loading-indicator {
+    display: none;
+  }
+
+  .htmx-request .loading-indicator {
+    display: inline;
+  }
+
+  .htmx-request.loading-indicator {
+    display: inline;
+  }
+
+  .htmx-request.ping-indicator {
+    display: none;
+  }
+</style>

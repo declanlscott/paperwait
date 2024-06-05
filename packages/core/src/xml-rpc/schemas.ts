@@ -165,3 +165,14 @@ export const ListUserSharedAccountsResult = object({
 export type ListUserSharedAccountsResult = Output<
   typeof ListUserSharedAccountsResult
 >;
+
+// Ping PaperCut
+export const PingPapercutInput = object({
+  authToken: string(),
+});
+export type PingPapercutInput = Output<typeof PingPapercutInput>;
+export const PingPapercutEvent = merge([
+  BaseEvent,
+  object({ input: PingPapercutInput }),
+]);
+export type PingPapercutEvent = Output<typeof PingPapercutEvent>;

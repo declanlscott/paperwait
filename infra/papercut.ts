@@ -68,6 +68,18 @@ papercutApiGateway.route("POST /list-user-shared-accounts", {
   },
 });
 
+papercutApiGateway.route("POST /ping-papercut", {
+  handler: "packages/functions/src/ping-papercut.handler",
+  timeout: "10 seconds",
+  permissions: [getPapercutParameterPermission],
+  vpc: {
+    securityGroups: [natSecurityGroup.id],
+    subnets: privateSubnetsOutput.apply((subnets) =>
+      subnets.map((subnet) => subnet.id),
+    ),
+  },
+});
+
 export const adjustSharedAccountAccountBalanceDeadLetterQueue =
   new sst.aws.Queue("AdjustSharedAccountAccountBalanceDeadLetterQueue");
 
