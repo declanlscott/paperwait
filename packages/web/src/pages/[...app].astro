@@ -3,6 +3,7 @@ import { ClientResource } from "@paperwait/core/resource";
 
 import { App } from "~/app/index";
 import AppLoadingIndicator from "~/components/app-loading-indicator.astro";
+import Logo from "~/components/logo.astro";
 import Layout from "~/layouts/app.astro";
 
 import type { AppProps } from "~/app/index";
@@ -20,5 +21,6 @@ const appProps = {
 <Layout>
   <App client:only="react" {...appProps}>
     <AppLoadingIndicator slot="loadingIndicator" />
+    <Logo slot="logo" />
   </App>
 </Layout>

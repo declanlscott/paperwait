@@ -12,4 +12,5 @@ export type UnAuthed = {
 
 export type Slot = {
   loadingIndicator: ReactNode;
+  logo: ReactNode;
 };

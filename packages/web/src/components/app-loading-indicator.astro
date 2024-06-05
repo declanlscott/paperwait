@@ -1,4 +1,6 @@
 ---
+import LoadingIndicator from "~/components/loading-indicator.astro";
+
 type Props = {
   isInitial?: boolean;
 };
@@ -10,5 +12,5 @@ const { isInitial = false } = Astro.props;
   id=`${isInitial ? "initial-": ""}app-loading-indicator`
   class="flex h-screen w-screen items-center justify-center"
 >
-  <img src="/loading-indicator.svg" alt="Loading..." class="w-24" />
+  <LoadingIndicator />
 </div>

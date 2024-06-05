@@ -6,6 +6,7 @@ import { AuthedProvider } from "~/app/components/providers/auth";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
 import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useRealtime } from "~/app/lib/hooks/realtime";
+import { useSlot } from "~/app/lib/hooks/slot";
 
 import type { PropsWithChildren } from "react";
 
@@ -35,13 +36,15 @@ function Realtime(props: PropsWithChildren) {
 function Nav() {
   const logout = useLogout();
 
+  const { logo } = useSlot();
+
   return (
     <nav>
-      <img src="./logo.svg" className="size-10" />
-
       <ul>
         <li>
-          <a href="/">Home</a>
+          <a href="/" className="flex h-12 w-10 items-center overflow-hidden">
+            {logo}
+          </a>
         </li>
 
         <li>

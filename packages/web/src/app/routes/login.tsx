@@ -5,6 +5,7 @@ import { fallback, parse, safeParse } from "valibot";
 import { Button } from "~/app/components/ui/primitives/button";
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
+import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams, loginSearchParams } from "~/app/lib/schemas";
 import { buttonStyles } from "~/styles/components/button";
 
@@ -23,27 +24,29 @@ function Component() {
 
   const navigate = Route.useNavigate();
 
+  const { logo } = useSlot();
+
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
-      <div className="bg-muted hidden lg:block lg:max-h-screen">
-        <img
-          src="/placeholder.svg"
-          alt="placeholder"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover"
-        />
-      </div>
+      <div
+        className="bg-muted hidden lg:block lg:max-h-screen"
+        style={{
+          backgroundImage: "url(/topography.svg)",
+          backgroundRepeat: "repeat",
+        }}
+      />
 
       <form
         action="/api/auth/login"
         method="GET"
-        className="flex items-center justify-center pb-12"
+        className="flex items-center justify-center py-12"
       >
         <div className="mx-auto grid w-[350px] gap-6">
           <div className="flex justify-center">
             <a href="/">
-              <img src="./logo.svg" className="size-20" />
+              <div className="flex h-24 w-20 items-center overflow-hidden">
+                {logo}
+              </div>
             </a>
           </div>
 

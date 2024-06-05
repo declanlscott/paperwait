@@ -27,7 +27,7 @@ export interface AppProps extends Partial<Slot> {
 }
 
 export function App(props: AppProps) {
-  const { clientResource, initialAuth, loadingIndicator } = props;
+  const { clientResource, initialAuth, loadingIndicator, logo } = props;
 
   const [router] = useState(() =>
     createRouter({
@@ -50,7 +50,7 @@ export function App(props: AppProps) {
   return (
     <ResourceProvider resource={clientResource}>
       <AuthStoreProvider initialAuth={initialAuth}>
-        <SlotProvider slot={{ loadingIndicator }}>
+        <SlotProvider slot={{ loadingIndicator, logo }}>
           <AppRouter router={router} />
         </SlotProvider>
       </AuthStoreProvider>
