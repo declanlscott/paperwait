@@ -1,5 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 
+import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
 import { transact } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
@@ -15,6 +16,7 @@ import { User } from "../user/user.sql";
 import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { getClientGroup, getData } from "./data";
 import {
+  searchAnnouncements,
   searchClients,
   searchComments,
   searchOrders,
@@ -87,6 +89,7 @@ export async function pull(
             and(
               eq(ReplicacheClientView.clientGroupId, pullRequest.clientGroupID),
               eq(ReplicacheClientView.version, order),
+              eq(ReplicacheClientView.orgId, user.orgId),
             ),
           )
       : [undefined];
@@ -101,6 +104,7 @@ export async function pull(
         papercutAccountManagerAuthorization: {},
         room: {},
         product: {},
+        announcement: {},
         order: {},
         comment: {},
         client: {},
@@ -125,6 +129,7 @@ export async function pull(
       papercutAccountCustomerAuthorizationsMetadata,
       papercutAccountManagerAuthorizationsMetadata,
       roomsMetadata,
+      announcementsMetadata,
       productsMetadata,
       ordersMetadata,
       commentsMetadata,
@@ -135,6 +140,7 @@ export async function pull(
       searchPapercutAccountCustomerAuthorizations(tx, user),
       searchPapercutAccountManagerAuthorizations(tx, user),
       searchRooms(tx, user),
+      searchAnnouncements(tx, user),
       searchProducts(tx, user),
       searchOrders(tx, user),
       searchComments(tx, user),
@@ -152,6 +158,7 @@ export async function pull(
         papercutAccountManagerAuthorizationsMetadata,
       ),
       room: buildCvrEntries(roomsMetadata),
+      announcement: buildCvrEntries(announcementsMetadata),
       product: buildCvrEntries(productsMetadata),
       order: buildCvrEntries(ordersMetadata),
       comment: buildCvrEntries(commentsMetadata),
@@ -171,6 +178,7 @@ export async function pull(
       papercutAccountCustomerAuthorizations,
       papercutAccountManagerAuthorizations,
       rooms,
+      announcements,
       products,
       orders,
       comments,
@@ -216,6 +224,15 @@ export async function pull(
         Room,
         { orgId: Room.orgId, id: Room.id },
         { orgId: user.orgId, ids: diff.room.puts },
+      ),
+      getData(
+        tx,
+        Announcement,
+        {
+          orgId: Announcement.orgId,
+          id: Announcement.id,
+        },
+        { orgId: user.orgId, ids: diff.announcement.puts },
       ),
       getData(
         tx,
@@ -290,6 +307,7 @@ export async function pull(
           dels: diff.papercutAccountManagerAuthorization.dels,
         },
         room: { puts: rooms, dels: diff.room.dels },
+        announcement: { puts: announcements, dels: diff.announcement.dels },
         product: { puts: products, dels: diff.product.dels },
         order: { puts: orders, dels: diff.order.dels },
         comment: { puts: comments, dels: diff.comment.dels },

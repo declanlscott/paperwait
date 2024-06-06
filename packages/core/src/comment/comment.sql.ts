@@ -1,4 +1,4 @@
-import { foreignKey, text } from "drizzle-orm/pg-core";
+import { foreignKey, index, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
@@ -9,7 +9,7 @@ export const Comment = orgTable(
   "comment",
   {
     orderId: id("order_id").notNull(),
-    roomId: id("room_id").notNull(),
+    authorId: id("author_id").notNull(),
     content: text("content").notNull(),
     visibleTo: UserRole("visible_to").array().notNull(),
   },
@@ -19,11 +19,8 @@ export const Comment = orgTable(
       foreignColumns: [Order.id, Order.orgId],
       name: "order_fk",
     }),
-    roomReference: foreignKey({
-      columns: [table.roomId, table.orgId],
-      foreignColumns: [Order.roomId, Order.orgId],
-      name: "room_fk",
-    }),
+    orderIdIndex: index("order_id_idx").on(table.orderId),
+    visibleToIndex: index("visible_to_idx").on(table.visibleTo),
   }),
 );
 export type Comment = typeof Comment.$inferSelect;

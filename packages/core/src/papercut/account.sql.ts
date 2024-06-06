@@ -1,6 +1,7 @@
 import {
   bigint,
   foreignKey,
+  index,
   pgTable,
   primaryKey,
   text,
@@ -48,6 +49,10 @@ export const PapercutAccountCustomerAuthorization = orgTable(
     uniquePapercutAccountCustomer: unique(
       "unique_papercut_account_customer",
     ).on(table.papercutAccountId, table.customerId),
+    customerIdIndex: index("customer_id_idx").on(table.customerId),
+    papercutAccountIdIndex: index("papercut_account_id_idx").on(
+      table.papercutAccountId,
+    ),
   }),
 );
 export type PapercutAccountCustomerAuthorization =
@@ -75,6 +80,10 @@ export const PapercutAccountManagerAuthorization = orgTable(
     uniquePapercutAccountManager: unique("unique_papercut_account_manager").on(
       table.papercutAccountId,
       table.managerId,
+    ),
+    managerIdIndex: index("manager_id_idx").on(table.managerId),
+    papercutAccountIdIndex: index("papercut_account_id_idx").on(
+      table.papercutAccountId,
     ),
   }),
 );

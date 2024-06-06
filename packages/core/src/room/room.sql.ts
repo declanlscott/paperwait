@@ -1,4 +1,4 @@
-import { pgEnum, text, unique } from "drizzle-orm/pg-core";
+import { index, pgEnum, text, unique } from "drizzle-orm/pg-core";
 
 import { orgTable } from "../drizzle/tables";
 
@@ -13,6 +13,7 @@ export const Room = orgTable(
   },
   (table) => ({
     uniqueName: unique("unique_name").on(table.name, table.orgId),
+    statusIndex: index("status_idx").on(table.status),
   }),
 );
 export type Room = typeof Room.$inferSelect;

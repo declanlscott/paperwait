@@ -1,6 +1,7 @@
 import { and, arrayOverlaps, eq, isNull, sql } from "drizzle-orm";
 import { uniqueBy } from "remeda";
 
+import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
 import { Order } from "../order/order.sql";
 import {
@@ -165,6 +166,24 @@ export async function searchRooms(tx: Transaction, user: LuciaUser) {
         .where(and(eq(Room.orgId, user.orgId), isNull(Room.deletedAt))),
     searchAsManager: selectPublished,
     searchAsCustomer: selectPublished,
+  });
+}
+
+export async function searchAnnouncements(tx: Transaction, user: LuciaUser) {
+  const selectAll = async () =>
+    await tx
+      .select({
+        id: Announcement.id,
+        rowVersion: sql<number>`"announcement"."xmin"`,
+      })
+      .from(Announcement)
+      .where(eq(Announcement.orgId, user.orgId));
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: selectAll,
+    searchAsOperator: selectAll,
+    searchAsManager: selectAll,
+    searchAsCustomer: selectAll,
   });
 }
 

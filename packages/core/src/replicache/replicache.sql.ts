@@ -1,6 +1,7 @@
 import {
   bigint,
   foreignKey,
+  index,
   integer,
   json,
   pgTable,
@@ -54,6 +55,7 @@ export const ReplicacheClient = orgTable(
       foreignColumns: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
       name: "client_group_fk",
     }),
+    clientGroupIdIndex: index("client_group_id_idx").on(table.clientGroupId),
   }),
 );
 export type ReplicacheClient = typeof ReplicacheClient.$inferSelect;

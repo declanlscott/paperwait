@@ -99,6 +99,7 @@ export const Domain = picklist([
   "papercutAccountCustomerAuthorization",
   "papercutAccountManagerAuthorization",
   "room",
+  "announcement",
   "product",
   "order",
   "comment",

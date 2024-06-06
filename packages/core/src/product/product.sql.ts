@@ -1,4 +1,4 @@
-import { foreignKey, pgEnum, text } from "drizzle-orm/pg-core";
+import { foreignKey, index, pgEnum, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
@@ -21,6 +21,7 @@ export const Product = orgTable(
       foreignColumns: [Room.id, Room.orgId],
       name: "room_fk",
     }),
+    statusIndex: index("status_idx").on(table.status),
   }),
 );
 export type Product = typeof Product.$inferSelect;

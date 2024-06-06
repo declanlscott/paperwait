@@ -1,9 +1,9 @@
-import { bigint, foreignKey, pgEnum } from "drizzle-orm/pg-core";
+import { bigint, foreignKey, index, pgEnum } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
 import { PapercutAccount } from "../papercut/account.sql";
-import { Room } from "../room/room.sql";
+import { Product } from "../product/product.sql";
 import { User } from "../user/user.sql";
 
 export const OrderStatus = pgEnum("order_status", [
@@ -20,7 +20,7 @@ export const Order = orgTable(
     customerId: id("customer_id").notNull(),
     managerId: id("manager_id"),
     operatorId: id("operator_id"),
-    roomId: id("room_id").notNull(),
+    productId: id("product_id").notNull(),
     papercutAccountId: bigint("papercut_account_id", {
       mode: "number",
     }).notNull(),
@@ -42,16 +42,20 @@ export const Order = orgTable(
       foreignColumns: [User.id, User.orgId],
       name: "operator_fk",
     }),
-    roomReference: foreignKey({
-      columns: [table.roomId, table.orgId],
-      foreignColumns: [Room.id, Room.orgId],
-      name: "room_fk",
+    productReference: foreignKey({
+      columns: [table.productId, table.orgId],
+      foreignColumns: [Product.id, Product.orgId],
+      name: "product_fk",
     }),
     papercutAccountReference: foreignKey({
       columns: [table.papercutAccountId, table.orgId],
       foreignColumns: [PapercutAccount.id, PapercutAccount.orgId],
       name: "papercut_account_fk",
     }),
+    customerIdIndex: index("customer_id_idx").on(table.customerId),
+    papercutAccountIdIndex: index("papercut_account_id_idx").on(
+      table.papercutAccountId,
+    ),
   }),
 );
 export type Order = typeof Order.$inferSelect;
