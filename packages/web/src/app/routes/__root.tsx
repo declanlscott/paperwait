@@ -7,6 +7,7 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 
+import type { QueryClient } from "@tanstack/react-query";
 import type {
   NavigateOptions,
   RegisteredRouter,
@@ -28,6 +29,7 @@ const TanStackRouterDevtools = import.meta.env.DEV
 type RouterContext = {
   resource: ResourceContext;
   authStore: AuthStore;
+  queryClient: QueryClient;
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({

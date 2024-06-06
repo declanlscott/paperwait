@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
 import { AuthStoreProvider } from "~/app/components/providers/auth";
@@ -21,6 +22,8 @@ declare module "@tanstack/react-router" {
   }
 }
 
+const queryClient = new QueryClient();
+
 export interface AppProps extends Partial<Slot> {
   clientResource: ClientResourceType;
   initialAuth: Auth;
@@ -36,6 +39,7 @@ export function App(props: AppProps) {
         // These will be set after we wrap the app router in providers
         resource: undefined!,
         authStore: undefined!,
+        queryClient,
       },
       defaultPendingComponent: () => loadingIndicator,
     }),
@@ -51,7 +55,9 @@ export function App(props: AppProps) {
     <ResourceProvider resource={clientResource}>
       <AuthStoreProvider initialAuth={initialAuth}>
         <SlotProvider slot={{ loadingIndicator, logo }}>
-          <AppRouter router={router} />
+          <QueryClientProvider client={queryClient}>
+            <AppRouter router={router} />
+          </QueryClientProvider>
         </SlotProvider>
       </AuthStoreProvider>
     </ResourceProvider>
@@ -67,6 +73,9 @@ function AppRouter(props: AppRouterProps) {
   const authStore = useAuthStore((store) => store);
 
   return (
-    <RouterProvider router={props.router} context={{ resource, authStore }} />
+    <RouterProvider
+      router={props.router}
+      context={{ resource, authStore, queryClient }}
+    />
   );
 }
