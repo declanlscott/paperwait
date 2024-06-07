@@ -5,16 +5,12 @@ import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useMutators } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
+import { useSlot } from "~/app/lib/hooks/slot";
 
 import type { PropsWithChildren } from "react";
 
 export function ReplicacheProvider(props: PropsWithChildren) {
-  const [replicache, setReplicache] = useState<ReplicacheContext | null>(
-    () => ({
-      status: "initializing",
-      replicache: null,
-    }),
-  );
+  const [replicache, setReplicache] = useState<ReplicacheContext | null>(null);
 
   const { user } = useAuthed();
 
@@ -39,10 +35,14 @@ export function ReplicacheProvider(props: PropsWithChildren) {
       return null;
     };
 
-    setReplicache(() => ({ status: "ready", replicache }));
+    setReplicache(() => replicache);
 
     return () => void replicache.close();
   }, [user.id, ReplicacheLicenseKey.value, IsDev.value, mutators, logout]);
+
+  const { loadingIndicator } = useSlot();
+
+  if (!replicache) return <>{loadingIndicator}</>;
 
   return (
     <ReplicacheContext.Provider value={replicache}>

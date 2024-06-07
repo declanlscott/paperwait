@@ -21,9 +21,7 @@ export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
 export const AuthedContext = createContext<Authed | null>(null);
 
-export type ReplicacheContext =
-  | { status: "initializing"; replicache: null }
-  | { status: "ready"; replicache: Replicache };
+export type ReplicacheContext = Replicache;
 
 export const ReplicacheContext = createContext<ReplicacheContext | null>(null);
 

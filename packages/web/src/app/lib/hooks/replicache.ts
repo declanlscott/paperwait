@@ -30,11 +30,11 @@ import type {
 import type { WriteTransaction } from "replicache";
 
 export function useReplicache() {
-  const context = useContext(ReplicacheContext);
+  const replicache = useContext(ReplicacheContext);
 
-  if (!context) throw new MissingContextProviderError("Replicache");
+  if (!replicache) throw new MissingContextProviderError("Replicache");
 
-  return context.replicache;
+  return replicache;
 }
 
 export function useMutators() {
