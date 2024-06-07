@@ -1,15 +1,18 @@
 import {
   FieldError as AriaFieldError,
+  Group as AriaGroup,
   Label as AriaLabel,
   Text as AriaText,
+  composeRenderProps,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
 
-import { labelStyles } from "~/styles/components/label";
+import { fieldGroupStyles, labelStyles } from "~/styles/components/field";
 import { composeTwRenderProps } from "~/styles/utils";
 
 import type {
   FieldErrorProps as AriaFieldErrorProps,
+  GroupProps as AriaGroupProps,
   LabelProps as AriaLabelProps,
   TextProps as AriaTextProps,
 } from "react-aria-components";
@@ -36,6 +39,18 @@ export function FieldError(props: FieldErrorProps) {
     <AriaFieldError
       {...props}
       className={composeTwRenderProps(props.className, "text-sm text-red-500")}
+    />
+  );
+}
+
+export type FieldGroupProps = AriaGroupProps;
+export function FieldGroup(props: FieldGroupProps) {
+  return (
+    <AriaGroup
+      {...props}
+      className={composeRenderProps(props.className, (className, renderProps) =>
+        fieldGroupStyles({ ...renderProps, className }),
+      )}
     />
   );
 }

@@ -14,7 +14,11 @@ export const focusRing = tv({
     },
     isFocusVisible: {
       false: "ring-0",
-      true: "ring-2 ring-ring ring-offset-2",
+      true: "outline-none ring-2 ring-ring ring-offset-2",
+    },
+    isFocusWithin: {
+      false: "ring-0",
+      true: "outline-none ring-2 ring-ring ring-offset-2",
     },
   },
   defaultVariants: {
@@ -24,6 +28,11 @@ export const focusRing = tv({
     {
       variant: "error",
       isFocusVisible: true,
+      className: "ring-red-500",
+    },
+    {
+      variant: "error",
+      isFocusWithin: true,
       className: "ring-red-500",
     },
   ],
