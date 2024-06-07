@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 
 import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
-import { ApplicationError } from "../errors/application";
+import { ForbiddenError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import {
   PapercutAccount,
@@ -17,13 +17,9 @@ import {
   requireAccessToOrder,
 } from "../replicache/data";
 import { Room } from "../room/room.sql";
-import { assertRole } from "../user/assert";
 import { User } from "../user/user.sql";
-import { globalPermissions } from "./schemas";
-
-import type { LuciaUser } from "../auth/lucia";
-import type { Transaction } from "../database/transaction";
-import type {
+import { validate } from "../valibot";
+import {
   CreateAnnouncementMutationArgs,
   CreateCommentMutationArgs,
   CreateOrderMutationArgs,
@@ -46,16 +42,24 @@ import type {
   UpdateUserRoleMutationArgs,
 } from "./schemas";
 
+import type { JSONValue } from "replicache";
+import type { LuciaUser } from "../auth/lucia";
+import type { Transaction } from "../database/transaction";
+import type { AuthoritativeMutation } from "./schemas";
+
 async function updateUserRole(
   tx: Transaction,
   user: LuciaUser,
-  { id: userId, ...args }: UpdateUserRoleMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.updateUserRole);
+  const { id: userId, ...values } = validate(UpdateUserRoleMutationArgs, args);
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(User)
-    .set(args)
+    .set(values)
     .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
   return [formatChannel("org", user.orgId)];
@@ -64,13 +68,16 @@ async function updateUserRole(
 async function deleteUser(
   tx: Transaction,
   user: LuciaUser,
-  { id: userId, ...args }: DeleteUserMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.deleteUser);
+  const { id: userId, ...values } = validate(DeleteUserMutationArgs, args);
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(User)
-    .set(args)
+    .set(values)
     .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
   return [formatChannel("org", user.orgId)];
@@ -79,9 +86,15 @@ async function deleteUser(
 async function deletePapercutAccount(
   tx: Transaction,
   user: LuciaUser,
-  { id: papercutAccountId, ...args }: DeletePapercutAccountMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.deletePapercutAccount);
+  const { id: papercutAccountId, ...values } = validate(
+    DeletePapercutAccountMutationArgs,
+    args,
+  );
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   const [adminsOps, managers, customers] = await Promise.all([
     getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
@@ -111,7 +124,7 @@ async function deletePapercutAccount(
       ),
     tx
       .update(PapercutAccount)
-      .set(args)
+      .set(values)
       .where(
         and(
           eq(PapercutAccount.id, papercutAccountId),
@@ -130,13 +143,19 @@ async function deletePapercutAccount(
 async function createPapercutAccountManagerAuthorization(
   tx: Transaction,
   user: LuciaUser,
-  args: CreatePapercutAccountManagerAuthorizationMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.createPapercutAccountManagerAuthorization);
+  const values = validate(
+    CreatePapercutAccountManagerAuthorizationMutationArgs,
+    args,
+  );
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   const [managerAuthorization] = await tx
     .insert(PapercutAccountManagerAuthorization)
-    .values(args)
+    .values(values)
     .onConflictDoNothing()
     .returning({ id: PapercutAccountManagerAuthorization.id });
 
@@ -148,16 +167,19 @@ async function createPapercutAccountManagerAuthorization(
 async function deletePapercutAccountManagerAuthorization(
   tx: Transaction,
   user: LuciaUser,
-  {
-    id: papercutAccountManagerAuthorizationId,
-    ...args
-  }: DeletePapercutAccountManagerAuthorizationMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.deletePapercutAccountManagerAuthorization);
+  const { id: papercutAccountManagerAuthorizationId, ...values } = validate(
+    DeletePapercutAccountManagerAuthorizationMutationArgs,
+    args,
+  );
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(PapercutAccountManagerAuthorization)
-    .set(args)
+    .set(values)
     .where(
       and(
         eq(
@@ -174,13 +196,16 @@ async function deletePapercutAccountManagerAuthorization(
 async function createRoom(
   tx: Transaction,
   user: LuciaUser,
-  args: CreateRoomMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.createRoom);
+  const values = validate(CreateRoomMutationArgs, args);
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   const [room] = await tx
     .insert(Room)
-    .values(args)
+    .values(values)
     .onConflictDoNothing()
     .returning({ id: Room.id });
   if (!room) return [];
@@ -191,13 +216,16 @@ async function createRoom(
 async function updateRoom(
   tx: Transaction,
   user: LuciaUser,
-  { id: roomId, ...args }: UpdateRoomMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.updateRoom);
+  const { id: roomId, ...values } = validate(UpdateRoomMutationArgs, args);
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(Room)
-    .set(args)
+    .set(values)
     .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
   return [formatChannel("org", user.orgId)];
@@ -206,13 +234,16 @@ async function updateRoom(
 async function deleteRoom(
   tx: Transaction,
   user: LuciaUser,
-  { id: roomId, ...args }: DeleteRoomMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.deleteRoom);
+  const { id: roomId, ...values } = validate(DeleteRoomMutationArgs, args);
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(Room)
-    .set(args)
+    .set(values)
     .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
   return [formatChannel("org", user.orgId)];
@@ -221,11 +252,14 @@ async function deleteRoom(
 async function createAnnouncement(
   tx: Transaction,
   user: LuciaUser,
-  args: CreateAnnouncementMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.createAnnouncement);
+  const values = validate(CreateAnnouncementMutationArgs, args);
 
-  await tx.insert(Announcement).values(args);
+  if (!isAuthorized) throw new ForbiddenError();
+
+  await tx.insert(Announcement).values(values);
 
   return [formatChannel("org", user.orgId)];
 }
@@ -233,13 +267,19 @@ async function createAnnouncement(
 async function updateAnnouncement(
   tx: Transaction,
   user: LuciaUser,
-  { id: announcementId, ...args }: UpdateAnnouncementMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.updateAnnouncement);
+  const { id: announcementId, ...values } = validate(
+    UpdateAnnouncementMutationArgs,
+    args,
+  );
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(Announcement)
-    .set(args)
+    .set(values)
     .where(
       and(
         eq(Announcement.id, announcementId),
@@ -253,13 +293,19 @@ async function updateAnnouncement(
 async function deleteAnnouncement(
   tx: Transaction,
   user: LuciaUser,
-  { id: announcementId, ...args }: DeleteAnnouncementMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.deleteAnnouncement);
+  const { id: announcementId, ...values } = validate(
+    DeleteAnnouncementMutationArgs,
+    args,
+  );
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(Announcement)
-    .set(args)
+    .set(values)
     .where(
       and(
         eq(Announcement.id, announcementId),
@@ -273,11 +319,14 @@ async function deleteAnnouncement(
 async function createProduct(
   tx: Transaction,
   user: LuciaUser,
-  args: CreateProductMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.createProduct);
+  const values = validate(CreateProductMutationArgs, args);
 
-  await tx.insert(Product).values(args);
+  if (!isAuthorized) throw new ForbiddenError();
+
+  await tx.insert(Product).values(values);
 
   return [formatChannel("org", user.orgId)];
 }
@@ -285,13 +334,19 @@ async function createProduct(
 async function updateProduct(
   tx: Transaction,
   user: LuciaUser,
-  { id: productId, ...args }: UpdateProductMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.updateProduct);
+  const { id: productId, ...values } = validate(
+    UpdateProductMutationArgs,
+    args,
+  );
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(Product)
-    .set(args)
+    .set(values)
     .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
   return [formatChannel("org", user.orgId)];
@@ -300,13 +355,19 @@ async function updateProduct(
 async function deleteProduct(
   tx: Transaction,
   user: LuciaUser,
-  { id: productId, ...args }: DeleteProductMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.deleteProduct);
+  const { id: productId, ...values } = validate(
+    DeleteProductMutationArgs,
+    args,
+  );
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   await tx
     .update(Product)
-    .set(args)
+    .set(values)
     .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
   return [formatChannel("org", user.orgId)];
@@ -315,13 +376,16 @@ async function deleteProduct(
 async function createOrder(
   tx: Transaction,
   user: LuciaUser,
-  args: CreateOrderMutationArgs,
+  args: JSONValue,
+  isAuthorized: boolean,
 ) {
-  assertRole(user, globalPermissions.createOrder);
+  const values = validate(CreateOrderMutationArgs, args);
+
+  if (!isAuthorized) throw new ForbiddenError();
 
   const [order] = await tx
     .insert(Order)
-    .values(args)
+    .values(values)
     .returning({ id: Order.id });
 
   const users = await getUsersWithAccessToOrder(tx, order.id, user.orgId);
@@ -332,20 +396,16 @@ async function createOrder(
 async function updateOrder(
   tx: Transaction,
   user: LuciaUser,
-  { id: orderId, ...args }: UpdateOrderMutationArgs,
+  args: JSONValue,
+  _isAuthorized: boolean,
 ) {
-  let users: Awaited<ReturnType<typeof requireAccessToOrder>>;
-  try {
-    assertRole(user, globalPermissions.updateOrder);
-  } catch (e) {
-    if (!(e instanceof ApplicationError)) throw e;
-  } finally {
-    users = await requireAccessToOrder(tx, user, orderId);
-  }
+  const { id: orderId, ...values } = validate(UpdateOrderMutationArgs, args);
+
+  const users = await requireAccessToOrder(tx, user, orderId);
 
   await tx
     .update(Order)
-    .set(args)
+    .set(values)
     .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
 
   return users.map(({ id }) => formatChannel("user", id));
@@ -354,20 +414,16 @@ async function updateOrder(
 async function deleteOrder(
   tx: Transaction,
   user: LuciaUser,
-  { id: orderId, ...args }: DeleteOrderMutationArgs,
+  args: JSONValue,
+  _isAuthorized: boolean,
 ) {
-  let users: Awaited<ReturnType<typeof requireAccessToOrder>>;
-  try {
-    assertRole(user, globalPermissions.updateOrder);
-  } catch (e) {
-    if (!(e instanceof ApplicationError)) throw e;
-  } finally {
-    users = await requireAccessToOrder(tx, user, orderId);
-  }
+  const { id: orderId, ...values } = validate(DeleteOrderMutationArgs, args);
+
+  const users = await requireAccessToOrder(tx, user, orderId);
 
   await tx
     .update(Order)
-    .set(args)
+    .set(values)
     .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
 
   return users.map(({ id }) => formatChannel("user", id));
@@ -376,18 +432,14 @@ async function deleteOrder(
 async function createComment(
   tx: Transaction,
   user: LuciaUser,
-  args: CreateCommentMutationArgs,
+  args: JSONValue,
+  _isAuthorized: boolean,
 ) {
-  let users: Awaited<ReturnType<typeof requireAccessToOrder>>;
-  try {
-    assertRole(user, globalPermissions.updateOrder);
-  } catch (e) {
-    if (!(e instanceof ApplicationError)) throw e;
-  } finally {
-    users = await requireAccessToOrder(tx, user, args.orderId);
-  }
+  const values = validate(CreateCommentMutationArgs, args);
 
-  await tx.insert(Comment).values(args);
+  const users = await requireAccessToOrder(tx, user, values.orderId);
+
+  await tx.insert(Comment).values(values);
 
   return users.map(({ id }) => formatChannel("user", id));
 }
@@ -395,20 +447,19 @@ async function createComment(
 async function updateComment(
   tx: Transaction,
   user: LuciaUser,
-  { id: commentId, ...args }: UpdateCommentMutationArgs,
+  args: JSONValue,
+  _isAuthorized: boolean,
 ) {
-  let users: Awaited<ReturnType<typeof requireAccessToOrder>>;
-  try {
-    assertRole(user, globalPermissions.updateOrder);
-  } catch (e) {
-    if (!(e instanceof ApplicationError)) throw e;
-  } finally {
-    users = await requireAccessToOrder(tx, user, args.orderId);
-  }
+  const { id: commentId, ...values } = validate(
+    UpdateCommentMutationArgs,
+    args,
+  );
+
+  const users = await requireAccessToOrder(tx, user, values.orderId);
 
   await tx
     .update(Comment)
-    .set(args)
+    .set(values)
     .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
 
   return users.map(({ id }) => formatChannel("user", id));
@@ -417,20 +468,20 @@ async function updateComment(
 async function deleteComment(
   tx: Transaction,
   user: LuciaUser,
-  { id: commentId, orderId, ...args }: DeleteCommentMutationArgs,
+  args: JSONValue,
+  _isAuthorized: boolean,
 ) {
-  let users: Awaited<ReturnType<typeof requireAccessToOrder>>;
-  try {
-    assertRole(user, globalPermissions.updateOrder);
-  } catch (e) {
-    if (!(e instanceof ApplicationError)) throw e;
-  } finally {
-    users = await requireAccessToOrder(tx, user, orderId);
-  }
+  const {
+    id: commentId,
+    orderId,
+    ...values
+  } = validate(DeleteCommentMutationArgs, args);
+
+  const users = await requireAccessToOrder(tx, user, orderId);
 
   await tx
     .update(Comment)
-    .set(args)
+    .set(values)
     .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
 
   return users.map(({ id }) => formatChannel("user", id));
@@ -472,4 +523,4 @@ export const authoritative = {
   createComment,
   updateComment,
   deleteComment,
-};
+} satisfies AuthoritativeMutation;

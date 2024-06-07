@@ -39,6 +39,7 @@ import type {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
+  OptimisticMutation,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
   UpdateOrderMutationArgs,
@@ -395,7 +396,7 @@ export const optimistic = {
   createComment,
   updateComment,
   deleteComment,
-};
+} satisfies OptimisticMutation;
 
 async function requireAccessToOrder(
   tx: WriteTransaction,

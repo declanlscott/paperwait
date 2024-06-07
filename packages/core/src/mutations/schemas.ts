@@ -12,7 +12,7 @@ import {
   string,
   transform,
   undefined_,
-  variant,
+  union,
 } from "valibot";
 
 import { Announcement } from "../announcement/announcement.sql";
@@ -25,7 +25,84 @@ import { PushRequest } from "../replicache/schemas";
 import { Room } from "../room/room.sql";
 import { UserRole } from "../user/user.sql";
 
-import type { BaseSchema, Output } from "valibot";
+import type { JSONValue, WriteTransaction } from "replicache";
+import type { Output } from "valibot";
+import type { LuciaUser } from "../auth/lucia";
+import type { Transaction } from "../database/transaction";
+import type { Channel } from "../realtime";
+
+export const Mutation = merge([
+  PushRequest.options[1].entries.mutations.item,
+  object({
+    name: union([
+      literal("updateUserRole"),
+      literal("deleteUser"),
+      literal("syncPapercutAccounts"),
+      literal("deletePapercutAccount"),
+      literal("createPapercutAccountManagerAuthorization"),
+      literal("deletePapercutAccountManagerAuthorization"),
+      literal("createRoom"),
+      literal("updateRoom"),
+      literal("deleteRoom"),
+      literal("createAnnouncement"),
+      literal("updateAnnouncement"),
+      literal("deleteAnnouncement"),
+      literal("createProduct"),
+      literal("updateProduct"),
+      literal("deleteProduct"),
+      literal("createOrder"),
+      literal("updateOrder"),
+      literal("deleteOrder"),
+      literal("createComment"),
+      literal("updateComment"),
+      literal("deleteComment"),
+    ]),
+  }),
+]);
+export type Mutation = Output<typeof Mutation>;
+
+export type AuthoritativeMutation = Record<
+  Exclude<Mutation["name"], "syncPapercutAccounts">,
+  (
+    tx: Transaction,
+    user: LuciaUser,
+    args: JSONValue,
+    isAuthorized: boolean,
+  ) => Promise<Array<Channel>>
+>;
+
+export type OptimisticMutation = Record<
+  Exclude<Mutation["name"], "syncPapercutAccounts">,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (tx: WriteTransaction, user: LuciaUser, args: any) => Promise<void>
+>;
+
+/**
+ * Permissions required to perform each mutation to any entity within the organization.
+ */
+export const globalPermissions = {
+  updateUserRole: ["administrator"],
+  deleteUser: ["administrator"],
+  syncPapercutAccounts: ["administrator"],
+  deletePapercutAccount: ["administrator"],
+  createPapercutAccountManagerAuthorization: ["administrator"],
+  deletePapercutAccountManagerAuthorization: ["administrator"],
+  createRoom: ["administrator"],
+  updateRoom: ["administrator", "operator"],
+  deleteRoom: ["administrator"],
+  createAnnouncement: ["administrator", "operator"],
+  updateAnnouncement: ["administrator", "operator"],
+  deleteAnnouncement: ["administrator", "operator"],
+  createProduct: ["administrator", "operator"],
+  updateProduct: ["administrator", "operator"],
+  deleteProduct: ["administrator", "operator"],
+  createOrder: ["administrator", "operator", "manager", "customer"],
+  updateOrder: ["administrator", "operator"],
+  deleteOrder: ["administrator", "operator"],
+  createComment: ["administrator", "operator"],
+  updateComment: ["administrator"],
+  deleteComment: ["administrator"],
+} as const satisfies Record<Mutation["name"], Array<UserRole>>;
 
 export const UpdateUserRoleMutationArgs = object({
   id: NanoId,
@@ -195,76 +272,3 @@ export const DeleteCommentMutationArgs = object({
 export type DeleteCommentMutationArgs = Output<
   typeof DeleteCommentMutationArgs
 >;
-
-export const BaseMutation = PushRequest.options[1].entries.mutations.item;
-
-function mutation<TName extends string, TArgs extends BaseSchema>(
-  name: TName,
-  Args: TArgs,
-) {
-  return merge([
-    BaseMutation,
-    object({
-      name: literal(name),
-      args: Args,
-    }),
-  ]);
-}
-
-export const Mutation = variant("name", [
-  mutation("updateUserRole", UpdateUserRoleMutationArgs),
-  mutation("deleteUser", DeleteUserMutationArgs),
-  mutation("syncPapercutAccounts", SyncPapercutAccountsMutationArgs),
-  mutation("deletePapercutAccount", DeletePapercutAccountMutationArgs),
-  mutation(
-    "createPapercutAccountManagerAuthorization",
-    CreatePapercutAccountManagerAuthorizationMutationArgs,
-  ),
-  mutation(
-    "deletePapercutAccountManagerAuthorization",
-    DeletePapercutAccountManagerAuthorizationMutationArgs,
-  ),
-  mutation("createRoom", CreateRoomMutationArgs),
-  mutation("updateRoom", UpdateRoomMutationArgs),
-  mutation("deleteRoom", DeleteRoomMutationArgs),
-  mutation("createAnnouncement", CreateAnnouncementMutationArgs),
-  mutation("updateAnnouncement", UpdateAnnouncementMutationArgs),
-  mutation("deleteAnnouncement", DeleteAnnouncementMutationArgs),
-  mutation("createProduct", CreateProductMutationArgs),
-  mutation("updateProduct", UpdateProductMutationArgs),
-  mutation("deleteProduct", DeleteProductMutationArgs),
-  mutation("createOrder", CreateOrderMutationArgs),
-  mutation("updateOrder", UpdateOrderMutationArgs),
-  mutation("deleteOrder", DeleteOrderMutationArgs),
-  mutation("createComment", CreateCommentMutationArgs),
-  mutation("updateComment", UpdateCommentMutationArgs),
-  mutation("deleteComment", DeleteCommentMutationArgs),
-]);
-export type Mutation = Output<typeof Mutation>;
-
-/**
- * Permissions required to perform each mutation to any entity within the organization.
- */
-export const globalPermissions = {
-  updateUserRole: ["administrator"],
-  deleteUser: ["administrator"],
-  syncPapercutAccounts: ["administrator"],
-  deletePapercutAccount: ["administrator"],
-  createPapercutAccountManagerAuthorization: ["administrator"],
-  deletePapercutAccountManagerAuthorization: ["administrator"],
-  createRoom: ["administrator"],
-  updateRoom: ["administrator", "operator"],
-  deleteRoom: ["administrator"],
-  createAnnouncement: ["administrator", "operator"],
-  updateAnnouncement: ["administrator", "operator"],
-  deleteAnnouncement: ["administrator", "operator"],
-  createProduct: ["administrator", "operator"],
-  updateProduct: ["administrator", "operator"],
-  deleteProduct: ["administrator", "operator"],
-  createOrder: ["administrator", "operator", "manager", "customer"],
-  updateOrder: ["administrator", "operator"],
-  deleteOrder: ["administrator", "operator"],
-  createComment: ["administrator", "operator"],
-  updateComment: ["administrator"],
-  deleteComment: ["administrator"],
-} as const satisfies Record<Mutation["name"], Array<UserRole>>;

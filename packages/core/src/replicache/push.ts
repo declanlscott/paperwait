@@ -3,7 +3,8 @@ import { eq, sql } from "drizzle-orm";
 import { transact } from "../database/transaction";
 import { BadRequestError, NotImplementedError } from "../errors/http";
 import { authoritative } from "../mutations/authoritative";
-import { Mutation } from "../mutations/schemas";
+import { globalPermissions, Mutation } from "../mutations/schemas";
+import { assertRole } from "../user/assert";
 import { validate } from "../valibot";
 import { poke } from "./poke";
 import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
@@ -194,67 +195,15 @@ async function mutate(
   user: LuciaUser,
   mutation: Mutation,
 ): Promise<Channel[]> {
-  const mutationName = mutation.name;
+  if (mutation.name === "syncPapercutAccounts")
+    throw new NotImplementedError(
+      'Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT api/papercut/accounts)',
+    );
 
-  switch (mutationName) {
-    case "updateUserRole":
-      return await authoritative.updateUserRole(tx, user, mutation.args);
-    case "deleteUser":
-      return await authoritative.deleteUser(tx, user, mutation.args);
-    case "syncPapercutAccounts":
-      throw new NotImplementedError(
-        `Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT api/papercut/accounts)`,
-      );
-    case "deletePapercutAccount":
-      return await authoritative.deletePapercutAccount(tx, user, mutation.args);
-    case "createPapercutAccountManagerAuthorization":
-      return await authoritative.createPapercutAccountManagerAuthorization(
-        tx,
-        user,
-        mutation.args,
-      );
-    case "deletePapercutAccountManagerAuthorization":
-      return await authoritative.deletePapercutAccountManagerAuthorization(
-        tx,
-        user,
-        mutation.args,
-      );
-    case "createRoom":
-      return await authoritative.createRoom(tx, user, mutation.args);
-    case "updateRoom":
-      return await authoritative.updateRoom(tx, user, mutation.args);
-    case "deleteRoom":
-      return await authoritative.deleteRoom(tx, user, mutation.args);
-    case "createAnnouncement":
-      return await authoritative.createAnnouncement(tx, user, mutation.args);
-    case "updateAnnouncement":
-      return await authoritative.updateAnnouncement(tx, user, mutation.args);
-    case "deleteAnnouncement":
-      return await authoritative.deleteAnnouncement(tx, user, mutation.args);
-    case "createProduct":
-      return await authoritative.createProduct(tx, user, mutation.args);
-    case "updateProduct":
-      return await authoritative.updateProduct(tx, user, mutation.args);
-    case "deleteProduct":
-      return await authoritative.deleteProduct(tx, user, mutation.args);
-    case "createOrder":
-      return await authoritative.createOrder(tx, user, mutation.args);
-    case "updateOrder":
-      return await authoritative.updateOrder(tx, user, mutation.args);
-    case "deleteOrder":
-      return await authoritative.deleteOrder(tx, user, mutation.args);
-    case "createComment":
-      return await authoritative.createComment(tx, user, mutation.args);
-    case "updateComment":
-      return await authoritative.updateComment(tx, user, mutation.args);
-    case "deleteComment":
-      return await authoritative.deleteComment(tx, user, mutation.args);
-    default:
-      mutationName satisfies never;
-
-      throw new NotImplementedError(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Mutation "${mutationName}" not implemented`,
-      );
-  }
+  return await authoritative[mutation.name](
+    tx,
+    user,
+    mutation.args,
+    assertRole(user, globalPermissions[mutation.name], false),
+  );
 }
