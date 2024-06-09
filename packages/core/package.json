@@ -27,7 +27,7 @@
     "nanoid": "^5.0.7",
     "remeda": "^2.0.4",
     "replicache": "^14.2.2",
-    "valibot": "^0.30.0",
+    "valibot": "^0.31.1",
     "ws": "^8.17.0"
   },
   "devDependencies": {

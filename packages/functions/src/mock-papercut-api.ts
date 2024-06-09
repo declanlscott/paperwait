@@ -9,18 +9,7 @@ import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import {
-  fallback,
-  integer,
-  literal,
-  number,
-  object,
-  parse,
-  string,
-  tuple,
-  union,
-  variant,
-} from "valibot";
+import * as v from "valibot";
 
 const xmlParser = new XMLParser();
 const xmlBuilder = new XMLBuilder();
@@ -51,19 +40,21 @@ api.use(async (c, next) => {
   await next();
 });
 
-const stringParamSchema = object({ value: object({ string: string() }) });
-const intParamSchema = object({ value: object({ int: number([integer()]) }) });
-const booleanParamSchema = object({
-  value: object({ boolean: union([literal(0), literal(1)]) }),
+const stringParamSchema = v.object({ value: v.object({ string: v.string() }) });
+const intParamSchema = v.object({
+  value: v.object({ int: v.pipe(v.number(), v.integer()) }),
 });
-const doubleParamSchema = object({ value: object({ double: number() }) });
+const booleanParamSchema = v.object({
+  value: v.object({ boolean: v.union([v.literal(0), v.literal(1)]) }),
+});
+const doubleParamSchema = v.object({ value: v.object({ double: v.number() }) });
 
-const schema = object({
-  methodCall: variant("methodName", [
-    object({
-      methodName: literal(xmlRpcMethod.adjustSharedAccountAccountBalance),
-      params: object({
-        param: tuple([
+const schema = v.object({
+  methodCall: v.variant("methodName", [
+    v.object({
+      methodName: v.literal(xmlRpcMethod.adjustSharedAccountAccountBalance),
+      params: v.object({
+        param: v.tuple([
           // auth token
           stringParamSchema,
 
@@ -75,10 +66,10 @@ const schema = object({
         ]),
       }),
     }),
-    object({
-      methodName: literal(xmlRpcMethod.isUserExists),
-      params: object({
-        param: tuple([
+    v.object({
+      methodName: v.literal(xmlRpcMethod.isUserExists),
+      params: v.object({
+        param: v.tuple([
           // auth token
           stringParamSchema,
 
@@ -87,10 +78,10 @@ const schema = object({
         ]),
       }),
     }),
-    object({
-      methodName: literal(xmlRpcMethod.listSharedAccounts),
-      params: object({
-        param: tuple([
+    v.object({
+      methodName: v.literal(xmlRpcMethod.listSharedAccounts),
+      params: v.object({
+        param: v.tuple([
           // auth token
           stringParamSchema,
 
@@ -102,10 +93,10 @@ const schema = object({
         ]),
       }),
     }),
-    object({
-      methodName: literal(xmlRpcMethod.listUserSharedAccounts),
-      params: object({
-        param: tuple([
+    v.object({
+      methodName: v.literal(xmlRpcMethod.listUserSharedAccounts),
+      params: v.object({
+        param: v.tuple([
           // auth token
           stringParamSchema,
 
@@ -119,14 +110,14 @@ const schema = object({
           intParamSchema,
 
           // ignore user account selection config
-          fallback(booleanParamSchema, { value: { boolean: 0 } }),
+          v.fallback(booleanParamSchema, { value: { boolean: 0 } }),
         ]),
       }),
     }),
-    object({
-      methodName: literal(xmlRpcMethod.getSharedAccountProperties),
-      params: object({
-        param: tuple([
+    v.object({
+      methodName: v.literal(xmlRpcMethod.getSharedAccountProperties),
+      params: v.object({
+        param: v.tuple([
           // auth token
           stringParamSchema,
 
@@ -141,7 +132,7 @@ const schema = object({
 api.post("/", async (c) => {
   const text = await c.req.text();
 
-  const rpc = parse(schema, xmlParser.parse(text));
+  const rpc = v.parse(schema, xmlParser.parse(text));
 
   if (rpc.methodCall.params.param[0].value.string !== c.env.AUTH_TOKEN)
     throw new Error("Invalid auth token");

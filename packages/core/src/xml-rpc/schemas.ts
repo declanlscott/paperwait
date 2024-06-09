@@ -1,178 +1,192 @@
-import {
-  array,
-  boolean,
-  custom,
-  fallback,
-  integer,
-  merge,
-  number,
-  object,
-  optional,
-  string,
-  tuple,
-  unknown,
-} from "valibot";
+import * as v from "valibot";
 
 import { PAPERCUT_API_PAGINATION_LIMIT } from "../constants";
 
-import type { Output } from "valibot";
-
-const BaseEvent = object({
-  orgId: string(),
-  input: unknown(),
+const BaseEvent = v.object({
+  orgId: v.string(),
+  input: v.unknown(),
 });
 
-const Offset = fallback(optional(number([integer()])), 0);
-const Limit = fallback(
-  optional(number([integer()])),
+const Offset = v.fallback(v.optional(v.pipe(v.number(), v.integer())), 0);
+const Limit = v.fallback(
+  v.optional(v.pipe(v.number(), v.integer())),
   PAPERCUT_API_PAGINATION_LIMIT,
 );
 
 // api.adjustSharedAccountAccountBalance
-export const AdjustSharedAccountAccountBalanceInput = object({
-  sharedAccountName: string(),
-  adjustment: number(),
-  comment: string(),
+export const AdjustSharedAccountAccountBalanceInput = v.object({
+  sharedAccountName: v.string(),
+  adjustment: v.number(),
+  comment: v.string(),
 });
-export type AdjustSharedAccountAccountBalanceInput = Output<
+export type AdjustSharedAccountAccountBalanceInput = v.InferOutput<
   typeof AdjustSharedAccountAccountBalanceInput
 >;
-export const AdjustSharedAccountAccountBalanceEventRecord = merge([
-  BaseEvent,
-  object({ input: AdjustSharedAccountAccountBalanceInput }),
-]);
-export type AdjustSharedAccountAccountBalanceRecord = Output<
+export const AdjustSharedAccountAccountBalanceEventRecord = v.object({
+  ...BaseEvent.entries,
+  ...v.object({
+    input: AdjustSharedAccountAccountBalanceInput,
+  }).entries,
+});
+export type AdjustSharedAccountAccountBalanceRecord = v.InferOutput<
   typeof AdjustSharedAccountAccountBalanceEventRecord
 >;
-export const AdjustSharedAccountAccountBalanceOutput = boolean();
-export type AdjustSharedAccountAccountBalanceOutput = Output<
+export const AdjustSharedAccountAccountBalanceOutput = v.boolean();
+export type AdjustSharedAccountAccountBalanceOutput = v.InferOutput<
   typeof AdjustSharedAccountAccountBalanceOutput
 >;
-export const AdjustSharedAccountAccountBalanceResult = object({
+export const AdjustSharedAccountAccountBalanceResult = v.object({
   output: AdjustSharedAccountAccountBalanceOutput,
 });
-export type AdjustSharedAccountAccountBalanceResult = Output<
+export type AdjustSharedAccountAccountBalanceResult = v.InferOutput<
   typeof AdjustSharedAccountAccountBalanceResult
 >;
 
 // api.getSharedAccountProperties
-export const GetSharedAccountPropertiesInput = object({
-  sharedAccountName: string(),
+export const GetSharedAccountPropertiesInput = v.object({
+  sharedAccountName: v.string(),
 });
-export type GetSharedAccountPropertiesInput = Output<
+export type GetSharedAccountPropertiesInput = v.InferOutput<
   typeof GetSharedAccountPropertiesInput
 >;
-export const GetSharedAccountPropertiesEvent = merge([
-  BaseEvent,
-  object({ input: GetSharedAccountPropertiesInput }),
-]);
-export type GetSharedAccountPropertiesEvent = Output<
+export const GetSharedAccountPropertiesEvent = v.object({
+  ...BaseEvent.entries,
+  ...v.object({
+    input: GetSharedAccountPropertiesInput,
+  }).entries,
+});
+export type GetSharedAccountPropertiesEvent = v.InferOutput<
   typeof GetSharedAccountPropertiesEvent
 >;
-export const GetSharedAccountPropertiesOutput = tuple([
-  string(), // access-groups
-  string(), // access-users
-  string([
-    custom((value) => {
+export const GetSharedAccountPropertiesOutput = v.tuple([
+  v.string(), // access-groups
+  v.string(), // access-users
+  v.pipe(
+    v.string(),
+    v.check((value) => {
       const accountId = JSON.parse(value);
 
       // Validate that the account id is an integer
       return typeof accountId === "number" && accountId % 1 === 0;
     }),
-  ]), // account-id
-  string([custom((value) => typeof JSON.parse(value) === "number")]), // balance
-  string(), // comment-option
-  string([
-    custom((value) => typeof JSON.parse(value.toLowerCase()) === "boolean"),
-  ]), // disabled
-  string(), // invoice-option
-  string(), // notes
-  string([custom((value) => typeof JSON.parse(value) === "number")]), // overdraft-amount
-  string(), // pin
-  string([
-    custom((value) => typeof JSON.parse(value.toLowerCase()) === "boolean"),
-  ]), // restricted
+  ), // account-id
+  v.pipe(
+    v.string(),
+    v.check((value) => typeof JSON.parse(value) === "number"),
+  ), // balance
+  v.string(), // comment-option
+  v.pipe(
+    v.string(),
+    v.check((value) => typeof JSON.parse(value.toLowerCase()) === "boolean"),
+  ), // disabled
+  v.string(), // invoice-option
+  v.string(), // notes
+  v.pipe(
+    v.string(),
+    v.check((value) => typeof JSON.parse(value) === "number"),
+  ), // overdraft-amount
+  v.string(), // pin
+  v.pipe(
+    v.string(),
+    v.check((value) => typeof JSON.parse(value.toLowerCase()) === "boolean"),
+  ), // restricted
 ]);
-export type GetSharedAccountPropertiesOutput = Output<
+export type GetSharedAccountPropertiesOutput = v.InferOutput<
   typeof GetSharedAccountPropertiesOutput
 >;
-export const GetSharedAccountPropertiesResult = object({
+export const GetSharedAccountPropertiesResult = v.object({
   output: GetSharedAccountPropertiesOutput,
 });
-export type GetSharedAccountPropertiesResult = Output<
+export type GetSharedAccountPropertiesResult = v.InferOutput<
   typeof GetSharedAccountPropertiesResult
 >;
 
 // api.isUserExists
-export const IsUserExistsInput = object({
-  username: string(),
+export const IsUserExistsInput = v.object({
+  username: v.string(),
 });
-export type IsUserExistsInput = Output<typeof IsUserExistsInput>;
-export const IsUserExistsEvent = merge([
-  BaseEvent,
-  object({ input: IsUserExistsInput }),
-]);
-export type IsUserExistsEvent = Output<typeof IsUserExistsEvent>;
-export const IsUserExistsOutput = boolean();
-export type IsUserExistsOutput = Output<typeof IsUserExistsOutput>;
-export const IsUserExistsResult = object({
+export type IsUserExistsInput = v.InferOutput<typeof IsUserExistsInput>;
+export const IsUserExistsEvent = v.object({
+  ...BaseEvent.entries,
+  ...v.object({
+    input: IsUserExistsInput,
+  }).entries,
+});
+export type IsUserExistsEvent = v.InferOutput<typeof IsUserExistsEvent>;
+export const IsUserExistsOutput = v.boolean();
+export type IsUserExistsOutput = v.InferOutput<typeof IsUserExistsOutput>;
+export const IsUserExistsResult = v.object({
   output: IsUserExistsOutput,
 });
-export type IsUserExistsResult = Output<typeof IsUserExistsResult>;
+export type IsUserExistsResult = v.InferOutput<typeof IsUserExistsResult>;
 
 // api.listSharedAccounts
-export const ListSharedAccountsInput = object({
+export const ListSharedAccountsInput = v.object({
   offset: Offset,
   limit: Limit,
 });
-export type ListSharedAccountsInput = Output<typeof ListSharedAccountsInput>;
-export const ListSharedAccountsEvent = merge([
-  BaseEvent,
-  object({ input: ListSharedAccountsInput }),
-]);
-export type ListSharedAccountsEvent = Output<typeof ListSharedAccountsEvent>;
-export const ListSharedAccountsOutput = array(string());
-export type ListSharedAccountsOutput = Output<typeof ListSharedAccountsOutput>;
-export const ListSharedAccountsResult = object({
+export type ListSharedAccountsInput = v.InferOutput<
+  typeof ListSharedAccountsInput
+>;
+export const ListSharedAccountsEvent = v.object({
+  ...BaseEvent.entries,
+  ...v.object({
+    input: ListSharedAccountsInput,
+  }).entries,
+});
+export type ListSharedAccountsEvent = v.InferOutput<
+  typeof ListSharedAccountsEvent
+>;
+export const ListSharedAccountsOutput = v.array(v.string());
+export type ListSharedAccountsOutput = v.InferOutput<
+  typeof ListSharedAccountsOutput
+>;
+export const ListSharedAccountsResult = v.object({
   output: ListSharedAccountsOutput,
 });
-export type ListSharedAccountsResult = Output<typeof ListSharedAccountsResult>;
+export type ListSharedAccountsResult = v.InferOutput<
+  typeof ListSharedAccountsResult
+>;
 
 // api.listUserSharedAccounts
-export const ListUserSharedAccountsInput = object({
-  username: string(),
+export const ListUserSharedAccountsInput = v.object({
+  username: v.string(),
   offset: Offset,
   limit: Limit,
-  ignoreUserAccountSelectionConfig: fallback(optional(boolean()), true),
+  ignoreUserAccountSelectionConfig: v.fallback(v.optional(v.boolean()), true),
 });
-export type ListUserSharedAccountsInput = Output<
+export type ListUserSharedAccountsInput = v.InferOutput<
   typeof ListUserSharedAccountsInput
 >;
-export const ListUserSharedAccountsEvent = merge([
-  BaseEvent,
-  object({ input: ListUserSharedAccountsInput }),
-]);
-export type ListUserSharedAccountsEvent = Output<
+export const ListUserSharedAccountsEvent = v.object({
+  ...BaseEvent.entries,
+  ...v.object({
+    input: ListUserSharedAccountsInput,
+  }).entries,
+});
+export type ListUserSharedAccountsEvent = v.InferOutput<
   typeof ListUserSharedAccountsEvent
 >;
-export const ListUserSharedAccountsOutput = array(string());
-export type ListUserSharedAccountsOutput = Output<
+export const ListUserSharedAccountsOutput = v.array(v.string());
+export type ListUserSharedAccountsOutput = v.InferOutput<
   typeof ListUserSharedAccountsOutput
 >;
-export const ListUserSharedAccountsResult = object({
+export const ListUserSharedAccountsResult = v.object({
   output: ListUserSharedAccountsOutput,
 });
-export type ListUserSharedAccountsResult = Output<
+export type ListUserSharedAccountsResult = v.InferOutput<
   typeof ListUserSharedAccountsResult
 >;
 
 // Test PaperCut
-export const TestPapercutInput = object({
-  authToken: string(),
+export const TestPapercutInput = v.object({
+  authToken: v.string(),
 });
-export type TestPapercutInput = Output<typeof TestPapercutInput>;
-export const TestPapercutEvent = merge([
-  BaseEvent,
-  object({ input: TestPapercutInput }),
-]);
-export type TestPapercutEvent = Output<typeof TestPapercutEvent>;
+export type TestPapercutInput = v.InferOutput<typeof TestPapercutInput>;
+export const TestPapercutEvent = v.object({
+  ...BaseEvent.entries,
+  ...v.object({
+    input: TestPapercutInput,
+  }).entries,
+});
+export type TestPapercutEvent = v.InferOutput<typeof TestPapercutEvent>;

@@ -1,99 +1,85 @@
-import {
-  array,
-  boolean,
-  intersect,
-  lazy,
-  literal,
-  nullable,
-  number,
-  object,
-  optional,
-  picklist,
-  record,
-  string,
-  union,
-  uuid,
-  variant,
-} from "valibot";
+import v, { variant } from "valibot";
 
 import { NanoId } from "../id";
 
 import type { JSONValue } from "replicache";
-import type { BaseSchema, Output } from "valibot";
 
-export const JsonValue: BaseSchema<JSONValue> = nullable(
-  union([
-    number(),
-    string(),
-    boolean(),
-    lazy(() => array(JsonValue)),
-    lazy(() => JsonObject),
+export const JsonValue: v.GenericSchema<JSONValue> = v.nullable(
+  v.union([
+    v.number(),
+    v.string(),
+    v.boolean(),
+    v.lazy(() => v.array(JsonValue)),
+    v.lazy(() => JsonObject),
   ]),
 );
-export type JsonValue = Output<typeof JsonValue>;
+export type JsonValue = v.InferOutput<typeof JsonValue>;
 
-export const JsonObject = record(string(), optional(JsonValue));
-export type JsonObject = Output<typeof JsonObject>;
+export const JsonObject = v.record(v.string(), v.optional(JsonValue));
+export type JsonObject = v.InferOutput<typeof JsonObject>;
 
-export const PushRequest = variant("pushVersion", [
-  object({
-    pushVersion: literal(0),
+export const PushRequest = v.variant("pushVersion", [
+  v.object({
+    pushVersion: v.literal(0),
     clientID: NanoId,
-    mutations: array(
-      object({
-        name: string(),
+    mutations: v.array(
+      v.object({
+        name: v.string(),
         args: JsonValue,
-        id: number(),
-        timestamp: number(),
+        id: v.number(),
+        timestamp: v.number(),
       }),
     ),
-    profileID: string(),
-    schemaVersion: string(),
+    profileID: v.string(),
+    schemaVersion: v.string(),
   }),
-  object({
-    pushVersion: literal(1),
-    clientGroupID: string([uuid()]),
-    mutations: array(
-      object({
-        name: string(),
+  v.object({
+    pushVersion: v.literal(1),
+    clientGroupID: v.pipe(v.string(), v.uuid()),
+    mutations: v.array(
+      v.object({
+        name: v.string(),
         args: JsonValue,
         clientID: NanoId,
-        id: number(),
-        timestamp: number(),
+        id: v.number(),
+        timestamp: v.number(),
       }),
     ),
-    profileID: string(),
-    schemaVersion: string(),
+    profileID: v.string(),
+    schemaVersion: v.string(),
   }),
 ]);
-export type PushRequest = Output<typeof PushRequest>;
+export type PushRequest = v.InferOutput<typeof PushRequest>;
 
 export const PullRequest = variant("pullVersion", [
-  object({
-    pullVersion: literal(0),
-    schemaVersion: string(),
-    profileID: string(),
+  v.object({
+    pullVersion: v.literal(0),
+    schemaVersion: v.string(),
+    profileID: v.string(),
     cookie: JsonValue,
     clientID: NanoId,
-    lastMutationID: number(),
+    lastMutationID: v.number(),
   }),
-  object({
-    pullVersion: literal(1),
-    schemaVersion: string(),
-    profileID: string(),
-    cookie: nullable(
-      union([
-        string(),
-        number(),
-        intersect([JsonValue, object({ order: union([string(), number()]) })]),
+  v.object({
+    pullVersion: v.literal(1),
+    schemaVersion: v.string(),
+    profileID: v.string(),
+    cookie: v.nullable(
+      v.union([
+        v.string(),
+        v.number(),
+        v.intersect([
+          JsonValue,
+          v.object({ order: v.union([v.string(), v.number()]) }),
+        ]),
       ]),
     ),
-    clientGroupID: string([uuid()]),
+    clientGroupID: v.pipe(v.string(), v.uuid()),
   }),
 ]);
-export type PullRequest = Output<typeof PullRequest>;
+export type PullRequest = v.InferOutput<typeof PullRequest>;
 
-export const Domain = picklist([
+export const Domain = v.picklist([
   "user",
   "papercutAccount",
   "papercutAccountCustomerAuthorization",
@@ -105,4 +91,4 @@ export const Domain = picklist([
   "comment",
   "client",
 ]);
-export type Domain = Output<typeof Domain>;
+export type Domain = v.InferOutput<typeof Domain>;

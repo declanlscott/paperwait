@@ -1,17 +1,19 @@
-import { safeParse } from "valibot";
+import * as v from "valibot";
 
-import type { BaseSchema, Output } from "valibot";
 import type { HttpError } from "../errors/http";
 
-export function validate<TSchema extends BaseSchema, TError extends HttpError>(
+export function validate<
+  TSchema extends v.GenericSchema,
+  TError extends HttpError,
+>(
   schema: TSchema,
   input: unknown,
   customError?: {
     Error: new (message?: string, statusCode?: number) => TError;
     message?: string;
   },
-): Output<TSchema> {
-  const result = safeParse(schema, input);
+): v.InferOutput<TSchema> {
+  const result = v.safeParse(schema, input);
 
   if (!result.success) {
     console.log(result.issues);

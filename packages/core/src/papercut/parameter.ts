@@ -1,9 +1,7 @@
-import { minLength, object, string, toTrimmed, url } from "valibot";
+import * as v from "valibot";
 
-import type { Output } from "valibot";
-
-export const PapercutParameter = object({
-  serverUrl: string([url()]),
-  authToken: string([toTrimmed(), minLength(1)]),
+export const PapercutParameter = v.object({
+  serverUrl: v.pipe(v.string(), v.url()),
+  authToken: v.pipe(v.string(), v.trim(), v.minLength(1)),
 });
-export type PapercutParameter = Output<typeof PapercutParameter>;
+export type PapercutParameter = v.InferOutput<typeof PapercutParameter>;

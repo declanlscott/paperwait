@@ -1,44 +1,28 @@
 import { provider } from "@paperwait/core/organization";
 import { PapercutParameter } from "@paperwait/core/papercut";
-import {
-  boolean,
-  custom,
-  literal,
-  merge,
-  minLength,
-  object,
-  safeParse,
-  string,
-  toTrimmed,
-  union,
-  uuid,
-} from "valibot";
+import * as v from "valibot";
 
-import type { Output } from "valibot";
+export const Registration = v.pipe(
+  v.object({
+    ...v.object({
+      name: v.pipe(v.string(), v.trim(), v.minLength(1)),
+      slug: v.pipe(v.string(), v.trim(), v.minLength(1)),
+      authProvider: v.picklist(provider.enumValues),
+      providerId: v.string(),
+    }).entries,
+    ...PapercutParameter.entries,
+  }),
+  v.check(({ authProvider, providerId }) => {
+    if (authProvider === "entra-id")
+      return v.safeParse(v.pipe(v.string(), v.uuid()), providerId).success;
 
-export const Registration = merge([
-  object(
-    {
-      name: string([toTrimmed(), minLength(1)]),
-      slug: string([toTrimmed(), minLength(1)]),
-      authProvider: union(provider.enumValues.map((value) => literal(value))),
-      providerId: string(),
-    },
-    [
-      custom(({ authProvider, providerId }) => {
-        if (authProvider === "entra-id")
-          return safeParse(string([uuid()]), providerId).success;
+    return true;
+  }),
+);
+export type Registration = v.InferOutput<typeof Registration>;
 
-        return true;
-      }),
-    ],
-  ),
-  PapercutParameter,
-]);
-export type Registration = Output<typeof Registration>;
-
-export const IsOrgSlugValid = object({
-  value: string(),
-  isValid: boolean(),
+export const IsOrgSlugValid = v.object({
+  value: v.string(),
+  isValid: v.boolean(),
 });
-export type IsOrgSlugValid = Output<typeof IsOrgSlugValid>;
+export type IsOrgSlugValid = v.InferOutput<typeof IsOrgSlugValid>;

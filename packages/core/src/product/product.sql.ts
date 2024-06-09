@@ -1,7 +1,9 @@
 import { foreignKey, index, pgEnum, text } from "drizzle-orm/pg-core";
+import * as v from "valibot";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
+import { NanoId } from "../id";
 import { Room } from "../room/room.sql";
 
 export const ProductStatus = pgEnum("product_status", ["draft", "published"]);
@@ -25,3 +27,14 @@ export const Product = orgTable(
   }),
 );
 export type Product = typeof Product.$inferSelect;
+
+export const ProductSchema = v.object({
+  id: NanoId,
+  orgId: NanoId,
+  name: v.string(),
+  status: v.picklist(ProductStatus.enumValues),
+  roomId: NanoId,
+  createdAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.nullable(v.pipe(v.string(), v.isoDateTime())),
+});

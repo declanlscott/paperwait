@@ -1,13 +1,13 @@
 ---
-import { fallback, parse } from "valibot";
+import * as v from "valibot";
 
 import RegisterOrgProviderId from "~/components/org/provider-id.astro";
 import { Registration } from "~/lib/schemas";
 
 export const partial = true;
 
-const provider = parse(
-  fallback(Registration.entries.authProvider, "entra-id"),
+const provider = v.parse(
+  v.fallback(Registration.entries.authProvider, "entra-id"),
   Astro.url.searchParams.get("authProvider"),
 );
 ---

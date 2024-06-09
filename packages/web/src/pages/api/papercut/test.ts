@@ -1,7 +1,7 @@
 import { BadRequestError, HttpError } from "@paperwait/core/errors";
 import { testPapercut } from "@paperwait/core/papercut";
 import { validate } from "@paperwait/core/valibot";
-import { object, string } from "valibot";
+import * as v from "valibot";
 
 import type { APIContext } from "astro";
 
@@ -10,9 +10,9 @@ export async function POST(context: APIContext) {
 
   try {
     const { orgId, authToken } = validate(
-      object({
-        orgId: string(),
-        authToken: string(),
+      v.object({
+        orgId: v.string(),
+        authToken: v.string(),
       }),
       Object.fromEntries(formData.entries()),
       { Error: BadRequestError },

@@ -1,16 +1,16 @@
-import { merge, minLength, object, optional, string } from "valibot";
+import * as v from "valibot";
 
-import type { Output } from "valibot";
-
-export const baseSearchParams = object({
-  redirect: optional(string()),
+export const baseSearchParams = v.object({
+  redirect: v.optional(v.string()),
 });
 
-export const loginSearchParams = merge([
-  baseSearchParams,
-  object({ org: string([minLength(1)]) }),
-]);
+export const loginSearchParams = v.object({
+  ...baseSearchParams.entries,
+  ...v.object({
+    org: v.pipe(v.string(), v.minLength(1)),
+  }).entries,
+});
 
-export const initialLoginSearchParams = { org: "" } satisfies Output<
+export const initialLoginSearchParams = { org: "" } satisfies v.InferOutput<
   typeof loginSearchParams
 >;

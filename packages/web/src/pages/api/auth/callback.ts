@@ -29,7 +29,7 @@ import { and, eq } from "drizzle-orm";
 import ky from "ky";
 import { parseJWT } from "oslo/jwt";
 import { isDeepEqual } from "remeda";
-import { object, string, uuid } from "valibot";
+import * as v from "valibot";
 
 import entraId from "~/lib/auth/entra-id";
 import google from "~/lib/auth/google";
@@ -183,10 +183,10 @@ function parseIdTokenPayload(
   switch (provider) {
     case "entra-id": {
       const { tid, oid, preferred_username } = validate(
-        object({
-          tid: string([uuid()]),
-          oid: string([uuid()]),
-          preferred_username: string(),
+        v.object({
+          tid: v.pipe(v.string(), v.uuid()),
+          oid: v.pipe(v.string(), v.uuid()),
+          preferred_username: v.string(),
         }),
         payload,
         {
@@ -203,7 +203,7 @@ function parseIdTokenPayload(
     }
     case "google": {
       const { hd, sub, name } = validate(
-        object({ hd: string(), sub: string(), name: string() }),
+        v.object({ hd: v.string(), sub: v.string(), name: v.string() }),
         payload,
         {
           Error: InternalServerError,

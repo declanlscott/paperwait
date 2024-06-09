@@ -1,65 +1,50 @@
-import { createSelectSchema } from "drizzle-valibot";
 import { unique } from "remeda";
-import {
-  array,
-  isoDateTime,
-  literal,
-  merge,
-  object,
-  omit,
-  partial,
-  picklist,
-  string,
-  transform,
-  undefined_,
-  union,
-} from "valibot";
+import * as v from "valibot";
 
-import { Announcement } from "../announcement/announcement.sql";
-import { Comment } from "../comment/comment.sql";
+import { AnnouncementSchema } from "../announcement/announcement.sql";
+import { CommentSchema } from "../comment/comment.sql";
 import { NanoId, PapercutAccountId } from "../id";
-import { Order } from "../order/order.sql";
-import { PapercutAccountManagerAuthorization } from "../papercut/account.sql";
-import { Product } from "../product/product.sql";
+import { OrderSchema } from "../order/order.sql";
+import { PapercutAccountManagerAuthorizationSchema } from "../papercut/account.sql";
+import { ProductSchema } from "../product/product.sql";
 import { PushRequest } from "../replicache/schemas";
-import { Room } from "../room/room.sql";
+import { RoomSchema } from "../room/room.sql";
 import { UserRole } from "../user/user.sql";
 
 import type { JSONValue, WriteTransaction } from "replicache";
-import type { Output } from "valibot";
 import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
 import type { Channel } from "../realtime";
 
-export const Mutation = merge([
-  PushRequest.options[1].entries.mutations.item,
-  object({
-    name: union([
-      literal("updateUserRole"),
-      literal("deleteUser"),
-      literal("syncPapercutAccounts"),
-      literal("deletePapercutAccount"),
-      literal("createPapercutAccountManagerAuthorization"),
-      literal("deletePapercutAccountManagerAuthorization"),
-      literal("createRoom"),
-      literal("updateRoom"),
-      literal("deleteRoom"),
-      literal("createAnnouncement"),
-      literal("updateAnnouncement"),
-      literal("deleteAnnouncement"),
-      literal("createProduct"),
-      literal("updateProduct"),
-      literal("deleteProduct"),
-      literal("createOrder"),
-      literal("updateOrder"),
-      literal("deleteOrder"),
-      literal("createComment"),
-      literal("updateComment"),
-      literal("deleteComment"),
+export const Mutation = v.object({
+  ...PushRequest.options[1].entries.mutations.item.entries,
+  ...v.object({
+    name: v.union([
+      v.literal("updateUserRole"),
+      v.literal("deleteUser"),
+      v.literal("syncPapercutAccounts"),
+      v.literal("deletePapercutAccount"),
+      v.literal("createPapercutAccountManagerAuthorization"),
+      v.literal("deletePapercutAccountManagerAuthorization"),
+      v.literal("createRoom"),
+      v.literal("updateRoom"),
+      v.literal("deleteRoom"),
+      v.literal("createAnnouncement"),
+      v.literal("updateAnnouncement"),
+      v.literal("deleteAnnouncement"),
+      v.literal("createProduct"),
+      v.literal("updateProduct"),
+      v.literal("deleteProduct"),
+      v.literal("createOrder"),
+      v.literal("updateOrder"),
+      v.literal("deleteOrder"),
+      v.literal("createComment"),
+      v.literal("updateComment"),
+      v.literal("deleteComment"),
     ]),
-  }),
-]);
-export type Mutation = Output<typeof Mutation>;
+  }).entries,
+});
+export type Mutation = v.InferOutput<typeof Mutation>;
 
 export type AuthoritativeMutation = Record<
   Exclude<Mutation["name"], "syncPapercutAccounts">,
@@ -104,171 +89,191 @@ export const globalPermissions = {
   deleteComment: ["administrator"],
 } as const satisfies Record<Mutation["name"], Array<UserRole>>;
 
-export const UpdateUserRoleMutationArgs = object({
+export const UpdateUserRoleMutationArgs = v.object({
   id: NanoId,
-  role: picklist(UserRole.enumValues),
-  updatedAt: string([isoDateTime()]),
+  role: v.picklist(UserRole.enumValues),
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type UpdateUserRoleMutationArgs = Output<
+export type UpdateUserRoleMutationArgs = v.InferOutput<
   typeof UpdateUserRoleMutationArgs
 >;
 
-export const DeleteUserMutationArgs = object({
+export const DeleteUserMutationArgs = v.object({
   id: NanoId,
-  deletedAt: string([isoDateTime()]),
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type DeleteUserMutationArgs = Output<typeof DeleteUserMutationArgs>;
+export type DeleteUserMutationArgs = v.InferOutput<
+  typeof DeleteUserMutationArgs
+>;
 
-export const SyncPapercutAccountsMutationArgs = undefined_();
-export type SyncPapercutAccountsMutationArgs = Output<
+export const SyncPapercutAccountsMutationArgs = v.undefined_();
+export type SyncPapercutAccountsMutationArgs = v.InferOutput<
   typeof SyncPapercutAccountsMutationArgs
 >;
 
-export const DeletePapercutAccountMutationArgs = object({
+export const DeletePapercutAccountMutationArgs = v.object({
   id: PapercutAccountId,
-  deletedAt: string([isoDateTime()]),
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type DeletePapercutAccountMutationArgs = Output<
+export type DeletePapercutAccountMutationArgs = v.InferOutput<
   typeof DeletePapercutAccountMutationArgs
 >;
 
 export const CreatePapercutAccountManagerAuthorizationMutationArgs =
-  createSelectSchema(PapercutAccountManagerAuthorization);
-export type CreatePapercutAccountManagerAuthorizationMutationArgs = Output<
-  typeof CreatePapercutAccountManagerAuthorizationMutationArgs
->;
+  PapercutAccountManagerAuthorizationSchema;
+export type CreatePapercutAccountManagerAuthorizationMutationArgs =
+  v.InferOutput<typeof CreatePapercutAccountManagerAuthorizationMutationArgs>;
 
-export const DeletePapercutAccountManagerAuthorizationMutationArgs = object({
+export const DeletePapercutAccountManagerAuthorizationMutationArgs = v.object({
   id: NanoId,
-  deletedAt: string([isoDateTime()]),
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type DeletePapercutAccountManagerAuthorizationMutationArgs = Output<
-  typeof DeletePapercutAccountManagerAuthorizationMutationArgs
+export type DeletePapercutAccountManagerAuthorizationMutationArgs =
+  v.InferOutput<typeof DeletePapercutAccountManagerAuthorizationMutationArgs>;
+
+export const CreateRoomMutationArgs = RoomSchema;
+export type CreateRoomMutationArgs = v.InferOutput<
+  typeof CreateRoomMutationArgs
 >;
 
-export const CreateRoomMutationArgs = createSelectSchema(Room);
-export type CreateRoomMutationArgs = Output<typeof CreateRoomMutationArgs>;
-
-export const UpdateRoomMutationArgs = object({
+export const UpdateRoomMutationArgs = v.object({
   id: NanoId,
-  ...partial(
-    omit(createSelectSchema(Room), ["id", "orgId", "createdAt", "deletedAt"]),
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  ...v.partial(
+    v.omit(RoomSchema, ["id", "orgId", "createdAt", "updatedAt", "deletedAt"]),
   ).entries,
 });
-export type UpdateRoomMutationArgs = Output<typeof UpdateRoomMutationArgs>;
-
-export const DeleteRoomMutationArgs = object({
-  id: NanoId,
-  deletedAt: string([isoDateTime()]),
-});
-export type DeleteRoomMutationArgs = Output<typeof DeleteRoomMutationArgs>;
-
-export const CreateProductMutationArgs = createSelectSchema(Product);
-export type CreateProductMutationArgs = Output<
-  typeof CreateProductMutationArgs
+export type UpdateRoomMutationArgs = v.InferOutput<
+  typeof UpdateRoomMutationArgs
 >;
 
-export const CreateAnnouncementMutationArgs = createSelectSchema(Announcement);
-export type CreateAnnouncementMutationArgs = Output<
+export const DeleteRoomMutationArgs = v.object({
+  id: NanoId,
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+});
+export type DeleteRoomMutationArgs = v.InferOutput<
+  typeof DeleteRoomMutationArgs
+>;
+
+export const CreateAnnouncementMutationArgs = AnnouncementSchema;
+export type CreateAnnouncementMutationArgs = v.InferOutput<
   typeof CreateAnnouncementMutationArgs
 >;
 
-export const UpdateAnnouncementMutationArgs = object({
+export const UpdateAnnouncementMutationArgs = v.object({
   id: NanoId,
-  ...partial(
-    omit(createSelectSchema(Announcement), [
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  ...v.partial(
+    v.omit(AnnouncementSchema, [
       "id",
       "orgId",
       "createdAt",
+      "updatedAt",
       "deletedAt",
     ]),
   ).entries,
 });
-export type UpdateAnnouncementMutationArgs = Output<
+export type UpdateAnnouncementMutationArgs = v.InferOutput<
   typeof UpdateAnnouncementMutationArgs
 >;
 
-export const DeleteAnnouncementMutationArgs = object({
+export const DeleteAnnouncementMutationArgs = v.object({
   id: NanoId,
-  deletedAt: string([isoDateTime()]),
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type DeleteAnnouncementMutationArgs = Output<
+export type DeleteAnnouncementMutationArgs = v.InferOutput<
   typeof DeleteAnnouncementMutationArgs
 >;
 
-export const UpdateProductMutationArgs = object({
+export const CreateProductMutationArgs = ProductSchema;
+export type CreateProductMutationArgs = v.InferOutput<
+  typeof CreateProductMutationArgs
+>;
+
+export const UpdateProductMutationArgs = v.object({
   id: NanoId,
-  ...partial(
-    omit(createSelectSchema(Product), [
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  ...v.partial(
+    v.omit(ProductSchema, [
       "id",
       "orgId",
+      "updatedAt",
       "createdAt",
       "deletedAt",
     ]),
   ).entries,
 });
-export type UpdateProductMutationArgs = Output<
+export type UpdateProductMutationArgs = v.InferOutput<
   typeof UpdateProductMutationArgs
 >;
 
-export const DeleteProductMutationArgs = object({
+export const DeleteProductMutationArgs = v.object({
   id: NanoId,
-  deletedAt: string([isoDateTime()]),
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type DeleteProductMutationArgs = Output<
+export type DeleteProductMutationArgs = v.InferOutput<
   typeof DeleteProductMutationArgs
 >;
 
-export const CreateOrderMutationArgs = createSelectSchema(Order);
-export type CreateOrderMutationArgs = Output<typeof CreateOrderMutationArgs>;
+export const CreateOrderMutationArgs = OrderSchema;
+export type CreateOrderMutationArgs = v.InferOutput<
+  typeof CreateOrderMutationArgs
+>;
 
-export const UpdateOrderMutationArgs = object({
+export const UpdateOrderMutationArgs = v.object({
   id: NanoId,
-  ...partial(
-    omit(CreateOrderMutationArgs, ["id", "orgId", "createdAt", "deletedAt"]),
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  ...v.partial(
+    v.omit(OrderSchema, ["id", "orgId", "updatedAt", "createdAt", "deletedAt"]),
   ).entries,
 });
-export type UpdateOrderMutationArgs = Output<typeof UpdateOrderMutationArgs>;
+export type UpdateOrderMutationArgs = v.InferOutput<
+  typeof UpdateOrderMutationArgs
+>;
 
-export const DeleteOrderMutationArgs = object({
+export const DeleteOrderMutationArgs = v.object({
   id: NanoId,
-  deletedAt: string([isoDateTime()]),
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type DeleteOrderMutationArgs = Output<typeof DeleteOrderMutationArgs>;
+export type DeleteOrderMutationArgs = v.InferOutput<
+  typeof DeleteOrderMutationArgs
+>;
 
-export const CreateCommentMutationArgs = transform(
-  object({
-    ...omit(createSelectSchema(Comment), ["visibleTo"]).entries,
-    visibleTo: array(picklist(UserRole.enumValues)),
-  }),
-  ({ visibleTo, ...rest }) => ({ ...rest, visibleTo: unique(visibleTo) }),
+export const CreateCommentMutationArgs = v.pipe(
+  CommentSchema,
+  v.transform(({ visibleTo, ...rest }) => ({
+    visibleTo: unique(visibleTo),
+    ...rest,
+  })),
 );
-export type CreateCommentMutationArgs = Output<
+export type CreateCommentMutationArgs = v.InferOutput<
   typeof CreateCommentMutationArgs
 >;
 
-export const UpdateCommentMutationArgs = object({
+export const UpdateCommentMutationArgs = v.object({
   id: NanoId,
   orderId: NanoId,
-  ...partial(
-    omit(CreateCommentMutationArgs, [
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  ...v.partial(
+    v.omit(CommentSchema, [
       "id",
       "orgId",
       "orderId",
       "createdAt",
+      "updatedAt",
       "deletedAt",
     ]),
   ).entries,
 });
-export type UpdateCommentMutationArgs = Output<
+export type UpdateCommentMutationArgs = v.InferOutput<
   typeof UpdateCommentMutationArgs
 >;
 
-export const DeleteCommentMutationArgs = object({
+export const DeleteCommentMutationArgs = v.object({
   id: NanoId,
   orderId: NanoId,
-  deletedAt: string([isoDateTime()]),
+  deletedAt: v.pipe(v.string(), v.isoDateTime()),
 });
-export type DeleteCommentMutationArgs = Output<
+export type DeleteCommentMutationArgs = v.InferOutput<
   typeof DeleteCommentMutationArgs
 >;

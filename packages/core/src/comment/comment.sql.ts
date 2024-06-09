@@ -1,7 +1,9 @@
 import { foreignKey, index, text } from "drizzle-orm/pg-core";
+import * as v from "valibot";
 
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
+import { NanoId } from "../id";
 import { Order } from "../order/order.sql";
 import { UserRole } from "../user";
 
@@ -24,3 +26,15 @@ export const Comment = orgTable(
   }),
 );
 export type Comment = typeof Comment.$inferSelect;
+
+export const CommentSchema = v.object({
+  id: NanoId,
+  orgId: NanoId,
+  orderId: NanoId,
+  authorId: NanoId,
+  content: v.string(),
+  visibleTo: v.array(v.picklist(UserRole.enumValues)),
+  createdAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.nullable(v.pipe(v.string(), v.isoDateTime())),
+});
