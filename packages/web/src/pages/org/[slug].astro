@@ -2,8 +2,8 @@
 import { db } from "@paperwait/core/database";
 import { Organization } from "@paperwait/core/organization";
 import { eq } from "drizzle-orm";
-import Logo from "~/components/logo.astro";
 
+import Logo from "~/components/logo.astro";
 import PapercutAuthToken from "~/components/papercut/auth-token.astro";
 import TestPapercut from "~/components/papercut/test.astro";
 import Layout from "~/layouts/layout.astro";
@@ -36,8 +36,7 @@ const title =
 
 <Layout {title} htmx>
   <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
-    <div class="hidden bg-muted lg:block lg:max-h-screen topography">
-    </div>
+    <div class="hidden bg-muted lg:block lg:max-h-screen topography"></div>
 
     <form
       class="flex items-center justify-center py-12"
