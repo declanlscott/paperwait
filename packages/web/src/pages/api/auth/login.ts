@@ -48,7 +48,13 @@ export async function GET(context: APIContext) {
     switch (org.provider) {
       case "entra-id": {
         url = await entraId.createAuthorizationURL(state, codeVerifier, {
-          scopes: ["profile", "email"],
+          scopes: [
+            "profile",
+            "email",
+            "offline_access",
+            "User.Read",
+            "User.ReadBasic.All",
+          ],
         });
         break;
       }

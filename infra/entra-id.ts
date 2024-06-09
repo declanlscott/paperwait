@@ -14,6 +14,18 @@ $linkable(azuread.ApplicationPassword, (resource) => ({
   },
 }));
 
+const wellKnownOutput = azuread.getApplicationPublishedAppIdsOutput({});
+
+const microsoftGraphAppId = wellKnownOutput.result?.MicrosoftGraph;
+
+const { oauth2PermissionScopeIds, appRoleIds } = new azuread.ServicePrincipal(
+  "MicrosoftGraphServicePrincipal",
+  {
+    clientId: microsoftGraphAppId,
+    useExisting: true,
+  },
+);
+
 export const entraIdApp = new azuread.Application("EntraIdApplication", {
   displayName: "Paperwait",
   preventDuplicateNames: true,
@@ -24,6 +36,37 @@ export const entraIdApp = new azuread.Application("EntraIdApplication", {
       $interpolate`https://${domain.value}${AUTH_CALLBACK_PATH}`,
     ],
   },
+  requiredResourceAccesses: [
+    {
+      resourceAppId: microsoftGraphAppId,
+      resourceAccesses: [
+        {
+          id: oauth2PermissionScopeIds["openid"],
+          type: "Scope",
+        },
+        {
+          id: oauth2PermissionScopeIds["profile"],
+          type: "Scope",
+        },
+        {
+          id: oauth2PermissionScopeIds["email"],
+          type: "Scope",
+        },
+        {
+          id: oauth2PermissionScopeIds["offline_access"],
+          type: "Scope",
+        },
+        {
+          id: oauth2PermissionScopeIds["User.Read"],
+          type: "Scope",
+        },
+        {
+          id: oauth2PermissionScopeIds["User.ReadBasic.All"],
+          type: "Scope",
+        },
+      ],
+    },
+  ],
 });
 
 export const rotationHours = 24 * 7 * 26; // 6 months
