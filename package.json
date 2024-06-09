@@ -2,6 +2,7 @@
   "name": "paperwait",
   "version": "0.0.0",
   "scripts": {
+    "dev": "sst dev",
     "format:check": "prettier --check .",
     "format:write": "prettier --write .",
     "lint": "eslint packages/ --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
