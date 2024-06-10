@@ -1,10 +1,10 @@
 import { Input as AriaInput } from "react-aria-components";
 
-import { inputStyles } from "~/styles/components/input";
-import { composeTwRenderProps } from "~/styles/utils";
+import { inputStyles } from "~/shared/styles/components/input";
+import { composeTwRenderProps } from "~/shared/styles/utils";
 
 import type { InputProps as AriaInputProps } from "react-aria-components";
-import type { InputStyles } from "~/styles/components/input";
+import type { InputStyles } from "~/shared/styles/components/input";
 
 export interface InputProps extends AriaInputProps, InputStyles {}
 

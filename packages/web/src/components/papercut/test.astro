@@ -1,8 +1,8 @@
 ---
 import LoadingIndicator from "~/components/loading-indicator.astro";
-import { buttonStyles } from "~/styles/components/button";
+import { buttonStyles } from "~/shared/styles/components/button";
 
-type Props =
+export type Props =
   | { status: "initial" }
   | { status: "success" }
   | { status: "error"; reason: string };

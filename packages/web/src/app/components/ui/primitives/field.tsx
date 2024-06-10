@@ -7,8 +7,11 @@ import {
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
 
-import { fieldGroupStyles, labelStyles } from "~/styles/components/field";
-import { composeTwRenderProps } from "~/styles/utils";
+import {
+  fieldGroupStyles,
+  labelStyles,
+} from "~/shared/styles/components/field";
+import { composeTwRenderProps } from "~/shared/styles/utils";
 
 import type {
   FieldErrorProps as AriaFieldErrorProps,

@@ -1,15 +1,25 @@
 ---
+import { validate } from "@paperwait/core/valibot";
 import * as v from "valibot";
 
+import { isOrgSlugValid } from "~/api/lib/organization";
 import OrgSlug from "~/components/org/slug.astro";
-import { IsOrgSlugValid } from "~/lib/schemas";
-import { POST } from "~/pages/api/organization/slug";
+import { Registration } from "~/shared/lib/schemas";
+
+import type { Props } from "~/components/org/slug.astro";
 
 export const partial = true;
 
-const response = await POST(Astro);
-const data = await response.json();
-const props = v.parse(IsOrgSlugValid, data);
+const formData = await Astro.request.formData();
+
+const { slug } = validate(
+  v.object({ slug: Registration.entries.slug }),
+  Object.fromEntries(formData.entries()),
+);
+
+const isValid = await isOrgSlugValid(slug);
+
+const props: Props = { value: slug, isValid };
 ---
 
 <OrgSlug {...props} />

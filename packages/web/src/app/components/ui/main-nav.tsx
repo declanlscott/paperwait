@@ -17,7 +17,7 @@ import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useLogout } from "~/app/lib/hooks/auth";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
-import { linkStyles } from "~/styles/components/main-nav";
+import { linkStyles } from "~/shared/styles/components/main-nav";
 
 import type { ComponentProps } from "react";
 import type { Room } from "@paperwait/core/room";

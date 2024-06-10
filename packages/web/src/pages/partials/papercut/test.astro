@@ -1,16 +1,32 @@
 ---
+import { HttpError } from "@paperwait/core/errors";
+import { NanoId } from "@paperwait/core/id";
+import { testPapercut } from "@paperwait/core/papercut";
+import { validate } from "@paperwait/core/valibot";
+import * as v from "valibot";
+
 import TestPapercut from "~/components/papercut/test.astro";
-import { POST } from "~/pages/api/papercut/test";
+
+import type { Props } from "~/components/papercut/test.astro";
 
 export const partial = true;
 
-const response = await POST(Astro);
+const formData = Astro.request.formData();
+const { orgId, authToken } = validate(
+  v.object({ orgId: NanoId, authToken: v.string() }),
+  formData,
+);
+
+let props: Props;
+try {
+  await testPapercut({ orgId, input: { authToken } });
+  props = { status: "success" };
+} catch (e) {
+  props = {
+    status: "error",
+    reason: e instanceof HttpError ? e.message : "An unexpected error occurred",
+  };
+}
 ---
 
-{
-  response.status === 204 ? (
-    <TestPapercut status="success" />
-  ) : (
-    <TestPapercut status="error" reason={await response.text()} />
-  )
-}
+<TestPapercut {...props} />

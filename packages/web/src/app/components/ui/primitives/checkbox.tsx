@@ -14,8 +14,8 @@ import {
   boxStyles,
   checkboxStyles,
   checkStyles,
-} from "~/styles/components/checkbox";
-import { composeTwRenderProps } from "~/styles/utils";
+} from "~/shared/styles/components/checkbox";
+import { composeTwRenderProps } from "~/shared/styles/utils";
 
 import type { ReactNode } from "react";
 import type {
@@ -23,7 +23,7 @@ import type {
   CheckboxProps as AriaCheckboxProps,
   ValidationResult,
 } from "react-aria-components";
-import type { CheckboxStyles } from "~/styles/components/checkbox";
+import type { CheckboxStyles } from "~/shared/styles/components/checkbox";
 
 export interface CheckboxProps extends AriaCheckboxProps, CheckboxStyles {}
 

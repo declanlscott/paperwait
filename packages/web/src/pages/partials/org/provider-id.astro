@@ -2,7 +2,9 @@
 import * as v from "valibot";
 
 import RegisterOrgProviderId from "~/components/org/provider-id.astro";
-import { Registration } from "~/lib/schemas";
+import { Registration } from "~/shared/lib/schemas";
+
+import type { Props } from "~/components/org/provider-id.astro";
 
 export const partial = true;
 
@@ -10,6 +12,8 @@ const provider = v.parse(
   v.fallback(Registration.entries.authProvider, "entra-id"),
   Astro.url.searchParams.get("authProvider"),
 );
+
+const props: Props = { provider };
 ---
 
-<RegisterOrgProviderId {provider} />
+<RegisterOrgProviderId {...props} />

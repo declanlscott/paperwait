@@ -1,20 +1,9 @@
-import { createSession } from "@paperwait/core/auth";
 import { getSharedAccountPropertiesOutputIndex } from "@paperwait/core/constants";
 import { db, transact } from "@paperwait/core/database";
-import {
-  BadRequestError,
-  DatabaseError,
-  handlePromiseResult,
-  HttpError,
-  InternalServerError,
-  NotFoundError,
-  NotImplementedError,
-  UnauthorizedError,
-} from "@paperwait/core/errors";
+import { NotImplementedError, UnauthorizedError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import {
   getSharedAccountProperties,
-  isUserExists,
   listUserSharedAccounts,
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -23,26 +12,15 @@ import {
 import { formatChannel } from "@paperwait/core/realtime";
 import { getUsersByRoles, poke } from "@paperwait/core/replicache";
 import { User } from "@paperwait/core/user";
-import { validate } from "@paperwait/core/valibot";
-import { OAuth2RequestError } from "arctic";
 import { and, eq } from "drizzle-orm";
 import ky from "ky";
-import { parseJWT } from "oslo/jwt";
 import { isDeepEqual } from "remeda";
-import * as v from "valibot";
-
-import entraId from "~/lib/auth/entra-id";
-import google from "~/lib/auth/google";
-import { Registration } from "~/lib/schemas";
 
 import type { Provider } from "@paperwait/core/organization";
 import type { OmitTimestamps } from "@paperwait/core/types";
-import type { GoogleTokens, MicrosoftEntraIdTokens } from "arctic";
-import type { APIContext } from "astro";
+import type { IdTokenPayload } from "~/api/lib/auth/tokens";
 
-type Tokens = MicrosoftEntraIdTokens | GoogleTokens;
-
-type EntraIdUserInfo = {
+export type EntraIdUserInfo = {
   sub: string;
   name: string;
   family_name: string;
@@ -51,7 +29,7 @@ type EntraIdUserInfo = {
   email: string;
 };
 
-type GoogleUserInfo = {
+export type GoogleUserInfo = {
   sub: string;
   name: string;
   given_name: string;
@@ -59,178 +37,9 @@ type GoogleUserInfo = {
   email: string;
 };
 
-export async function GET(context: APIContext) {
-  const code = context.url.searchParams.get("code");
-  const state = context.url.searchParams.get("state");
+export type UserInfo = EntraIdUserInfo | GoogleUserInfo;
 
-  const storedProvider = context.cookies.get("provider");
-  const storedState = context.cookies.get("state");
-  const storedCodeVerifier = context.cookies.get("code_verifier");
-  const storedOrgId = context.cookies.get("org");
-
-  const redirect = context.cookies.get("redirect")?.value ?? "/dashboard";
-
-  try {
-    if (
-      !code ||
-      !state ||
-      !storedProvider ||
-      !storedState ||
-      !storedCodeVerifier ||
-      !storedOrgId
-    )
-      throw new BadRequestError("Missing required parameters");
-
-    const provider = validate(
-      Registration.entries.authProvider,
-      storedProvider.value,
-      {
-        Error: InternalServerError,
-        message: "Failed to parse provider",
-      },
-    );
-
-    const tokens = await getTokens(provider, code, storedCodeVerifier.value);
-
-    const idToken = parseJWT(tokens.idToken)!;
-
-    const idTokenPayload = parseIdTokenPayload(provider, idToken.payload);
-
-    const [org] = await db
-      .select({ status: Organization.status })
-      .from(Organization)
-      .where(
-        and(
-          eq(Organization.providerId, idTokenPayload.orgProviderId),
-          eq(Organization.id, storedOrgId.value),
-        ),
-      );
-    if (!org)
-      throw new NotFoundError(`
-        Failed to find organization (${storedOrgId.value}) with providerId: ${idTokenPayload.orgProviderId}
-      `);
-
-    const results = await Promise.allSettled([
-      isUserExists({
-        orgId: storedOrgId.value,
-        input: { username: idTokenPayload.username },
-      }).then((exists) => {
-        if (!exists)
-          throw new UnauthorizedError("User does not exist in PaperCut");
-
-        return exists;
-      }),
-      getUserInfo(provider, tokens.accessToken),
-    ]);
-
-    handlePromiseResult(results[0]);
-    const userInfo = handlePromiseResult(results[1]);
-
-    const userId = await processUser(
-      { id: storedOrgId.value, status: org.status },
-      { idTokenPayload, info: userInfo },
-    );
-
-    const { cookie } = await createSession(userId, storedOrgId.value);
-
-    context.cookies.set(cookie.name, cookie.value, cookie.attributes);
-
-    return context.redirect(redirect);
-  } catch (e) {
-    console.error(e);
-
-    if (e instanceof HttpError)
-      return new Response(e.message, { status: e.statusCode });
-    if (e instanceof OAuth2RequestError)
-      return new Response(e.message, { status: 400 });
-    if (e instanceof DatabaseError)
-      return new Response(e.message, { status: 500 });
-
-    return new Response("Internal server error", { status: 500 });
-  }
-}
-
-async function getTokens(
-  provider: Provider,
-  code: string,
-  codeVerifier: string,
-): Promise<Tokens> {
-  switch (provider) {
-    case "entra-id":
-      return await entraId.validateAuthorizationCode(code, codeVerifier);
-    case "google":
-      return await google.validateAuthorizationCode(code, codeVerifier);
-    default:
-      provider satisfies never;
-
-      throw new NotImplementedError(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Provider "${provider}" is not implemented`,
-      );
-  }
-}
-
-type IdTokenPayload = {
-  userProviderId: string;
-  orgProviderId: string;
-  username: string;
-};
-
-function parseIdTokenPayload(
-  provider: Provider,
-  payload: unknown,
-): IdTokenPayload {
-  switch (provider) {
-    case "entra-id": {
-      const { tid, oid, preferred_username } = validate(
-        v.object({
-          tid: v.pipe(v.string(), v.uuid()),
-          oid: v.pipe(v.string(), v.uuid()),
-          preferred_username: v.string(),
-        }),
-        payload,
-        {
-          Error: InternalServerError,
-          message: `Failed to parse ${provider} id token payload`,
-        },
-      );
-
-      return {
-        orgProviderId: tid,
-        userProviderId: oid,
-        username: preferred_username,
-      };
-    }
-    case "google": {
-      const { hd, sub, name } = validate(
-        v.object({ hd: v.string(), sub: v.string(), name: v.string() }),
-        payload,
-        {
-          Error: InternalServerError,
-          message: `Failed to parse ${provider} id token payload`,
-        },
-      );
-
-      return {
-        orgProviderId: hd,
-        userProviderId: sub,
-        username: name,
-      };
-    }
-    default: {
-      provider satisfies never;
-
-      throw new NotImplementedError(
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Provider "${provider}" is not implemented`,
-      );
-    }
-  }
-}
-
-type UserInfo = EntraIdUserInfo | GoogleUserInfo;
-
-async function getUserInfo(
+export async function getUserInfo(
   provider: Provider,
   accessToken: string,
 ): Promise<UserInfo> {
@@ -261,7 +70,7 @@ async function getUserInfo(
   }
 }
 
-async function processUser(
+export async function processUser(
   org: Pick<Organization, "id" | "status">,
   user: {
     idTokenPayload: IdTokenPayload;
