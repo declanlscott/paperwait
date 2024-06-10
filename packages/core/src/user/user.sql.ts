@@ -1,6 +1,7 @@
 import { index, pgEnum, text } from "drizzle-orm/pg-core";
+import * as v from "valibot";
 
-import { orgTable } from "../drizzle/tables";
+import { orgTable, OrgTableSchema } from "../drizzle/tables";
 
 export const UserRole = pgEnum("user_role", [
   "administrator",
@@ -25,3 +26,12 @@ export const User = orgTable(
   }),
 );
 export type User = typeof User.$inferSelect;
+
+export const UserSchema = v.object({
+  ...OrgTableSchema.entries,
+  providerId: v.string(),
+  role: v.picklist(UserRole.enumValues),
+  name: v.string(),
+  email: v.string(),
+  username: v.string(),
+});

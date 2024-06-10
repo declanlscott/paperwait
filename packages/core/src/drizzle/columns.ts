@@ -1,5 +1,6 @@
 import { getTableColumns, sql } from "drizzle-orm";
 import { char, timestamp } from "drizzle-orm/pg-core";
+import * as v from "valibot";
 
 import { NANOID_LENGTH } from "../constants";
 import { generateId } from "../id";
@@ -41,6 +42,12 @@ export const timestamps = {
   },
 };
 export type Timestamp = keyof typeof timestamps;
+
+export const TimestampsSchema = v.object({
+  createdAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.nullable(v.pipe(v.string(), v.isoDateTime())),
+});
 
 export function buildConflictUpdateColumns<
   TTable extends PgTable,

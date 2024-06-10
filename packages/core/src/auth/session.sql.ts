@@ -4,9 +4,11 @@ import {
   primaryKey,
   timestamp,
 } from "drizzle-orm/pg-core";
+import * as v from "valibot";
 
 import { orgIdColumns } from "../drizzle";
 import { id } from "../drizzle/columns";
+import { NanoId } from "../id";
 import { User } from "../user/user.sql";
 
 export const Session = pgTable(
@@ -27,3 +29,10 @@ export const Session = pgTable(
   }),
 );
 export type Session = typeof Session.$inferSelect;
+
+export const SessionSchema = v.object({
+  id: NanoId,
+  orgId: NanoId,
+  userId: NanoId,
+  expiresAt: v.date(),
+});

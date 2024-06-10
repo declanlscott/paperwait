@@ -10,7 +10,7 @@ import {
 import * as v from "valibot";
 
 import { id, timestamps } from "../drizzle/columns";
-import { orgIdColumns, orgTable } from "../drizzle/tables";
+import { orgIdColumns, orgTable, OrgTableSchema } from "../drizzle/tables";
 import { NanoId, PapercutAccountId } from "../id";
 import { User } from "../user/user.sql";
 
@@ -93,11 +93,7 @@ export type PapercutAccountManagerAuthorization =
   typeof PapercutAccountManagerAuthorization.$inferSelect;
 
 export const PapercutAccountManagerAuthorizationSchema = v.object({
-  id: NanoId,
-  orgId: NanoId,
+  ...OrgTableSchema.entries,
   managerId: NanoId,
   papercutAccountId: PapercutAccountId,
-  createdAt: v.pipe(v.string(), v.isoDateTime()),
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
-  deletedAt: v.nullable(v.pipe(v.string(), v.isoDateTime())),
 });
