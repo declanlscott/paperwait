@@ -29,7 +29,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
       const pullResult = await pull(user, c.req.valid("json"));
 
       if (pullResult.type !== "success")
-        throw new BadRequestError(JSON.stringify(pullResult.response));
+        return c.json(pullResult.response, { status: 400 });
 
       return c.json(pullResult.response, { status: 200 });
     },
@@ -48,7 +48,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
       const pushResult = await push(user, c.req.valid("json"));
 
       if (pushResult.type !== "success")
-        throw new BadRequestError(JSON.stringify(pushResult.response));
+        return c.json(pushResult.response, { status: 400 });
 
       return c.json(null, { status: 200 });
     },
