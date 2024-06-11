@@ -2,30 +2,48 @@ import * as v from "valibot";
 
 import type { HttpError } from "../errors/http";
 
-export function validate<
-  TSchema extends v.GenericSchema,
-  TError extends HttpError,
->(
-  schema: TSchema,
-  input: unknown,
-  customError?: {
-    Error: new (message?: string, statusCode?: number) => TError;
-    message?: string;
-  },
-): v.InferOutput<TSchema> {
-  const result = v.safeParse(schema, input);
+export const validate =
+  <TSchema extends v.GenericSchema, TError extends HttpError>(
+    schema: TSchema,
+    customError?: {
+      Error: new (message?: string, statusCode?: number) => TError;
+      message?: string;
+    },
+  ) =>
+  (input: unknown) => {
+    try {
+      return v.parse(schema, input);
+    } catch (e) {
+      if (v.isValiError(e) && customError)
+        throw new customError.Error(customError.message ?? e.message);
 
-  if (!result.success) {
-    console.log(result.issues);
+      throw e;
+    }
+  };
 
-    if (customError)
-      throw new customError.Error(
-        customError.message ?? "Failed to parse schema",
-      );
+export const fn =
+  <
+    TSchema extends v.GenericSchema,
+    TCallback extends (output: v.InferOutput<TSchema>) => ReturnType<TCallback>,
+    TError extends HttpError,
+  >(
+    schema: TSchema,
+    callback: TCallback,
+    customError?: {
+      Error: new (message?: string, statusCode?: number) => TError;
+      message?: string;
+    },
+  ) =>
+  (input: unknown) => {
+    let output: v.InferOutput<TSchema>;
+    try {
+      output = v.parse(schema, input);
+    } catch (e) {
+      if (v.isValiError(e) && customError)
+        throw new customError.Error(customError.message ?? e.message);
 
-    throw new Error("Failed to parse schema");
-  }
+      throw e;
+    }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return result.output;
-}
+    return callback.apply(callback, [output]);
+  };

@@ -18,7 +18,7 @@ import {
 } from "../replicache/data";
 import { Room } from "../room/room.sql";
 import { User } from "../user/user.sql";
-import { validate } from "../valibot";
+import { fn } from "../valibot";
 import {
   CreateAnnouncementMutationArgs,
   CreateCommentMutationArgs,
@@ -53,16 +53,16 @@ async function updateUserRole(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: userId, ...values } = validate(UpdateUserRoleMutationArgs, args);
+  return fn(UpdateUserRoleMutationArgs, async ({ id: userId, ...values }) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx
+      .update(User)
+      .set(values)
+      .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
-  await tx
-    .update(User)
-    .set(values)
-    .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function deleteUser(
@@ -71,16 +71,16 @@ async function deleteUser(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: userId, ...values } = validate(DeleteUserMutationArgs, args);
+  return fn(DeleteUserMutationArgs, async ({ id: userId, ...values }) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx
+      .update(User)
+      .set(values)
+      .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
-  await tx
-    .update(User)
-    .set(values)
-    .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function deletePapercutAccount(
@@ -89,55 +89,57 @@ async function deletePapercutAccount(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: papercutAccountId, ...values } = validate(
+  return fn(
     DeletePapercutAccountMutationArgs,
-    args,
-  );
+    async ({ id: papercutAccountId, ...values }) => {
+      if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
-
-  const [adminsOps, managers, customers] = await Promise.all([
-    getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
-    tx
-      .select({ managerId: PapercutAccountManagerAuthorization.managerId })
-      .from(PapercutAccountManagerAuthorization)
-      .where(
-        and(
-          eq(
-            PapercutAccountManagerAuthorization.papercutAccountId,
-            papercutAccountId,
+      const [adminsOps, managers, customers] = await Promise.all([
+        getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
+        tx
+          .select({ managerId: PapercutAccountManagerAuthorization.managerId })
+          .from(PapercutAccountManagerAuthorization)
+          .where(
+            and(
+              eq(
+                PapercutAccountManagerAuthorization.papercutAccountId,
+                papercutAccountId,
+              ),
+              eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
+            ),
           ),
-          eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
-        ),
-      ),
-    tx
-      .select({ customerId: PapercutAccountCustomerAuthorization.customerId })
-      .from(PapercutAccountCustomerAuthorization)
-      .where(
-        and(
-          eq(
-            PapercutAccountCustomerAuthorization.papercutAccountId,
-            papercutAccountId,
+        tx
+          .select({
+            customerId: PapercutAccountCustomerAuthorization.customerId,
+          })
+          .from(PapercutAccountCustomerAuthorization)
+          .where(
+            and(
+              eq(
+                PapercutAccountCustomerAuthorization.papercutAccountId,
+                papercutAccountId,
+              ),
+              eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
+            ),
           ),
-          eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
-        ),
-      ),
-    tx
-      .update(PapercutAccount)
-      .set(values)
-      .where(
-        and(
-          eq(PapercutAccount.id, papercutAccountId),
-          eq(PapercutAccount.orgId, user.orgId),
-        ),
-      ),
-  ]);
+        tx
+          .update(PapercutAccount)
+          .set(values)
+          .where(
+            and(
+              eq(PapercutAccount.id, papercutAccountId),
+              eq(PapercutAccount.orgId, user.orgId),
+            ),
+          ),
+      ]);
 
-  return [
-    ...adminsOps.map(({ id }) => formatChannel("user", id)),
-    ...customers.map(({ customerId }) => formatChannel("user", customerId)),
-    ...managers.map(({ managerId }) => formatChannel("user", managerId)),
-  ];
+      return [
+        ...adminsOps.map(({ id }) => formatChannel("user", id)),
+        ...customers.map(({ customerId }) => formatChannel("user", customerId)),
+        ...managers.map(({ managerId }) => formatChannel("user", managerId)),
+      ];
+    },
+  )(args);
 }
 
 async function createPapercutAccountManagerAuthorization(
@@ -146,22 +148,22 @@ async function createPapercutAccountManagerAuthorization(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const values = validate(
+  return fn(
     CreatePapercutAccountManagerAuthorizationMutationArgs,
-    args,
-  );
+    async (values) => {
+      if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+      const [managerAuthorization] = await tx
+        .insert(PapercutAccountManagerAuthorization)
+        .values(values)
+        .onConflictDoNothing()
+        .returning({ id: PapercutAccountManagerAuthorization.id });
 
-  const [managerAuthorization] = await tx
-    .insert(PapercutAccountManagerAuthorization)
-    .values(values)
-    .onConflictDoNothing()
-    .returning({ id: PapercutAccountManagerAuthorization.id });
+      if (!managerAuthorization) return [];
 
-  if (!managerAuthorization) return [];
-
-  return [formatChannel("org", user.orgId)];
+      return [formatChannel("org", user.orgId)];
+    },
+  )(args);
 }
 
 async function deletePapercutAccountManagerAuthorization(
@@ -170,27 +172,27 @@ async function deletePapercutAccountManagerAuthorization(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: papercutAccountManagerAuthorizationId, ...values } = validate(
+  return fn(
     DeletePapercutAccountManagerAuthorizationMutationArgs,
-    args,
-  );
+    async ({ id: papercutAccountManagerAuthorizationId, ...values }) => {
+      if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+      await tx
+        .update(PapercutAccountManagerAuthorization)
+        .set(values)
+        .where(
+          and(
+            eq(
+              PapercutAccountManagerAuthorization.id,
+              papercutAccountManagerAuthorizationId,
+            ),
+            eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
+          ),
+        );
 
-  await tx
-    .update(PapercutAccountManagerAuthorization)
-    .set(values)
-    .where(
-      and(
-        eq(
-          PapercutAccountManagerAuthorization.id,
-          papercutAccountManagerAuthorizationId,
-        ),
-        eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
-      ),
-    );
-
-  return [formatChannel("org", user.orgId)];
+      return [formatChannel("org", user.orgId)];
+    },
+  )(args);
 }
 
 async function createRoom(
@@ -199,18 +201,18 @@ async function createRoom(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const values = validate(CreateRoomMutationArgs, args);
+  return fn(CreateRoomMutationArgs, async (values) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    const [room] = await tx
+      .insert(Room)
+      .values(values)
+      .onConflictDoNothing()
+      .returning({ id: Room.id });
+    if (!room) return [];
 
-  const [room] = await tx
-    .insert(Room)
-    .values(values)
-    .onConflictDoNothing()
-    .returning({ id: Room.id });
-  if (!room) return [];
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function updateRoom(
@@ -219,16 +221,16 @@ async function updateRoom(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: roomId, ...values } = validate(UpdateRoomMutationArgs, args);
+  return fn(UpdateRoomMutationArgs, async ({ id: roomId, ...values }) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx
+      .update(Room)
+      .set(values)
+      .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
-  await tx
-    .update(Room)
-    .set(values)
-    .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function deleteRoom(
@@ -237,16 +239,16 @@ async function deleteRoom(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: roomId, ...values } = validate(DeleteRoomMutationArgs, args);
+  return fn(DeleteRoomMutationArgs, async ({ id: roomId, ...values }) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx
+      .update(Room)
+      .set(values)
+      .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
-  await tx
-    .update(Room)
-    .set(values)
-    .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function createAnnouncement(
@@ -255,13 +257,13 @@ async function createAnnouncement(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const values = validate(CreateAnnouncementMutationArgs, args);
+  return fn(CreateAnnouncementMutationArgs, async (values) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx.insert(Announcement).values(values);
 
-  await tx.insert(Announcement).values(values);
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function updateAnnouncement(
@@ -270,24 +272,24 @@ async function updateAnnouncement(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: announcementId, ...values } = validate(
+  return fn(
     UpdateAnnouncementMutationArgs,
-    args,
-  );
+    async ({ id: announcementId, ...values }) => {
+      if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+      await tx
+        .update(Announcement)
+        .set(values)
+        .where(
+          and(
+            eq(Announcement.id, announcementId),
+            eq(Announcement.orgId, user.orgId),
+          ),
+        );
 
-  await tx
-    .update(Announcement)
-    .set(values)
-    .where(
-      and(
-        eq(Announcement.id, announcementId),
-        eq(Announcement.orgId, user.orgId),
-      ),
-    );
-
-  return [formatChannel("org", user.orgId)];
+      return [formatChannel("org", user.orgId)];
+    },
+  )(args);
 }
 
 async function deleteAnnouncement(
@@ -296,24 +298,24 @@ async function deleteAnnouncement(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: announcementId, ...values } = validate(
+  return fn(
     DeleteAnnouncementMutationArgs,
-    args,
-  );
+    async ({ id: announcementId, ...values }) => {
+      if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+      await tx
+        .update(Announcement)
+        .set(values)
+        .where(
+          and(
+            eq(Announcement.id, announcementId),
+            eq(Announcement.orgId, user.orgId),
+          ),
+        );
 
-  await tx
-    .update(Announcement)
-    .set(values)
-    .where(
-      and(
-        eq(Announcement.id, announcementId),
-        eq(Announcement.orgId, user.orgId),
-      ),
-    );
-
-  return [formatChannel("org", user.orgId)];
+      return [formatChannel("org", user.orgId)];
+    },
+  )(args);
 }
 
 async function createProduct(
@@ -322,13 +324,13 @@ async function createProduct(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const values = validate(CreateProductMutationArgs, args);
+  return fn(CreateProductMutationArgs, async (values) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx.insert(Product).values(values);
 
-  await tx.insert(Product).values(values);
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function updateProduct(
@@ -337,19 +339,16 @@ async function updateProduct(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: productId, ...values } = validate(
-    UpdateProductMutationArgs,
-    args,
-  );
+  return fn(UpdateProductMutationArgs, async ({ id: productId, ...values }) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx
+      .update(Product)
+      .set(values)
+      .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
-  await tx
-    .update(Product)
-    .set(values)
-    .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function deleteProduct(
@@ -358,19 +357,16 @@ async function deleteProduct(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const { id: productId, ...values } = validate(
-    DeleteProductMutationArgs,
-    args,
-  );
+  return fn(DeleteProductMutationArgs, async ({ id: productId, ...values }) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    await tx
+      .update(Product)
+      .set(values)
+      .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
-  await tx
-    .update(Product)
-    .set(values)
-    .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
-
-  return [formatChannel("org", user.orgId)];
+    return [formatChannel("org", user.orgId)];
+  })(args);
 }
 
 async function createOrder(
@@ -379,18 +375,18 @@ async function createOrder(
   args: JSONValue,
   isAuthorized: boolean,
 ) {
-  const values = validate(CreateOrderMutationArgs, args);
+  return fn(CreateOrderMutationArgs, async (values) => {
+    if (!isAuthorized) throw new ForbiddenError();
 
-  if (!isAuthorized) throw new ForbiddenError();
+    const [order] = await tx
+      .insert(Order)
+      .values(values)
+      .returning({ id: Order.id });
 
-  const [order] = await tx
-    .insert(Order)
-    .values(values)
-    .returning({ id: Order.id });
+    const users = await getUsersWithAccessToOrder(tx, order.id, user.orgId);
 
-  const users = await getUsersWithAccessToOrder(tx, order.id, user.orgId);
-
-  return users.map(({ id }) => formatChannel("user", id));
+    return users.map(({ id }) => formatChannel("user", id));
+  })(args);
 }
 
 async function updateOrder(
@@ -399,16 +395,16 @@ async function updateOrder(
   args: JSONValue,
   _isAuthorized: boolean,
 ) {
-  const { id: orderId, ...values } = validate(UpdateOrderMutationArgs, args);
+  return fn(UpdateOrderMutationArgs, async ({ id: orderId, ...values }) => {
+    const users = await requireAccessToOrder(tx, user, orderId);
 
-  const users = await requireAccessToOrder(tx, user, orderId);
+    await tx
+      .update(Order)
+      .set(values)
+      .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
 
-  await tx
-    .update(Order)
-    .set(values)
-    .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
-
-  return users.map(({ id }) => formatChannel("user", id));
+    return users.map(({ id }) => formatChannel("user", id));
+  })(args);
 }
 
 async function deleteOrder(
@@ -417,16 +413,16 @@ async function deleteOrder(
   args: JSONValue,
   _isAuthorized: boolean,
 ) {
-  const { id: orderId, ...values } = validate(DeleteOrderMutationArgs, args);
+  return fn(DeleteOrderMutationArgs, async ({ id: orderId, ...values }) => {
+    const users = await requireAccessToOrder(tx, user, orderId);
 
-  const users = await requireAccessToOrder(tx, user, orderId);
+    await tx
+      .update(Order)
+      .set(values)
+      .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
 
-  await tx
-    .update(Order)
-    .set(values)
-    .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
-
-  return users.map(({ id }) => formatChannel("user", id));
+    return users.map(({ id }) => formatChannel("user", id));
+  })(args);
 }
 
 async function createComment(
@@ -435,13 +431,13 @@ async function createComment(
   args: JSONValue,
   _isAuthorized: boolean,
 ) {
-  const values = validate(CreateCommentMutationArgs, args);
+  return fn(CreateCommentMutationArgs, async (values) => {
+    const users = await requireAccessToOrder(tx, user, values.orderId);
 
-  const users = await requireAccessToOrder(tx, user, values.orderId);
+    await tx.insert(Comment).values(values);
 
-  await tx.insert(Comment).values(values);
-
-  return users.map(({ id }) => formatChannel("user", id));
+    return users.map(({ id }) => formatChannel("user", id));
+  })(args);
 }
 
 async function updateComment(
@@ -450,19 +446,16 @@ async function updateComment(
   args: JSONValue,
   _isAuthorized: boolean,
 ) {
-  const { id: commentId, ...values } = validate(
-    UpdateCommentMutationArgs,
-    args,
-  );
+  return fn(UpdateCommentMutationArgs, async ({ id: commentId, ...values }) => {
+    const users = await requireAccessToOrder(tx, user, values.orderId);
 
-  const users = await requireAccessToOrder(tx, user, values.orderId);
+    await tx
+      .update(Comment)
+      .set(values)
+      .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
 
-  await tx
-    .update(Comment)
-    .set(values)
-    .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
-
-  return users.map(({ id }) => formatChannel("user", id));
+    return users.map(({ id }) => formatChannel("user", id));
+  })(args);
 }
 
 async function deleteComment(
@@ -471,20 +464,19 @@ async function deleteComment(
   args: JSONValue,
   _isAuthorized: boolean,
 ) {
-  const {
-    id: commentId,
-    orderId,
-    ...values
-  } = validate(DeleteCommentMutationArgs, args);
+  return fn(
+    DeleteCommentMutationArgs,
+    async ({ id: commentId, orderId, ...values }) => {
+      const users = await requireAccessToOrder(tx, user, orderId);
 
-  const users = await requireAccessToOrder(tx, user, orderId);
+      await tx
+        .update(Comment)
+        .set(values)
+        .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
 
-  await tx
-    .update(Comment)
-    .set(values)
-    .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
-
-  return users.map(({ id }) => formatChannel("user", id));
+      return users.map(({ id }) => formatChannel("user", id));
+    },
+  )(args);
 }
 
 export const authoritative = {

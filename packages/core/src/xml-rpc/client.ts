@@ -3,20 +3,23 @@ import { XmlRpcClient } from "@foxglove/xmlrpc";
 import { getParameter } from "../aws/ssm";
 import { InternalServerError, NotFoundError } from "../errors/http";
 import { PapercutParameter } from "../papercut/parameter";
-import { validate } from "../valibot";
+import { fn } from "../valibot";
 
 export async function buildClient(orgId: string) {
   const config = await getConfig(orgId);
-  const { serverUrl, authToken } = validate(
+
+  const { client, authToken } = fn(
     PapercutParameter,
-    JSON.parse(config),
+    ({ serverUrl, authToken }) => {
+      const client = new XmlRpcClient(serverUrl);
+
+      return { client, authToken };
+    },
     {
       Error: InternalServerError,
       message: "Failed to parse PaperCut parameter",
     },
-  );
-
-  const client = new XmlRpcClient(serverUrl);
+  )(JSON.parse(config));
 
   return { client, authToken };
 }

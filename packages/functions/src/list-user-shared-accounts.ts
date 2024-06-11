@@ -16,14 +16,10 @@ import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    const { orgId, input } = validate(
-      ListUserSharedAccountsEvent,
-      JSON.parse(event.body ?? "{}"),
-      {
-        Error: BadRequestError,
-        message: "Failed to parse event",
-      },
-    );
+    const { orgId, input } = validate(ListUserSharedAccountsEvent, {
+      Error: BadRequestError,
+      message: "Failed to parse event",
+    })(JSON.parse(event.body ?? "{}"));
 
     const { client, authToken } = await buildClient(orgId);
 
@@ -32,10 +28,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       ...Object.values(input),
     ]);
 
-    const output = validate(ListUserSharedAccountsOutput, value, {
+    const output = validate(ListUserSharedAccountsOutput, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
-    });
+    })(value);
 
     return { statusCode: 200, body: JSON.stringify({ output }) };
   } catch (e) {

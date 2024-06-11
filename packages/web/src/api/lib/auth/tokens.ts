@@ -2,7 +2,7 @@ import {
   InternalServerError,
   NotImplementedError,
 } from "@paperwait/core/errors";
-import { validate } from "@paperwait/core/valibot";
+import { fn } from "@paperwait/core/valibot";
 import * as v from "valibot";
 
 import entraId from "~/api/lib/auth/providers/entra-id";
@@ -45,40 +45,36 @@ export function parseIdTokenPayload(
 ): IdTokenPayload {
   switch (provider) {
     case "entra-id": {
-      const { tid, oid, preferred_username } = validate(
+      return fn(
         v.object({
           tid: v.pipe(v.string(), v.uuid()),
           oid: v.pipe(v.string(), v.uuid()),
           preferred_username: v.string(),
         }),
-        payload,
+        ({ tid, oid, preferred_username }) => ({
+          orgProviderId: tid,
+          userProviderId: oid,
+          username: preferred_username,
+        }),
         {
           Error: InternalServerError,
           message: `Failed to parse ${provider} id token payload`,
         },
-      );
-
-      return {
-        orgProviderId: tid,
-        userProviderId: oid,
-        username: preferred_username,
-      };
+      )(payload);
     }
     case "google": {
-      const { hd, sub, name } = validate(
+      return fn(
         v.object({ hd: v.string(), sub: v.string(), name: v.string() }),
-        payload,
+        ({ hd, sub, name }) => ({
+          orgProviderId: hd,
+          userProviderId: sub,
+          username: name,
+        }),
         {
           Error: InternalServerError,
           message: `Failed to parse ${provider} id token payload`,
         },
-      );
-
-      return {
-        orgProviderId: hd,
-        userProviderId: sub,
-        username: name,
-      };
+      )(payload);
     }
     default: {
       provider satisfies never;

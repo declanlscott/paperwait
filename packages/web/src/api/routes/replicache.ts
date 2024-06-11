@@ -10,21 +10,21 @@ import { Hono } from "hono";
 import { validator } from "hono/validator";
 
 import { authorize } from "~/api/lib/auth/authorize";
-import { validateBindings } from "~/api/lib/bindings";
 
 import type { BindingsInput } from "~/api/lib/bindings";
 
 export default new Hono<{ Bindings: BindingsInput }>()
   .post(
     "/pull",
-    validator("json", (body) =>
-      validate(PullRequest, body, {
+    validator(
+      "json",
+      validate(PullRequest, {
         Error: BadRequestError,
         message: "Invalid body",
       }),
     ),
     async (c) => {
-      const { user } = authorize(validateBindings(c.env));
+      const { user } = authorize(c.env);
 
       const pullResult = await pull(user, c.req.valid("json"));
 
@@ -36,14 +36,15 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .post(
     "/push",
-    validator("json", (body) =>
-      validate(PushRequest, body, {
+    validator(
+      "json",
+      validate(PushRequest, {
         Error: BadRequestError,
         message: "Invalid body",
       }),
     ),
     async (c) => {
-      const { user } = authorize(validateBindings(c.env));
+      const { user } = authorize(c.env);
 
       const pushResult = await push(user, c.req.valid("json"));
 

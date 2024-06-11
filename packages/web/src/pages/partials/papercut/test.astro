@@ -11,11 +11,10 @@ import type { Props } from "~/components/papercut/test.astro";
 
 export const partial = true;
 
-const formData = Astro.request.formData();
+const formData = await Astro.request.formData();
 const { orgId, authToken } = validate(
   v.object({ orgId: NanoId, authToken: v.string() }),
-  formData,
-);
+)(formData);
 
 let props: Props;
 try {

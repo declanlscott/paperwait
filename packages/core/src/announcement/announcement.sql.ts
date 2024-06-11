@@ -24,6 +24,6 @@ export type Announcement = typeof Announcement.$inferSelect;
 
 export const AnnouncementSchema = v.object({
   ...OrgTableSchema.entries,
-  context: v.string(),
+  content: v.string(),
   roomId: NanoId,
 });

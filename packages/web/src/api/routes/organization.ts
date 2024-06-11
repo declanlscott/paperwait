@@ -16,8 +16,9 @@ import type { BindingsInput } from "~/api/lib/bindings";
 export default new Hono<{ Bindings: BindingsInput }>()
   .post(
     "/",
-    validator("form", (formData) =>
-      validate(Registration, formData, {
+    validator(
+      "form",
+      validate(Registration, {
         Error: BadRequestError,
         message: "Invalid form data",
       }),
@@ -77,8 +78,12 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .post(
     "/:slug",
-    validator("param", (params) =>
-      validate(v.object({ slug: v.string() }), params),
+    validator(
+      "param",
+      validate(v.object({ slug: v.string() }), {
+        Error: BadRequestError,
+        message: "Invalid path parameters",
+      }),
     ),
     async (c) => {
       const isValid = await isOrgSlugValid(c.req.valid("param").slug);

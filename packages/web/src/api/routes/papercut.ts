@@ -19,24 +19,21 @@ import { validator } from "hono/validator";
 import * as v from "valibot";
 
 import { authorize } from "~/api/lib/auth/authorize";
-import { validateBindings } from "~/api/lib/bindings";
 
 import type { BindingsInput } from "~/api/lib/bindings";
 
 export default new Hono<{ Bindings: BindingsInput }>()
   .put(
     "/accounts",
-    validator("json", (body) =>
-      validate(SyncPapercutAccountsMutationArgs, body, {
+    validator(
+      "json",
+      validate(SyncPapercutAccountsMutationArgs, {
         Error: BadRequestError,
         message: "Invalid body",
       }),
     ),
     async (c) => {
-      const { user } = authorize(
-        validateBindings(c.env),
-        globalPermissions.syncPapercutAccounts,
-      );
+      const { user } = authorize(c.env, globalPermissions.syncPapercutAccounts);
 
       await transact(
         async (tx) =>
@@ -50,14 +47,15 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .put(
     "/credentials",
-    validator("json", (body) =>
-      validate(PapercutParameter, body, {
+    validator(
+      "json",
+      validate(PapercutParameter, {
         Error: BadRequestError,
         message: "Invalid body",
       }),
     ),
     async (c) => {
-      const { user } = authorize(validateBindings(c.env), ["administrator"]);
+      const { user } = authorize(c.env, ["administrator"]);
 
       await putParameter({
         Name: `/paperwait/org/${user.orgId}/papercut`,
@@ -71,8 +69,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .post(
     "/test",
-    validator("form", (formData) =>
-      validate(v.object({ orgId: NanoId, authToken: v.string() }), formData, {
+    validator(
+      "form",
+      validate(v.object({ orgId: NanoId, authToken: v.string() }), {
         Error: BadRequestError,
         message: "Invalid form data",
       }),

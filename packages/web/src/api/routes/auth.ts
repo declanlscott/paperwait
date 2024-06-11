@@ -28,7 +28,6 @@ import entraId from "~/api/lib/auth/providers/entra-id";
 import google from "~/api/lib/auth/providers/google";
 import { getTokens, parseIdTokenPayload } from "~/api/lib/auth/tokens";
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
-import { validateBindings } from "~/api/lib/bindings";
 import { Registration } from "~/shared/lib/schemas";
 
 import type { BindingsInput } from "~/api/lib/bindings";
@@ -37,10 +36,10 @@ export default new Hono<{ Bindings: BindingsInput }>()
   // Login
   .get(
     "/login",
-    validator("query", (queryParams) =>
+    validator(
+      "query",
       validate(
         v.object({ org: v.string(), redirect: v.optional(v.string()) }),
-        queryParams,
         {
           Error: BadRequestError,
           message: "Invalid query parameters",
@@ -154,13 +153,15 @@ export default new Hono<{ Bindings: BindingsInput }>()
   // Callback
   .get(
     "/callback",
-    validator("query", (queryParams) =>
-      validate(v.object({ code: v.string(), state: v.string() }), queryParams, {
+    validator(
+      "query",
+      validate(v.object({ code: v.string(), state: v.string() }), {
         Error: BadRequestError,
         message: "Invalid query parameters",
       }),
     ),
-    validator("cookie", (cookies) =>
+    validator(
+      "cookie",
       validate(
         v.object({
           provider: Registration.entries.authProvider,
@@ -169,7 +170,6 @@ export default new Hono<{ Bindings: BindingsInput }>()
           orgId: v.string(),
           redirect: v.fallback(v.string(), "/dashboard"),
         }),
-        cookies,
         {
           Error: BadRequestError,
           message: "Invalid cookies",
@@ -231,7 +231,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   // Logout
   .post("/logout", async (c) => {
-    const { session } = authorize(validateBindings(c.env));
+    const { session } = authorize(c.env);
 
     const { cookie } = await invalidateSession(session.id);
 
@@ -242,8 +242,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   // Logout user
   .post(
     "/logout/:userId",
-    validator("param", (params) =>
-      validate(v.object({ userId: NanoId }), params, {
+    validator(
+      "param",
+      validate(v.object({ userId: NanoId }), {
         Error: BadRequestError,
         message: "Invalid parameters",
       }),
@@ -251,7 +252,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
     async (c) => {
       const { userId } = c.req.valid("param");
 
-      authorize(validateBindings(c.env), ["administrator"]);
+      authorize(c.env, ["administrator"]);
 
       await invalidateUserSessions(userId);
 

@@ -1,5 +1,5 @@
 ---
-import { validate } from "@paperwait/core/valibot";
+import { fn } from "@paperwait/core/valibot";
 import * as v from "valibot";
 
 import { isOrgSlugValid } from "~/api/lib/organization";
@@ -12,14 +12,14 @@ export const partial = true;
 
 const formData = await Astro.request.formData();
 
-const { slug } = validate(
+const props: Props = await fn(
   v.object({ slug: Registration.entries.slug }),
-  Object.fromEntries(formData.entries()),
-);
+  async ({ slug }) => {
+    const isValid = await isOrgSlugValid(slug);
 
-const isValid = await isOrgSlugValid(slug);
-
-const props: Props = { value: slug, isValid };
+    return { value: slug, isValid };
+  },
+)(Object.fromEntries(formData.entries()));
 ---
 
 <OrgSlug {...props} />

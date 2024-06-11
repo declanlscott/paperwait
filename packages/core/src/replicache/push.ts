@@ -5,7 +5,7 @@ import { BadRequestError, NotImplementedError } from "../errors/http";
 import { authoritative } from "../mutations/authoritative";
 import { globalPermissions, Mutation } from "../mutations/schemas";
 import { assertRole } from "../user/assert";
-import { validate } from "../valibot";
+import { fn } from "../valibot";
 import { poke } from "./poke";
 import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
 
@@ -140,14 +140,11 @@ async function processMutation(
       try {
         // 10(i): Business logic
         // 10(i)(a): xmin column is automatically updated by Postgres on any affected rows
-        channels = await mutate(
-          tx,
-          user,
-          validate(Mutation, mutation, {
-            Error: BadRequestError,
-            message: "Failed to parse mutation",
-          }),
-        );
+        channels = await fn(
+          Mutation,
+          (mutation) => mutate(tx, user, mutation),
+          { Error: BadRequestError, message: "Failed to parse mutation" },
+        )(mutation);
       } catch (e) {
         // 10(ii)(a-c): Log, abort, and retry
         console.error(`Error processing mutation ${mutation.id}:`, e);

@@ -21,12 +21,11 @@ async function processRecord(record: SQSRecord) {
 
     const { orgId, input } = validate(
       AdjustSharedAccountAccountBalanceEventRecord,
-      message,
       {
         Error: BadRequestError,
         message: "Failed to parse message",
       },
-    );
+    )(message);
 
     const { client, authToken } = await buildClient(orgId);
 
@@ -35,10 +34,10 @@ async function processRecord(record: SQSRecord) {
       [authToken, ...Object.values(input)],
     );
 
-    const output = validate(AdjustSharedAccountAccountBalanceOutput, value, {
+    const output = validate(AdjustSharedAccountAccountBalanceOutput, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
-    });
+    })(value);
 
     if (!output)
       throw new InternalServerError("Failed to adjust account balance");
