@@ -2,13 +2,24 @@ import * as v from "valibot";
 
 import type { HttpError } from "../errors/http";
 
-export const validate =
+export type CustomError<TError extends HttpError> = {
+  Error: new (message?: string, statusCode?: number) => TError;
+  message?: string;
+};
+
+export const validate = <
+  TSchema extends v.GenericSchema,
+  TError extends HttpError,
+>(
+  schema: TSchema,
+  input: unknown,
+  customError?: CustomError<TError>,
+) => validator(schema, customError)(input);
+
+export const validator =
   <TSchema extends v.GenericSchema, TError extends HttpError>(
     schema: TSchema,
-    customError?: {
-      Error: new (message?: string, statusCode?: number) => TError;
-      message?: string;
-    },
+    customError?: CustomError<TError>,
   ) =>
   (input: unknown) => {
     try {
@@ -29,10 +40,7 @@ export const fn =
   >(
     schema: TSchema,
     callback: TCallback,
-    customError?: {
-      Error: new (message?: string, statusCode?: number) => TError;
-      message?: string;
-    },
+    customError?: CustomError<TError>,
   ) =>
   (input: unknown) => {
     let output: v.InferOutput<TSchema>;

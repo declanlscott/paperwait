@@ -1,4 +1,4 @@
-import v, { variant } from "valibot";
+import * as v from "valibot";
 
 import { NanoId } from "../id";
 
@@ -51,7 +51,7 @@ export const PushRequest = v.variant("pushVersion", [
 ]);
 export type PushRequest = v.InferOutput<typeof PushRequest>;
 
-export const PullRequest = variant("pullVersion", [
+export const PullRequest = v.variant("pullVersion", [
   v.object({
     pullVersion: v.literal(0),
     schemaVersion: v.string(),

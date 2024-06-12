@@ -1,4 +1,5 @@
 ---
+import { validate } from "@paperwait/core/valibot";
 import * as v from "valibot";
 
 import RegisterOrgProviderId from "~/components/org/provider-id.astro";
@@ -8,7 +9,7 @@ import type { OrgProviderIdProps } from "~/types/astro-component-props";
 
 export const partial = true;
 
-const provider = v.parse(
+const provider = validate(
   v.fallback(Registration.entries.authProvider, "entra-id"),
   Astro.url.searchParams.get("authProvider"),
 );

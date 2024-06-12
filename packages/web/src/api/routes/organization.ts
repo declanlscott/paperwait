@@ -3,9 +3,9 @@ import { db } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { Room } from "@paperwait/core/room";
-import { validate } from "@paperwait/core/valibot";
+import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
-import { validator } from "hono/validator";
+import { validator as honoValidator } from "hono/validator";
 import * as v from "valibot";
 
 import { isOrgSlugValid } from "~/api/lib/organization";
@@ -16,9 +16,9 @@ import type { BindingsInput } from "~/api/lib/bindings";
 export default new Hono<{ Bindings: BindingsInput }>()
   .post(
     "/",
-    validator(
+    honoValidator(
       "form",
-      validate(Registration, {
+      validator(Registration, {
         Error: BadRequestError,
         message: "Invalid form data",
       }),
@@ -64,7 +64,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
           return org;
         });
 
-        return c.redirect(`/organization/${org.slug}`);
+        return c.redirect(`/org/${org.slug}`);
       } catch (e) {
         // Rollback the parameter if the transaction fails
         if (org && putParameterCommandOutput)
@@ -78,9 +78,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .post(
     "/:slug",
-    validator(
+    honoValidator(
       "param",
-      validate(v.object({ slug: v.string() }), {
+      validator(v.object({ slug: v.string() }), {
         Error: BadRequestError,
         message: "Invalid path parameters",
       }),

@@ -1,4 +1,5 @@
 ---
+import { validate } from "@paperwait/core/valibot";
 import * as v from "valibot";
 
 import PapercutAuthToken from "~/components/papercut/auth-token.astro";
@@ -10,14 +11,14 @@ export const partial = true;
 
 const formData = await Astro.request.formData();
 
-const { authToken: value } = v.parse(
+const { authToken: value } = validate(
   v.fallback(v.object({ authToken: Registration.entries.authToken }), {
     authToken: "",
   }),
   Object.fromEntries(formData.entries()),
 );
 
-const show = v.parse(
+const show = validate(
   v.fallback(v.boolean(), false),
   Astro.url.searchParams.get("show") === "true",
 );

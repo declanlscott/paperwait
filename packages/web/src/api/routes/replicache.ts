@@ -5,9 +5,9 @@ import {
   push,
   PushRequest,
 } from "@paperwait/core/replicache";
-import { validate } from "@paperwait/core/valibot";
+import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
-import { validator } from "hono/validator";
+import { validator as honoValidator } from "hono/validator";
 
 import { authorize } from "~/api/lib/auth/authorize";
 
@@ -16,9 +16,9 @@ import type { BindingsInput } from "~/api/lib/bindings";
 export default new Hono<{ Bindings: BindingsInput }>()
   .post(
     "/pull",
-    validator(
+    honoValidator(
       "json",
-      validate(PullRequest, {
+      validator(PullRequest, {
         Error: BadRequestError,
         message: "Invalid body",
       }),
@@ -36,9 +36,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .post(
     "/push",
-    validator(
+    honoValidator(
       "json",
-      validate(PushRequest, {
+      validator(PushRequest, {
         Error: BadRequestError,
         message: "Invalid body",
       }),

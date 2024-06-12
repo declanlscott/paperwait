@@ -14,12 +14,12 @@ import {
 import { NanoId } from "@paperwait/core/id";
 import { Organization } from "@paperwait/core/organization";
 import { isUserExists } from "@paperwait/core/papercut";
-import { validate } from "@paperwait/core/valibot";
+import { validator } from "@paperwait/core/valibot";
 import { generateCodeVerifier, generateState } from "arctic";
 import { and, eq, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
-import { validator } from "hono/validator";
+import { validator as honoValidator } from "hono/validator";
 import { parseJWT } from "oslo/jwt";
 import * as v from "valibot";
 
@@ -36,9 +36,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   // Login
   .get(
     "/login",
-    validator(
+    honoValidator(
       "query",
-      validate(
+      validator(
         v.object({ org: v.string(), redirect: v.optional(v.string()) }),
         {
           Error: BadRequestError,
@@ -153,16 +153,16 @@ export default new Hono<{ Bindings: BindingsInput }>()
   // Callback
   .get(
     "/callback",
-    validator(
+    honoValidator(
       "query",
-      validate(v.object({ code: v.string(), state: v.string() }), {
+      validator(v.object({ code: v.string(), state: v.string() }), {
         Error: BadRequestError,
         message: "Invalid query parameters",
       }),
     ),
-    validator(
+    honoValidator(
       "cookie",
-      validate(
+      validator(
         v.object({
           provider: Registration.entries.authProvider,
           state: v.string(),
@@ -242,9 +242,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   // Logout user
   .post(
     "/logout/:userId",
-    validator(
+    honoValidator(
       "param",
-      validate(v.object({ userId: NanoId }), {
+      validator(v.object({ userId: NanoId }), {
         Error: BadRequestError,
         message: "Invalid parameters",
       }),

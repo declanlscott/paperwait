@@ -5,6 +5,7 @@
  */
 
 import { xmlRpcMethod } from "@paperwait/core/constants";
+import { validate } from "@paperwait/core/valibot";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -132,7 +133,7 @@ const schema = v.object({
 api.post("/", async (c) => {
   const text = await c.req.text();
 
-  const rpc = v.parse(schema, xmlParser.parse(text));
+  const rpc = validate(schema, xmlParser.parse(text));
 
   if (rpc.methodCall.params.param[0].value.string !== c.env.AUTH_TOKEN)
     throw new Error("Invalid auth token");

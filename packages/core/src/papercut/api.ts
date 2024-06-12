@@ -43,10 +43,10 @@ export async function isUserExists(event: IsUserExistsEvent) {
       event,
     );
 
-    const { output } = validate(IsUserExistsResult, {
+    const { output } = validate(IsUserExistsResult, result, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
-    })(result);
+    });
 
     return output;
   } catch (e) {
@@ -71,10 +71,10 @@ export async function listSharedAccounts(event: ListSharedAccountsEvent) {
         } satisfies ListSharedAccountsEvent,
       );
 
-      page = validate(ListSharedAccountsResult, {
+      page = validate(ListSharedAccountsResult, result, {
         Error: InternalServerError,
         message: "Failed to parse xml-rpc output",
-      })(result).output;
+      }).output;
 
       sharedAccounts.push(...page);
     } catch (e) {
@@ -104,10 +104,10 @@ export async function listUserSharedAccounts(
         } satisfies ListUserSharedAccountsEvent,
       );
 
-      page = validate(ListUserSharedAccountsResult, {
+      page = validate(ListUserSharedAccountsResult, result, {
         Error: InternalServerError,
         message: "Failed to parse xml-rpc output",
-      })(result).output;
+      }).output;
 
       userSharedAccounts.push(...page);
     } catch (e) {
@@ -129,10 +129,10 @@ export async function getSharedAccountProperties(
       event,
     );
 
-    const { output } = validate(GetSharedAccountPropertiesResult, {
+    const { output } = validate(GetSharedAccountPropertiesResult, result, {
       Error: InternalServerError,
       message: "Failed to parse xml-rpc output",
-    })(result);
+    });
 
     return output;
   } catch (e) {

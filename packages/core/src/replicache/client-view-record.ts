@@ -1,6 +1,7 @@
 import { unique } from "remeda";
-import { array, parse } from "valibot";
+import * as v from "valibot";
 
+import { validate } from "../valibot";
 import { Domain } from "./schemas";
 
 import type { Metadata } from "./metadata";
@@ -26,8 +27,8 @@ export function buildCvrEntries(domainMetadata: Array<Metadata>) {
 
 export function diffCvr(prev: ClientViewRecord, next: ClientViewRecord) {
   return unique([
-    ...parse(array(Domain), Object.keys(prev)),
-    ...parse(array(Domain), Object.keys(next)),
+    ...validate(v.array(Domain), Object.keys(prev)),
+    ...validate(v.array(Domain), Object.keys(next)),
   ]).reduce((diff, domain) => {
     diff[domain] = {
       puts: Object.keys(next[domain]).filter(

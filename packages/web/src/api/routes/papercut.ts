@@ -13,9 +13,9 @@ import {
 } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
-import { validate } from "@paperwait/core/valibot";
+import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
-import { validator } from "hono/validator";
+import { validator as honoValidator } from "hono/validator";
 import * as v from "valibot";
 
 import { authorize } from "~/api/lib/auth/authorize";
@@ -25,9 +25,9 @@ import type { BindingsInput } from "~/api/lib/bindings";
 export default new Hono<{ Bindings: BindingsInput }>()
   .put(
     "/accounts",
-    validator(
+    honoValidator(
       "json",
-      validate(SyncPapercutAccountsMutationArgs, {
+      validator(SyncPapercutAccountsMutationArgs, {
         Error: BadRequestError,
         message: "Invalid body",
       }),
@@ -47,9 +47,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .put(
     "/credentials",
-    validator(
+    honoValidator(
       "json",
-      validate(PapercutParameter, {
+      validator(PapercutParameter, {
         Error: BadRequestError,
         message: "Invalid body",
       }),
@@ -69,9 +69,9 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   .post(
     "/test",
-    validator(
+    honoValidator(
       "form",
-      validate(v.object({ orgId: NanoId, authToken: v.string() }), {
+      validator(v.object({ orgId: NanoId, authToken: v.string() }), {
         Error: BadRequestError,
         message: "Invalid form data",
       }),
