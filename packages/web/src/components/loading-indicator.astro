@@ -1,7 +1,7 @@
 ---
-type Props = {
-  color?: string;
-};
+import type { LoadingIndicatorProps } from "~/types/astro-component-props";
+
+type Props = LoadingIndicatorProps;
 
 const { color = "#000" } = Astro.props;
 ---

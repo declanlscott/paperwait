@@ -2,11 +2,9 @@
 import { labelStyles } from "~/shared/styles/components/field";
 import { inputStyles } from "~/shared/styles/components/input";
 
-import type { Provider } from "@paperwait/core/organization";
+import type { OrgProviderIdProps } from "~/types/astro-component-props";
 
-export type Props = {
-  provider?: Provider;
-};
+type Props = OrgProviderIdProps;
 
 const { provider = "entra-id" } = Astro.props;
 

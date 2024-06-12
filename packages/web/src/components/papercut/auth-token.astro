@@ -3,10 +3,9 @@ import { buttonStyles } from "~/shared/styles/components/button";
 import { labelStyles } from "~/shared/styles/components/field";
 import { inputStyles } from "~/shared/styles/components/input";
 
-export type Props = {
-  value?: string;
-  show?: boolean;
-};
+import type { PapercutAuthTokenProps } from "~/types/astro-component-props";
+
+type Props = PapercutAuthTokenProps;
 
 const { value, show = false } = Astro.props;
 ---

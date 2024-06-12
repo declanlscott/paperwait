@@ -3,10 +3,9 @@ import LoadingIndicator from "~/components/loading-indicator.astro";
 import { labelStyles } from "~/shared/styles/components/field";
 import { inputStyles } from "~/shared/styles/components/input";
 
-export type Props = {
-  value?: string;
-  isValid?: boolean;
-};
+import type { OrgSlugProps } from "~/types/astro-component-props";
+
+type Props = OrgSlugProps;
 
 const { value, isValid } = Astro.props;
 

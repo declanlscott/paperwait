@@ -4,11 +4,12 @@ import * as v from "valibot";
 import PapercutAuthToken from "~/components/papercut/auth-token.astro";
 import { Registration } from "~/shared/lib/schemas";
 
-import type { Props } from "~/components/papercut/auth-token.astro";
+import type { PapercutAuthTokenProps } from "~/types/astro-component-props";
 
 export const partial = true;
 
 const formData = await Astro.request.formData();
+
 const { authToken: value } = v.parse(
   v.fallback(v.object({ authToken: Registration.entries.authToken }), {
     authToken: "",
@@ -21,7 +22,7 @@ const show = v.parse(
   Astro.url.searchParams.get("show") === "true",
 );
 
-const props: Props = { value, show };
+const props = { value, show } satisfies PapercutAuthTokenProps;
 ---
 
 <PapercutAuthToken {...props} />

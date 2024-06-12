@@ -1,7 +1,7 @@
 ---
-type Props = {
-  color?: string;
-};
+import type { LogoProps } from "~/types/astro-component-props";
+
+type Props = LogoProps;
 
 const { color = "#000" } = Astro.props;
 ---

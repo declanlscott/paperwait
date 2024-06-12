@@ -6,20 +6,20 @@ import { isOrgSlugValid } from "~/api/lib/organization";
 import OrgSlug from "~/components/org/slug.astro";
 import { Registration } from "~/shared/lib/schemas";
 
-import type { Props } from "~/components/org/slug.astro";
+import type { OrgSlugProps } from "~/types/astro-component-props";
 
 export const partial = true;
 
 const formData = await Astro.request.formData();
 
-const props: Props = await fn(
+const props = (await fn(
   v.object({ slug: Registration.entries.slug }),
   async ({ slug }) => {
     const isValid = await isOrgSlugValid(slug);
 
     return { value: slug, isValid };
   },
-)(Object.fromEntries(formData.entries()));
+)(Object.fromEntries(formData.entries()))) satisfies OrgSlugProps;
 ---
 
 <OrgSlug {...props} />

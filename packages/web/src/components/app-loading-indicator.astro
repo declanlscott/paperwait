@@ -1,9 +1,9 @@
 ---
 import LoadingIndicator from "~/components/loading-indicator.astro";
 
-type Props = {
-  isInitial?: boolean;
-};
+import type { AppLoadingIndicatorProps } from "~/types/astro-component-props";
+
+type Props = AppLoadingIndicatorProps;
 
 const { isInitial = false } = Astro.props;
 ---

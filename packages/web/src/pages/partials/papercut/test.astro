@@ -7,16 +7,18 @@ import * as v from "valibot";
 
 import TestPapercut from "~/components/papercut/test.astro";
 
-import type { Props } from "~/components/papercut/test.astro";
+import type { PapercutTestProps } from "~/types/astro-component-props";
 
 export const partial = true;
 
 const formData = await Astro.request.formData();
+
 const { orgId, authToken } = validate(
   v.object({ orgId: NanoId, authToken: v.string() }),
-)(formData);
+  Object.fromEntries(formData.entries()),
+);
 
-let props: Props;
+let props: PapercutTestProps;
 try {
   await testPapercut({ orgId, input: { authToken } });
   props = { status: "success" };
