@@ -25,8 +25,8 @@ export function ReplicacheProvider(props: PropsWithChildren) {
       name: user.id,
       licenseKey: ReplicacheLicenseKey.value,
       mutators,
-      // pushURL: "/api/replicache/push",
-      // pullURL: "/api/replicache/pull",
+      pushURL: "/api/replicache/push",
+      pullURL: "/api/replicache/pull",
       logLevel: IsDev.value === "true" ? "info" : "error",
     });
 
