@@ -1,22 +1,14 @@
-import {
-  BadRequestError,
-  DatabaseError,
-  HttpError,
-} from "@paperwait/core/errors";
-import { validate } from "@paperwait/core/valibot";
+import { DatabaseError, HttpError } from "@paperwait/core/errors";
 import { OAuth2RequestError } from "arctic";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
 import { parse } from "superjson";
 
-import { DeserializedBindings } from "~/api/lib/bindings";
 import auth from "~/api/routes/auth";
 import organization from "~/api/routes/organization";
 import papercut from "~/api/routes/papercut";
 import replicache from "~/api/routes/replicache";
-
-import type { SerializedBindings } from "~/api/lib/bindings";
 
 declare module "hono" {
   interface ContextVariableMap {
@@ -24,25 +16,17 @@ declare module "hono" {
   }
 }
 
-const api = new Hono<{ Bindings: SerializedBindings }>()
+export type Bindings = Record<keyof App.Locals, string>;
+
+const api = new Hono<{ Bindings: Bindings }>()
   .basePath("/api/")
   .use(logger())
   .use(async (c, next) => {
-    c.set(
-      "locals",
-      validate(
-        DeserializedBindings,
-        {
-          session: parse(c.env.session),
-          user: parse(c.env.user),
-          org: parse(c.env.org),
-        },
-        {
-          Error: BadRequestError,
-          message: "Invalid api context bindings",
-        },
-      ),
-    );
+    c.set("locals", {
+      session: parse<App.Locals["session"]>(c.env.session),
+      user: parse<App.Locals["user"]>(c.env.user),
+      org: parse<App.Locals["org"]>(c.env.org),
+    });
 
     await next();
   })
