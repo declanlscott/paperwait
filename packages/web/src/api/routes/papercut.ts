@@ -20,9 +20,7 @@ import * as v from "valibot";
 
 import { authorize } from "~/api/lib/auth/authorize";
 
-import type { BindingsInput } from "~/api/lib/bindings";
-
-export default new Hono<{ Bindings: BindingsInput }>()
+export default new Hono()
   .put(
     "/accounts",
     honoValidator(
@@ -33,7 +31,10 @@ export default new Hono<{ Bindings: BindingsInput }>()
       }),
     ),
     async (c) => {
-      const { user } = authorize(c.env, globalPermissions.syncPapercutAccounts);
+      const { user } = authorize(
+        c.get("locals"),
+        globalPermissions.syncPapercutAccounts,
+      );
 
       await transact(
         async (tx) =>
@@ -42,7 +43,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
 
       await poke([formatChannel("org", user.orgId)]);
 
-      return c.json(null, { status: 204 });
+      return c.body(null, { status: 204 });
     },
   )
   .put(
@@ -55,7 +56,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
       }),
     ),
     async (c) => {
-      const { user } = authorize(c.env, ["administrator"]);
+      const { user } = authorize(c.get("locals"), ["administrator"]);
 
       await putParameter({
         Name: `/paperwait/org/${user.orgId}/papercut`,
@@ -64,7 +65,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
         Overwrite: true,
       });
 
-      return c.json(null, { status: 204 });
+      return c.body(null, { status: 204 });
     },
   )
   .post(
@@ -81,6 +82,6 @@ export default new Hono<{ Bindings: BindingsInput }>()
 
       await testPapercut({ orgId, input: { authToken } });
 
-      return c.json(null, { status: 204 });
+      return c.body(null, { status: 204 });
     },
   );

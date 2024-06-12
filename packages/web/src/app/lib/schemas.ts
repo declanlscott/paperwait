@@ -1,16 +1,16 @@
 import * as v from "valibot";
 
-export const baseSearchParams = v.object({
+export const BaseSearchParams = v.object({
   redirect: v.optional(v.string()),
 });
+export type BaseSearchParams = v.InferOutput<typeof BaseSearchParams>;
 
-export const loginSearchParams = v.object({
-  ...baseSearchParams.entries,
+export const LoginSearchParams = v.object({
+  ...BaseSearchParams.entries,
   ...v.object({
     org: v.pipe(v.string(), v.minLength(1)),
   }).entries,
 });
+export type LoginSearchParams = v.InferOutput<typeof LoginSearchParams>;
 
-export const initialLoginSearchParams = { org: "" } satisfies v.InferOutput<
-  typeof loginSearchParams
->;
+export const initialLoginSearchParams = { org: "" } satisfies LoginSearchParams;

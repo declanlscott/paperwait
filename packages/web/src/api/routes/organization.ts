@@ -11,9 +11,7 @@ import * as v from "valibot";
 import { isOrgSlugValid } from "~/api/lib/organization";
 import { Registration } from "~/shared/lib/schemas";
 
-import type { BindingsInput } from "~/api/lib/bindings";
-
-export default new Hono<{ Bindings: BindingsInput }>()
+export default new Hono()
   .post(
     "/",
     honoValidator(

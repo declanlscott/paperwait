@@ -1,19 +1,51 @@
-import { DatabaseError, HttpError } from "@paperwait/core/errors";
+import {
+  BadRequestError,
+  DatabaseError,
+  HttpError,
+} from "@paperwait/core/errors";
+import { validate } from "@paperwait/core/valibot";
 import { OAuth2RequestError } from "arctic";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
+import { parse } from "superjson";
 
+import { DeserializedBindings } from "~/api/lib/bindings";
 import auth from "~/api/routes/auth";
 import organization from "~/api/routes/organization";
 import papercut from "~/api/routes/papercut";
 import replicache from "~/api/routes/replicache";
 
-import type { BindingsInput } from "~/api/lib/bindings";
+import type { SerializedBindings } from "~/api/lib/bindings";
 
-const api = new Hono<{ Bindings: BindingsInput }>()
+declare module "hono" {
+  interface ContextVariableMap {
+    locals: App.Locals;
+  }
+}
+
+const api = new Hono<{ Bindings: SerializedBindings }>()
   .basePath("/api/")
   .use(logger())
+  .use(async (c, next) => {
+    c.set(
+      "locals",
+      validate(
+        DeserializedBindings,
+        {
+          session: parse(c.env.session),
+          user: parse(c.env.user),
+          org: parse(c.env.org),
+        },
+        {
+          Error: BadRequestError,
+          message: "Invalid api context bindings",
+        },
+      ),
+    );
+
+    await next();
+  })
   .route("/auth", auth)
   .route("/organization", organization)
   .route("/papercut", papercut)

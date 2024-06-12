@@ -30,9 +30,7 @@ import { getTokens, parseIdTokenPayload } from "~/api/lib/auth/tokens";
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
 import { Registration } from "~/shared/lib/schemas";
 
-import type { BindingsInput } from "~/api/lib/bindings";
-
-export default new Hono<{ Bindings: BindingsInput }>()
+export default new Hono()
   // Login
   .get(
     "/login",
@@ -147,7 +145,7 @@ export default new Hono<{ Bindings: BindingsInput }>()
         });
       }
 
-      c.redirect(url.toString());
+      return c.redirect(url.toString());
     },
   )
   // Callback
@@ -231,13 +229,13 @@ export default new Hono<{ Bindings: BindingsInput }>()
   )
   // Logout
   .post("/logout", async (c) => {
-    const { session } = authorize(c.env);
+    const { session } = authorize(c.get("locals"));
 
     const { cookie } = await invalidateSession(session.id);
 
     setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
-    return c.json(null, { status: 204 });
+    return c.body(null, { status: 204 });
   })
   // Logout user
   .post(
@@ -252,10 +250,10 @@ export default new Hono<{ Bindings: BindingsInput }>()
     async (c) => {
       const { userId } = c.req.valid("param");
 
-      authorize(c.env, ["administrator"]);
+      authorize(c.get("locals"), ["administrator"]);
 
       await invalidateUserSessions(userId);
 
-      return c.json(null, { status: 204 });
+      return c.body(null, { status: 204 });
     },
   );
