@@ -16,9 +16,9 @@ import { and, eq } from "drizzle-orm";
 import ky from "ky";
 import { isDeepEqual } from "remeda";
 
+import type { IdToken } from "@paperwait/core/auth";
 import type { Provider } from "@paperwait/core/organization";
 import type { OmitTimestamps } from "@paperwait/core/types";
-import type { IdTokenPayload } from "~/api/lib/auth/tokens";
 
 export type EntraIdUserInfo = {
   sub: string;
@@ -73,7 +73,7 @@ export async function getUserInfo(
 export async function processUser(
   org: Pick<Organization, "id" | "status">,
   user: {
-    idTokenPayload: IdTokenPayload;
+    idToken: IdToken;
     info: UserInfo;
   },
 ): Promise<User["id"]> {
@@ -88,7 +88,7 @@ export async function processUser(
     .from(User)
     .where(
       and(
-        eq(User.providerId, user.idTokenPayload.userProviderId),
+        eq(User.providerId, user.idToken.userProviderId),
         eq(User.orgId, org.id),
       ),
     );
@@ -106,17 +106,17 @@ export async function processUser(
           .insert(User)
           .values({
             orgId: org.id,
-            providerId: user.idTokenPayload.userProviderId,
+            providerId: user.idToken.userProviderId,
             role: isInitializing ? "administrator" : "customer",
             name: user.info.name,
             email: user.info.email,
-            username: user.idTokenPayload.username,
+            username: user.idToken.username,
           })
           .returning({ id: User.id }),
         // Get names of the shared accounts the user has access to
         listUserSharedAccounts({
           orgId: org.id,
-          input: { username: user.idTokenPayload.username },
+          input: { username: user.idToken.username },
         }),
         // Update organization status to active if it's still initializing
         isInitializing
@@ -178,7 +178,7 @@ export async function processUser(
   const freshUserInfo = {
     name: user.info.name,
     email: user.info.email,
-    username: user.idTokenPayload.username,
+    username: user.idToken.username,
   };
 
   if (!isDeepEqual(existingUserInfo, freshUserInfo)) {

@@ -4,10 +4,10 @@ import { Lucia } from "lucia";
 import { db } from "../database";
 import { generateId } from "../id";
 import { User } from "../user/user.sql";
-import { Session } from "./session.sql";
+import { Session, SessionTokens } from "./session.sql";
 
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
-import type { NanoId } from "../id";
+import type { ProviderTokens } from "./provider";
 
 export const adapter = new DrizzlePostgreSQLAdapter(db, Session, User);
 
@@ -23,16 +23,16 @@ export const lucia = new Lucia(adapter, {
     email: attributes.email,
     username: attributes.username,
   }),
-  getSessionAttributes: ({ orgId }) => ({ orgId }),
+  getSessionAttributes: (attributes) => ({
+    orgId: attributes.orgId,
+  }),
 });
 
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
     DatabaseUserAttributes: Omit<User, "id">;
-    DatabaseSessionAttributes: {
-      orgId: NanoId;
-    };
+    DatabaseSessionAttributes: Pick<Session, "orgId">;
   }
 }
 
@@ -41,12 +41,24 @@ export type { User as LuciaUser, Session as LuciaSession } from "lucia";
 export async function createSession(
   userId: LuciaUser["id"],
   orgId: LuciaUser["orgId"],
+  tokens: ProviderTokens,
 ) {
-  const session = await lucia.createSession(
-    userId,
-    { orgId },
-    { sessionId: generateId() },
-  );
+  const session = await db.transaction(async (tx) => {
+    const sessionId = generateId();
+
+    const [session] = await Promise.all([
+      lucia.createSession(userId, { orgId }, { sessionId }),
+      tx
+        .insert(SessionTokens)
+        .values({ sessionId, userId, orgId, ...tokens })
+        .onConflictDoUpdate({
+          target: [SessionTokens.sessionId],
+          set: tokens,
+        }),
+    ]);
+
+    return session;
+  });
 
   const cookie = lucia.createSessionCookie(session.id);
 
