@@ -18,4 +18,7 @@ export default defineConfig({
     starlight({ title: "Paperwait" }),
   ],
   vite: { plugins: [TanStackRouterVite()] },
+  security: {
+    checkOrigin: true,
+  },
 });
