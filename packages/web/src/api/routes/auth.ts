@@ -1,13 +1,15 @@
 import {
+  createProviderAuthorizationUrl,
   createSession,
+  getProviderTokens,
   invalidateSession,
   invalidateUserSessions,
+  parseProviderIdToken,
 } from "@paperwait/core/auth";
 import { db } from "@paperwait/core/database";
 import {
   BadRequestError,
   handlePromiseResult,
-  InternalServerError,
   NotFoundError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
@@ -15,18 +17,13 @@ import { NanoId } from "@paperwait/core/id";
 import { Organization } from "@paperwait/core/organization";
 import { isUserExists } from "@paperwait/core/papercut";
 import { validator } from "@paperwait/core/valibot";
-import { generateCodeVerifier, generateState } from "arctic";
 import { and, eq, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
 import { validator as honoValidator } from "hono/validator";
-import { parseJWT } from "oslo/jwt";
 import * as v from "valibot";
 
 import { authorize } from "~/api/lib/auth/authorize";
-import entraId from "~/api/lib/auth/providers/entra-id";
-import google from "~/api/lib/auth/providers/google";
-import { getTokens, parseIdTokenPayload } from "~/api/lib/auth/tokens";
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
 import { Registration } from "~/shared/lib/schemas";
 
@@ -68,36 +65,8 @@ export default new Hono()
         );
       if (!org) throw new NotFoundError("Organization not found");
 
-      const state = generateState();
-      const codeVerifier = generateCodeVerifier();
-
-      let url: URL;
-      switch (org.provider) {
-        case "entra-id": {
-          url = await entraId.createAuthorizationURL(state, codeVerifier, {
-            scopes: [
-              "profile",
-              "email",
-              "offline_access",
-              "User.Read",
-              "User.ReadBasic.All",
-            ],
-          });
-          break;
-        }
-        case "google": {
-          url = await google.createAuthorizationURL(state, codeVerifier, {
-            scopes: ["profile", "email"],
-          });
-          url.searchParams.set("hd", org.providerId);
-          break;
-        }
-        default: {
-          org.provider satisfies never;
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          throw new InternalServerError(`Unknown provider: ${org.provider}`);
-        }
-      }
+      const { authorizationUrl, state, codeVerifier } =
+        await createProviderAuthorizationUrl(org);
 
       // store the provider as a cookie
       setCookie(c, "provider", org.provider, {
@@ -145,7 +114,7 @@ export default new Hono()
         });
       }
 
-      return c.redirect(url.toString());
+      return c.redirect(authorizationUrl.toString());
     },
   )
   // Callback
@@ -179,30 +148,28 @@ export default new Hono()
       const { provider, code_verifier, orgId, redirect } =
         c.req.valid("cookie");
 
-      const tokens = await getTokens(provider, code, code_verifier);
+      const tokens = await getProviderTokens(provider, code, code_verifier);
 
-      const idToken = parseJWT(tokens.idToken);
-
-      const idTokenPayload = parseIdTokenPayload(provider, idToken?.payload);
+      const idToken = parseProviderIdToken(provider, tokens.idToken);
 
       const [org] = await db
         .select({ status: Organization.status })
         .from(Organization)
         .where(
           and(
-            eq(Organization.providerId, idTokenPayload.orgProviderId),
+            eq(Organization.providerId, idToken.orgProviderId),
             eq(Organization.id, orgId),
           ),
         );
       if (!org)
         throw new NotFoundError(`
-        Failed to find organization (${orgId}) with providerId: ${idTokenPayload.orgProviderId}
+        Failed to find organization (${orgId}) with providerId: ${idToken.orgProviderId}
       `);
 
       const results = await Promise.allSettled([
         isUserExists({
           orgId,
-          input: { username: idTokenPayload.username },
+          input: { username: idToken.username },
         }).then((exists) => {
           if (!exists)
             throw new UnauthorizedError("User does not exist in PaperCut");
@@ -217,10 +184,10 @@ export default new Hono()
 
       const userId = await processUser(
         { id: orgId, status: org.status },
-        { idTokenPayload, info: userInfo },
+        { idToken, info: userInfo },
       );
 
-      const { cookie } = await createSession(userId, orgId);
+      const { cookie } = await createSession(userId, orgId, tokens);
 
       setCookie(c, cookie.name, cookie.value, cookie.attributes);
 

@@ -9,14 +9,10 @@ import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
 import { validator as honoValidator } from "hono/validator";
 
-import { authorize } from "~/api/lib/auth/authorize";
+import { authorization } from "~/api/middleware";
 
 export default new Hono()
-  .use(async (c, next) => {
-    authorize(c.get("locals"));
-
-    await next();
-  })
+  .use(authorization)
   .post(
     "/pull",
     honoValidator(
