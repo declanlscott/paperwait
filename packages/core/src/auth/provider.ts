@@ -203,8 +203,7 @@ export async function validateProvider(
     });
 
   // Check if the access token is expired within 10 seconds
-  const expired =
-    Date.now() > tokens.accessTokenExpiresAt.getUTCMilliseconds() - 10_000;
+  const expired = Date.now() > tokens.accessTokenExpiresAt.getTime() - 10_000;
 
   // Return the access token if it isn't expired
   if (!expired) return { type, id, accessToken: tokens.accessToken };
