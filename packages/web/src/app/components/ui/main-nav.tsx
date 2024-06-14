@@ -1,8 +1,14 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
+import { getUserInitials } from "@paperwait/core/utils";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
 import { useSubscribe } from "replicache-react";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "~/app/components/ui/primitives/avatar";
 import {
   Combobox,
   ComboboxCollection,
@@ -14,7 +20,7 @@ import {
   ComboboxSection,
 } from "~/app/components/ui/primitives/combobox";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
-import { useLogout } from "~/app/lib/hooks/auth";
+import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { linkStyles } from "~/shared/styles/components/main-nav";
@@ -34,6 +40,8 @@ export function MainNav() {
   );
 
   const [selectedRoomId, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
+
+  const { user } = useAuthed();
 
   return (
     <div className="hidden flex-col md:flex">
@@ -90,6 +98,11 @@ export function MainNav() {
                 <Link onPress={logout}>Logout</Link>
               </li>
             </ul>
+
+            <Avatar>
+              <AvatarImage src={`/api/user/${user.id}/photo`} />
+              <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
+            </Avatar>
           </nav>
         </div>
       </div>
