@@ -57,6 +57,7 @@ export default new Hono()
       );
 
       c.header("Content-Type", res.headers.get("Content-Type") ?? undefined);
+      c.header("Cache-Control", "max-age=2592000");
       c.status(res.status as StatusCode);
 
       return c.body(res.body);
