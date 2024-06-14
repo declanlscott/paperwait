@@ -124,7 +124,9 @@ export function parseProviderIdToken(
   provider: Provider,
   idToken: ProviderTokens["idToken"],
 ): IdToken {
-  const payload = parseJWT(idToken);
+  const jwt = parseJWT(idToken);
+
+  if (!jwt?.payload) throw new InternalServerError("Empty id token payload");
 
   switch (provider) {
     case "entra-id": {
@@ -143,7 +145,7 @@ export function parseProviderIdToken(
           Error: InternalServerError,
           message: `Failed to parse ${provider} id token payload`,
         },
-      )(payload);
+      )(jwt.payload);
     }
     case "google": {
       return fn(
@@ -157,7 +159,7 @@ export function parseProviderIdToken(
           Error: InternalServerError,
           message: `Failed to parse ${provider} id token payload`,
         },
-      )(payload);
+      )(jwt.payload);
     }
     default: {
       provider satisfies never;

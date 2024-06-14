@@ -44,18 +44,19 @@ export async function createSession(
   tokens: ProviderTokens,
 ) {
   const session = await db.transaction(async (tx) => {
-    const sessionId = generateId();
+    const session = await lucia.createSession(
+      userId,
+      { orgId },
+      { sessionId: generateId() },
+    );
 
-    const [session] = await Promise.all([
-      lucia.createSession(userId, { orgId }, { sessionId }),
-      tx
-        .insert(SessionTokens)
-        .values({ sessionId, userId, orgId, ...tokens })
-        .onConflictDoUpdate({
-          target: [SessionTokens.sessionId],
-          set: tokens,
-        }),
-    ]);
+    await tx
+      .insert(SessionTokens)
+      .values({ sessionId: session.id, userId, orgId, ...tokens })
+      .onConflictDoUpdate({
+        target: [SessionTokens.sessionId],
+        set: tokens,
+      });
 
     return session;
   });
