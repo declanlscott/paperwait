@@ -18,7 +18,7 @@ import { authorization, provider } from "~/api/middleware";
 import type { StatusCode } from "hono/utils/http-status";
 
 export default new Hono()
-  .use(authorization)
+  .use(authorization())
   .use(provider)
   .get(
     "/:id/photo",

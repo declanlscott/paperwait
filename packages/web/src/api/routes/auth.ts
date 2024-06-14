@@ -23,8 +23,8 @@ import { setCookie } from "hono/cookie";
 import { validator as honoValidator } from "hono/validator";
 import * as v from "valibot";
 
-import { authorize } from "~/api/lib/auth/authorize";
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
+import { authorization } from "~/api/middleware";
 import { Registration } from "~/shared/lib/schemas";
 
 export default new Hono()
@@ -195,10 +195,8 @@ export default new Hono()
     },
   )
   // Logout
-  .post("/logout", async (c) => {
-    const { session } = authorize(c.get("locals"));
-
-    const { cookie } = await invalidateSession(session.id);
+  .post("/logout", authorization(), async (c) => {
+    const { cookie } = await invalidateSession(c.get("locals").session!.id);
 
     setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
@@ -207,6 +205,7 @@ export default new Hono()
   // Logout user
   .post(
     "/logout/:userId",
+    authorization(["administrator"]),
     honoValidator(
       "param",
       validator(v.object({ userId: NanoId }), {
@@ -216,8 +215,6 @@ export default new Hono()
     ),
     async (c) => {
       const { userId } = c.req.valid("param");
-
-      authorize(c.get("locals"), ["administrator"]);
 
       await invalidateUserSessions(userId);
 

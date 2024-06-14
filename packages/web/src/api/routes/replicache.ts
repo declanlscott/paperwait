@@ -12,7 +12,7 @@ import { validator as honoValidator } from "hono/validator";
 import { authorization } from "~/api/middleware";
 
 export default new Hono()
-  .use(authorization)
+  .use(authorization())
   .post(
     "/pull",
     honoValidator(

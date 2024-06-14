@@ -18,11 +18,12 @@ import { Hono } from "hono";
 import { validator as honoValidator } from "hono/validator";
 import * as v from "valibot";
 
-import { authorize } from "~/api/lib/auth/authorize";
+import { authorization } from "~/api/middleware";
 
 export default new Hono()
   .put(
     "/accounts",
+    authorization(globalPermissions.syncPapercutAccounts),
     honoValidator(
       "json",
       validator(SyncPapercutAccountsMutationArgs, {
@@ -31,23 +32,21 @@ export default new Hono()
       }),
     ),
     async (c) => {
-      const { user } = authorize(
-        c.get("locals"),
-        globalPermissions.syncPapercutAccounts,
-      );
+      const orgId = c.get("locals").user!.orgId;
 
       await transact(
         async (tx) =>
-          await syncPapercutAccounts(tx, user.orgId, c.req.valid("json")),
+          await syncPapercutAccounts(tx, orgId, c.req.valid("json")),
       );
 
-      await poke([formatChannel("org", user.orgId)]);
+      await poke([formatChannel("org", orgId)]);
 
       return c.body(null, { status: 204 });
     },
   )
   .put(
     "/credentials",
+    authorization(["administrator"]),
     honoValidator(
       "json",
       validator(PapercutParameter, {
@@ -56,10 +55,8 @@ export default new Hono()
       }),
     ),
     async (c) => {
-      const { user } = authorize(c.get("locals"), ["administrator"]);
-
       await putParameter({
-        Name: `/paperwait/org/${user.orgId}/papercut`,
+        Name: `/paperwait/org/${c.get("locals").user!.orgId}/papercut`,
         Value: JSON.stringify(c.req.valid("json")),
         Type: "SecureString",
         Overwrite: true,

@@ -1,14 +1,17 @@
 import { validateProvider } from "@paperwait/core/auth";
 import { UnauthorizedError } from "@paperwait/core/errors";
-import { createMiddleware } from "Hono/factory";
+import { createMiddleware } from "hono/factory";
 
 import { authorize } from "~/api/lib/auth/authorize";
 
-export const authorization = createMiddleware(async (c, next) => {
-  authorize(c.get("locals"));
+import type { UserRole } from "@paperwait/core/user";
 
-  await next();
-});
+export const authorization = (roles?: Array<UserRole>) =>
+  createMiddleware(async (c, next) => {
+    authorize(c.get("locals"), roles);
+
+    await next();
+  });
 
 export const provider = createMiddleware(async (c, next) => {
   const session = c.get("locals").session;
