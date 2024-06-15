@@ -30,6 +30,7 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
+import { Separator } from "~/app/components/ui/primitives/separator";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useReplicache } from "~/app/lib/hooks/replicache";
@@ -65,6 +66,8 @@ export function MainNav() {
             >
               {logo}
             </a>
+
+            <Separator orientation="vertical" className="h-8" />
 
             <div className="flex">
               <Combobox
