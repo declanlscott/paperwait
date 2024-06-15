@@ -2,6 +2,7 @@ import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { getUserInitials } from "@paperwait/core/utils";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
+import { LogOut } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import {
@@ -9,6 +10,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "~/app/components/ui/primitives/avatar";
+import { Button } from "~/app/components/ui/primitives/button";
 import {
   Combobox,
   ComboboxCollection,
@@ -19,6 +21,15 @@ import {
   ComboboxPopover,
   ComboboxSection,
 } from "~/app/components/ui/primitives/combobox";
+import {
+  Menu,
+  MenuHeader,
+  MenuItem,
+  MenuPopover,
+  MenuSection,
+  MenuSeparator,
+  MenuTrigger,
+} from "~/app/components/ui/primitives/menu";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useReplicache } from "~/app/lib/hooks/replicache";
@@ -46,7 +57,7 @@ export function MainNav() {
   return (
     <div className="hidden flex-col md:flex">
       <div className="border-b">
-        <div className="flex h-16 items-center px-4">
+        <div className="flex h-16 items-center justify-between px-4">
           <nav className="flex items-center space-x-4 lg:space-x-6">
             <a href="/" className="flex h-11 w-9 items-center overflow-hidden">
               {logo}
@@ -93,17 +104,46 @@ export function MainNav() {
               <li>
                 <Link href="/settings">Settings</Link>
               </li>
-
-              <li>
-                <Link onPress={logout}>Logout</Link>
-              </li>
             </ul>
-
-            <Avatar>
-              <AvatarImage src={`/api/user/${user.id}/photo`} />
-              <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
-            </Avatar>
           </nav>
+
+          <MenuTrigger>
+            <Button className="rounded-full px-0">
+              <Avatar>
+                <AvatarImage src={`/api/user/${user.id}/photo`} />
+
+                <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
+              </Avatar>
+            </Button>
+
+            <MenuPopover placement="bottom" className="min-w-[8rem]">
+              <Menu className="w-56">
+                <MenuSection>
+                  <MenuHeader>
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-sm font-medium leading-none">
+                        {user.name}
+                      </span>
+
+                      <span className="text-muted-foreground text-xs leading-none">
+                        {user.email}
+                      </span>
+                    </div>
+                  </MenuHeader>
+                </MenuSection>
+
+                <MenuSeparator />
+
+                <MenuSection>
+                  <MenuItem onAction={logout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+
+                    <span>Logout</span>
+                  </MenuItem>
+                </MenuSection>
+              </Menu>
+            </MenuPopover>
+          </MenuTrigger>
         </div>
       </div>
     </div>
