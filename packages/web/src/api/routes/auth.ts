@@ -16,6 +16,7 @@ import {
 import { NanoId } from "@paperwait/core/id";
 import { Organization } from "@paperwait/core/organization";
 import { isUserExists } from "@paperwait/core/papercut";
+import { User } from "@paperwait/core/user";
 import { validator } from "@paperwait/core/valibot";
 import { and, eq, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
@@ -215,6 +216,16 @@ export default new Hono()
     ),
     async (c) => {
       const { userId } = c.req.valid("param");
+
+      const exists = await db
+        .select({})
+        .from(User)
+        .where(
+          and(eq(User.id, userId), eq(User.orgId, c.get("locals").user!.orgId)),
+        )
+        .execute()
+        .then((rows) => rows.length > 0);
+      if (!exists) throw new NotFoundError(`User "${userId}" not found`);
 
       await invalidateUserSessions(userId);
 
