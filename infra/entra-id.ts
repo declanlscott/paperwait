@@ -2,13 +2,13 @@ import { AUTH_CALLBACK_PATH } from "@paperwait/core/constants";
 
 import { domain } from "./secrets";
 
-$linkable(azuread.Application, (resource) => ({
+sst.linkable(azuread.Application, (resource) => ({
   properties: {
     clientId: resource.clientId,
   },
 }));
 
-$linkable(azuread.ApplicationPassword, (resource) => ({
+sst.linkable(azuread.ApplicationPassword, (resource) => ({
   properties: {
     value: resource.value,
   },
@@ -18,7 +18,7 @@ const wellKnownOutput = azuread.getApplicationPublishedAppIdsOutput({});
 
 const microsoftGraphAppId = wellKnownOutput.result?.MicrosoftGraph;
 
-const { oauth2PermissionScopeIds, appRoleIds } = new azuread.ServicePrincipal(
+const { oauth2PermissionScopeIds } = new azuread.ServicePrincipal(
   "MicrosoftGraphServicePrincipal",
   {
     clientId: microsoftGraphAppId,
