@@ -59,7 +59,10 @@ export function MainNav() {
       <div className="border-b">
         <div className="flex h-16 items-center justify-between px-4">
           <nav className="flex items-center space-x-4 lg:space-x-6">
-            <a href="/" className="flex h-11 w-9 items-center overflow-hidden">
+            <a
+              href="/"
+              className="focus:ring-ring flex h-11 w-9 items-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2"
+            >
               {logo}
             </a>
 

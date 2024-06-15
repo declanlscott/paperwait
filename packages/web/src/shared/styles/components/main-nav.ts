@@ -11,6 +11,9 @@ export const linkStyles = tv({
     isHovered: {
       true: "text-primary",
     },
+    isFocusVisible: {
+      true: "outline-none ring-2 ring-ring ring-offset-2",
+    },
   },
 });
 export type LinkStyles = VariantProps<typeof linkStyles>;
