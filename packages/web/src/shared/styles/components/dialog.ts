@@ -5,13 +5,13 @@ import { focusRing } from "~/shared/styles/utils";
 import type { VariantProps } from "tailwind-variants";
 
 export const dialogOverlayStyles = tv({
-  base: "fixed inset-0 z-50 bg-black/80",
+  base: "fixed inset-0 z-50 bg-muted/80",
   variants: {
     isEntering: {
       true: "animate-in fade-in-0",
     },
     isExiting: {
-      true: "animate-out fade-out-0 duration-300",
+      true: "animate-out fade-out-0 duration-200",
     },
   },
 });
@@ -24,7 +24,7 @@ export const sheetStyles = tv({
       true: "duration-500 animate-in",
     },
     isExiting: {
-      true: "duration-300 animate-out",
+      true: "duration-200 animate-out",
     },
     side: {
       top: "inset-x-0 top-0 border-b",
@@ -79,13 +79,13 @@ export const sheetStyles = tv({
 export type SheetStyles = VariantProps<typeof sheetStyles>;
 
 export const dialogContentStyles = tv({
-  base: "bg-background fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] border p-6 shadow-lg duration-200 sm:rounded-lg md:w-full",
+  base: "bg-background fixed inset-0 z-50 mx-auto mt-[10vh] h-fit max-h-[100dvh] w-[32rem] max-w-[100vw] border p-6 shadow-lg duration-200 sm:rounded-lg",
   variants: {
     isEntering: {
-      true: "animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-[48%]",
+      true: "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2",
     },
     isExiting: {
-      true: "animate-out fade-out-0 zoom-out-95 slide-out-to-left-1/2 slide-out-to-top-[48%] duration-300",
+      true: "animate-out fade-out-0 zoom-out-95 slide-out-to-bottom-2 duration-200",
     },
   },
 });
