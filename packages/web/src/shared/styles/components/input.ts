@@ -10,7 +10,8 @@ export const inputStyles = tv({
   variants: {
     variant: {
       default: "border-input placeholder:text-muted-foreground",
-      error: "border-red-500 text-red-500 placeholder:text-red-500/50",
+      destructive:
+        "border-destructive text-destructive placeholder:text-destructive/50",
     },
   },
   defaultVariants: {

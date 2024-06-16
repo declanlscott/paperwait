@@ -1,18 +1,18 @@
 import { tv } from "tailwind-variants";
 
+import { focusRing } from "~/shared/styles/utils";
+
 import type { VariantProps } from "tailwind-variants";
 
 export const linkStyles = tv({
-  base: "text-muted-foreground text-sm font-medium transition-colors p-3 cursor-pointer outline-none",
+  extend: focusRing,
+  base: "text-muted-foreground text-sm font-medium transition-colors p-3 cursor-pointer outline-none rounded-md",
   variants: {
     isActive: {
       true: "text-primary",
     },
     isHovered: {
       true: "text-primary",
-    },
-    isFocusVisible: {
-      true: "outline-none ring-2 ring-ring ring-offset-2",
     },
   },
 });

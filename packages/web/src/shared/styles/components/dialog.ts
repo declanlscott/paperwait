@@ -1,5 +1,7 @@
 import { tv } from "tailwind-variants";
 
+import { focusRing } from "~/shared/styles/utils";
+
 import type { VariantProps } from "tailwind-variants";
 
 export const dialogOverlayStyles = tv({
@@ -100,14 +102,9 @@ export const dialogStyles = tv({
 export type DialogStyles = VariantProps<typeof dialogStyles>;
 
 export const closeButtonStyles = tv({
+  extend: focusRing,
   base: "ring-offset-background absolute right-4 top-4 rounded-sm opacity-70 transition-opacity",
   variants: {
-    isFocused: {
-      true: "ring-ring outline-none ring-2 ring-offset-2",
-    },
-    isFocusVisible: {
-      true: "ring-ring outline-none ring-2 ring-offset-2",
-    },
     isEntering: {
       true: "bg-accent text-muted-foreground",
     },

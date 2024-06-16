@@ -17,7 +17,7 @@ const { value, show = false } = Astro.props;
     <input
       id="auth-token"
       name="authToken"
-      class={inputStyles()}
+      class={inputStyles({ isHtml: true })}
       required
       type={show ? "text" : "password"}
       autocomplete="off"

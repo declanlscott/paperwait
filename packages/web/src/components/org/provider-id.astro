@@ -34,5 +34,10 @@ switch (provider) {
 
 <div id="provider-id" class="grid gap-2">
   <label class={labelStyles()} for={data.inputId}>{data.label}</label>
-  <input id={data.inputId} name="providerId" class={inputStyles()} required />
+  <input
+    id={data.inputId}
+    name="providerId"
+    class={inputStyles({ isHtml: true })}
+    required
+  />
 </div>

@@ -62,7 +62,7 @@ export function MainNav() {
           <nav className="flex items-center space-x-4 lg:space-x-6">
             <a
               href="/"
-              className="focus:ring-ring flex h-11 w-9 items-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="focus-visible:ring-ring flex h-11 w-9 items-center overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             >
               {logo}
             </a>

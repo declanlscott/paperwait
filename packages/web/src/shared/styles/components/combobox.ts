@@ -3,13 +3,10 @@ import { tv } from "tailwind-variants";
 import type { VariantProps } from "tailwind-variants";
 
 export const comboboxInputStyles = tv({
-  base: "flex w-full bg-background px-3 py-2 text-sm placeholder:text-muted-foreground",
+  base: "flex w-full bg-background px-3 py-2 text-sm placeholder:text-muted-foreground outline-none",
   variants: {
     isDisabled: {
       true: "cursor-not-allowed opacity-50",
-    },
-    isFocused: {
-      true: "outline-none",
     },
   },
 });

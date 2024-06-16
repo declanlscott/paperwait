@@ -9,7 +9,7 @@ export const labelStyles = tv({
   variants: {
     variant: {
       default: "",
-      error: "text-red-500",
+      destructive: "text-red-destructive",
     },
   },
   defaultVariants: {

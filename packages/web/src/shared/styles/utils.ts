@@ -6,34 +6,25 @@ import { tv } from "tailwind-variants";
 import type { ClassValue } from "clsx/lite";
 
 export const focusRing = tv({
-  base: "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background",
+  base: "outline-none",
   variants: {
-    variant: {
-      default: "focus-visible:ring-ring",
-      error: "focus-visible:ring-red-500",
-    },
     isFocusVisible: {
-      false: "ring-0",
-      true: "outline-none ring-2 ring-ring ring-offset-2",
+      true: "ring-2 ring-ring ring-offset-2",
     },
-    isFocusWithin: {
-      false: "ring-0",
-      true: "outline-none ring-2 ring-ring ring-offset-2",
+    isHtml: {
+      true: "focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-background ring-ring",
     },
-  },
-  defaultVariants: {
-    variant: "default",
   },
   compoundVariants: [
     {
-      variant: "error",
+      variant: "destructive",
       isFocusVisible: true,
-      className: "ring-red-500",
+      className: "ring-destructive",
     },
     {
-      variant: "error",
-      isFocusWithin: true,
-      className: "ring-red-500",
+      variant: "destructive",
+      isFocused: true,
+      className: "ring-destructive",
     },
   ],
 });

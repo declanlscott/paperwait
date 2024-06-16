@@ -10,7 +10,7 @@ type Props = OrgSlugProps;
 const { value, isValid } = Astro.props;
 
 const variant =
-  isValid === undefined ? "default" : isValid ? "default" : "error";
+  isValid === undefined ? "default" : isValid ? "default" : "destructive";
 ---
 
 <div class="grid gap-2" hx-target="this" hx-swap="outerHTML">
@@ -20,7 +20,7 @@ const variant =
     <input
       id="slug"
       name="slug"
-      class={inputStyles({ variant })}
+      class={inputStyles({ variant, isHtml: true })}
       placeholder="my-org"
       required
       hx-post="/partials/org/slug"
