@@ -32,13 +32,19 @@ export const Command = forwardRef<
   />
 ));
 
-export type CommandDialogProps = AriaDialogProps;
-export const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
+export interface CommandDialogProps extends AriaDialogProps {
+  commandProps?: ComponentPropsWithoutRef<typeof CommandPrimitive>;
+}
+export const CommandDialog = ({
+  children,
+  commandProps,
+  ...props
+}: CommandDialogProps) => {
   return (
     <Dialog {...props}>
       <DialogContent className="overflow-hidden p-0 shadow-lg">
         {(values) => (
-          <Command className={commandDialogContentStyles()}>
+          <Command {...commandProps} className={commandDialogContentStyles()}>
             {typeof children === "function" ? children(values) : children}
           </Command>
         )}

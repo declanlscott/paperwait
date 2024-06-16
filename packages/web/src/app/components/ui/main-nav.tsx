@@ -2,9 +2,10 @@ import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { getUserInitials } from "@paperwait/core/utils";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import { LogOut } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
+import { CommandBar } from "~/app/components/ui/command-bar";
 import {
   Avatar,
   AvatarFallback,
@@ -21,6 +22,8 @@ import {
   ComboboxPopover,
   ComboboxSection,
 } from "~/app/components/ui/primitives/combobox";
+import { DialogTrigger } from "~/app/components/ui/primitives/dialog";
+import { KeyboardShortcut } from "~/app/components/ui/primitives/keyboard-shortcut";
 import {
   Menu,
   MenuHeader,
@@ -113,43 +116,61 @@ export function MainNav() {
             </ul>
           </nav>
 
-          <MenuTrigger>
-            <Button className="rounded-full px-0">
-              <Avatar>
-                <AvatarImage src={`/api/user/${user.id}/photo`} />
+          <div className="flex gap-4">
+            <DialogTrigger>
+              <Button variant="outline" className="w-40 justify-between">
+                <div className="flex items-center">
+                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
 
-                <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
-              </Avatar>
-            </Button>
+                  <span className="text-muted-foreground font-normal">
+                    Search...
+                  </span>
+                </div>
 
-            <MenuPopover placement="bottom" className="min-w-[8rem]">
-              <Menu className="w-56">
-                <MenuSection>
-                  <MenuHeader>
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-sm font-medium leading-none">
-                        {user.name}
-                      </span>
+                <KeyboardShortcut>⌘K</KeyboardShortcut>
+              </Button>
 
-                      <span className="text-muted-foreground text-xs leading-none">
-                        {user.email}
-                      </span>
-                    </div>
-                  </MenuHeader>
-                </MenuSection>
+              <CommandBar />
+            </DialogTrigger>
 
-                <MenuSeparator />
+            <MenuTrigger>
+              <Button className="rounded-full px-0">
+                <Avatar>
+                  <AvatarImage src={`/api/user/${user.id}/photo`} />
 
-                <MenuSection>
-                  <MenuItem onAction={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
+                  <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
+                </Avatar>
+              </Button>
 
-                    <span>Logout</span>
-                  </MenuItem>
-                </MenuSection>
-              </Menu>
-            </MenuPopover>
-          </MenuTrigger>
+              <MenuPopover placement="bottom" className="min-w-[8rem]">
+                <Menu className="w-56">
+                  <MenuSection>
+                    <MenuHeader>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-medium leading-none">
+                          {user.name}
+                        </span>
+
+                        <span className="text-muted-foreground text-xs leading-none">
+                          {user.email}
+                        </span>
+                      </div>
+                    </MenuHeader>
+                  </MenuSection>
+
+                  <MenuSeparator />
+
+                  <MenuSection>
+                    <MenuItem onAction={logout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+
+                      <span>Logout</span>
+                    </MenuItem>
+                  </MenuSection>
+                </Menu>
+              </MenuPopover>
+            </MenuTrigger>
+          </div>
         </div>
       </div>
     </div>
