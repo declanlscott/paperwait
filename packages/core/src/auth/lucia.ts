@@ -7,7 +7,7 @@ import { User } from "../user/user.sql";
 import { Session, SessionTokens } from "./session.sql";
 
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
-import type { ProviderTokens } from "./provider";
+import type { ProviderTokens } from "../auth-provider/types";
 
 export const adapter = new DrizzlePostgreSQLAdapter(db, Session, User);
 

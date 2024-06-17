@@ -1,16 +1,22 @@
 import {
-  createProviderAuthorizationUrl,
   createSession,
-  getProviderTokens,
   invalidateSession,
   invalidateUserSessions,
-  parseProviderIdToken,
 } from "@paperwait/core/auth";
+import {
+  createEntraIdAuthorizationUrl,
+  createGoogleAuthorizationUrl,
+  entraId,
+  google,
+  parseEntraIdIdToken,
+  parseGoogleIdToken,
+} from "@paperwait/core/auth-provider";
 import { db } from "@paperwait/core/database";
 import {
   BadRequestError,
   handlePromiseResult,
   NotFoundError,
+  NotImplementedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
 import { NanoId } from "@paperwait/core/id";
@@ -27,6 +33,8 @@ import * as v from "valibot";
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
 import { authorization } from "~/api/middleware";
 import { Registration } from "~/shared/lib/schemas";
+
+import type { IdToken, ProviderTokens } from "@paperwait/core/auth-provider";
 
 export default new Hono()
   // Login
@@ -66,8 +74,33 @@ export default new Hono()
         );
       if (!org) throw new NotFoundError("Organization not found");
 
-      const { authorizationUrl, state, codeVerifier } =
-        await createProviderAuthorizationUrl(org);
+      let state: string;
+      let codeVerifier: string;
+      let authorizationUrl: URL;
+      switch (org.provider) {
+        case "entra-id": {
+          const entraId = await createEntraIdAuthorizationUrl();
+          state = entraId.state;
+          codeVerifier = entraId.codeVerifier;
+          authorizationUrl = entraId.authorizationUrl;
+          break;
+        }
+        case "google": {
+          const google = await createGoogleAuthorizationUrl(org.providerId);
+          state = google.state;
+          codeVerifier = google.codeVerifier;
+          authorizationUrl = google.authorizationUrl;
+          break;
+        }
+        default: {
+          org.provider satisfies never;
+
+          throw new NotImplementedError(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Provider "${org.provider}" not implemented`,
+          );
+        }
+      }
 
       // store the provider as a cookie
       setCookie(c, "provider", org.provider, {
@@ -149,9 +182,28 @@ export default new Hono()
       const { provider, code_verifier, orgId, redirect } =
         c.req.valid("cookie");
 
-      const tokens = await getProviderTokens(provider, code, code_verifier);
+      let tokens: ProviderTokens;
+      let idToken: IdToken;
+      switch (provider) {
+        case "entra-id": {
+          tokens = await entraId.validateAuthorizationCode(code, code_verifier);
+          idToken = parseEntraIdIdToken(tokens.idToken);
+          break;
+        }
+        case "google": {
+          tokens = await google.validateAuthorizationCode(code, code_verifier);
+          idToken = parseGoogleIdToken(tokens.idToken);
+          break;
+        }
+        default: {
+          provider satisfies never;
 
-      const idToken = parseProviderIdToken(provider, tokens.idToken);
+          throw new NotImplementedError(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Provider "${provider}" not implemented`,
+          );
+        }
+      }
 
       const [org] = await db
         .select({ status: Organization.status })
