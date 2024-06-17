@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { Search } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 
 import { Dialog, DialogContent } from "~/app/components/ui/primitives/dialog";
 import {
@@ -53,12 +53,20 @@ export const CommandDialog = ({
   );
 };
 
+export interface CommandInputProps
+  extends ComponentPropsWithoutRef<typeof CommandPrimitive.Input> {
+  back?: boolean;
+}
 export const CommandInput = forwardRef<
   ElementRef<typeof CommandPrimitive.Input>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
+  CommandInputProps
+>(({ className, back = false, ...props }, ref) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    {back ? (
+      <ArrowLeft className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    ) : (
+      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    )}
 
     <CommandPrimitive.Input
       ref={ref}

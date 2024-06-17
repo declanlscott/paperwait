@@ -2,7 +2,7 @@ import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { getUserInitials } from "@paperwait/core/utils";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import { LogOut, Search } from "lucide-react";
+import { Building2, LogOut, Search } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import { CommandBar } from "~/app/components/ui/command-bar";
@@ -34,7 +34,11 @@ import {
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
 import { Separator } from "~/app/components/ui/primitives/separator";
-import { selectedRoomIdAtom } from "~/app/lib/atoms";
+import {
+  commandBarInputAtom,
+  commandBarPagesAtom,
+  selectedRoomIdAtom,
+} from "~/app/lib/atoms";
 import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
@@ -56,7 +60,10 @@ export function MainNav() {
 
   const [selectedRoomId, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
 
-  const { user } = useAuthed();
+  const { user, org } = useAuthed();
+
+  const [, setInput] = useAtom(commandBarInputAtom);
+  const [, setPages] = useAtom(commandBarPagesAtom);
 
   return (
     <div className="hidden flex-col md:flex">
@@ -76,7 +83,8 @@ export function MainNav() {
               <Combobox
                 aria-label="Select Room"
                 onSelectionChange={setSelectedRoomId}
-                defaultSelectedKey={selectedRoomId ?? undefined}
+                // defaultSelectedKey={selectedRoomId ?? undefined}
+                selectedKey={selectedRoomId}
               >
                 <ComboboxInput
                   placeholder="Select a room..."
@@ -117,7 +125,14 @@ export function MainNav() {
           </nav>
 
           <div className="flex gap-4">
-            <DialogTrigger>
+            <DialogTrigger
+              onOpenChange={(isOpen) => {
+                if (isOpen) {
+                  setInput("");
+                  setPages(["home"]);
+                }
+              }}
+            >
               <Button variant="outline" className="w-40 justify-between">
                 <div className="flex items-center">
                   <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -146,6 +161,26 @@ export function MainNav() {
                 <Menu className="w-56">
                   <MenuSection>
                     <MenuHeader>
+                      <div className="flex items-center gap-2">
+                        <Building2 />
+
+                        <div className="flex flex-col space-y-1">
+                          <span className="text-sm font-medium leading-none">
+                            {org.name}
+                          </span>
+
+                          <span className="text-muted-foreground text-xs leading-none">
+                            {org.slug}
+                          </span>
+                        </div>
+                      </div>
+                    </MenuHeader>
+                  </MenuSection>
+
+                  <MenuSeparator />
+
+                  <MenuSection>
+                    <MenuHeader>
                       <div className="flex flex-col space-y-1">
                         <span className="text-sm font-medium leading-none">
                           {user.name}
@@ -162,7 +197,7 @@ export function MainNav() {
 
                   <MenuSection>
                     <MenuItem onAction={logout}>
-                      <LogOut className="mr-2 h-4 w-4" />
+                      <LogOut className="mr-2 size-4" />
 
                       <span>Logout</span>
                     </MenuItem>
