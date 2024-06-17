@@ -92,7 +92,7 @@ export const globalPermissions = {
 export const UpdateUserRoleMutationArgs = v.object({
   id: NanoId,
   role: v.picklist(UserRole.enumValues),
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type UpdateUserRoleMutationArgs = v.InferOutput<
   typeof UpdateUserRoleMutationArgs
@@ -100,7 +100,7 @@ export type UpdateUserRoleMutationArgs = v.InferOutput<
 
 export const DeleteUserMutationArgs = v.object({
   id: NanoId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeleteUserMutationArgs = v.InferOutput<
   typeof DeleteUserMutationArgs
@@ -113,7 +113,7 @@ export type SyncPapercutAccountsMutationArgs = v.InferOutput<
 
 export const DeletePapercutAccountMutationArgs = v.object({
   id: PapercutAccountId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeletePapercutAccountMutationArgs = v.InferOutput<
   typeof DeletePapercutAccountMutationArgs
@@ -126,7 +126,7 @@ export type CreatePapercutAccountManagerAuthorizationMutationArgs =
 
 export const DeletePapercutAccountManagerAuthorizationMutationArgs = v.object({
   id: NanoId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeletePapercutAccountManagerAuthorizationMutationArgs =
   v.InferOutput<typeof DeletePapercutAccountManagerAuthorizationMutationArgs>;
@@ -138,7 +138,7 @@ export type CreateRoomMutationArgs = v.InferOutput<
 
 export const UpdateRoomMutationArgs = v.object({
   id: NanoId,
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
     v.omit(RoomSchema, ["id", "orgId", "createdAt", "updatedAt", "deletedAt"]),
   ).entries,
@@ -149,7 +149,7 @@ export type UpdateRoomMutationArgs = v.InferOutput<
 
 export const DeleteRoomMutationArgs = v.object({
   id: NanoId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeleteRoomMutationArgs = v.InferOutput<
   typeof DeleteRoomMutationArgs
@@ -162,7 +162,7 @@ export type CreateAnnouncementMutationArgs = v.InferOutput<
 
 export const UpdateAnnouncementMutationArgs = v.object({
   id: NanoId,
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
     v.omit(AnnouncementSchema, [
       "id",
@@ -179,7 +179,7 @@ export type UpdateAnnouncementMutationArgs = v.InferOutput<
 
 export const DeleteAnnouncementMutationArgs = v.object({
   id: NanoId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeleteAnnouncementMutationArgs = v.InferOutput<
   typeof DeleteAnnouncementMutationArgs
@@ -192,7 +192,7 @@ export type CreateProductMutationArgs = v.InferOutput<
 
 export const UpdateProductMutationArgs = v.object({
   id: NanoId,
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
     v.omit(ProductSchema, [
       "id",
@@ -209,7 +209,7 @@ export type UpdateProductMutationArgs = v.InferOutput<
 
 export const DeleteProductMutationArgs = v.object({
   id: NanoId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeleteProductMutationArgs = v.InferOutput<
   typeof DeleteProductMutationArgs
@@ -222,7 +222,7 @@ export type CreateOrderMutationArgs = v.InferOutput<
 
 export const UpdateOrderMutationArgs = v.object({
   id: NanoId,
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
     v.omit(OrderSchema, ["id", "orgId", "updatedAt", "createdAt", "deletedAt"]),
   ).entries,
@@ -233,7 +233,7 @@ export type UpdateOrderMutationArgs = v.InferOutput<
 
 export const DeleteOrderMutationArgs = v.object({
   id: NanoId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeleteOrderMutationArgs = v.InferOutput<
   typeof DeleteOrderMutationArgs
@@ -253,7 +253,7 @@ export type CreateCommentMutationArgs = v.InferOutput<
 export const UpdateCommentMutationArgs = v.object({
   id: NanoId,
   orderId: NanoId,
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
     v.omit(CommentSchema, [
       "id",
@@ -272,7 +272,7 @@ export type UpdateCommentMutationArgs = v.InferOutput<
 export const DeleteCommentMutationArgs = v.object({
   id: NanoId,
   orderId: NanoId,
-  deletedAt: v.pipe(v.string(), v.isoDateTime()),
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type DeleteCommentMutationArgs = v.InferOutput<
   typeof DeleteCommentMutationArgs

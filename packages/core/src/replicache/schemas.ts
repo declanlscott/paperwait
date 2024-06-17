@@ -21,7 +21,7 @@ export type JsonObject = v.InferOutput<typeof JsonObject>;
 export const PushRequest = v.variant("pushVersion", [
   v.object({
     pushVersion: v.literal(0),
-    clientID: NanoId,
+    clientID: v.pipe(v.string(), v.uuid()),
     mutations: v.array(
       v.object({
         name: v.string(),
@@ -40,7 +40,7 @@ export const PushRequest = v.variant("pushVersion", [
       v.object({
         name: v.string(),
         args: JsonValue,
-        clientID: NanoId,
+        clientID: v.pipe(v.string(), v.uuid()),
         id: v.number(),
         timestamp: v.number(),
       }),
@@ -57,7 +57,7 @@ export const PullRequest = v.variant("pullVersion", [
     schemaVersion: v.string(),
     profileID: v.string(),
     cookie: JsonValue,
-    clientID: NanoId,
+    clientID: v.pipe(v.string(), v.uuid()),
     lastMutationID: v.number(),
   }),
   v.object({

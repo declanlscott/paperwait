@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { id, timestamps } from "../drizzle/columns";
-import { orgIdColumns, orgTable } from "../drizzle/tables";
+import { orgIdColumns } from "../drizzle/tables";
 import { User } from "../user/user.sql";
 
 import type { ClientViewRecord } from "./client-view-record";
@@ -41,15 +41,19 @@ export const ReplicacheClientGroup = pgTable(
 );
 export type ReplicacheClientGroup = typeof ReplicacheClientGroup.$inferSelect;
 
-export const ReplicacheClient = orgTable(
+export const ReplicacheClient = pgTable(
   "replicache_client",
   {
+    id: uuid("id").notNull(),
+    orgId: orgIdColumns.orgId,
     clientGroupId: uuid("client_group_id").notNull(),
     lastMutationId: bigint("last_mutation_id", { mode: "number" })
       .notNull()
       .default(0),
+    ...timestamps,
   },
   (table) => ({
+    primary: primaryKey({ columns: [table.id, table.orgId] }),
     clientGroupReference: foreignKey({
       columns: [table.clientGroupId, table.orgId],
       foreignColumns: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],

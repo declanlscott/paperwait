@@ -70,7 +70,7 @@ async function processMutation(
     let channels: Array<string> = [];
 
     // 3: Get client group
-    const [clientGroup] = (await tx
+    const clientGroup = await tx
       .select({
         id: ReplicacheClientGroup.id,
         orgId: ReplicacheClientGroup.orgId,
@@ -78,15 +78,21 @@ async function processMutation(
         userId: ReplicacheClientGroup.userId,
       })
       .from(ReplicacheClientGroup)
-      .for("update")
-      .where(eq(ReplicacheClientGroup.id, clientGroupId))) ?? [
-      {
-        id: clientGroupId,
-        orgId: user.orgId,
-        cvrVersion: 0,
-        userId: user.id,
-      } satisfies OmitTimestamps<ReplicacheClientGroup>,
-    ];
+      .where(eq(ReplicacheClientGroup.id, clientGroupId))
+      .execute()
+      .then((rows): OmitTimestamps<ReplicacheClientGroup> => {
+        const result = rows.at(0);
+
+        if (!result)
+          return {
+            id: clientGroupId,
+            orgId: user.orgId,
+            cvrVersion: 0,
+            userId: user.id,
+          };
+
+        return result;
+      });
 
     // 4: Verify requesting user owns the client group
     if (clientGroup.userId !== user.id)
@@ -95,7 +101,7 @@ async function processMutation(
       );
 
     // 5: Get client
-    const [client] = (await tx
+    const client = await tx
       .select({
         id: ReplicacheClient.id,
         orgId: ReplicacheClient.orgId,
@@ -103,15 +109,21 @@ async function processMutation(
         lastMutationId: ReplicacheClient.lastMutationId,
       })
       .from(ReplicacheClient)
-      .for("update")
-      .where(eq(ReplicacheClient.id, mutation.clientID))) ?? [
-      {
-        id: mutation.clientID,
-        orgId: user.orgId,
-        clientGroupId: clientGroupId,
-        lastMutationId: 0,
-      } satisfies OmitTimestamps<ReplicacheClient>,
-    ];
+      .where(eq(ReplicacheClient.id, mutation.clientID))
+      .execute()
+      .then((rows): OmitTimestamps<ReplicacheClient> => {
+        const result = rows.at(0);
+
+        if (!result)
+          return {
+            id: mutation.clientID,
+            orgId: user.orgId,
+            clientGroupId: clientGroupId,
+            lastMutationId: 0,
+          };
+
+        return result;
+      });
 
     // 6: Verify requesting client group owns the client
     if (client.clientGroupId !== clientGroupId)

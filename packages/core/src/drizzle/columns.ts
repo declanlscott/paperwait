@@ -44,9 +44,9 @@ export const timestamps = {
 export type Timestamp = keyof typeof timestamps;
 
 export const TimestampsSchema = v.object({
-  createdAt: v.pipe(v.string(), v.isoDateTime()),
-  updatedAt: v.pipe(v.string(), v.isoDateTime()),
-  deletedAt: v.nullable(v.pipe(v.string(), v.isoDateTime())),
+  createdAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.nullable(v.pipe(v.string(), v.isoTimestamp())),
 });
 
 export function buildConflictUpdateColumns<
