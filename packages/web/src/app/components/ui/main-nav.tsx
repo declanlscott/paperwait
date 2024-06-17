@@ -2,7 +2,15 @@ import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { getUserInitials } from "@paperwait/core/utils";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import { BookDashed, Building2, Cuboid, LogOut, Search } from "lucide-react";
+import {
+  BookDashed,
+  Building2,
+  Cuboid,
+  LayoutDashboard,
+  LogOut,
+  Search,
+  Settings,
+} from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import { CommandBar } from "~/app/components/ui/command-bar";
@@ -62,7 +70,7 @@ export function MainNav() {
   const { reset } = useCommandBarActions();
 
   return (
-    <div className="hidden flex-col md:flex">
+    <div className="flex flex-col">
       <div className="border-b">
         <div className="flex h-16 items-center justify-between px-4">
           <nav className="flex items-center space-x-4 lg:space-x-6">
@@ -83,7 +91,7 @@ export function MainNav() {
               >
                 <ComboboxInput
                   placeholder="Select a room..."
-                  className="w-32"
+                  className="w-0 md:w-32"
                   icon={<Cuboid className="size-4 opacity-50" />}
                 />
 
@@ -117,22 +125,33 @@ export function MainNav() {
 
             <ul className="flex items-center">
               <li>
-                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard" className="flex items-center gap-2">
+                  <LayoutDashboard className="size-5 md:size-4" />
+
+                  <span className="hidden md:block">Dashboard</span>
+                </Link>
               </li>
 
               <li>
-                <Link href="/settings">Settings</Link>
+                <Link href="/settings" className="flex items-center gap-2">
+                  <Settings className="size-5 md:size-4" />
+
+                  <span className="hidden md:block">Settings</span>
+                </Link>
               </li>
             </ul>
           </nav>
 
           <div className="flex gap-4">
             <DialogTrigger onOpenChange={(isOpen) => isOpen && reset()}>
-              <Button variant="outline" className="w-40 justify-between">
+              <Button
+                variant="outline"
+                className="w-fit justify-between md:w-40"
+              >
                 <div className="flex items-center">
-                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                  <Search className="h-4 w-4 shrink-0 opacity-50 md:mr-2" />
 
-                  <span className="text-muted-foreground font-normal">
+                  <span className="text-muted-foreground hidden font-normal md:block">
                     Search...
                   </span>
                 </div>
