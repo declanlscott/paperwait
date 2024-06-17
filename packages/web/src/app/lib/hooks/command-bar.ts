@@ -21,4 +21,4 @@ export const useCommandBar = () =>
   useCommandBarStore(useShallow(({ input, pages }) => ({ input, pages })));
 
 export const useCommandBarActions = () =>
-  useCommandBarStore(({ actions }) => actions);
+  useCommandBarStore(useShallow(({ actions }) => actions));
