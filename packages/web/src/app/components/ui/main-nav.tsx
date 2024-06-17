@@ -203,6 +203,11 @@ export function MainNav() {
                         <span className="text-muted-foreground text-xs leading-none">
                           {user.email}
                         </span>
+
+                        <span className="text-muted-foreground/90 text-xs font-thin leading-none">
+                          {user.role.charAt(0).toUpperCase() +
+                            user.role.slice(1)}
+                        </span>
                       </div>
                     </MenuHeader>
                   </MenuSection>
