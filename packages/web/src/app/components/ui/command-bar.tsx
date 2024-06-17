@@ -3,12 +3,13 @@ import { OverlayTriggerStateContext } from "react-aria-components";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import {
-  ArrowRight,
   Book,
   BookDashed,
   Check,
   Cuboid,
+  LayoutDashboard,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
@@ -125,7 +126,7 @@ function HomeCommand() {
 
         <CommandGroup heading="Navigation">
           <CommandItem onSelect={() => handleNavigation("/dashboard")}>
-            <ArrowRight className="mr-2 size-4" />
+            <LayoutDashboard className="mr-2 size-4" />
 
             <p>
               Go to <span className="font-medium">Dashboard</span>
@@ -133,7 +134,7 @@ function HomeCommand() {
           </CommandItem>
 
           <CommandItem onSelect={() => handleNavigation("/settings")}>
-            <ArrowRight className="mr-2 size-4" />
+            <Settings className="mr-2 size-4" />
 
             <p>
               Go to <span className="font-medium">Settings</span>
