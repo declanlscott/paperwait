@@ -2,7 +2,7 @@ import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { getUserInitials } from "@paperwait/core/utils";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import { Building2, LogOut, Search } from "lucide-react";
+import { Building2, Cuboid, LogOut, Search } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import { CommandBar } from "~/app/components/ui/command-bar";
@@ -34,12 +34,9 @@ import {
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
 import { Separator } from "~/app/components/ui/primitives/separator";
-import {
-  commandBarInputAtom,
-  commandBarPagesAtom,
-  selectedRoomIdAtom,
-} from "~/app/lib/atoms";
+import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
+import { useCommandBarActions } from "~/app/lib/hooks/command-bar";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { linkStyles } from "~/shared/styles/components/main-nav";
@@ -62,8 +59,7 @@ export function MainNav() {
 
   const { user, org } = useAuthed();
 
-  const [, setInput] = useAtom(commandBarInputAtom);
-  const [, setPages] = useAtom(commandBarPagesAtom);
+  const { reset } = useCommandBarActions();
 
   return (
     <div className="hidden flex-col md:flex">
@@ -83,12 +79,12 @@ export function MainNav() {
               <Combobox
                 aria-label="Select Room"
                 onSelectionChange={setSelectedRoomId}
-                // defaultSelectedKey={selectedRoomId ?? undefined}
                 selectedKey={selectedRoomId}
               >
                 <ComboboxInput
                   placeholder="Select a room..."
                   className="w-32"
+                  icon={<Cuboid className="size-4 opacity-50" />}
                 />
 
                 <ComboboxPopover>
@@ -125,14 +121,7 @@ export function MainNav() {
           </nav>
 
           <div className="flex gap-4">
-            <DialogTrigger
-              onOpenChange={(isOpen) => {
-                if (isOpen) {
-                  setInput("");
-                  setPages(["home"]);
-                }
-              }}
-            >
+            <DialogTrigger onOpenChange={(isOpen) => isOpen && reset()}>
               <Button variant="outline" className="w-40 justify-between">
                 <div className="flex items-center">
                   <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />

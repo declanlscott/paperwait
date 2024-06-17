@@ -2,6 +2,7 @@ import { formatChannel } from "@paperwait/core/realtime";
 import { Outlet } from "@tanstack/react-router";
 
 import { AuthedProvider } from "~/app/components/providers/auth";
+import { CommandBarProvider } from "~/app/components/providers/command-bar";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
 import { MainNav } from "~/app/components/ui/main-nav";
 import { useAuthed } from "~/app/lib/hooks/auth";
@@ -14,9 +15,11 @@ export function AuthedLayout() {
     <AuthedProvider>
       <ReplicacheProvider>
         <Realtime>
-          <MainNav />
+          <CommandBarProvider>
+            <MainNav />
 
-          <Outlet />
+            <Outlet />
+          </CommandBarProvider>
         </Realtime>
       </ReplicacheProvider>
     </AuthedProvider>

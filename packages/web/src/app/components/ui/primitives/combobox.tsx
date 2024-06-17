@@ -24,7 +24,7 @@ import {
   comboboxSeparatorStyles,
 } from "~/shared/styles/components/combobox";
 
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import type {
   InputProps as AriaInputProps,
   ListBoxItemProps as AriaListBoxItemProps,
@@ -39,10 +39,14 @@ export const ComboboxSection = AriaComboboxSection;
 
 export const ComboboxCollection = AriaComboboxCollection;
 
-export type ComboboxInputProps = AriaInputProps;
-export function ComboboxInput(props: ComboboxInputProps) {
+export interface ComboboxInputProps extends AriaInputProps {
+  icon?: ReactNode;
+}
+export function ComboboxInput({ icon, ...props }: ComboboxInputProps) {
   return (
     <FieldGroup>
+      <div className="flex items-center pl-3">{icon}</div>
+
       <AriaInput
         {...props}
         className={composeRenderProps(

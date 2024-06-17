@@ -1,8 +1,15 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
-import { ArrowRight, Cuboid, LogOut } from "lucide-react";
+import {
+  ArrowRight,
+  Book,
+  BookDashed,
+  Check,
+  Cuboid,
+  LogOut,
+} from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import {
@@ -15,12 +22,12 @@ import {
   CommandSeparator,
 } from "~/app/components/ui/primitives/command";
 import { DialogOverlay } from "~/app/components/ui/primitives/dialog";
-import {
-  commandBarInputAtom,
-  commandBarPagesAtom,
-  selectedRoomIdAtom,
-} from "~/app/lib/atoms";
+import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useAuthActions } from "~/app/lib/hooks/auth";
+import {
+  useCommandBar,
+  useCommandBarActions,
+} from "~/app/lib/hooks/command-bar";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 
 import type { Room } from "@paperwait/core/room";
@@ -33,17 +40,9 @@ import type {
 export function CommandBar() {
   const state = useContext(OverlayTriggerStateContext);
 
-  const [input, setInput] = useAtom(commandBarInputAtom);
-
-  const [pages, setPages] = useAtom(commandBarPagesAtom);
-
-  const activePage = pages[pages.length - 1];
-  const isHome = activePage === "home";
-
-  const popPage = useCallback(
-    () => setPages((pages) => pages.toSpliced(-1, 1)),
-    [setPages],
-  );
+  const { input } = useCommandBar();
+  const { getActivePage, popPage } = useCommandBarActions();
+  const activePage = getActivePage();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -57,23 +56,14 @@ export function CommandBar() {
     document.addEventListener("keydown", down);
 
     return () => document.removeEventListener("keydown", down);
-  }, [state, setPages]);
-
-  function placeholder() {
-    switch (activePage) {
-      case "rooms":
-        return "Search rooms...";
-      default:
-        return "Type a command or search...";
-    }
-  }
+  }, [state]);
 
   return (
     <DialogOverlay>
       <CommandDialog
         commandProps={{
           onKeyDown(e) {
-            if (isHome || input.length) return;
+            if (activePage.type === "home" || input.length) return;
 
             if (e.key === "Backspace") {
               e.preventDefault();
@@ -83,34 +73,26 @@ export function CommandBar() {
           },
         }}
       >
-        <CommandInput
-          placeholder={placeholder()}
-          autoFocus
-          value={input}
-          onValueChange={setInput}
-          back={!isHome}
-        />
-
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-
-          {isHome && <HomeList />}
-          {activePage === "rooms" && <RoomsList />}
-        </CommandList>
+        {activePage.type === "home" && <HomeCommand />}
+        {activePage.type === "rooms" && <RoomsCommand />}
+        {activePage.type === "room" && (
+          <RoomCommand roomId={activePage.roomId} />
+        )}
       </CommandDialog>
     </DialogOverlay>
   );
 }
 
-function HomeList() {
+function HomeCommand() {
   const state = useContext(OverlayTriggerStateContext);
+
+  const { pushPage } = useCommandBarActions();
+  const { input } = useCommandBar();
+  const { setInput } = useCommandBarActions();
 
   const navigate = useNavigate();
 
   const { logout } = useAuthActions();
-
-  const [, setInput] = useAtom(commandBarInputAtom);
-  const [, setPages] = useAtom(commandBarPagesAtom);
 
   const handleNavigation = async (
     to: ToPathOption<
@@ -122,50 +104,57 @@ function HomeList() {
 
   return (
     <>
-      <CommandGroup heading="Rooms">
-        <CommandItem
-          onSelect={() => {
-            setPages((pages) => [...pages, "rooms"]);
-            setInput("");
-          }}
-        >
-          <Cuboid className="mr-2 size-4" />
+      <CommandInput
+        placeholder="Type a command or search..."
+        autoFocus
+        value={input}
+        onValueChange={setInput}
+      />
 
-          <span>Search rooms...</span>
-        </CommandItem>
-      </CommandGroup>
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
 
-      <CommandGroup heading="Navigation">
-        <CommandItem onSelect={() => handleNavigation("/dashboard")}>
-          <ArrowRight className="mr-2 size-4" />
+        <CommandGroup heading="Rooms">
+          <CommandItem onSelect={() => pushPage({ type: "rooms" })}>
+            <Cuboid className="mr-2 size-4" />
 
-          <p>
-            Go to <span className="font-medium">Dashboard</span>
-          </p>
-        </CommandItem>
+            <span>Search rooms...</span>
+          </CommandItem>
+        </CommandGroup>
 
-        <CommandItem onSelect={() => handleNavigation("/settings")}>
-          <ArrowRight className="mr-2 size-4" />
+        <CommandGroup heading="Navigation">
+          <CommandItem onSelect={() => handleNavigation("/dashboard")}>
+            <ArrowRight className="mr-2 size-4" />
 
-          <p>
-            Go to <span className="font-medium">Settings</span>
-          </p>
-        </CommandItem>
+            <p>
+              Go to <span className="font-medium">Dashboard</span>
+            </p>
+          </CommandItem>
 
-        <CommandSeparator />
+          <CommandItem onSelect={() => handleNavigation("/settings")}>
+            <ArrowRight className="mr-2 size-4" />
 
-        <CommandItem onSelect={() => logout()}>
-          <LogOut className="mr-2 size-4" />
+            <p>
+              Go to <span className="font-medium">Settings</span>
+            </p>
+          </CommandItem>
 
-          <span>Logout</span>
-        </CommandItem>
-      </CommandGroup>
+          <CommandSeparator />
+
+          <CommandItem onSelect={() => logout()}>
+            <LogOut className="mr-2 size-4" />
+
+            <span>Logout</span>
+          </CommandItem>
+        </CommandGroup>
+      </CommandList>
     </>
   );
 }
 
-function RoomsList() {
-  const state = useContext(OverlayTriggerStateContext);
+function RoomsCommand() {
+  const { input } = useCommandBar();
+  const { setInput, pushPage, popPage } = useCommandBarActions();
 
   const replicache = useReplicache();
 
@@ -173,26 +162,105 @@ function RoomsList() {
     tx.scan<Room>({ prefix: "room/" }).toArray(),
   );
 
+  return (
+    <>
+      <CommandInput
+        placeholder="Search rooms..."
+        autoFocus
+        value={input}
+        onValueChange={setInput}
+        back={{ buttonProps: { onPress: () => popPage() } }}
+      />
+
+      <CommandList>
+        <CommandEmpty>No rooms found.</CommandEmpty>
+
+        <CommandGroup heading="Rooms">
+          {rooms?.map((room) => (
+            <CommandItem
+              key={room.id}
+              onSelect={() => pushPage({ type: "room", roomId: room.id })}
+            >
+              <Cuboid className="mr-2 size-4" />
+
+              <span>{room.name}</span>
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </>
+  );
+}
+
+type RoomCommandProps = {
+  roomId: Room["id"];
+};
+function RoomCommand(props: RoomCommandProps) {
+  const state = useContext(OverlayTriggerStateContext);
+
+  const { input } = useCommandBar();
+  const { setInput, popPage } = useCommandBarActions();
+
   const [, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
+
+  const replicache = useReplicache();
+
+  const room = useSubscribe(replicache, async (tx) =>
+    tx.get<Room>(`room/${props.roomId}`),
+  );
+
+  function selectRoom() {
+    setSelectedRoomId(props.roomId);
+    state.close();
+  }
 
   return (
     <>
-      <CommandGroup heading="Rooms">
-        {rooms?.map((room) => (
-          <CommandItem
-            key={room.id}
-            onSelect={() => {
-              setSelectedRoomId(room.id);
+      <CommandInput
+        placeholder={`Room: ${room?.name}`}
+        autoFocus
+        value={input}
+        onValueChange={setInput}
+        back={{ buttonProps: { onPress: () => popPage() } }}
+      />
 
-              state.close();
-            }}
-          >
-            <Cuboid className="mr-2 size-4" />
+      <CommandList>
+        <CommandEmpty>No rooms found.</CommandEmpty>
 
-            <span>{room.name}</span>
-          </CommandItem>
-        ))}
-      </CommandGroup>
+        <CommandGroup heading="Room">
+          {room && (
+            <>
+              <CommandItem onSelect={() => selectRoom()}>
+                <Check className="mr-2 size-4" />
+
+                <p>
+                  <span className="font-medium">Select</span> {room.name}
+                </p>
+              </CommandItem>
+
+              <CommandItem>
+                {room.status === "draft" ? (
+                  <>
+                    <Book className="mr-2 size-4" />
+
+                    <p>
+                      <span className="font-medium">Publish</span> {room.name}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <BookDashed className="mr-2 size-4" />
+
+                    <p>
+                      <span className="font-medium">Unpublish</span> {room.name}
+                    </p>
+                  </>
+                )}
+              </CommandItem>
+            </>
+          )}
+        </CommandGroup>
+      </CommandList>
     </>
   );
 }

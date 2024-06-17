@@ -1,9 +1,14 @@
 import { forwardRef } from "react";
+import {
+  Button as AriaButton,
+  composeRenderProps,
+} from "react-aria-components";
 import { Command as CommandPrimitive } from "cmdk";
 import { ArrowLeft, Search } from "lucide-react";
 
 import { Dialog, DialogContent } from "~/app/components/ui/primitives/dialog";
 import {
+  commandBackButtonStyles,
   commandDialogContentStyles,
   commandGroupStyles,
   commandInputStyles,
@@ -19,7 +24,10 @@ import type {
   ElementRef,
   HTMLAttributes,
 } from "react";
-import type { DialogProps as AriaDialogProps } from "react-aria-components";
+import type {
+  ButtonProps as AriaButtonProps,
+  DialogProps as AriaDialogProps,
+} from "react-aria-components";
 
 export const Command = forwardRef<
   ElementRef<typeof CommandPrimitive>,
@@ -55,17 +63,26 @@ export const CommandDialog = ({
 
 export interface CommandInputProps
   extends ComponentPropsWithoutRef<typeof CommandPrimitive.Input> {
-  back?: boolean;
+  back?: {
+    buttonProps: AriaButtonProps;
+  };
 }
 export const CommandInput = forwardRef<
   ElementRef<typeof CommandPrimitive.Input>,
   CommandInputProps
->(({ className, back = false, ...props }, ref) => (
+>(({ className, back, ...props }, ref) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
     {back ? (
-      <ArrowLeft className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+      <AriaButton
+        {...back.buttonProps}
+        className={composeRenderProps("", (className, renderProps) =>
+          commandBackButtonStyles({ ...renderProps, className }),
+        )}
+      >
+        <ArrowLeft className="size-4" />
+      </AriaButton>
     ) : (
-      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+      <Search className="mr-2 size-4 shrink-0 opacity-50" />
     )}
 
     <CommandPrimitive.Input

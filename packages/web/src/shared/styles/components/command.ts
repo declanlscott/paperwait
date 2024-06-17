@@ -1,5 +1,7 @@
 import { tv } from "tailwind-variants";
 
+import { focusRing } from "~/shared/styles/utils";
+
 import type { VariantProps } from "tailwind-variants";
 
 export const commandStyles = tv({
@@ -18,6 +20,16 @@ export const commandInputStyles = tv({
   base: "placeholder:text-muted-foreground flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50",
 });
 export type CommandInputStyles = VariantProps<typeof commandInputStyles>;
+
+export const commandBackButtonStyles = tv({
+  extend: focusRing,
+  base: "ring-offset-background mr-2 shrink-0 text-primary/50 transition-colors rounded-sm",
+  variants: {
+    isHovered: {
+      true: "text-primary/100",
+    },
+  },
+});
 
 export const commandListStyles = tv({
   base: "max-h-[300px] overflow-y-auto overflow-x-hidden",
