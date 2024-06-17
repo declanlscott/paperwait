@@ -2,7 +2,7 @@ import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { getUserInitials } from "@paperwait/core/utils";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import { Building2, Cuboid, LogOut, Search } from "lucide-react";
+import { BookDashed, Building2, Cuboid, LogOut, Search } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import { CommandBar } from "~/app/components/ui/command-bar";
@@ -99,7 +99,13 @@ export function MainNav() {
                             id={room.id}
                             key={room.id}
                           >
-                            {room.name}
+                            <div className="flex w-full items-center justify-between">
+                              {room.name}
+
+                              {room.status === "draft" && (
+                                <BookDashed className="size-4" />
+                              )}
+                            </div>
                           </ComboboxItem>
                         )}
                       </ComboboxCollection>

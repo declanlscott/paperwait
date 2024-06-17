@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
+import { Authorize } from "~/app/components/ui/authorize";
 import {
   CommandDialog,
   CommandEmpty,
@@ -211,6 +212,17 @@ function RoomCommand(props: RoomCommandProps) {
 
   function selectRoom() {
     setSelectedRoomId(props.roomId);
+
+    state.close();
+  }
+
+  async function updateRoomStatus(status: Room["status"]) {
+    await replicache.mutate.updateRoom({
+      id: props.roomId,
+      status,
+      updatedAt: new Date().toISOString(),
+    });
+
     state.close();
   }
 
@@ -238,25 +250,25 @@ function RoomCommand(props: RoomCommandProps) {
                 </p>
               </CommandItem>
 
-              <CommandItem>
+              <Authorize roles={["administrator", "operator"]}>
                 {room.status === "draft" ? (
-                  <>
+                  <CommandItem onSelect={() => updateRoomStatus("published")}>
                     <Book className="mr-2 size-4" />
 
                     <p>
                       <span className="font-medium">Publish</span> {room.name}
                     </p>
-                  </>
+                  </CommandItem>
                 ) : (
-                  <>
+                  <CommandItem onSelect={() => updateRoomStatus("draft")}>
                     <BookDashed className="mr-2 size-4" />
 
                     <p>
                       <span className="font-medium">Unpublish</span> {room.name}
                     </p>
-                  </>
+                  </CommandItem>
                 )}
-              </CommandItem>
+              </Authorize>
             </>
           )}
         </CommandGroup>

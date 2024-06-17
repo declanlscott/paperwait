@@ -4,6 +4,7 @@ import type { ClientResourceType } from "@paperwait/core/types";
 import type { UserRole } from "@paperwait/core/user";
 import type { Replicache } from "replicache";
 import type { StoreApi } from "zustand";
+import type { Mutators } from "~/app/lib/hooks/replicache";
 import type { Auth, Authed, CommandBarPage, Slot } from "~/app/types";
 
 type AuthActions = {
@@ -21,7 +22,7 @@ export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
 export const AuthedContext = createContext<Authed | null>(null);
 
-export type ReplicacheContext = Replicache;
+export type ReplicacheContext = Replicache<Mutators>;
 
 export const ReplicacheContext = createContext<ReplicacheContext | null>(null);
 
