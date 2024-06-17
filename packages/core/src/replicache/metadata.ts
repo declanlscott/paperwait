@@ -25,7 +25,7 @@ export type Metadata = {
 export async function searchUsers(tx: Transaction, user: LuciaUser) {
   const selectAll = async () =>
     await tx
-      .select({ id: User.id, rowVersion: sql<number>`"user.xmin"` })
+      .select({ id: User.id, rowVersion: sql<number>`"user"."xmin"` })
       .from(User)
       .where(and(eq(User.orgId, user.orgId), isNull(User.deletedAt)));
 
