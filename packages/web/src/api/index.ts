@@ -10,7 +10,7 @@ import papercut from "~/api/routes/papercut";
 import replicache from "~/api/routes/replicache";
 import user from "~/api/routes/user";
 
-import type { ProviderData } from "@paperwait/core/auth";
+import type { ProviderData } from "@paperwait/core/auth-provider";
 
 declare module "hono" {
   interface ContextVariableMap {

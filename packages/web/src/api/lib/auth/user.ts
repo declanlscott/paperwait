@@ -16,7 +16,7 @@ import { and, eq } from "drizzle-orm";
 import ky from "ky";
 import { isDeepEqual } from "remeda";
 
-import type { IdToken } from "@paperwait/core/auth";
+import type { IdToken } from "@paperwait/core/auth-provider";
 import type { Provider } from "@paperwait/core/organization";
 import type { OmitTimestamps } from "@paperwait/core/types";
 
