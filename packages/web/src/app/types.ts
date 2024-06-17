@@ -19,4 +19,5 @@ export type Slot = {
 export type CommandBarPage =
   | { type: "home" }
   | { type: "rooms" }
-  | { type: "room"; roomId: Room["id"] };
+  | { type: "room"; roomId: Room["id"] }
+  | { type: "users" };
