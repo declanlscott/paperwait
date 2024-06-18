@@ -83,7 +83,7 @@ export function MainNav() {
 
             <Separator orientation="vertical" className="h-8" />
 
-            <div className="flex">
+            <div className="hidden md:flex">
               <Combobox
                 aria-label="Select Room"
                 onSelectionChange={setSelectedRoomId}
@@ -91,7 +91,7 @@ export function MainNav() {
               >
                 <ComboboxInput
                   placeholder="Select a room..."
-                  className="w-0 md:w-32"
+                  className="w-32"
                   icon={<Cuboid className="size-4 opacity-50" />}
                 />
 
@@ -216,9 +216,9 @@ export function MainNav() {
 
                   <MenuSection>
                     <MenuItem onAction={logout}>
-                      <LogOut className="mr-2 size-4" />
+                      <LogOut className="text-destructive mr-2 size-4" />
 
-                      <span>Logout</span>
+                      <span className="text-destructive">Logout</span>
                     </MenuItem>
                   </MenuSection>
                 </Menu>
