@@ -18,7 +18,9 @@ export function AuthedLayout() {
           <CommandBarProvider>
             <MainNav />
 
-            <Outlet />
+            <main className="bg-muted/40 min-h-[calc(100vh_-_theme(spacing.16))]">
+              <Outlet />
+            </main>
           </CommandBarProvider>
         </Realtime>
       </ReplicacheProvider>

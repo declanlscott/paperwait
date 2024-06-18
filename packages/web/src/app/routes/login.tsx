@@ -8,7 +8,7 @@ import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams, LoginSearchParams } from "~/app/lib/schemas";
-import { buttonStyles } from "~/shared/styles/components/button";
+import { buttonStyles } from "~/shared/styles/components/primitives/button";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search) =>

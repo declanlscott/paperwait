@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 
-import { cardStyles } from "~/shared/styles/components/card";
+import { cardStyles } from "~/shared/styles/components/primitives/card";
 
 import type { HTMLAttributes } from "react";
 

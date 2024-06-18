@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { MissingContextProviderError } from "@paperwait/core/errors";
 import { optimistic } from "@paperwait/core/mutations";
 
@@ -23,6 +23,7 @@ import type {
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
   UpdateOrderMutationArgs,
+  UpdateOrganizationMutationArgs,
   UpdateProductMutationArgs,
   UpdateRoomMutationArgs,
   UpdateUserRoleMutationArgs,
@@ -37,8 +38,26 @@ export function useReplicache() {
   return replicache;
 }
 
+export function useIsSyncing() {
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const replicache = useReplicache();
+
+  useEffect(() => {
+    replicache.onSync = setIsSyncing;
+  }, [replicache]);
+
+  return isSyncing;
+}
+
 export function useMutators() {
   const authed = useAuthed();
+
+  const updateOrganization = useCallback(
+    async (tx: WriteTransaction, args: UpdateOrganizationMutationArgs) =>
+      optimistic.updateOrganization(tx, authed.user, args),
+    [authed.user],
+  );
 
   const updateUserRole = useCallback(
     async (tx: WriteTransaction, args: UpdateUserRoleMutationArgs) =>
@@ -176,6 +195,9 @@ export function useMutators() {
 
   return useMemo(
     () => ({
+      // Organization
+      updateOrganization,
+
       // User
       updateUserRole,
       deleteUser,
@@ -213,6 +235,7 @@ export function useMutators() {
       deleteComment,
     }),
     [
+      updateOrganization,
       createAnnouncement,
       createComment,
       createOrder,

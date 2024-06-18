@@ -1,7 +1,5 @@
 import * as v from "valibot";
 
-import { NanoId } from "../id";
-
 import type { JSONValue } from "replicache";
 
 export const JsonValue: v.GenericSchema<JSONValue> = v.nullable(
@@ -80,6 +78,7 @@ export const PullRequest = v.variant("pullVersion", [
 export type PullRequest = v.InferOutput<typeof PullRequest>;
 
 export const Domain = v.picklist([
+  "organization",
   "user",
   "papercutAccount",
   "papercutAccountCustomerAuthorization",

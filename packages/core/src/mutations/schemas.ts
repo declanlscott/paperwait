@@ -5,13 +5,14 @@ import { AnnouncementSchema } from "../announcement/announcement.sql";
 import { CommentSchema } from "../comment/comment.sql";
 import { NanoId, PapercutAccountId } from "../id";
 import { OrderSchema } from "../order/order.sql";
+import { OrganizationSchema } from "../organization";
 import { PapercutAccountManagerAuthorizationSchema } from "../papercut/account.sql";
 import { ProductSchema } from "../product/product.sql";
 import { PushRequest } from "../replicache/schemas";
 import { RoomSchema } from "../room/room.sql";
 import { UserRole } from "../user/user.sql";
 
-import type { JSONValue, WriteTransaction } from "replicache";
+import type { WriteTransaction } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
 import type { Channel } from "../realtime";
@@ -20,6 +21,7 @@ export const Mutation = v.object({
   ...PushRequest.options[1].entries.mutations.item.entries,
   ...v.object({
     name: v.union([
+      v.literal("updateOrganization"),
       v.literal("updateUserRole"),
       v.literal("deleteUser"),
       v.literal("syncPapercutAccounts"),
@@ -51,9 +53,8 @@ export type AuthoritativeMutation = Record<
   (
     tx: Transaction,
     user: LuciaUser,
-    args: JSONValue,
     isAuthorized: boolean,
-  ) => Promise<Array<Channel>>
+  ) => (input: unknown) => Promise<Array<Channel>>
 >;
 
 export type OptimisticMutation = Record<
@@ -66,6 +67,7 @@ export type OptimisticMutation = Record<
  * Permissions required to perform each mutation to any entity within the organization.
  */
 export const globalPermissions = {
+  updateOrganization: ["administrator"],
   updateUserRole: ["administrator"],
   deleteUser: ["administrator"],
   syncPapercutAccounts: ["administrator"],
@@ -88,6 +90,24 @@ export const globalPermissions = {
   updateComment: ["administrator"],
   deleteComment: ["administrator"],
 } as const satisfies Record<Mutation["name"], Array<UserRole>>;
+
+export const UpdateOrganizationMutationArgs = v.object({
+  id: NanoId,
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  ...v.partial(
+    v.omit(OrganizationSchema, [
+      "id",
+      "provider",
+      "providerId",
+      "createdAt",
+      "updatedAt",
+      "deletedAt",
+    ]),
+  ).entries,
+});
+export type UpdateOrganizationMutationArgs = v.InferOutput<
+  typeof UpdateOrganizationMutationArgs
+>;
 
 export const UpdateUserRoleMutationArgs = v.object({
   id: NanoId,

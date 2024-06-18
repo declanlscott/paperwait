@@ -5,6 +5,7 @@ import {
   EntityNotFoundError,
   OrderAccessDeniedError,
 } from "../errors/application";
+import { Organization } from "../organization";
 import { assertRole } from "../user/assert";
 import { globalPermissions } from "./schemas";
 
@@ -43,10 +44,26 @@ import type {
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
   UpdateOrderMutationArgs,
+  UpdateOrganizationMutationArgs,
   UpdateProductMutationArgs,
   UpdateRoomMutationArgs,
   UpdateUserRoleMutationArgs,
 } from "./schemas";
+
+async function updateOrganization(
+  tx: WriteTransaction,
+  user: LuciaUser,
+  { id: orgId, ...args }: UpdateOrganizationMutationArgs,
+) {
+  assertRole(user, globalPermissions.updateOrganization);
+
+  const prev = await tx.get<Organization>(`organization/${orgId}`);
+  if (!prev) throw new EntityNotFoundError("Organization", orgId);
+
+  const next = { ...prev, ...args } satisfies Organization;
+
+  return await tx.set(`organization/${orgId}`, next);
+}
 
 async function updateUserRole(
   tx: WriteTransaction,
@@ -361,6 +378,9 @@ async function deleteComment(
 }
 
 export const optimistic = {
+  // Organization
+  updateOrganization,
+
   // User
   updateUserRole,
   deleteUser,

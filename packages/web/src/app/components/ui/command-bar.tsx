@@ -26,7 +26,7 @@ import {
 } from "~/app/components/ui/primitives/command";
 import { DialogOverlay } from "~/app/components/ui/primitives/dialog";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
-import { useAuthActions } from "~/app/lib/hooks/auth";
+import { useLogout } from "~/app/lib/hooks/auth";
 import {
   useCommandBar,
   useCommandBarActions,
@@ -95,7 +95,7 @@ function HomeCommand() {
 
   const navigate = useNavigate();
 
-  const { logout } = useAuthActions();
+  const logout = useLogout();
 
   const replicache = useReplicache();
 

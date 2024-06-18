@@ -5,7 +5,7 @@ import {
   avatarFallbackStyles,
   avatarImageStyles,
   avatarStyles,
-} from "~/shared/styles/components/avatar";
+} from "~/shared/styles/components/primitives/avatar";
 
 import type { ComponentPropsWithoutRef, ElementRef } from "react";
 

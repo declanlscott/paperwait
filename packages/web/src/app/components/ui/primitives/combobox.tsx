@@ -22,7 +22,7 @@ import {
   comboboxListBoxStyles,
   comboboxPopoverStyles,
   comboboxSeparatorStyles,
-} from "~/shared/styles/components/combobox";
+} from "~/shared/styles/components/primitives/combobox";
 
 import type { ComponentProps, ReactNode } from "react";
 import type {

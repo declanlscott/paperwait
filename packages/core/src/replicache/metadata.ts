@@ -4,6 +4,7 @@ import { uniqueBy } from "remeda";
 import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
 import { Order } from "../order/order.sql";
+import { Organization } from "../organization";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -21,6 +22,24 @@ export type Metadata = {
   id: string | number;
   rowVersion: number;
 };
+
+export async function searchOrganizations(tx: Transaction, user: LuciaUser) {
+  const select = async () =>
+    await tx
+      .select({
+        id: Organization.id,
+        rowVersion: sql<number>`"organization"."xmin"`,
+      })
+      .from(Organization)
+      .where(and(eq(Organization.id, user.orgId)));
+
+  return searchAsRole(user.role, {
+    searchAsAdministrator: select,
+    searchAsOperator: select,
+    searchAsManager: select,
+    searchAsCustomer: select,
+  });
+}
 
 export async function searchUsers(tx: Transaction, user: LuciaUser) {
   const selectAll = async () =>

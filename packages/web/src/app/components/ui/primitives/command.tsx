@@ -17,7 +17,7 @@ import {
   commandSeparatorStyles,
   commandShortcutStyles,
   commandStyles,
-} from "~/shared/styles/components/command";
+} from "~/shared/styles/components/primitives/command";
 
 import type {
   ComponentPropsWithoutRef,

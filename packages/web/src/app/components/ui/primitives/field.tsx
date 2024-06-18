@@ -10,7 +10,7 @@ import { twMerge } from "tailwind-merge";
 import {
   fieldGroupStyles,
   labelStyles,
-} from "~/shared/styles/components/field";
+} from "~/shared/styles/components/primitives/field";
 import { composeTwRenderProps } from "~/shared/styles/utils";
 
 import type {

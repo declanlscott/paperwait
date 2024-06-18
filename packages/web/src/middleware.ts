@@ -21,7 +21,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const [org] = user
     ? await db
-        .select({ slug: Organization.slug, name: Organization.name })
+        .select({
+          id: Organization.id,
+          slug: Organization.slug,
+        })
         .from(Organization)
         .where(eq(Organization.id, user.orgId))
     : [null];

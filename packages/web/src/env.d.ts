@@ -9,7 +9,7 @@ declare namespace App {
     user: import("@paperwait/core/auth").LuciaUser | null;
     org: Pick<
       import("@paperwait/core/organization").Organization,
-      "slug" | "name"
+      "id" | "slug"
     > | null;
   }
 }

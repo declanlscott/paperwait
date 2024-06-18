@@ -16,9 +16,12 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthedImport } from './routes/_authed'
 import { Route as AuthedDashboardImport } from './routes/_authed.dashboard'
+import { Route as AuthedSettingsIndexImport } from './routes/_authed.settings.index'
+import { Route as AuthedSettingsPapercutImport } from './routes/_authed.settings.papercut'
 
 // Create Virtual Routes
 
+const AuthedUsersLazyImport = createFileRoute('/_authed/users')()
 const AuthedSettingsLazyImport = createFileRoute('/_authed/settings')()
 
 // Create/Update Routes
@@ -33,6 +36,11 @@ const AuthedRoute = AuthedImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AuthedUsersLazyRoute = AuthedUsersLazyImport.update({
+  path: '/users',
+  getParentRoute: () => AuthedRoute,
+} as any).lazy(() => import('./routes/_authed.users.lazy').then((d) => d.Route))
+
 const AuthedSettingsLazyRoute = AuthedSettingsLazyImport.update({
   path: '/settings',
   getParentRoute: () => AuthedRoute,
@@ -43,6 +51,16 @@ const AuthedSettingsLazyRoute = AuthedSettingsLazyImport.update({
 const AuthedDashboardRoute = AuthedDashboardImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthedRoute,
+} as any)
+
+const AuthedSettingsIndexRoute = AuthedSettingsIndexImport.update({
+  path: '/',
+  getParentRoute: () => AuthedSettingsLazyRoute,
+} as any)
+
+const AuthedSettingsPapercutRoute = AuthedSettingsPapercutImport.update({
+  path: '/papercut',
+  getParentRoute: () => AuthedSettingsLazyRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -77,6 +95,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettingsLazyImport
       parentRoute: typeof AuthedImport
     }
+    '/_authed/users': {
+      id: '/_authed/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthedUsersLazyImport
+      parentRoute: typeof AuthedImport
+    }
+    '/_authed/settings/papercut': {
+      id: '/_authed/settings/papercut'
+      path: '/papercut'
+      fullPath: '/settings/papercut'
+      preLoaderRoute: typeof AuthedSettingsPapercutImport
+      parentRoute: typeof AuthedSettingsLazyImport
+    }
+    '/_authed/settings/': {
+      id: '/_authed/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthedSettingsIndexImport
+      parentRoute: typeof AuthedSettingsLazyImport
+    }
   }
 }
 
@@ -85,7 +124,11 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   AuthedRoute: AuthedRoute.addChildren({
     AuthedDashboardRoute,
-    AuthedSettingsLazyRoute,
+    AuthedSettingsLazyRoute: AuthedSettingsLazyRoute.addChildren({
+      AuthedSettingsPapercutRoute,
+      AuthedSettingsIndexRoute,
+    }),
+    AuthedUsersLazyRoute,
   }),
   LoginRoute,
 })
@@ -106,7 +149,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authed.tsx",
       "children": [
         "/_authed/dashboard",
-        "/_authed/settings"
+        "/_authed/settings",
+        "/_authed/users"
       ]
     },
     "/login": {
@@ -118,7 +162,23 @@ export const routeTree = rootRoute.addChildren({
     },
     "/_authed/settings": {
       "filePath": "_authed.settings.lazy.tsx",
+      "parent": "/_authed",
+      "children": [
+        "/_authed/settings/papercut",
+        "/_authed/settings/"
+      ]
+    },
+    "/_authed/users": {
+      "filePath": "_authed.users.lazy.tsx",
       "parent": "/_authed"
+    },
+    "/_authed/settings/papercut": {
+      "filePath": "_authed.settings.papercut.tsx",
+      "parent": "/_authed/settings"
+    },
+    "/_authed/settings/": {
+      "filePath": "_authed.settings.index.tsx",
+      "parent": "/_authed/settings"
     }
   }
 }

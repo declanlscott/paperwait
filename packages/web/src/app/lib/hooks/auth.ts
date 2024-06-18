@@ -1,12 +1,15 @@
 import { useCallback, useContext } from "react";
 import { MissingContextProviderError } from "@paperwait/core/errors";
 import { useRouter } from "@tanstack/react-router";
+import { useSubscribe } from "replicache-react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
 import { AuthContext, AuthedContext } from "~/app/lib/contexts";
+import { useReplicache } from "~/app/lib/hooks/replicache";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
+import type { Organization } from "@paperwait/core/organization";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { Authed, UnAuthed } from "~/app/types";
 
@@ -46,17 +49,29 @@ export function useAuthed() {
 
 export function useLogout() {
   const { logout } = useAuthActions();
+
   const { invalidate, navigate } = useRouter();
-  const { org } = useAuthed();
+
+  const replicache = useReplicache();
+
+  const org = useSubscribe(replicache, (tx) =>
+    tx
+      .scan<Organization>({ prefix: "organization/" })
+      .toArray()
+      .then((values) => values.at(0)),
+  );
 
   return useCallback(async () => {
     await logout();
+
     await invalidate().finally(
       () =>
         void navigate({
           to: "/login",
-          search: { ...initialLoginSearchParams, org: org.slug },
+          search: org?.slug
+            ? { ...initialLoginSearchParams, org: org.slug }
+            : initialLoginSearchParams,
         }),
     );
-  }, [logout, invalidate, navigate, org.slug]);
+  }, [logout, invalidate, navigate, org?.slug]);
 }

@@ -5,6 +5,7 @@ import { Comment } from "../comment/comment.sql";
 import { transact } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
+import { Organization } from "../organization";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -20,6 +21,7 @@ import {
   searchClients,
   searchComments,
   searchOrders,
+  searchOrganizations,
   searchPapercutAccountCustomerAuthorizations,
   searchPapercutAccountManagerAuthorizations,
   searchPapercutAccounts,
@@ -98,6 +100,7 @@ export async function pull(
     const baseCvr =
       prevClientView?.record ??
       ({
+        organization: {},
         user: {},
         papercutAccount: {},
         papercutAccountCustomerAuthorization: {},
@@ -124,6 +127,7 @@ export async function pull(
     // 6: Read all domain data, just ids and versions
     // 7: Read all clients in the client group
     const [
+      organizationsMetadata,
       usersMetadata,
       papercutAccountsMetadata,
       papercutAccountCustomerAuthorizationsMetadata,
@@ -135,6 +139,7 @@ export async function pull(
       commentsMetadata,
       clientsMetadata,
     ] = await Promise.all([
+      searchOrganizations(tx, user),
       searchUsers(tx, user),
       searchPapercutAccounts(tx, user),
       searchPapercutAccountCustomerAuthorizations(tx, user),
@@ -149,6 +154,7 @@ export async function pull(
 
     // 8: Build next client view record
     const nextCvr = {
+      organization: buildCvrEntries(organizationsMetadata),
       user: buildCvrEntries(usersMetadata),
       papercutAccount: buildCvrEntries(papercutAccountsMetadata),
       papercutAccountCustomerAuthorization: buildCvrEntries(
@@ -173,6 +179,7 @@ export async function pull(
 
     // 11: Get entities
     const [
+      organizations,
       users,
       papercutAccounts,
       papercutAccountCustomerAuthorizations,
@@ -183,6 +190,12 @@ export async function pull(
       orders,
       comments,
     ] = await Promise.all([
+      getData(
+        tx,
+        Organization,
+        { orgId: Organization.id, id: Organization.id },
+        { orgId: user.orgId, ids: diff.organization.puts },
+      ),
       getData(
         tx,
         User,
@@ -293,6 +306,7 @@ export async function pull(
     // 15: Commit transaction
     return {
       entities: {
+        organization: { puts: organizations, dels: diff.organization.dels },
         user: { puts: users, dels: diff.user.dels },
         papercutAccount: {
           puts: papercutAccounts,

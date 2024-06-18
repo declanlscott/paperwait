@@ -17,35 +17,34 @@ export type ClientViewRecordDiffEntry = {
   dels: Array<Metadata["id"]>;
 };
 
-export function buildCvrEntries(domainMetadata: Array<Metadata>) {
-  return domainMetadata.reduce((entries, { id, rowVersion }) => {
+export const buildCvrEntries = (domainMetadata: Array<Metadata>) =>
+  domainMetadata.reduce((entries, { id, rowVersion }) => {
     entries[id] = rowVersion;
 
     return entries;
   }, {} as ClientViewRecordEntries);
-}
 
-export function diffCvr(prev: ClientViewRecord, next: ClientViewRecord) {
-  return unique([
+export const diffCvr = (prev: ClientViewRecord, next: ClientViewRecord) =>
+  unique([
     ...validate(v.array(Domain), Object.keys(prev)),
     ...validate(v.array(Domain), Object.keys(next)),
   ]).reduce((diff, domain) => {
+    const prevDomain = prev[domain] ?? {};
+    const nextDomain = next[domain] ?? {};
+
     diff[domain] = {
-      puts: Object.keys(next[domain]).filter(
-        (id) =>
-          prev[domain][id] === undefined || prev[domain][id] < next[domain][id],
+      puts: Object.keys(nextDomain).filter(
+        (id) => prevDomain[id] === undefined || prevDomain[id] < nextDomain[id],
       ),
-      dels: Object.keys(prev[domain]).filter(
-        (id) => next[domain][id] === undefined,
+      dels: Object.keys(prevDomain).filter(
+        (id) => nextDomain[id] === undefined,
       ),
     };
 
     return diff;
   }, {} as ClientViewRecordDiff);
-}
 
-export function isCvrDiffEmpty(diff: ClientViewRecordDiff) {
-  return Object.values(diff).every(
+export const isCvrDiffEmpty = (diff: ClientViewRecordDiff) =>
+  Object.values(diff).every(
     ({ puts, dels }) => puts.length === 0 && dels.length === 0,
   );
-}

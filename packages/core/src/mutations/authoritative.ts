@@ -4,6 +4,7 @@ import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
 import { ForbiddenError } from "../errors/http";
 import { Order } from "../order/order.sql";
+import { Organization } from "../organization";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -37,63 +38,73 @@ import {
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
   UpdateOrderMutationArgs,
+  UpdateOrganizationMutationArgs,
   UpdateProductMutationArgs,
   UpdateRoomMutationArgs,
   UpdateUserRoleMutationArgs,
 } from "./schemas";
 
-import type { JSONValue } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
 import type { AuthoritativeMutation } from "./schemas";
 
-async function updateUserRole(
+function updateOrganization(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
+  return fn(UpdateOrganizationMutationArgs, async (values) => {
+    await tx
+      .update(Organization)
+      .set(values)
+      .where(eq(Organization.id, user.orgId));
+
+    return [formatChannel("org", user.orgId)];
+  });
+}
+
+function updateUserRole(
+  tx: Transaction,
+  user: LuciaUser,
+  isAuthorized: boolean,
+) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(UpdateUserRoleMutationArgs, async ({ id: userId, ...values }) => {
-    if (!isAuthorized) throw new ForbiddenError();
-
     await tx
       .update(User)
       .set(values)
       .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function deleteUser(
-  tx: Transaction,
-  user: LuciaUser,
-  args: JSONValue,
-  isAuthorized: boolean,
-) {
+function deleteUser(tx: Transaction, user: LuciaUser, isAuthorized: boolean) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(DeleteUserMutationArgs, async ({ id: userId, ...values }) => {
-    if (!isAuthorized) throw new ForbiddenError();
-
     await tx
       .update(User)
       .set(values)
       .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function deletePapercutAccount(
+function deletePapercutAccount(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(
     DeletePapercutAccountMutationArgs,
     async ({ id: papercutAccountId, ...values }) => {
-      if (!isAuthorized) throw new ForbiddenError();
-
       const [adminsOps, managers, customers] = await Promise.all([
         getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
         tx
@@ -139,20 +150,19 @@ async function deletePapercutAccount(
         ...managers.map(({ managerId }) => formatChannel("user", managerId)),
       ];
     },
-  )(args);
+  );
 }
 
-async function createPapercutAccountManagerAuthorization(
+function createPapercutAccountManagerAuthorization(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(
     CreatePapercutAccountManagerAuthorizationMutationArgs,
     async (values) => {
-      if (!isAuthorized) throw new ForbiddenError();
-
       const [managerAuthorization] = await tx
         .insert(PapercutAccountManagerAuthorization)
         .values(values)
@@ -163,20 +173,19 @@ async function createPapercutAccountManagerAuthorization(
 
       return [formatChannel("org", user.orgId)];
     },
-  )(args);
+  );
 }
 
-async function deletePapercutAccountManagerAuthorization(
+function deletePapercutAccountManagerAuthorization(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(
     DeletePapercutAccountManagerAuthorizationMutationArgs,
     async ({ id: papercutAccountManagerAuthorizationId, ...values }) => {
-      if (!isAuthorized) throw new ForbiddenError();
-
       await tx
         .update(PapercutAccountManagerAuthorization)
         .set(values)
@@ -192,18 +201,13 @@ async function deletePapercutAccountManagerAuthorization(
 
       return [formatChannel("org", user.orgId)];
     },
-  )(args);
+  );
 }
 
-async function createRoom(
-  tx: Transaction,
-  user: LuciaUser,
-  args: JSONValue,
-  isAuthorized: boolean,
-) {
-  return fn(CreateRoomMutationArgs, async (values) => {
-    if (!isAuthorized) throw new ForbiddenError();
+function createRoom(tx: Transaction, user: LuciaUser, isAuthorized: boolean) {
+  if (!isAuthorized) throw new ForbiddenError();
 
+  return fn(CreateRoomMutationArgs, async (values) => {
     const [room] = await tx
       .insert(Room)
       .values(values)
@@ -212,71 +216,59 @@ async function createRoom(
     if (!room) return [];
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function updateRoom(
-  tx: Transaction,
-  user: LuciaUser,
-  args: JSONValue,
-  isAuthorized: boolean,
-) {
+function updateRoom(tx: Transaction, user: LuciaUser, isAuthorized: boolean) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(UpdateRoomMutationArgs, async ({ id: roomId, ...values }) => {
-    if (!isAuthorized) throw new ForbiddenError();
-
     await tx
       .update(Room)
       .set(values)
       .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function deleteRoom(
-  tx: Transaction,
-  user: LuciaUser,
-  args: JSONValue,
-  isAuthorized: boolean,
-) {
+function deleteRoom(tx: Transaction, user: LuciaUser, isAuthorized: boolean) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(DeleteRoomMutationArgs, async ({ id: roomId, ...values }) => {
-    if (!isAuthorized) throw new ForbiddenError();
-
     await tx
       .update(Room)
       .set(values)
       .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function createAnnouncement(
+function createAnnouncement(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
-  return fn(CreateAnnouncementMutationArgs, async (values) => {
-    if (!isAuthorized) throw new ForbiddenError();
+  if (!isAuthorized) throw new ForbiddenError();
 
+  return fn(CreateAnnouncementMutationArgs, async (values) => {
     await tx.insert(Announcement).values(values);
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function updateAnnouncement(
+function updateAnnouncement(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(
     UpdateAnnouncementMutationArgs,
     async ({ id: announcementId, ...values }) => {
-      if (!isAuthorized) throw new ForbiddenError();
-
       await tx
         .update(Announcement)
         .set(values)
@@ -289,20 +281,19 @@ async function updateAnnouncement(
 
       return [formatChannel("org", user.orgId)];
     },
-  )(args);
+  );
 }
 
-async function deleteAnnouncement(
+function deleteAnnouncement(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(
     DeleteAnnouncementMutationArgs,
     async ({ id: announcementId, ...values }) => {
-      if (!isAuthorized) throw new ForbiddenError();
-
       await tx
         .update(Announcement)
         .set(values)
@@ -315,69 +306,61 @@ async function deleteAnnouncement(
 
       return [formatChannel("org", user.orgId)];
     },
-  )(args);
+  );
 }
 
-async function createProduct(
+function createProduct(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
-  return fn(CreateProductMutationArgs, async (values) => {
-    if (!isAuthorized) throw new ForbiddenError();
+  if (!isAuthorized) throw new ForbiddenError();
 
+  return fn(CreateProductMutationArgs, async (values) => {
     await tx.insert(Product).values(values);
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function updateProduct(
+function updateProduct(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(UpdateProductMutationArgs, async ({ id: productId, ...values }) => {
-    if (!isAuthorized) throw new ForbiddenError();
-
     await tx
       .update(Product)
       .set(values)
       .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function deleteProduct(
+function deleteProduct(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   isAuthorized: boolean,
 ) {
+  if (!isAuthorized) throw new ForbiddenError();
+
   return fn(DeleteProductMutationArgs, async ({ id: productId, ...values }) => {
-    if (!isAuthorized) throw new ForbiddenError();
-
     await tx
       .update(Product)
       .set(values)
       .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
     return [formatChannel("org", user.orgId)];
-  })(args);
+  });
 }
 
-async function createOrder(
-  tx: Transaction,
-  user: LuciaUser,
-  args: JSONValue,
-  isAuthorized: boolean,
-) {
-  return fn(CreateOrderMutationArgs, async (values) => {
-    if (!isAuthorized) throw new ForbiddenError();
+function createOrder(tx: Transaction, user: LuciaUser, isAuthorized: boolean) {
+  if (!isAuthorized) throw new ForbiddenError();
 
+  return fn(CreateOrderMutationArgs, async (values) => {
     const [order] = await tx
       .insert(Order)
       .values(values)
@@ -386,15 +369,10 @@ async function createOrder(
     const users = await getUsersWithAccessToOrder(tx, order.id, user.orgId);
 
     return users.map(({ id }) => formatChannel("user", id));
-  })(args);
+  });
 }
 
-async function updateOrder(
-  tx: Transaction,
-  user: LuciaUser,
-  args: JSONValue,
-  _isAuthorized: boolean,
-) {
+function updateOrder(tx: Transaction, user: LuciaUser, _isAuthorized: boolean) {
   return fn(UpdateOrderMutationArgs, async ({ id: orderId, ...values }) => {
     const users = await requireAccessToOrder(tx, user, orderId);
 
@@ -404,15 +382,10 @@ async function updateOrder(
       .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
 
     return users.map(({ id }) => formatChannel("user", id));
-  })(args);
+  });
 }
 
-async function deleteOrder(
-  tx: Transaction,
-  user: LuciaUser,
-  args: JSONValue,
-  _isAuthorized: boolean,
-) {
+function deleteOrder(tx: Transaction, user: LuciaUser, _isAuthorized: boolean) {
   return fn(DeleteOrderMutationArgs, async ({ id: orderId, ...values }) => {
     const users = await requireAccessToOrder(tx, user, orderId);
 
@@ -422,13 +395,12 @@ async function deleteOrder(
       .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
 
     return users.map(({ id }) => formatChannel("user", id));
-  })(args);
+  });
 }
 
-async function createComment(
+function createComment(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   _isAuthorized: boolean,
 ) {
   return fn(CreateCommentMutationArgs, async (values) => {
@@ -437,13 +409,12 @@ async function createComment(
     await tx.insert(Comment).values(values);
 
     return users.map(({ id }) => formatChannel("user", id));
-  })(args);
+  });
 }
 
-async function updateComment(
+function updateComment(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   _isAuthorized: boolean,
 ) {
   return fn(UpdateCommentMutationArgs, async ({ id: commentId, ...values }) => {
@@ -455,13 +426,12 @@ async function updateComment(
       .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
 
     return users.map(({ id }) => formatChannel("user", id));
-  })(args);
+  });
 }
 
-async function deleteComment(
+function deleteComment(
   tx: Transaction,
   user: LuciaUser,
-  args: JSONValue,
   _isAuthorized: boolean,
 ) {
   return fn(
@@ -476,10 +446,13 @@ async function deleteComment(
 
       return users.map(({ id }) => formatChannel("user", id));
     },
-  )(args);
+  );
 }
 
 export const authoritative = {
+  // Organization
+  updateOrganization,
+
   // User
   updateUserRole,
   deleteUser,

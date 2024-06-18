@@ -18,7 +18,7 @@ import {
   dialogStyles,
   dialogTitleStyles,
   sheetStyles,
-} from "~/shared/styles/components/dialog";
+} from "~/shared/styles/components/primitives/dialog";
 
 import type { ComponentProps, HTMLAttributes } from "react";
 import type {
@@ -26,7 +26,7 @@ import type {
   HeadingProps as AriaHeadingProps,
   ModalOverlayProps as AriaModalOverlayProps,
 } from "react-aria-components";
-import type { SheetStyles } from "~/shared/styles/components/dialog";
+import type { SheetStyles } from "~/shared/styles/components/primitives/dialog";
 
 export const DialogTrigger = AriaDialogTrigger;
 

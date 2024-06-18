@@ -14,7 +14,7 @@ import {
   boxStyles,
   checkboxStyles,
   checkStyles,
-} from "~/shared/styles/components/checkbox";
+} from "~/shared/styles/components/primitives/checkbox";
 import { composeTwRenderProps } from "~/shared/styles/utils";
 
 import type { ReactNode } from "react";
@@ -23,7 +23,7 @@ import type {
   CheckboxProps as AriaCheckboxProps,
   ValidationResult,
 } from "react-aria-components";
-import type { CheckboxStyles } from "~/shared/styles/components/checkbox";
+import type { CheckboxStyles } from "~/shared/styles/components/primitives/checkbox";
 
 export interface CheckboxProps extends AriaCheckboxProps, CheckboxStyles {}
 

@@ -152,11 +152,9 @@ async function processMutation(
       try {
         // 10(i): Business logic
         // 10(i)(a): xmin column is automatically updated by Postgres on any affected rows
-        channels = await fn(
-          Mutation,
-          (mutation) => mutate(tx, user, mutation),
-          { Error: BadRequestError, message: "Failed to parse mutation" },
-        )(mutation);
+        const mutate = getMutator(tx, user);
+
+        channels = await mutate(mutation);
       } catch (e) {
         // 10(ii)(a-c): Log, abort, and retry
         console.error(`Error processing mutation ${mutation.id}:`, e);
@@ -199,20 +197,22 @@ async function processMutation(
   });
 }
 
-async function mutate(
-  tx: Transaction,
-  user: LuciaUser,
-  mutation: Mutation,
-): Promise<Channel[]> {
-  if (mutation.name === "syncPapercutAccounts")
-    throw new NotImplementedError(
-      'Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT api/papercut/accounts)',
-    );
+const getMutator = (tx: Transaction, user: LuciaUser) =>
+  fn(
+    Mutation,
+    (mutation): Promise<Array<Channel>> => {
+      if (mutation.name === "syncPapercutAccounts")
+        throw new NotImplementedError(
+          'Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT /api/papercut/accounts)',
+        );
 
-  return await authoritative[mutation.name](
-    tx,
-    user,
-    mutation.args,
-    assertRole(user, globalPermissions[mutation.name], false),
+      const mutator = authoritative[mutation.name](
+        tx,
+        user,
+        assertRole(user, globalPermissions[mutation.name], false),
+      );
+
+      return mutator(mutation.args);
+    },
+    { Error: BadRequestError, message: "Failed to parse mutation" },
   );
-}

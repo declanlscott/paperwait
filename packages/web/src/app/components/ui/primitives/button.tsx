@@ -3,10 +3,10 @@ import {
   composeRenderProps,
 } from "react-aria-components";
 
-import { buttonStyles } from "~/shared/styles/components/button";
+import { buttonStyles } from "~/shared/styles/components/primitives/button";
 
 import type { ButtonProps as AriaButtonProps } from "react-aria-components";
-import type { ButtonStyles } from "~/shared/styles/components/button";
+import type { ButtonStyles } from "~/shared/styles/components/primitives/button";
 
 export interface ButtonProps extends AriaButtonProps, ButtonStyles {}
 
