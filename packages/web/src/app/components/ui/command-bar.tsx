@@ -1,6 +1,5 @@
 import { useContext, useEffect } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
-import { getUserInitials } from "@paperwait/core/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import {
@@ -11,16 +10,11 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
-  Users,
 } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import { Authorize } from "~/app/components/ui/authorize";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "~/app/components/ui/primitives/avatar";
+import { Avatar, AvatarImage } from "~/app/components/ui/primitives/avatar";
 import {
   CommandDialog,
   CommandEmpty,
@@ -84,11 +78,9 @@ export function CommandBar() {
         }}
       >
         {activePage.type === "home" && <HomeCommand />}
-        {activePage.type === "rooms" && <RoomsCommand />}
         {activePage.type === "room" && (
           <RoomCommand roomId={activePage.roomId} />
         )}
-        {activePage.type === "users" && <UsersCommand />}
       </CommandDialog>
     </DialogOverlay>
   );
@@ -105,6 +97,16 @@ function HomeCommand() {
 
   const { logout } = useAuthActions();
 
+  const replicache = useReplicache();
+
+  const rooms = useSubscribe(replicache, async (tx) =>
+    tx.scan<Room>({ prefix: "room/" }).toArray(),
+  );
+
+  const users = useSubscribe(replicache, async (tx) =>
+    tx.scan<User>({ prefix: "user/" }).toArray(),
+  );
+
   const handleNavigation = async (
     to: ToPathOption<
       RegisteredRouter,
@@ -112,6 +114,8 @@ function HomeCommand() {
       ""
     >,
   ) => navigate({ to }).then(() => state.close());
+
+  const navigationKeywords = ["navigation", "navigate"];
 
   return (
     <>
@@ -125,24 +129,11 @@ function HomeCommand() {
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
 
-        <CommandGroup heading="Users">
-          <CommandItem onSelect={() => pushPage({ type: "users" })}>
-            <Users className="mr-2 size-4" />
-
-            <span>Search users...</span>
-          </CommandItem>
-        </CommandGroup>
-
-        <CommandGroup heading="Rooms">
-          <CommandItem onSelect={() => pushPage({ type: "rooms" })}>
-            <Cuboid className="mr-2 size-4" />
-
-            <span>Search rooms...</span>
-          </CommandItem>
-        </CommandGroup>
-
         <CommandGroup heading="Navigation">
-          <CommandItem onSelect={() => handleNavigation("/dashboard")}>
+          <CommandItem
+            onSelect={() => handleNavigation("/dashboard")}
+            keywords={navigationKeywords}
+          >
             <LayoutDashboard className="mr-2 size-4" />
 
             <p>
@@ -150,7 +141,10 @@ function HomeCommand() {
             </p>
           </CommandItem>
 
-          <CommandItem onSelect={() => handleNavigation("/settings")}>
+          <CommandItem
+            onSelect={() => handleNavigation("/settings")}
+            keywords={navigationKeywords}
+          >
             <Settings className="mr-2 size-4" />
 
             <p>
@@ -158,54 +152,53 @@ function HomeCommand() {
             </p>
           </CommandItem>
 
-          <CommandSeparator />
+          <CommandItem
+            onSelect={() => logout()}
+            keywords={[...navigationKeywords, "log out"]}
+          >
+            <LogOut className="text-destructive mr-2 size-4" />
 
-          <CommandItem onSelect={() => logout()}>
-            <LogOut className="mr-2 size-4" />
-
-            <span>Logout</span>
+            <span className="text-destructive">Logout</span>
           </CommandItem>
         </CommandGroup>
-      </CommandList>
-    </>
-  );
-}
 
-function RoomsCommand() {
-  const { input } = useCommandBar();
-  const { setInput, pushPage, popPage } = useCommandBarActions();
+        {rooms && rooms.length > 0 && (
+          <>
+            <CommandSeparator />
 
-  const replicache = useReplicache();
+            <CommandGroup heading="Rooms">
+              {rooms.map((room) => (
+                <CommandItem
+                  key={room.id}
+                  onSelect={() => pushPage({ type: "room", roomId: room.id })}
+                  keywords={["rooms", "room"]}
+                >
+                  <Cuboid className="mr-2 size-4" />
 
-  const rooms = useSubscribe(replicache, async (tx) =>
-    tx.scan<Room>({ prefix: "room/" }).toArray(),
-  );
+                  <span>{room.name}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
 
-  return (
-    <>
-      <CommandInput
-        placeholder="Search rooms..."
-        autoFocus
-        value={input}
-        onValueChange={setInput}
-        back={{ buttonProps: { onPress: () => popPage() } }}
-      />
+        {users && users.length > 0 && (
+          <>
+            <CommandSeparator />
 
-      <CommandList>
-        <CommandEmpty>No rooms found.</CommandEmpty>
+            <CommandGroup heading="Users">
+              {users.map((user) => (
+                <CommandItem key={user.id} keywords={["users", "user"]}>
+                  <Avatar className="mr-3 size-8">
+                    <AvatarImage src={`/api/user/${user.id}/photo`} />
+                  </Avatar>
 
-        <CommandGroup heading="Rooms">
-          {rooms?.map((room) => (
-            <CommandItem
-              key={room.id}
-              onSelect={() => pushPage({ type: "room", roomId: room.id })}
-            >
-              <Cuboid className="mr-2 size-4" />
-
-              <span>{room.name}</span>
-            </CommandItem>
-          ))}
-        </CommandGroup>
+                  <span>{user.name}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
       </CommandList>
     </>
   );
@@ -292,55 +285,5 @@ function RoomCommand(props: RoomCommandProps) {
         </CommandGroup>
       </CommandList>
     </>
-  );
-}
-
-function UsersCommand() {
-  const { input } = useCommandBar();
-  const { setInput, popPage } = useCommandBarActions();
-
-  const replicache = useReplicache();
-
-  const users = useSubscribe(replicache, async (tx) =>
-    tx.scan<User>({ prefix: "user/" }).toArray(),
-  );
-
-  return (
-    <>
-      <CommandInput
-        placeholder="Search users..."
-        autoFocus
-        value={input}
-        onValueChange={setInput}
-        back={{ buttonProps: { onPress: () => popPage() } }}
-      />
-
-      <CommandList>
-        <CommandEmpty>No users found.</CommandEmpty>
-
-        <CommandGroup heading="Users">
-          {users?.map((user) => <UserCommandItem key={user.id} user={user} />)}
-        </CommandGroup>
-      </CommandList>
-    </>
-  );
-}
-
-type UserCommandItemProps = {
-  user: User;
-};
-function UserCommandItem(props: UserCommandItemProps) {
-  const { user } = props;
-
-  return (
-    <CommandItem>
-      <Avatar className="mr-3 size-8">
-        <AvatarImage src={`/api/user/${user.id}/photo`} />
-
-        <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
-      </Avatar>
-
-      <span>{user.name}</span>
-    </CommandItem>
   );
 }
