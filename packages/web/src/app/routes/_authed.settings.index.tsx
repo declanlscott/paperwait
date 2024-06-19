@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 import { createFileRoute } from "@tanstack/react-router";
+import { Lock, LockOpen } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
+import { Button } from "~/app/components/ui/primitives/button";
 import {
   Card,
   CardContent,
@@ -12,9 +14,18 @@ import {
 } from "~/app/components/ui/primitives/card";
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
+import {
+  Select,
+  SelectCollection,
+  SelectContent,
+  SelectItem,
+  SelectPopover,
+  SelectTrigger,
+  SelectValue,
+} from "~/app/components/ui/primitives/select";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 
-import type { Organization } from "@paperwait/core/organization";
+import type { Organization, OrgStatus } from "@paperwait/core/organization";
 
 export const Route = createFileRoute("/_authed/settings/")({
   component: Component,
@@ -32,21 +43,27 @@ function Component() {
 
   return (
     <div className="grid gap-6">
-      {org && <OrganizationNamesCard {...org} />}
+      {org && (
+        <>
+          <OrganizationCard {...org} />
+        </>
+      )}
     </div>
   );
 }
 
-function OrganizationNamesCard(org: Organization) {
-  const [state, setState] = useState(() => ({
-    name: org.name,
-    slug: org.slug,
+function OrganizationCard(org: Organization) {
+  const [isLocked, setIsLocked] = useState(true);
+
+  const [names, setNames] = useState(() => ({
+    full: org.name,
+    short: org.slug,
   }));
 
   const replicache = useReplicache();
 
   async function mutateName() {
-    const name = state.name.trim();
+    const name = names.full.trim();
     if (name === org.name) return;
 
     await replicache.mutate.updateOrganization({
@@ -57,7 +74,7 @@ function OrganizationNamesCard(org: Organization) {
   }
 
   async function mutateSlug() {
-    const slug = state.slug.trim();
+    const slug = names.short.trim();
     if (slug === org.slug) return;
 
     await replicache.mutate.updateOrganization({
@@ -67,15 +84,40 @@ function OrganizationNamesCard(org: Organization) {
     });
   }
 
+  async function mutateStatus(status: Exclude<OrgStatus, "initializing">) {
+    if (status === org.status) return;
+
+    await replicache.mutate.updateOrganization({
+      id: org.id,
+      status,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Organization Names</CardTitle>
+      <CardHeader className="flex-row justify-between gap-4 space-y-0">
+        <div className="flex flex-col space-y-1.5">
+          <CardTitle>Organization</CardTitle>
 
-        <CardDescription>
-          Edit your organization's full and short names. The short name must be
-          globally unique.
-        </CardDescription>
+          <CardDescription>
+            Edit your organization's full and short names. The short name must
+            be globally unique.
+          </CardDescription>
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="shrink-0"
+          onPress={() => setIsLocked((isLocked) => !isLocked)}
+        >
+          {isLocked ? (
+            <Lock className="size-5" />
+          ) : (
+            <LockOpen className="size-5" />
+          )}
+        </Button>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -83,9 +125,10 @@ function OrganizationNamesCard(org: Organization) {
           <Label>Full Name</Label>
 
           <Input
-            value={state.name}
+            disabled={isLocked}
+            value={names.full}
             onChange={(e) =>
-              setState((state) => ({ ...state, name: e.target.value }))
+              setNames((names) => ({ ...names, full: e.target.value }))
             }
             onBlur={mutateName}
           />
@@ -95,13 +138,45 @@ function OrganizationNamesCard(org: Organization) {
           <Label>Short Name</Label>
 
           <Input
-            value={state.slug}
+            disabled={isLocked}
+            value={names.short}
             onChange={(e) =>
-              setState((state) => ({ ...state, slug: e.target.value }))
+              setNames((names) => ({ ...names, short: e.target.value }))
             }
             onBlur={mutateSlug}
           />
         </AriaTextField>
+
+        <div className="w-40">
+          <Label aria-label="status">Status</Label>
+
+          <Select
+            aria-label="status"
+            isDisabled={isLocked}
+            selectedKey={org.status}
+            onSelectionChange={(selected) =>
+              mutateStatus(selected as Exclude<OrgStatus, "initializing">)
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+
+            <SelectPopover>
+              <SelectContent aria-label="status">
+                <SelectCollection
+                  items={[{ name: "active" }, { name: "suspended" }]}
+                >
+                  {(item) => (
+                    <SelectItem id={item.name} textValue={item.name}>
+                      {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
+                    </SelectItem>
+                  )}
+                </SelectCollection>
+              </SelectContent>
+            </SelectPopover>
+          </Select>
+        </div>
       </CardContent>
     </Card>
   );
