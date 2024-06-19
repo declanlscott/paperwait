@@ -83,6 +83,7 @@ export async function processUser(
       name: User.name,
       email: User.email,
       username: User.username,
+      role: User.role,
       deletedAt: User.deletedAt,
     })
     .from(User)
@@ -95,6 +96,9 @@ export async function processUser(
 
   // Create user if it doesn't exist
   if (!existingUser) {
+    if (org.status === "suspended")
+      throw new UnauthorizedError("Organization is suspended");
+
     const { channels, newUser } = await transact(async (tx) => {
       const isInitializing = org.status === "initializing";
 
@@ -169,6 +173,9 @@ export async function processUser(
   // User already exists, continue processing
 
   if (existingUser.deletedAt) throw new UnauthorizedError("User is deleted");
+
+  if (org.status === "suspended" && existingUser.role !== "administrator")
+    throw new UnauthorizedError("Organization is suspended");
 
   const existingUserInfo = {
     name: existingUser.name,
