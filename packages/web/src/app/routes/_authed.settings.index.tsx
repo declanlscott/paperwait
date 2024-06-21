@@ -20,8 +20,6 @@ import {
   SelectContent,
   SelectItem,
   SelectPopover,
-  SelectTrigger,
-  SelectValue,
 } from "~/app/components/ui/primitives/select";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 
@@ -46,6 +44,8 @@ function Component() {
       {org && (
         <>
           <OrganizationCard {...org} />
+
+          <DangerZoneCard {...org} />
         </>
       )}
     </div>
@@ -80,16 +80,6 @@ function OrganizationCard(org: Organization) {
     await replicache.mutate.updateOrganization({
       id: org.id,
       slug,
-      updatedAt: new Date().toISOString(),
-    });
-  }
-
-  async function mutateStatus(status: Exclude<OrgStatus, "initializing">) {
-    if (status === org.status) return;
-
-    await replicache.mutate.updateOrganization({
-      id: org.id,
-      status,
       updatedAt: new Date().toISOString(),
     });
   }
@@ -146,21 +136,46 @@ function OrganizationCard(org: Organization) {
             onBlur={mutateSlug}
           />
         </AriaTextField>
+      </CardContent>
+    </Card>
+  );
+}
 
-        <div className="w-40">
-          <Label aria-label="status">Status</Label>
+function DangerZoneCard(org: Organization) {
+  const replicache = useReplicache();
+
+  async function mutateStatus(status: Exclude<OrgStatus, "initializing">) {
+    if (status === org.status) return;
+
+    await replicache.mutate.updateOrganization({
+      id: org.id,
+      status,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  return (
+    <Card className="border-destructive">
+      <CardHeader>
+        <CardTitle>Danger Zone</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex justify-between">
+          <div>
+            <Label aria-label="status">Status</Label>
+
+            <CardDescription>{`This organization is currently ${org.status}.`}</CardDescription>
+          </div>
 
           <Select
             aria-label="status"
-            isDisabled={isLocked}
             selectedKey={org.status}
             onSelectionChange={(selected) =>
               mutateStatus(selected as Exclude<OrgStatus, "initializing">)
             }
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+            <Button variant="destructive">Change status</Button>
 
             <SelectPopover>
               <SelectContent aria-label="status">
