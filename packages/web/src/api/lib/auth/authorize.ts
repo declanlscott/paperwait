@@ -9,7 +9,7 @@ export function authorize(
 ) {
   if (!session || !user) throw new UnauthorizedError();
 
-  if (!assertRole(user, roles, false)) throw new ForbiddenError();
+  assertRole(user, roles, ForbiddenError);
 
   return { user, session };
 }

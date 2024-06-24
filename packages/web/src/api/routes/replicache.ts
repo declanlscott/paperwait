@@ -1,10 +1,6 @@
 import { BadRequestError } from "@paperwait/core/errors";
-import {
-  pull,
-  PullRequest,
-  push,
-  PushRequest,
-} from "@paperwait/core/replicache";
+import { pull, push } from "@paperwait/core/replicache";
+import { PullRequest, PushRequest } from "@paperwait/core/schemas";
 import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
 import { validator as honoValidator } from "hono/validator";

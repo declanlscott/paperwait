@@ -17,13 +17,12 @@ interface BuildSignerProps
   sha256?: SignatureV4CryptoInit["sha256"];
 }
 
-export function buildSigner({
+export const buildSigner = ({
   credentials = fromNodeProviderChain(),
   region = AWS_REGION,
   sha256 = Sha256,
   service,
-}: BuildSignerProps) {
-  return new SignatureV4({ credentials, sha256, region, service });
-}
+}: BuildSignerProps) =>
+  new SignatureV4({ credentials, sha256, region, service });
 
 export const apiGatewaySigner = buildSigner({ service: "execute-api" });

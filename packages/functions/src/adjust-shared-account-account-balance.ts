@@ -1,11 +1,11 @@
 import { xmlRpcMethod } from "@paperwait/core/constants";
 import { BadRequestError, InternalServerError } from "@paperwait/core/errors";
-import { validate } from "@paperwait/core/valibot";
 import {
   AdjustSharedAccountAccountBalanceEventRecord,
   AdjustSharedAccountAccountBalanceOutput,
-  buildClient,
-} from "@paperwait/core/xml-rpc";
+} from "@paperwait/core/schemas";
+import { validate } from "@paperwait/core/valibot";
+import { buildClient } from "@paperwait/core/xml-rpc";
 
 import type { SQSHandler, SQSRecord } from "aws-lambda";
 

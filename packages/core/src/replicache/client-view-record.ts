@@ -1,8 +1,8 @@
 import { unique } from "remeda";
 import * as v from "valibot";
 
+import { Domain } from "../schemas/replicache";
 import { validate } from "../valibot";
-import { Domain } from "./schemas";
 
 import type { Metadata } from "./metadata";
 

@@ -2,7 +2,7 @@ import { XmlRpcClient } from "@foxglove/xmlrpc";
 
 import { getParameter } from "../aws/ssm";
 import { InternalServerError, NotFoundError } from "../errors/http";
-import { PapercutParameter } from "../papercut/parameter";
+import { PapercutParameter } from "../schemas/papercut";
 import { fn } from "../valibot";
 
 export async function buildClient(orgId: string) {

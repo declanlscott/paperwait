@@ -1,9 +1,8 @@
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
-import * as v from "valibot";
 
-import { generateId, NanoId } from "../id";
 import { Organization } from "../organization/organization.sql";
-import { id, timestamps, TimestampsSchema } from "./columns";
+import { generateId } from "../schemas/id";
+import { id, timestamps } from "./columns";
 
 import type { BuildColumns } from "drizzle-orm";
 import type {
@@ -51,9 +50,3 @@ export function orgTable<
     }),
   );
 }
-
-export const OrgTableSchema = v.object({
-  id: NanoId,
-  orgId: NanoId,
-  ...TimestampsSchema.entries,
-});

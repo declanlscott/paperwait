@@ -1,8 +1,6 @@
 import { index, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
-import * as v from "valibot";
 
-import { idPrimaryKey, timestamps, TimestampsSchema } from "../drizzle/columns";
-import { NanoId } from "../id";
+import { idPrimaryKey, timestamps } from "../drizzle/columns";
 
 export const Provider = pgEnum("provider", ["entra-id", "google"]);
 export type Provider = (typeof Provider.enumValues)[number];
@@ -32,13 +30,3 @@ export const Organization = pgTable(
   }),
 );
 export type Organization = typeof Organization.$inferSelect;
-
-export const OrganizationSchema = v.object({
-  id: NanoId,
-  slug: v.string(),
-  name: v.string(),
-  provider: v.picklist(Provider.enumValues),
-  providerId: v.string(),
-  status: v.picklist(OrgStatus.enumValues),
-  ...TimestampsSchema.entries,
-});

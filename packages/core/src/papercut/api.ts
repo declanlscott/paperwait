@@ -18,13 +18,13 @@ import {
   RequestTimeoutError,
   UnauthorizedError,
 } from "../errors/http";
-import { validate } from "../valibot";
 import {
   GetSharedAccountPropertiesResult,
   IsUserExistsResult,
   ListSharedAccountsResult,
   ListUserSharedAccountsResult,
-} from "../xml-rpc/schemas";
+} from "../schemas/xml-rpc";
+import { validate } from "../valibot";
 
 import type {
   GetSharedAccountPropertiesEvent,
@@ -34,7 +34,7 @@ import type {
   ListUserSharedAccountsEvent,
   ListUserSharedAccountsOutput,
   TestPapercutEvent,
-} from "../xml-rpc/schemas";
+} from "../schemas/xml-rpc";
 
 export async function isUserExists(event: IsUserExistsEvent) {
   try {

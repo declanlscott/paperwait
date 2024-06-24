@@ -1,17 +1,19 @@
-import { InvalidUserRoleError } from "../errors/application";
-
 import type { User } from "lucia";
+import type { ApplicationError } from "../errors/application";
+import type { HttpError } from "../errors/http";
 import type { UserRole } from "./user.sql";
 
-export function assertRole(
+export function assertRole<TCustomError extends HttpError | ApplicationError>(
   user: User,
   roles: Array<UserRole>,
-  shouldThrow = true,
+  CustomError?: new () => TCustomError,
 ) {
   if (!roles.includes(user.role)) {
-    if (!shouldThrow) return false;
+    console.error(`Role assertion failed for user id "${user.id}".`);
 
-    throw new InvalidUserRoleError();
+    if (!CustomError) return false;
+
+    throw new CustomError();
   }
 
   return true;

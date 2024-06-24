@@ -4,7 +4,7 @@ import {
   NotFoundError,
   NotImplementedError,
 } from "@paperwait/core/errors";
-import { NanoId } from "@paperwait/core/id";
+import { NanoId } from "@paperwait/core/schemas";
 import { User } from "@paperwait/core/user";
 import { validator } from "@paperwait/core/valibot";
 import { and, eq } from "drizzle-orm";

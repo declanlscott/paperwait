@@ -2,7 +2,7 @@ import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
 
 import { db } from "../database";
-import { generateId } from "../id";
+import { generateId } from "../schemas/id";
 import { User } from "../user/user.sql";
 import { Session, SessionTokens } from "./session.sql";
 

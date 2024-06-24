@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { uniqueBy } from "remeda";
 
-import { OrderAccessDeniedError } from "../errors/application";
+import { ForbiddenError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import {
   PapercutAccount,
@@ -74,10 +74,10 @@ export async function getData<
 export async function getUsersByRoles(
   tx: Transaction,
   orgId: Organization["id"],
-  roles: Array<UserRole>,
+  roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],
 ) {
   return tx
-    .select({ id: User.id })
+    .select({ id: User.id, role: User.role })
     .from(User)
     .where(and(inArray(User.role, roles), eq(User.orgId, orgId)));
 }
@@ -90,7 +90,9 @@ export async function requireAccessToOrder(
   const users = await getUsersWithAccessToOrder(tx, orderId, user.orgId);
 
   if (!users.map(({ id }) => id).includes(user.id))
-    throw new OrderAccessDeniedError({ orderId, userId: user.id });
+    throw new ForbiddenError(
+      `User "${user.id}" does not have access to order "${orderId}"`,
+    );
 
   return users;
 }

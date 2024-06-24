@@ -3,9 +3,9 @@ import * as v from "valibot";
 
 import {
   EntityNotFoundError,
+  InvalidUserRoleError,
   OrderAccessDeniedError,
 } from "../errors/application";
-import { assertRole } from "../user/assert";
 import {
   CreateAnnouncementMutationArgs,
   CreateCommentMutationArgs,
@@ -21,7 +21,7 @@ import {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
-  globalPermissions,
+  rolePermissions,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
   UpdateOrderMutationArgs,
@@ -29,7 +29,8 @@ import {
   UpdateProductMutationArgs,
   UpdateRoomMutationArgs,
   UpdateUserRoleMutationArgs,
-} from "./schemas";
+} from "../schemas/mutators";
+import { assertRole } from "../user/assert";
 
 import type { DeepReadonlyObject, WriteTransaction } from "replicache";
 import type { Announcement } from "../announcement/announcement.sql";
@@ -43,18 +44,31 @@ import type {
 } from "../papercut/account.sql";
 import type { Product } from "../product/product.sql";
 import type { Room } from "../room/room.sql";
+import type { OptimisticMutators } from "../schemas/mutators";
 import type { User } from "../user/user.sql";
-import type { OptimisticMutation } from "./schemas";
+
+const authorizeRole = (
+  mutationName: keyof typeof rolePermissions,
+  user: LuciaUser,
+  shouldThrow = true,
+) =>
+  assertRole(
+    user,
+    rolePermissions[mutationName],
+    shouldThrow ? InvalidUserRoleError : undefined,
+  );
 
 const buildMutator =
   <
     TSchema extends v.GenericSchema,
     TMutator extends (
       tx: WriteTransaction,
-      args: v.InferOutput<TSchema>,
-    ) => ReturnType<TMutator>,
+      values: v.InferOutput<TSchema>,
+    ) => ReturnType<
+      ReturnType<OptimisticMutators<TSchema>[keyof OptimisticMutators]>
+    >,
   >(
-    roleAuthorizer: () => boolean,
+    roleAuthorizer: () => ReturnType<typeof authorizeRole>,
     schema: TSchema,
     withRoleAuthorizer: (
       isRoleAuthorized: ReturnType<typeof roleAuthorizer>,
@@ -68,14 +82,14 @@ const buildMutator =
 
 const updateOrganization = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateOrganization),
+    () => authorizeRole("updateOrganization", user),
     UpdateOrganizationMutationArgs,
     () =>
-      async (tx, { id: orgId, ...args }) => {
+      async (tx, { id: orgId, ...values }) => {
         const prev = await tx.get<Organization>(`organization/${orgId}`);
         if (!prev) throw new EntityNotFoundError("Organization", orgId);
 
-        const next = { ...prev, ...args } satisfies Organization;
+        const next = { ...prev, ...values } satisfies Organization;
 
         return await tx.set(`organization/${orgId}`, next);
       },
@@ -83,14 +97,14 @@ const updateOrganization = (user: LuciaUser) =>
 
 const updateUserRole = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateUserRole),
+    () => authorizeRole("updateUserRole", user),
     UpdateUserRoleMutationArgs,
     () =>
-      async (tx, { id: userId, ...args }) => {
+      async (tx, { id: userId, ...values }) => {
         const prev = await tx.get<User>(`user/${userId}`);
         if (!prev) throw new EntityNotFoundError("User", userId);
 
-        const next = { ...prev, ...args } satisfies User;
+        const next = { ...prev, ...values } satisfies User;
 
         return await tx.set(`user/${userId}`, next);
       },
@@ -98,14 +112,14 @@ const updateUserRole = (user: LuciaUser) =>
 
 const deleteUser = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.deleteUser),
+    () => authorizeRole("deleteUser", user),
     DeleteUserMutationArgs,
     () =>
-      async (tx, { id: userId, ...args }) => {
+      async (tx, { id: userId, ...values }) => {
         const prev = await tx.get<User>(`user/${userId}`);
         if (!prev) throw new EntityNotFoundError("User", userId);
 
-        const next = { ...prev, ...args } satisfies User;
+        const next = { ...prev, ...values } satisfies User;
 
         return await tx.set(`user/${userId}`, next);
       },
@@ -113,17 +127,17 @@ const deleteUser = (user: LuciaUser) =>
 
 const deletePapercutAccount = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.deletePapercutAccount),
+    () => authorizeRole("deletePapercutAccount", user),
     DeletePapercutAccountMutationArgs,
     () =>
-      async (tx, { id: papercutAccountId, ...args }) => {
+      async (tx, { id: papercutAccountId, ...values }) => {
         const prev = await tx.get<PapercutAccount>(
           `papercutAccount/${papercutAccountId}`,
         );
         if (!prev)
           throw new EntityNotFoundError("PapercutAccount", papercutAccountId);
 
-        const next = { ...prev, ...args } satisfies PapercutAccount;
+        const next = { ...prev, ...values } satisfies PapercutAccount;
 
         return await tx.set(`papercutAccount/${papercutAccountId}`, next);
       },
@@ -131,26 +145,18 @@ const deletePapercutAccount = (user: LuciaUser) =>
 
 const createPapercutAccountManagerAuthorization = (user: LuciaUser) =>
   buildMutator(
-    () =>
-      assertRole(
-        user,
-        globalPermissions.createPapercutAccountManagerAuthorization,
-      ),
+    () => authorizeRole("createPapercutAccountManagerAuthorization", user),
     CreatePapercutAccountManagerAuthorizationMutationArgs,
-    () => async (tx, args) =>
-      tx.set(`papercutAccountManagerAuthorization/${args.id}`, args),
+    () => async (tx, values) =>
+      tx.set(`papercutAccountManagerAuthorization/${values.id}`, values),
   );
 
 const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
   buildMutator(
-    () =>
-      assertRole(
-        user,
-        globalPermissions.deletePapercutAccountManagerAuthorization,
-      ),
+    () => authorizeRole("deletePapercutAccountManagerAuthorization", user),
     DeletePapercutAccountManagerAuthorizationMutationArgs,
     () =>
-      async (tx, { id: papercutAccountManagerAuthorizationId, ...args }) => {
+      async (tx, { id: papercutAccountManagerAuthorizationId, ...values }) => {
         const prev = await tx.get<PapercutAccountManagerAuthorization>(
           `papercutAccountManagerAuthorization/${papercutAccountManagerAuthorizationId}`,
         );
@@ -162,7 +168,7 @@ const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
 
         const next = {
           ...prev,
-          ...args,
+          ...values,
         } satisfies PapercutAccountManagerAuthorization;
 
         return await tx.set(
@@ -174,20 +180,20 @@ const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
 
 const createRoom = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.createRoom),
+    () => authorizeRole("createRoom", user),
     CreateRoomMutationArgs,
-    () => async (tx, args) => tx.set(`room/${args.id}`, args),
+    () => async (tx, values) => tx.set(`room/${values.id}`, values),
   );
 
 const updateRoom = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateRoom),
+    () => authorizeRole("updateRoom", user),
     UpdateRoomMutationArgs,
     () =>
-      async (tx, { id: roomId, ...args }) => {
+      async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
         if (!prev) throw new EntityNotFoundError("Room", roomId);
-        const next = { ...prev, ...args } satisfies Room;
+        const next = { ...prev, ...values } satisfies Room;
 
         return await tx.set(`room/${roomId}`, next);
       },
@@ -195,13 +201,13 @@ const updateRoom = (user: LuciaUser) =>
 
 const deleteRoom = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.deleteRoom),
+    () => authorizeRole("deleteRoom", user),
     DeleteRoomMutationArgs,
     () =>
-      async (tx, { id: roomId, ...args }) => {
+      async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
         if (!prev) throw new EntityNotFoundError("Room", roomId);
-        const next = { ...prev, ...args } satisfies Room;
+        const next = { ...prev, ...values } satisfies Room;
 
         return await tx.set(`room/${roomId}`, next);
       },
@@ -209,23 +215,23 @@ const deleteRoom = (user: LuciaUser) =>
 
 const createAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.createAnnouncement),
+    () => authorizeRole("createAnnouncement", user),
     CreateAnnouncementMutationArgs,
-    () => async (tx, args) => tx.set(`announcement/${args.id}`, args),
+    () => async (tx, values) => tx.set(`announcement/${values.id}`, values),
   );
 
 const updateAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateAnnouncement),
+    () => authorizeRole("updateAnnouncement", user),
     UpdateAnnouncementMutationArgs,
     () =>
-      async (tx, { id: announcementId, ...args }) => {
+      async (tx, { id: announcementId, ...values }) => {
         const prev = await tx.get<Announcement>(
           `announcement/${announcementId}`,
         );
         if (!prev)
           throw new EntityNotFoundError("Announcement", announcementId);
-        const next = { ...prev, ...args } satisfies Announcement;
+        const next = { ...prev, ...values } satisfies Announcement;
 
         return await tx.set(`announcement/${announcementId}`, next);
       },
@@ -233,16 +239,16 @@ const updateAnnouncement = (user: LuciaUser) =>
 
 const deleteAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.deleteAnnouncement),
+    () => authorizeRole("deleteAnnouncement", user),
     DeleteAnnouncementMutationArgs,
     () =>
-      async (tx, { id: announcementId, ...args }) => {
+      async (tx, { id: announcementId, ...values }) => {
         const prev = await tx.get<Announcement>(
           `announcement/${announcementId}`,
         );
         if (!prev)
           throw new EntityNotFoundError("Announcement", announcementId);
-        const next = { ...prev, ...args } satisfies Announcement;
+        const next = { ...prev, ...values } satisfies Announcement;
 
         return await tx.set(`announcement/${announcementId}`, next);
       },
@@ -250,20 +256,20 @@ const deleteAnnouncement = (user: LuciaUser) =>
 
 const createProduct = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.createProduct),
+    () => authorizeRole("createProduct", user),
     CreateProductMutationArgs,
-    () => async (tx, args) => tx.set(`product/${args.id}`, args),
+    () => async (tx, values) => tx.set(`product/${values.id}`, values),
   );
 
 const updateProduct = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateProduct),
+    () => authorizeRole("updateProduct", user),
     UpdateProductMutationArgs,
     () =>
-      async (tx, { id: productId, ...args }) => {
+      async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
         if (!prev) throw new EntityNotFoundError("Product", productId);
-        const next = { ...prev, ...args } satisfies Product;
+        const next = { ...prev, ...values } satisfies Product;
 
         return await tx.set(`product/${productId}`, next);
       },
@@ -271,13 +277,13 @@ const updateProduct = (user: LuciaUser) =>
 
 const deleteProduct = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.deleteProduct),
+    () => authorizeRole("deleteProduct", user),
     DeleteProductMutationArgs,
     () =>
-      async (tx, { id: productId, ...args }) => {
+      async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
         if (!prev) throw new EntityNotFoundError("Product", productId);
-        const next = { ...prev, ...args } satisfies Product;
+        const next = { ...prev, ...values } satisfies Product;
 
         return await tx.set(`product/${productId}`, next);
       },
@@ -285,23 +291,23 @@ const deleteProduct = (user: LuciaUser) =>
 
 const createOrder = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.createOrder),
+    () => authorizeRole("createOrder", user),
     CreateOrderMutationArgs,
-    () => async (tx, args) => tx.set(`order/${args.id}`, args),
+    () => async (tx, values) => tx.set(`order/${values.id}`, values),
   );
 
 const updateOrder = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateOrder, false),
+    () => authorizeRole("updateOrder", user, false),
     UpdateOrderMutationArgs,
     (isRoleAuthorized) =>
-      async (tx, { id: orderId, ...args }) => {
+      async (tx, { id: orderId, ...values }) => {
         if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
 
         const prev = await tx.get<Order>(`order/${orderId}`);
         if (!prev) throw new EntityNotFoundError("Order", orderId);
 
-        const next = { ...prev, ...args } satisfies Order;
+        const next = { ...prev, ...values } satisfies Order;
 
         return await tx.set(`order/${orderId}`, next);
       },
@@ -309,16 +315,16 @@ const updateOrder = (user: LuciaUser) =>
 
 const deleteOrder = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.deleteOrder, false),
+    () => authorizeRole("deleteOrder", user, false),
     DeleteOrderMutationArgs,
     (isRoleAuthorized) =>
-      async (tx, { id: orderId, ...args }) => {
+      async (tx, { id: orderId, ...values }) => {
         if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
 
         const prev = await tx.get<Order>(`order/${orderId}`);
         if (!prev) throw new EntityNotFoundError("Order", orderId);
 
-        const next = { ...prev, ...args } satisfies Order;
+        const next = { ...prev, ...values } satisfies Order;
 
         return await tx.set(`order/${orderId}`, next);
       },
@@ -326,28 +332,32 @@ const deleteOrder = (user: LuciaUser) =>
 
 const createComment = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateOrder, false),
+    () => authorizeRole("updateOrder", user, false),
     CreateCommentMutationArgs,
-    (isRoleAuthorized) => async (tx, args) => {
-      if (!isRoleAuthorized) await requireAccessToOrder(tx, user, args.orderId);
+    (isRoleAuthorized) => async (tx, values) => {
+      if (!isRoleAuthorized)
+        await requireAccessToOrder(tx, user, values.orderId);
 
-      return await tx.set(`comment/${args.id}`, args);
+      return await tx.set(`comment/${values.id}`, values);
     },
   );
 
 const updateComment = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.updateOrder, false),
+    () => authorizeRole("updateComment", user, false),
     UpdateCommentMutationArgs,
     (isRoleAuthorized) =>
-      async (tx, { id: commentId, ...args }) => {
+      async (tx, { id: commentId, ...values }) => {
         if (!isRoleAuthorized)
-          await requireAccessToOrder(tx, user, args.orderId);
+          await requireAccessToOrder(tx, user, values.orderId);
 
         const prev = await tx.get<Comment>(`comment/${commentId}`);
         if (!prev) throw new EntityNotFoundError("Comment", commentId);
 
-        const next = { ...prev, ...args } satisfies DeepReadonlyObject<Comment>;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<Comment>;
 
         return await tx.set(`comment/${commentId}`, next);
       },
@@ -355,22 +365,25 @@ const updateComment = (user: LuciaUser) =>
 
 const deleteComment = (user: LuciaUser) =>
   buildMutator(
-    () => assertRole(user, globalPermissions.deleteComment, false),
+    () => authorizeRole("deleteComment", user, false),
     DeleteCommentMutationArgs,
     (isRoleAuthorized) =>
-      async (tx, { id: commentId, orderId, ...args }) => {
+      async (tx, { id: commentId, orderId, ...values }) => {
         if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
 
         const prev = await tx.get<Comment>(`comment/${commentId}`);
         if (!prev) throw new EntityNotFoundError("Comment", commentId);
 
-        const next = { ...prev, ...args } satisfies DeepReadonlyObject<Comment>;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<Comment>;
 
         return await tx.set(`comment/${commentId}`, next);
       },
   );
 
-export const optimistic = {
+export const mutators = {
   // Organization
   updateOrganization,
 
@@ -409,7 +422,7 @@ export const optimistic = {
   createComment,
   updateComment,
   deleteComment,
-} satisfies OptimisticMutation;
+} satisfies OptimisticMutators;
 
 async function requireAccessToOrder(
   tx: WriteTransaction,
@@ -419,6 +432,8 @@ async function requireAccessToOrder(
   const userIds = await getUsersWithAccessToOrder(tx, orderId);
 
   if (!userIds.includes(user.id)) throw new OrderAccessDeniedError();
+
+  return userIds;
 }
 
 async function getUsersWithAccessToOrder(
@@ -428,32 +443,30 @@ async function getUsersWithAccessToOrder(
   const order = await tx.get<Order>(`order/${orderId}`);
   if (!order) throw new EntityNotFoundError("Order", orderId);
 
-  const [admins, operators, papercutAccountManagerAuthorizations] =
-    await Promise.all([
-      tx
-        .scan<User>({ prefix: "user/" })
-        .toArray()
-        .then((users) => users.filter((user) => user.role === "administrator")),
-      tx
-        .scan<User>({ prefix: "user/" })
-        .toArray()
-        .then((users) => users.filter((user) => user.role === "operator")),
-      tx
-        .scan<PapercutAccountManagerAuthorization>({
-          prefix: "papercutAccountManagerAuthorization/",
-        })
-        .toArray()
-        .then((papercutAccountManagerAuthorizations) =>
-          papercutAccountManagerAuthorizations.filter(
-            ({ papercutAccountId }) =>
-              order.papercutAccountId === papercutAccountId,
-          ),
+  const [adminsOps, papercutAccountManagerAuthorizations] = await Promise.all([
+    tx
+      .scan<User>({ prefix: "user/" })
+      .toArray()
+      .then((users) =>
+        users.filter(
+          (user) => user.role === "administrator" || user.role === "operator",
         ),
-    ]);
+      ),
+    tx
+      .scan<PapercutAccountManagerAuthorization>({
+        prefix: "papercutAccountManagerAuthorization/",
+      })
+      .toArray()
+      .then((papercutAccountManagerAuthorizations) =>
+        papercutAccountManagerAuthorizations.filter(
+          ({ papercutAccountId }) =>
+            order.papercutAccountId === papercutAccountId,
+        ),
+      ),
+  ]);
 
   return unique([
-    ...admins.map(({ id }) => id),
-    ...operators.map(({ id }) => id),
+    ...adminsOps.map(({ id }) => id),
     ...papercutAccountManagerAuthorizations.map(({ managerId }) => managerId),
     order.customerId,
   ]);

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { MissingContextProviderError } from "@paperwait/core/errors";
-import { optimistic } from "@paperwait/core/mutators";
+import { mutators } from "@paperwait/core/optimistic-mutators";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthed } from "~/app/lib/hooks/auth";
@@ -30,93 +30,93 @@ export function useMutators() {
   const authed = useAuthed();
 
   const updateOrganization = useCallback(
-    optimistic.updateOrganization(authed.user),
+    mutators.updateOrganization(authed.user),
     [authed.user],
   );
 
-  const updateUserRole = useCallback(optimistic.updateUserRole(authed.user), [
+  const updateUserRole = useCallback(mutators.updateUserRole(authed.user), [
     authed.user,
   ]);
 
-  const deleteUser = useCallback(optimistic.deleteUser(authed.user), [
+  const deleteUser = useCallback(mutators.deleteUser(authed.user), [
     authed.user,
   ]);
 
   const deletePapercutAccount = useCallback(
-    optimistic.deletePapercutAccount(authed.user),
+    mutators.deletePapercutAccount(authed.user),
     [authed.user],
   );
 
   const createPapercutAccountManagerAuthorization = useCallback(
-    optimistic.createPapercutAccountManagerAuthorization(authed.user),
+    mutators.createPapercutAccountManagerAuthorization(authed.user),
     [authed.user],
   );
 
   const deletePapercutAccountManagerAuthorization = useCallback(
-    optimistic.deletePapercutAccountManagerAuthorization(authed.user),
+    mutators.deletePapercutAccountManagerAuthorization(authed.user),
     [authed.user],
   );
 
-  const createRoom = useCallback(optimistic.createRoom(authed.user), [
+  const createRoom = useCallback(mutators.createRoom(authed.user), [
     authed.user,
   ]);
 
-  const updateRoom = useCallback(optimistic.updateRoom(authed.user), [
+  const updateRoom = useCallback(mutators.updateRoom(authed.user), [
     authed.user,
   ]);
 
-  const deleteRoom = useCallback(optimistic.deleteRoom(authed.user), [
+  const deleteRoom = useCallback(mutators.deleteRoom(authed.user), [
     authed.user,
   ]);
 
   const createAnnouncement = useCallback(
-    optimistic.createAnnouncement(authed.user),
+    mutators.createAnnouncement(authed.user),
     [authed.user],
   );
 
   const updateAnnouncement = useCallback(
-    optimistic.updateAnnouncement(authed.user),
+    mutators.updateAnnouncement(authed.user),
     [authed.user],
   );
 
   const deleteAnnouncement = useCallback(
-    optimistic.deleteAnnouncement(authed.user),
+    mutators.deleteAnnouncement(authed.user),
     [authed.user],
   );
 
-  const createProduct = useCallback(optimistic.createProduct(authed.user), [
+  const createProduct = useCallback(mutators.createProduct(authed.user), [
     authed.user,
   ]);
 
-  const updateProduct = useCallback(optimistic.updateProduct(authed.user), [
+  const updateProduct = useCallback(mutators.updateProduct(authed.user), [
     authed.user,
   ]);
 
-  const deleteProduct = useCallback(optimistic.deleteProduct(authed.user), [
+  const deleteProduct = useCallback(mutators.deleteProduct(authed.user), [
     authed.user,
   ]);
 
-  const createOrder = useCallback(optimistic.createOrder(authed.user), [
+  const createOrder = useCallback(mutators.createOrder(authed.user), [
     authed.user,
   ]);
 
-  const updateOrder = useCallback(optimistic.updateOrder(authed.user), [
+  const updateOrder = useCallback(mutators.updateOrder(authed.user), [
     authed.user,
   ]);
 
-  const deleteOrder = useCallback(optimistic.deleteOrder(authed.user), [
+  const deleteOrder = useCallback(mutators.deleteOrder(authed.user), [
     authed.user,
   ]);
 
-  const createComment = useCallback(optimistic.createComment(authed.user), [
+  const createComment = useCallback(mutators.createComment(authed.user), [
     authed.user,
   ]);
 
-  const updateComment = useCallback(optimistic.updateComment(authed.user), [
+  const updateComment = useCallback(mutators.updateComment(authed.user), [
     authed.user,
   ]);
 
-  const deleteComment = useCallback(optimistic.deleteComment(authed.user), [
+  const deleteComment = useCallback(mutators.deleteComment(authed.user), [
     authed.user,
   ]);
 

@@ -1,10 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 
+import { mutators } from "../authoritative-mutators";
 import { transact } from "../database/transaction";
-import { BadRequestError, NotImplementedError } from "../errors/http";
-import { authoritative } from "../mutators/authoritative";
-import { globalPermissions, Mutation } from "../mutators/schemas";
-import { assertRole } from "../user/assert";
+import { BadRequestError } from "../errors/http";
+import { Mutation } from "../schemas/mutators";
 import { fn } from "../valibot";
 import { poke } from "./poke";
 import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
@@ -17,7 +16,6 @@ import type {
   VersionNotSupportedResponse,
 } from "replicache";
 import type { Transaction } from "../database/transaction";
-import type { Channel } from "../realtime";
 import type { OmitTimestamps } from "../types/drizzle";
 
 type PushResult =
@@ -200,19 +198,10 @@ async function processMutation(
 const getMutator = (tx: Transaction, user: LuciaUser) =>
   fn(
     Mutation,
-    (mutation): Promise<Array<Channel>> => {
-      if (mutation.name === "syncPapercutAccounts")
-        throw new NotImplementedError(
-          'Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT /api/papercut/accounts)',
-        );
+    (mutation) => {
+      const mutator = mutators[mutation.name](user);
 
-      const mutator = authoritative[mutation.name](
-        tx,
-        user,
-        assertRole(user, globalPermissions[mutation.name], false),
-      );
-
-      return mutator(mutation.args);
+      return mutator(tx, mutation.args);
     },
     { Error: BadRequestError, message: "Failed to parse mutation" },
   );

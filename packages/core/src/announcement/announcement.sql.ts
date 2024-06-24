@@ -1,9 +1,7 @@
 import { foreignKey, text } from "drizzle-orm/pg-core";
-import * as v from "valibot";
 
 import { id } from "../drizzle/columns";
-import { orgTable, OrgTableSchema } from "../drizzle/tables";
-import { NanoId } from "../id";
+import { orgTable } from "../drizzle/tables";
 import { Room } from "../room/room.sql";
 
 export const Announcement = orgTable(
@@ -20,10 +18,5 @@ export const Announcement = orgTable(
     }),
   }),
 );
-export type Announcement = typeof Announcement.$inferSelect;
 
-export const AnnouncementSchema = v.object({
-  ...OrgTableSchema.entries,
-  content: v.string(),
-  roomId: NanoId,
-});
+export type Announcement = typeof Announcement.$inferSelect;

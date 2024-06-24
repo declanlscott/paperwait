@@ -7,11 +7,9 @@ import {
   text,
   unique,
 } from "drizzle-orm/pg-core";
-import * as v from "valibot";
 
 import { id, timestamps } from "../drizzle/columns";
-import { orgIdColumns, orgTable, OrgTableSchema } from "../drizzle/tables";
-import { NanoId, PapercutAccountId } from "../id";
+import { orgIdColumns, orgTable } from "../drizzle/tables";
 import { User } from "../user/user.sql";
 
 export const PapercutAccount = pgTable(
@@ -91,9 +89,3 @@ export const PapercutAccountManagerAuthorization = orgTable(
 );
 export type PapercutAccountManagerAuthorization =
   typeof PapercutAccountManagerAuthorization.$inferSelect;
-
-export const PapercutAccountManagerAuthorizationSchema = v.object({
-  ...OrgTableSchema.entries,
-  managerId: NanoId,
-  papercutAccountId: PapercutAccountId,
-});

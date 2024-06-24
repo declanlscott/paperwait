@@ -1,18 +1,15 @@
 import { putParameter } from "@paperwait/core/aws";
 import { transact } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
-import { NanoId } from "@paperwait/core/id";
-import {
-  globalPermissions,
-  SyncPapercutAccountsMutationArgs,
-} from "@paperwait/core/mutators";
-import {
-  PapercutParameter,
-  syncPapercutAccounts,
-  testPapercut,
-} from "@paperwait/core/papercut";
+import { syncPapercutAccounts, testPapercut } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
+import {
+  NanoId,
+  PapercutParameter,
+  rolePermissions,
+  SyncPapercutAccountsMutationArgs,
+} from "@paperwait/core/schemas";
 import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
 import { validator as honoValidator } from "hono/validator";
@@ -23,7 +20,7 @@ import { authorization } from "~/api/middleware";
 export default new Hono()
   .put(
     "/accounts",
-    authorization(globalPermissions.syncPapercutAccounts),
+    authorization(rolePermissions.syncPapercutAccounts),
     honoValidator(
       "json",
       validator(SyncPapercutAccountsMutationArgs, {

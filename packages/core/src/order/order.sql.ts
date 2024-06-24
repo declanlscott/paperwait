@@ -1,9 +1,7 @@
 import { bigint, foreignKey, index, pgEnum } from "drizzle-orm/pg-core";
-import * as v from "valibot";
 
 import { id } from "../drizzle/columns";
-import { orgTable, OrgTableSchema } from "../drizzle/tables";
-import { NanoId, PapercutAccountId } from "../id";
+import { orgTable } from "../drizzle/tables";
 import { PapercutAccount } from "../papercut/account.sql";
 import { Product } from "../product/product.sql";
 import { User } from "../user/user.sql";
@@ -61,13 +59,3 @@ export const Order = orgTable(
   }),
 );
 export type Order = typeof Order.$inferSelect;
-
-export const OrderSchema = v.object({
-  ...OrgTableSchema.entries,
-  customerId: NanoId,
-  managerId: v.nullable(NanoId),
-  operatorId: v.nullable(NanoId),
-  productId: NanoId,
-  papercutAccountId: PapercutAccountId,
-  status: v.picklist(OrderStatus.enumValues),
-});

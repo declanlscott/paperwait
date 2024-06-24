@@ -4,13 +4,9 @@ import {
   HttpError,
   InternalServerError,
 } from "@paperwait/core/errors";
+import { IsUserExistsEvent, IsUserExistsOutput } from "@paperwait/core/schemas";
 import { validate } from "@paperwait/core/valibot";
-import {
-  buildClient,
-  IsUserExistsEvent,
-  IsUserExistsOutput,
-  XmlRpcFault,
-} from "@paperwait/core/xml-rpc";
+import { buildClient, XmlRpcFault } from "@paperwait/core/xml-rpc";
 
 import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 

@@ -1,5 +1,5 @@
 import { Provider } from "@paperwait/core/organization";
-import { PapercutParameter } from "@paperwait/core/papercut";
+import { PapercutParameter } from "@paperwait/core/schemas";
 import * as v from "valibot";
 
 export const Registration = v.pipe(

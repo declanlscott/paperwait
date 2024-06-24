@@ -1,16 +1,18 @@
 import { unique } from "remeda";
 import * as v from "valibot";
 
-import { AnnouncementSchema } from "../announcement/announcement.sql";
-import { CommentSchema } from "../comment/comment.sql";
-import { NanoId, PapercutAccountId } from "../id";
-import { OrderSchema } from "../order/order.sql";
-import { OrganizationSchema } from "../organization";
-import { PapercutAccountManagerAuthorizationSchema } from "../papercut/account.sql";
-import { ProductSchema } from "../product/product.sql";
-import { PushRequest } from "../replicache/schemas";
-import { RoomSchema } from "../room/room.sql";
 import { UserRole } from "../user/user.sql";
+import { NanoId, PapercutAccountId } from "./id";
+import { PushRequest } from "./replicache";
+import {
+  AnnouncementSchema,
+  CommentSchema,
+  OrderSchema,
+  OrganizationSchema,
+  PapercutAccountManagerAuthorizationSchema,
+  ProductSchema,
+  RoomSchema,
+} from "./tables";
 
 import type { WriteTransaction } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
@@ -48,25 +50,30 @@ export const Mutation = v.object({
 });
 export type Mutation = v.InferOutput<typeof Mutation>;
 
-export type AuthoritativeMutation = Record<
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AuthoritativeMutators<TSchema extends v.GenericSchema = any> =
+  Record<
+    Mutation["name"],
+    (
+      user: LuciaUser,
+    ) => (
+      tx: Transaction,
+      values: v.InferOutput<TSchema>,
+    ) => Promise<Array<Channel>>
+  >;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OptimisticMutators<TSchema extends v.GenericSchema = any> = Record<
   Exclude<Mutation["name"], "syncPapercutAccounts">,
   (
-    tx: Transaction,
     user: LuciaUser,
-    isAuthorized: boolean,
-  ) => (input: unknown) => Promise<Array<Channel>>
->;
-
-export type OptimisticMutation = Record<
-  Exclude<Mutation["name"], "syncPapercutAccounts">,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (user: LuciaUser) => (tx: WriteTransaction, args: any) => Promise<void>
+  ) => (tx: WriteTransaction, values: v.InferOutput<TSchema>) => Promise<void>
 >;
 
 /**
- * Permissions required to perform each mutation to any entity within the organization.
+ * Global role permissions required to perform each mutation to any entity within the organization.
  */
-export const globalPermissions = {
+export const rolePermissions = {
   updateOrganization: ["administrator"],
   updateUserRole: ["administrator"],
   deleteUser: ["administrator"],

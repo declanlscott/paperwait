@@ -4,13 +4,12 @@ import {
   HttpError,
   InternalServerError,
 } from "@paperwait/core/errors";
-import { validate } from "@paperwait/core/valibot";
 import {
-  buildClient,
   ListSharedAccountsEvent,
   ListSharedAccountsOutput,
-  XmlRpcFault,
-} from "@paperwait/core/xml-rpc";
+} from "@paperwait/core/schemas";
+import { validate } from "@paperwait/core/valibot";
+import { buildClient, XmlRpcFault } from "@paperwait/core/xml-rpc";
 
 import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
 

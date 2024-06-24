@@ -5,7 +5,7 @@ import { Comment } from "../comment/comment.sql";
 import { transact } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
-import { Organization } from "../organization";
+import { Organization } from "../organization/organization.sql";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
