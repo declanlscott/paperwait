@@ -14,7 +14,7 @@ import {
 } from "./api";
 
 import type { Transaction } from "../database/transaction";
-import type { SyncPapercutAccountsMutationArgs } from "../mutations/schemas";
+import type { SyncPapercutAccountsMutationArgs } from "../mutators/schemas";
 import type { Organization } from "../organization";
 import type { OmitTimestamps } from "../types";
 

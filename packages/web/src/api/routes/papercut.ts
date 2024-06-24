@@ -5,7 +5,7 @@ import { NanoId } from "@paperwait/core/id";
 import {
   globalPermissions,
   SyncPapercutAccountsMutationArgs,
-} from "@paperwait/core/mutations";
+} from "@paperwait/core/mutators";
 import {
   PapercutParameter,
   syncPapercutAccounts,

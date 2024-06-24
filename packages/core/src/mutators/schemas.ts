@@ -60,7 +60,7 @@ export type AuthoritativeMutation = Record<
 export type OptimisticMutation = Record<
   Exclude<Mutation["name"], "syncPapercutAccounts">,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (tx: WriteTransaction, user: LuciaUser, args: any) => Promise<void>
+  (user: LuciaUser) => (tx: WriteTransaction, args: any) => Promise<void>
 >;
 
 /**

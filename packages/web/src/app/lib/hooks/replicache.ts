@@ -1,34 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { MissingContextProviderError } from "@paperwait/core/errors";
-import { optimistic } from "@paperwait/core/mutations";
+import { optimistic } from "@paperwait/core/mutators";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthed } from "~/app/lib/hooks/auth";
-
-import type {
-  CreateAnnouncementMutationArgs,
-  CreateCommentMutationArgs,
-  CreateOrderMutationArgs,
-  CreatePapercutAccountManagerAuthorizationMutationArgs,
-  CreateProductMutationArgs,
-  CreateRoomMutationArgs,
-  DeleteAnnouncementMutationArgs,
-  DeleteCommentMutationArgs,
-  DeleteOrderMutationArgs,
-  DeletePapercutAccountManagerAuthorizationMutationArgs,
-  DeletePapercutAccountMutationArgs,
-  DeleteProductMutationArgs,
-  DeleteRoomMutationArgs,
-  DeleteUserMutationArgs,
-  UpdateAnnouncementMutationArgs,
-  UpdateCommentMutationArgs,
-  UpdateOrderMutationArgs,
-  UpdateOrganizationMutationArgs,
-  UpdateProductMutationArgs,
-  UpdateRoomMutationArgs,
-  UpdateUserRoleMutationArgs,
-} from "@paperwait/core/mutations";
-import type { WriteTransaction } from "replicache";
 
 export function useReplicache() {
   const replicache = useContext(ReplicacheContext);
@@ -54,144 +30,95 @@ export function useMutators() {
   const authed = useAuthed();
 
   const updateOrganization = useCallback(
-    async (tx: WriteTransaction, args: UpdateOrganizationMutationArgs) =>
-      optimistic.updateOrganization(tx, authed.user, args),
+    optimistic.updateOrganization(authed.user),
     [authed.user],
   );
 
-  const updateUserRole = useCallback(
-    async (tx: WriteTransaction, args: UpdateUserRoleMutationArgs) =>
-      optimistic.updateUserRole(tx, authed.user, args),
-    [authed.user],
-  );
+  const updateUserRole = useCallback(optimistic.updateUserRole(authed.user), [
+    authed.user,
+  ]);
 
-  const deleteUser = useCallback(
-    async (tx: WriteTransaction, args: DeleteUserMutationArgs) =>
-      optimistic.deleteUser(tx, authed.user, args),
-    [authed.user],
-  );
+  const deleteUser = useCallback(optimistic.deleteUser(authed.user), [
+    authed.user,
+  ]);
 
   const deletePapercutAccount = useCallback(
-    async (tx: WriteTransaction, args: DeletePapercutAccountMutationArgs) =>
-      optimistic.deletePapercutAccount(tx, authed.user, args),
+    optimistic.deletePapercutAccount(authed.user),
     [authed.user],
   );
 
   const createPapercutAccountManagerAuthorization = useCallback(
-    async (
-      tx: WriteTransaction,
-      args: CreatePapercutAccountManagerAuthorizationMutationArgs,
-    ) =>
-      optimistic.createPapercutAccountManagerAuthorization(
-        tx,
-        authed.user,
-        args,
-      ),
+    optimistic.createPapercutAccountManagerAuthorization(authed.user),
     [authed.user],
   );
 
   const deletePapercutAccountManagerAuthorization = useCallback(
-    async (
-      tx: WriteTransaction,
-      args: DeletePapercutAccountManagerAuthorizationMutationArgs,
-    ) =>
-      optimistic.deletePapercutAccountManagerAuthorization(
-        tx,
-        authed.user,
-        args,
-      ),
+    optimistic.deletePapercutAccountManagerAuthorization(authed.user),
     [authed.user],
   );
 
-  const createRoom = useCallback(
-    async (tx: WriteTransaction, args: CreateRoomMutationArgs) =>
-      optimistic.createRoom(tx, authed.user, args),
-    [authed.user],
-  );
+  const createRoom = useCallback(optimistic.createRoom(authed.user), [
+    authed.user,
+  ]);
 
-  const updateRoom = useCallback(
-    async (tx: WriteTransaction, args: UpdateRoomMutationArgs) =>
-      optimistic.updateRoom(tx, authed.user, args),
-    [authed.user],
-  );
+  const updateRoom = useCallback(optimistic.updateRoom(authed.user), [
+    authed.user,
+  ]);
 
-  const deleteRoom = useCallback(
-    async (tx: WriteTransaction, args: DeleteRoomMutationArgs) =>
-      optimistic.deleteRoom(tx, authed.user, args),
-    [authed.user],
-  );
+  const deleteRoom = useCallback(optimistic.deleteRoom(authed.user), [
+    authed.user,
+  ]);
 
   const createAnnouncement = useCallback(
-    async (tx: WriteTransaction, args: CreateAnnouncementMutationArgs) =>
-      optimistic.createAnnouncement(tx, authed.user, args),
+    optimistic.createAnnouncement(authed.user),
     [authed.user],
   );
 
   const updateAnnouncement = useCallback(
-    async (tx: WriteTransaction, args: UpdateAnnouncementMutationArgs) =>
-      optimistic.updateAnnouncement(tx, authed.user, args),
+    optimistic.updateAnnouncement(authed.user),
     [authed.user],
   );
 
   const deleteAnnouncement = useCallback(
-    async (tx: WriteTransaction, args: DeleteAnnouncementMutationArgs) =>
-      optimistic.deleteAnnouncement(tx, authed.user, args),
+    optimistic.deleteAnnouncement(authed.user),
     [authed.user],
   );
 
-  const createProduct = useCallback(
-    async (tx: WriteTransaction, args: CreateProductMutationArgs) =>
-      optimistic.createProduct(tx, authed.user, args),
-    [authed.user],
-  );
+  const createProduct = useCallback(optimistic.createProduct(authed.user), [
+    authed.user,
+  ]);
 
-  const updateProduct = useCallback(
-    async (tx: WriteTransaction, args: UpdateProductMutationArgs) =>
-      optimistic.updateProduct(tx, authed.user, args),
-    [authed.user],
-  );
+  const updateProduct = useCallback(optimistic.updateProduct(authed.user), [
+    authed.user,
+  ]);
 
-  const deleteProduct = useCallback(
-    async (tx: WriteTransaction, args: DeleteProductMutationArgs) =>
-      optimistic.deleteProduct(tx, authed.user, args),
-    [authed.user],
-  );
+  const deleteProduct = useCallback(optimistic.deleteProduct(authed.user), [
+    authed.user,
+  ]);
 
-  const createOrder = useCallback(
-    async (tx: WriteTransaction, args: CreateOrderMutationArgs) =>
-      optimistic.createOrder(tx, authed.user, args),
-    [authed.user],
-  );
+  const createOrder = useCallback(optimistic.createOrder(authed.user), [
+    authed.user,
+  ]);
 
-  const updateOrder = useCallback(
-    async (tx: WriteTransaction, args: UpdateOrderMutationArgs) =>
-      optimistic.updateOrder(tx, authed.user, args),
-    [authed.user],
-  );
+  const updateOrder = useCallback(optimistic.updateOrder(authed.user), [
+    authed.user,
+  ]);
 
-  const deleteOrder = useCallback(
-    async (tx: WriteTransaction, args: DeleteOrderMutationArgs) =>
-      optimistic.deleteOrder(tx, authed.user, args),
-    [authed.user],
-  );
+  const deleteOrder = useCallback(optimistic.deleteOrder(authed.user), [
+    authed.user,
+  ]);
 
-  const createComment = useCallback(
-    async (tx: WriteTransaction, args: CreateCommentMutationArgs) =>
-      optimistic.createComment(tx, authed.user, args),
-    [authed.user],
-  );
+  const createComment = useCallback(optimistic.createComment(authed.user), [
+    authed.user,
+  ]);
 
-  const updateComment = useCallback(
-    async (tx: WriteTransaction, args: UpdateCommentMutationArgs) =>
-      optimistic.updateComment(tx, authed.user, args),
-    [authed.user],
-  );
+  const updateComment = useCallback(optimistic.updateComment(authed.user), [
+    authed.user,
+  ]);
 
-  const deleteComment = useCallback(
-    async (tx: WriteTransaction, args: DeleteCommentMutationArgs) =>
-      optimistic.deleteComment(tx, authed.user, args),
-    [authed.user],
-  );
+  const deleteComment = useCallback(optimistic.deleteComment(authed.user), [
+    authed.user,
+  ]);
 
   return useMemo(
     () => ({

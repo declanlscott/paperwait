@@ -2,8 +2,8 @@ import { eq, sql } from "drizzle-orm";
 
 import { transact } from "../database/transaction";
 import { BadRequestError, NotImplementedError } from "../errors/http";
-import { authoritative } from "../mutations/authoritative";
-import { globalPermissions, Mutation } from "../mutations/schemas";
+import { authoritative } from "../mutators/authoritative";
+import { globalPermissions, Mutation } from "../mutators/schemas";
 import { assertRole } from "../user/assert";
 import { fn } from "../valibot";
 import { poke } from "./poke";
