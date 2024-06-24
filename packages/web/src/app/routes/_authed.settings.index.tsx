@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
+import { OrgStatus } from "@paperwait/core/organization";
+import { fn } from "@paperwait/core/valibot";
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock, LockOpen } from "lucide-react";
 import { useSubscribe } from "replicache-react";
+import * as v from "valibot";
 
 import { Button } from "~/app/components/ui/primitives/button";
 import {
@@ -12,6 +15,14 @@ import {
   CardHeader,
   CardTitle,
 } from "~/app/components/ui/primitives/card";
+import {
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogTitle,
+  DialogTrigger,
+} from "~/app/components/ui/primitives/dialog";
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
 import {
@@ -20,10 +31,12 @@ import {
   SelectContent,
   SelectItem,
   SelectPopover,
+  SelectTrigger,
+  SelectValue,
 } from "~/app/components/ui/primitives/select";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 
-import type { Organization, OrgStatus } from "@paperwait/core/organization";
+import type { Organization } from "@paperwait/core/organization";
 
 export const Route = createFileRoute("/_authed/settings/")({
   component: Component,
@@ -60,13 +73,13 @@ function OrganizationCard(org: Organization) {
     short: org.slug,
   }));
 
-  const replicache = useReplicache();
+  const { mutate } = useReplicache();
 
   async function mutateName() {
     const name = names.full.trim();
     if (name === org.name) return;
 
-    await replicache.mutate.updateOrganization({
+    await mutate.updateOrganization({
       id: org.id,
       name,
       updatedAt: new Date().toISOString(),
@@ -77,7 +90,7 @@ function OrganizationCard(org: Organization) {
     const slug = names.short.trim();
     if (slug === org.slug) return;
 
-    await replicache.mutate.updateOrganization({
+    await mutate.updateOrganization({
       id: org.id,
       slug,
       updatedAt: new Date().toISOString(),
@@ -142,18 +155,6 @@ function OrganizationCard(org: Organization) {
 }
 
 function DangerZoneCard(org: Organization) {
-  const replicache = useReplicache();
-
-  async function mutateStatus(status: Exclude<OrgStatus, "initializing">) {
-    if (status === org.status) return;
-
-    await replicache.mutate.updateOrganization({
-      id: org.id,
-      status,
-      updatedAt: new Date().toISOString(),
-    });
-  }
-
   return (
     <Card className="border-destructive">
       <CardHeader>
@@ -168,19 +169,60 @@ function DangerZoneCard(org: Organization) {
             <CardDescription>{`This organization is currently ${org.status}.`}</CardDescription>
           </div>
 
+          <DialogTrigger>
+            <Button variant="destructive">Change status</Button>
+
+            <DialogOverlay>
+              <ChangeStatus {...org} />
+            </DialogOverlay>
+          </DialogTrigger>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ChangeStatus(org: Organization) {
+  const { mutate } = useReplicache();
+
+  const [status, setStatus] = useState(() => org.status);
+
+  async function mutateStatus() {
+    if (status === "initializing") return;
+    if (status === org.status) return;
+
+    await mutate.updateOrganization({
+      id: org.id,
+      status,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  return (
+    <DialogContent>
+      {({ close: closeStatusDialog }) => (
+        <>
+          <DialogHeader>
+            <DialogTitle>Change organization status</DialogTitle>
+          </DialogHeader>
+
           <Select
             aria-label="status"
-            selectedKey={org.status}
-            onSelectionChange={(selected) =>
-              mutateStatus(selected as Exclude<OrgStatus, "initializing">)
-            }
+            selectedKey={status}
+            onSelectionChange={fn(v.picklist(OrgStatus.enumValues), setStatus)}
           >
-            <Button variant="destructive">Change status</Button>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
 
             <SelectPopover>
               <SelectContent aria-label="status">
                 <SelectCollection
-                  items={[{ name: "active" }, { name: "suspended" }]}
+                  items={OrgStatus.enumValues
+                    .filter((status) => status !== "initializing")
+                    .map((status) => ({
+                      name: status,
+                    }))}
                 >
                   {(item) => (
                     <SelectItem id={item.name} textValue={item.name}>
@@ -191,8 +233,57 @@ function DangerZoneCard(org: Organization) {
               </SelectContent>
             </SelectPopover>
           </Select>
-        </div>
-      </CardContent>
-    </Card>
+
+          <DialogFooter>
+            <Button variant="ghost" onPress={() => closeStatusDialog()}>
+              Cancel
+            </Button>
+
+            {status === "active" ? (
+              <Button onPress={() => mutateStatus().then(closeStatusDialog)}>
+                Save
+              </Button>
+            ) : (
+              <DialogTrigger>
+                <Button>Save</Button>
+
+                <DialogOverlay isDismissable={false}>
+                  <DialogContent role="alertdialog">
+                    {({ close: closeConfirmationDialog }) => (
+                      <>
+                        <DialogHeader>
+                          <DialogTitle>Are you sure?</DialogTitle>
+                        </DialogHeader>
+
+                        <DialogFooter>
+                          <Button
+                            variant="ghost"
+                            autoFocus
+                            onPress={() => closeConfirmationDialog()}
+                          >
+                            Cancel
+                          </Button>
+
+                          <Button
+                            onPress={() =>
+                              mutateStatus().then(() => {
+                                closeConfirmationDialog();
+                                closeStatusDialog();
+                              })
+                            }
+                          >
+                            Continue
+                          </Button>
+                        </DialogFooter>
+                      </>
+                    )}
+                  </DialogContent>
+                </DialogOverlay>
+              </DialogTrigger>
+            )}
+          </DialogFooter>
+        </>
+      )}
+    </DialogContent>
   );
 }
