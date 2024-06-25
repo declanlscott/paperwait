@@ -83,10 +83,11 @@ function RoomSelector() {
           placeholder="Select a room..."
           className="w-32"
           icon={<Cuboid className="size-4 opacity-50" />}
+          aria-controls="room-selector-listbox"
         />
 
         <ComboboxPopover>
-          <ComboboxListBox>
+          <ComboboxListBox id="room-selector-listbox">
             <ComboboxSection>
               <ComboboxLabel separator>Rooms</ComboboxLabel>
 

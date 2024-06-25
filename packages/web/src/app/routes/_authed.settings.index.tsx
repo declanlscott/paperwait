@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "~/app/components/ui/primitives/select";
 import { useReplicache } from "~/app/lib/hooks/replicache";
+import { labelStyles } from "~/shared/styles/components/primitives/field";
 
 import type { Organization } from "@paperwait/core/organization";
 
@@ -164,7 +165,7 @@ function DangerZoneCard(org: Organization) {
       <CardContent>
         <div className="flex justify-between">
           <div>
-            <Label aria-label="status">Status</Label>
+            <span className={labelStyles()}>Status</span>
 
             <CardDescription>{`This organization is currently ${org.status}.`}</CardDescription>
           </div>
