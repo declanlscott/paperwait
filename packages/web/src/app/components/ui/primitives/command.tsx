@@ -50,7 +50,7 @@ export const CommandDialog = ({
 }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-lg" isCenter={false}>
+      <DialogContent className="overflow-hidden p-0 shadow-lg" position="top">
         {(values) => (
           <Command {...commandProps} className={commandDialogContentStyles()}>
             {typeof children === "function" ? children(values) : children}

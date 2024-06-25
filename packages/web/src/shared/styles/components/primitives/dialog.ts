@@ -87,34 +87,34 @@ export const dialogContentStyles = tv({
     isExiting: {
       true: "animate-out fade-out-0 zoom-out-95 slide-out-to-bottom-2",
     },
-    isCenter: {
-      false:
-        "inset-0 z-50 mx-auto mt-[10vh] h-fit max-h-[100dvh] w-[32rem] max-w-[100vw]",
-      true: "left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]",
+    position: {
+      top: "inset-0 z-50 mx-auto mt-[10vh] h-fit max-h-[100dvh] w-[32rem] max-w-[100vw]",
+      center:
+        "left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]",
     },
   },
   defaultVariants: {
-    isCenter: true,
+    position: "center",
   },
   compoundVariants: [
     {
       isEntering: true,
-      isCenter: false,
+      position: "top",
       className: "slide-in-from-bottom-2",
     },
     {
       isEntering: true,
-      isCenter: true,
+      position: "center",
       className: "slide-in-from-left-1/2 slide-in-from-top-[48%]",
     },
     {
       isExiting: true,
-      isCenter: false,
+      position: "top",
       className: "slide-out-to-bottom-2",
     },
     {
       isExiting: true,
-      isCenter: true,
+      position: "center",
       className: "slide-out-to-left-1/2 slide-out-to-top-[48%]",
     },
   ],

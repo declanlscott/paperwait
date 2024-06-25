@@ -53,7 +53,7 @@ export interface DialogContentProps
   children?: AriaDialogProps["children"];
   role?: AriaDialogProps["role"];
   closeButton?: boolean;
-  isCenter?: boolean;
+  position?: "top" | "center";
 }
 export const DialogContent = ({
   className,
@@ -61,14 +61,14 @@ export const DialogContent = ({
   side,
   role,
   closeButton = true,
-  isCenter = true,
+  position,
   ...props
 }: DialogContentProps) => (
   <AriaModal
     className={composeRenderProps(className, (className, renderProps) =>
       side
         ? sheetStyles({ ...renderProps, side, className })
-        : dialogContentStyles({ ...renderProps, isCenter, className }),
+        : dialogContentStyles({ ...renderProps, position, className }),
     )}
     {...props}
   >
