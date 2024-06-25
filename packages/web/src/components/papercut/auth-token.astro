@@ -25,7 +25,7 @@ const { value, show = false } = Astro.props;
     />
 
     <button
-      class={buttonStyles({ variant: "ghost", size: "icon" })}
+      class={buttonStyles({ variant: "ghost", size: "icon", isHtml: true })}
       type="button"
       hx-post=`/partials/papercut/auth-token?show=${!show}`
     >

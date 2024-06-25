@@ -88,7 +88,7 @@ import { selectStyles } from "~/shared/styles/components/primitives/select";
 
           <button
             type="submit"
-            class={buttonStyles({ class: "w-full gap-2 mt-4" })}
+            class={buttonStyles({ class: "w-full gap-2 mt-4", isHtml: true })}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -116,8 +116,11 @@ import { selectStyles } from "~/shared/styles/components/primitives/select";
         <p class="text-sm">
           Already have an organization? <a
             href="/login"
-            class={buttonStyles({ variant: "link", class: "p-0 h-fit" })}
-            >Login</a
+            class={buttonStyles({
+              variant: "link",
+              class: "p-0 h-fit",
+              isHtml: true,
+            })}>Login</a
           >
         </p>
       </div>

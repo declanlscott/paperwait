@@ -10,7 +10,7 @@ const props = Astro.props;
 ---
 
 <div id="test-papercut" class="grid gap-2">
-  <button class={buttonStyles({ class: "gap-2" })} type="submit">
+  <button class={buttonStyles({ class: "gap-2", isHtml: true })} type="submit">
     <div id="status-indicator" class="loading-indicator">
       <div class="size-5 flex items-center">
         <LoadingIndicator color="#fff" />
