@@ -79,15 +79,45 @@ export const sheetStyles = tv({
 export type SheetStyles = VariantProps<typeof sheetStyles>;
 
 export const dialogContentStyles = tv({
-  base: "bg-background fixed inset-0 z-50 mx-auto mt-[10vh] h-fit max-h-[100dvh] w-[32rem] max-w-[100vw] border p-6 shadow-lg duration-200 sm:rounded-lg",
+  base: "bg-background fixed border p-6 shadow-lg duration-200 sm:rounded-lg",
   variants: {
     isEntering: {
-      true: "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2",
+      true: "animate-in fade-in-0 zoom-in-95",
     },
     isExiting: {
-      true: "animate-out fade-out-0 zoom-out-95 slide-out-to-bottom-2 duration-200",
+      true: "animate-out fade-out-0 zoom-out-95 slide-out-to-bottom-2",
+    },
+    isCenter: {
+      false:
+        "inset-0 z-50 mx-auto mt-[10vh] h-fit max-h-[100dvh] w-[32rem] max-w-[100vw]",
+      true: "left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]",
     },
   },
+  defaultVariants: {
+    isCenter: true,
+  },
+  compoundVariants: [
+    {
+      isEntering: true,
+      isCenter: false,
+      className: "slide-in-from-bottom-2",
+    },
+    {
+      isEntering: true,
+      isCenter: true,
+      className: "slide-in-from-left-1/2 slide-in-from-top-[48%]",
+    },
+    {
+      isExiting: true,
+      isCenter: false,
+      className: "slide-out-to-bottom-2",
+    },
+    {
+      isExiting: true,
+      isCenter: true,
+      className: "slide-out-to-left-1/2 slide-out-to-top-[48%]",
+    },
+  ],
 });
 export type DialogContentStyles = VariantProps<typeof dialogContentStyles>;
 
