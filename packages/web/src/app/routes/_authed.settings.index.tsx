@@ -167,7 +167,7 @@ function DangerZoneCard(org: Organization) {
           <div>
             <span className={labelStyles()}>Status</span>
 
-            <CardDescription>{`This organization is currently ${org.status}.`}</CardDescription>
+            <CardDescription>{`This organization is currently "${org.status}".`}</CardDescription>
           </div>
 
           <DialogTrigger>
@@ -188,6 +188,10 @@ function ChangeStatus(org: Organization) {
 
   const [status, setStatus] = useState(() => org.status);
 
+  const [confirmationText, setConfirmationText] = useState("");
+
+  const isConfirmed = confirmationText === org.name;
+
   async function mutateStatus() {
     if (status === "initializing") return;
     if (status === org.status) return;
@@ -204,36 +208,56 @@ function ChangeStatus(org: Organization) {
       {({ close: closeStatusDialog }) => (
         <>
           <DialogHeader>
-            <DialogTitle>Change organization status</DialogTitle>
+            <DialogTitle>Change status</DialogTitle>
+
+            <p className="text-muted-foreground text-sm">
+              Change the status of this organization.
+            </p>
+
+            <p className="text-muted-foreground text-sm">
+              Changing the status to "Suspended" will log out all
+              non-administrator users and prevent them from logging in.
+            </p>
           </DialogHeader>
 
-          <Select
-            aria-label="status"
-            selectedKey={status}
-            onSelectionChange={fn(v.picklist(OrgStatus.enumValues), setStatus)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="status">Status</Label>
 
-            <SelectPopover>
-              <SelectContent aria-label="status">
-                <SelectCollection
-                  items={OrgStatus.enumValues
-                    .filter((status) => status !== "initializing")
-                    .map((status) => ({
-                      name: status,
-                    }))}
-                >
-                  {(item) => (
-                    <SelectItem id={item.name} textValue={item.name}>
-                      {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
-                    </SelectItem>
-                  )}
-                </SelectCollection>
-              </SelectContent>
-            </SelectPopover>
-          </Select>
+              <Select
+                aria-label="status"
+                selectedKey={status}
+                onSelectionChange={fn(
+                  v.picklist(OrgStatus.enumValues),
+                  setStatus,
+                )}
+                className="w-36"
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+
+                <SelectPopover>
+                  <SelectContent aria-label="status">
+                    <SelectCollection
+                      items={OrgStatus.enumValues
+                        .filter((status) => status !== "initializing")
+                        .map((status) => ({
+                          name: status,
+                        }))}
+                    >
+                      {(item) => (
+                        <SelectItem id={item.name} textValue={item.name}>
+                          {item.name.charAt(0).toUpperCase() +
+                            item.name.slice(1)}
+                        </SelectItem>
+                      )}
+                    </SelectCollection>
+                  </SelectContent>
+                </SelectPopover>
+              </Select>
+            </div>
+          </div>
 
           <DialogFooter>
             <Button variant="ghost" onPress={() => closeStatusDialog()}>
@@ -241,26 +265,56 @@ function ChangeStatus(org: Organization) {
             </Button>
 
             {status === "active" ? (
-              <Button onPress={() => mutateStatus().then(closeStatusDialog)}>
+              <Button
+                onPress={() => mutateStatus().then(closeStatusDialog)}
+                isDisabled={status === org.status}
+              >
                 Save
               </Button>
             ) : (
               <DialogTrigger>
-                <Button>Save</Button>
+                <Button isDisabled={status === org.status}>Save</Button>
 
                 <DialogOverlay isDismissable={false}>
                   <DialogContent role="alertdialog">
                     {({ close: closeConfirmationDialog }) => (
                       <>
                         <DialogHeader>
-                          <DialogTitle>Are you sure?</DialogTitle>
+                          <DialogTitle>Suspend "{org.name}"?</DialogTitle>
+
+                          <p className="text-muted-foreground text-sm">
+                            Are you sure you want to continue? This action may
+                            be disruptive for your users.
+                          </p>
+
+                          <p className="text-muted-foreground text-sm">
+                            To confirm suspending, enter the full name of your
+                            organization in the text field below.
+                          </p>
                         </DialogHeader>
+
+                        <div className="grid gap-4 py-4">
+                          <AriaTextField>
+                            <Label>Full Name</Label>
+
+                            <Input
+                              placeholder={org.name}
+                              value={confirmationText}
+                              onChange={(e) =>
+                                setConfirmationText(e.target.value)
+                              }
+                            />
+                          </AriaTextField>
+                        </div>
 
                         <DialogFooter>
                           <Button
                             variant="ghost"
                             autoFocus
-                            onPress={() => closeConfirmationDialog()}
+                            onPress={() => {
+                              closeConfirmationDialog();
+                              setConfirmationText("");
+                            }}
                           >
                             Cancel
                           </Button>
@@ -272,8 +326,9 @@ function ChangeStatus(org: Organization) {
                                 closeStatusDialog();
                               })
                             }
+                            isDisabled={!isConfirmed}
                           >
-                            Continue
+                            Suspend
                           </Button>
                         </DialogFooter>
                       </>
