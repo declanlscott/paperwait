@@ -1,13 +1,7 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import {
-  BookDashed,
-  Cuboid,
-  LayoutDashboard,
-  Search,
-  Settings,
-} from "lucide-react";
+import { BookDashed, Cuboid, Search } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 
 import { CommandBar } from "~/app/components/ui/command-bar";
@@ -27,9 +21,11 @@ import { KeyboardShortcut } from "~/app/components/ui/primitives/keyboard-shortc
 import { Separator } from "~/app/components/ui/primitives/separator";
 import { UserMenu } from "~/app/components/ui/user-menu";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useCommandBarActions } from "~/app/lib/hooks/command-bar";
 import { useIsSyncing, useReplicache } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
+import { links } from "~/app/lib/links";
 import { linkStyles, logoStyles } from "~/shared/styles/components/main-nav";
 
 import type { ComponentProps } from "react";
@@ -81,7 +77,7 @@ function RoomSelector() {
       >
         <ComboboxInput
           placeholder="Select a room..."
-          className="w-32"
+          className="w-28"
           icon={<Cuboid className="size-4 opacity-50" />}
           aria-controls="room-selector-listbox"
         />
@@ -117,23 +113,19 @@ function RoomSelector() {
 }
 
 function NavList() {
+  const { user } = useAuthenticated();
+
   return (
     <ul className="flex items-center">
-      <li>
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <LayoutDashboard className="size-5 md:size-4" />
+      {links.mainNav[user.role].map((link) => (
+        <li key={link.name}>
+          <Link href={link.props.href} className="flex items-center gap-2">
+            <div className="flex size-5 shrink items-center">{link.icon}</div>
 
-          <span className="hidden md:block">Dashboard</span>
-        </Link>
-      </li>
-
-      <li>
-        <Link href="/settings" className="flex items-center gap-2">
-          <Settings className="size-5 md:size-4" />
-
-          <span className="hidden md:block">Settings</span>
-        </Link>
-      </li>
+            <span className="hidden lg:block">{link.name}</span>
+          </Link>
+        </li>
+      ))}
     </ul>
   );
 }

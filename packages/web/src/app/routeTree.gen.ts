@@ -16,6 +16,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as AuthenticatedDashboardImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedUsersIndexImport } from './routes/_authenticated.users.index'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated.settings.index'
 import { Route as AuthenticatedSettingsIntegrationsImport } from './routes/_authenticated.settings.integrations'
 
@@ -55,6 +56,11 @@ const AuthenticatedSettingsLazyRoute = AuthenticatedSettingsLazyImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+
+const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexImport.update({
+  path: '/',
+  getParentRoute: () => AuthenticatedUsersLazyRoute,
 } as any)
 
 const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
@@ -123,6 +129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexImport
       parentRoute: typeof AuthenticatedSettingsLazyImport
     }
+    '/_authenticated/users/': {
+      id: '/_authenticated/users/'
+      path: '/'
+      fullPath: '/users/'
+      preLoaderRoute: typeof AuthenticatedUsersIndexImport
+      parentRoute: typeof AuthenticatedUsersLazyImport
+    }
   }
 }
 
@@ -135,7 +148,9 @@ export const routeTree = rootRoute.addChildren({
       AuthenticatedSettingsIntegrationsRoute,
       AuthenticatedSettingsIndexRoute,
     }),
-    AuthenticatedUsersLazyRoute,
+    AuthenticatedUsersLazyRoute: AuthenticatedUsersLazyRoute.addChildren({
+      AuthenticatedUsersIndexRoute,
+    }),
   }),
   LoginRoute,
 })
@@ -177,7 +192,10 @@ export const routeTree = rootRoute.addChildren({
     },
     "/_authenticated/users": {
       "filePath": "_authenticated.users.lazy.tsx",
-      "parent": "/_authenticated"
+      "parent": "/_authenticated",
+      "children": [
+        "/_authenticated/users/"
+      ]
     },
     "/_authenticated/settings/integrations": {
       "filePath": "_authenticated.settings.integrations.tsx",
@@ -186,6 +204,10 @@ export const routeTree = rootRoute.addChildren({
     "/_authenticated/settings/": {
       "filePath": "_authenticated.settings.index.tsx",
       "parent": "/_authenticated/settings"
+    },
+    "/_authenticated/users/": {
+      "filePath": "_authenticated.users.index.tsx",
+      "parent": "/_authenticated/users"
     }
   }
 }

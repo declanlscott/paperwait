@@ -36,6 +36,7 @@ export type MutationOptionsFactory = Record<
 export type Links = Array<{
   name: string;
   props: ComponentProps<typeof AriaLink>;
+  icon?: ReactNode;
 }>;
 
 export type Href = ToPathOption<
