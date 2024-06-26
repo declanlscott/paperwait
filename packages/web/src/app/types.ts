@@ -10,11 +10,11 @@ import type {
 
 export type Auth = Pick<App.Locals, "user" | "session" | "org">;
 
-export type Authed = {
+export type Authenticated = {
   [TKey in keyof Auth]: NonNullable<Auth[TKey]>;
 } & { isAuthed: true };
 
-export type UnAuthed = {
+export type Unauthenticated = {
   [TKey in keyof Auth]: null;
 } & { isAuthed: false };
 

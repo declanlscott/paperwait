@@ -1,18 +1,18 @@
 import { formatChannel } from "@paperwait/core/realtime";
 import { Outlet } from "@tanstack/react-router";
 
-import { AuthedProvider } from "~/app/components/providers/auth";
+import { AuthenticatedProvider } from "~/app/components/providers/auth";
 import { CommandBarProvider } from "~/app/components/providers/command-bar";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
 import { MainNav } from "~/app/components/ui/main-nav";
-import { useAuthed } from "~/app/lib/hooks/auth";
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useRealtime } from "~/app/lib/hooks/realtime";
 
 import type { PropsWithChildren } from "react";
 
-export function AuthedLayout() {
+export function AuthenticatedLayout() {
   return (
-    <AuthedProvider>
+    <AuthenticatedProvider>
       <ReplicacheProvider>
         <Realtime>
           <CommandBarProvider>
@@ -24,12 +24,12 @@ export function AuthedLayout() {
           </CommandBarProvider>
         </Realtime>
       </ReplicacheProvider>
-    </AuthedProvider>
+    </AuthenticatedProvider>
   );
 }
 
 function Realtime(props: PropsWithChildren) {
-  const { user } = useAuthed();
+  const { user } = useAuthenticated();
 
   useRealtime({ channel: formatChannel("org", user.orgId) });
   useRealtime({ channel: formatChannel("user", user.id) });

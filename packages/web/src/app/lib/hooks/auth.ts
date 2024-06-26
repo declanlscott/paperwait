@@ -5,13 +5,13 @@ import { useSubscribe } from "replicache-react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
-import { AuthContext, AuthedContext } from "~/app/lib/contexts";
+import { AuthContext, AuthenticatedContext } from "~/app/lib/contexts";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { Organization } from "@paperwait/core/organization";
 import type { AuthStore } from "~/app/lib/contexts";
-import type { Authed, UnAuthed } from "~/app/types";
+import type { Authenticated, Unauthenticated } from "~/app/types";
 
 export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
   const store = useContext(AuthContext);
@@ -30,19 +30,19 @@ export const useAuth = () =>
           user: null,
           session: null,
           org: null,
-        } satisfies UnAuthed;
+        } satisfies Unauthenticated;
 
-      return { isAuthed: true, user, session, org } satisfies Authed;
+      return { isAuthed: true, user, session, org } satisfies Authenticated;
     }),
   );
 
 export const useAuthActions = () =>
   useAuthStore(useShallow(({ actions }) => actions));
 
-export function useAuthed() {
-  const auth = useContext(AuthedContext);
+export function useAuthenticated() {
+  const auth = useContext(AuthenticatedContext);
 
-  if (!auth) throw new MissingContextProviderError("Authed");
+  if (!auth) throw new MissingContextProviderError("Authenticated");
 
   return auth;
 }

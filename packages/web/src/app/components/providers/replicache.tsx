@@ -3,7 +3,7 @@ import { useRouter } from "@tanstack/react-router";
 import { Replicache } from "replicache";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
-import { useAuthActions, useAuthed } from "~/app/lib/hooks/auth";
+import { useAuthActions, useAuthenticated } from "~/app/lib/hooks/auth";
 import { useMutators } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { useSlot } from "~/app/lib/hooks/slot";
@@ -15,7 +15,7 @@ import type { Organization } from "@paperwait/core/organization";
 export function ReplicacheProvider(props: PropsWithChildren) {
   const [replicache, setReplicache] = useState<ReplicacheContext | null>(null);
 
-  const { user } = useAuthed();
+  const { user } = useAuthenticated();
 
   const { ReplicacheLicenseKey, IsDev } = useResource();
 

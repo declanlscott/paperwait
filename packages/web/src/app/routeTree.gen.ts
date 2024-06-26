@@ -14,15 +14,17 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as LoginImport } from './routes/login'
-import { Route as AuthedImport } from './routes/_authed'
-import { Route as AuthedDashboardImport } from './routes/_authed.dashboard'
-import { Route as AuthedSettingsIndexImport } from './routes/_authed.settings.index'
-import { Route as AuthedSettingsPapercutImport } from './routes/_authed.settings.papercut'
+import { Route as AuthenticatedImport } from './routes/_authenticated'
+import { Route as AuthenticatedDashboardImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated.settings.index'
+import { Route as AuthenticatedSettingsIntegrationsImport } from './routes/_authenticated.settings.integrations'
 
 // Create Virtual Routes
 
-const AuthedUsersLazyImport = createFileRoute('/_authed/users')()
-const AuthedSettingsLazyImport = createFileRoute('/_authed/settings')()
+const AuthenticatedUsersLazyImport = createFileRoute('/_authenticated/users')()
+const AuthenticatedSettingsLazyImport = createFileRoute(
+  '/_authenticated/settings',
+)()
 
 // Create/Update Routes
 
@@ -31,47 +33,52 @@ const LoginRoute = LoginImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthedRoute = AuthedImport.update({
-  id: '/_authed',
+const AuthenticatedRoute = AuthenticatedImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthedUsersLazyRoute = AuthedUsersLazyImport.update({
+const AuthenticatedUsersLazyRoute = AuthenticatedUsersLazyImport.update({
   path: '/users',
-  getParentRoute: () => AuthedRoute,
-} as any).lazy(() => import('./routes/_authed.users.lazy').then((d) => d.Route))
-
-const AuthedSettingsLazyRoute = AuthedSettingsLazyImport.update({
-  path: '/settings',
-  getParentRoute: () => AuthedRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any).lazy(() =>
-  import('./routes/_authed.settings.lazy').then((d) => d.Route),
+  import('./routes/_authenticated.users.lazy').then((d) => d.Route),
 )
 
-const AuthedDashboardRoute = AuthedDashboardImport.update({
+const AuthenticatedSettingsLazyRoute = AuthenticatedSettingsLazyImport.update({
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated.settings.lazy').then((d) => d.Route),
+)
+
+const AuthenticatedDashboardRoute = AuthenticatedDashboardImport.update({
   path: '/dashboard',
-  getParentRoute: () => AuthedRoute,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 
-const AuthedSettingsIndexRoute = AuthedSettingsIndexImport.update({
-  path: '/',
-  getParentRoute: () => AuthedSettingsLazyRoute,
-} as any)
+const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
+  {
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsLazyRoute,
+  } as any,
+)
 
-const AuthedSettingsPapercutRoute = AuthedSettingsPapercutImport.update({
-  path: '/papercut',
-  getParentRoute: () => AuthedSettingsLazyRoute,
-} as any)
+const AuthenticatedSettingsIntegrationsRoute =
+  AuthenticatedSettingsIntegrationsImport.update({
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedSettingsLazyRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authed': {
-      id: '/_authed'
+    '/_authenticated': {
+      id: '/_authenticated'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof AuthedImport
+      preLoaderRoute: typeof AuthenticatedImport
       parentRoute: typeof rootRoute
     }
     '/login': {
@@ -81,40 +88,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
-    '/_authed/dashboard': {
-      id: '/_authed/dashboard'
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthedDashboardImport
-      parentRoute: typeof AuthedImport
+      preLoaderRoute: typeof AuthenticatedDashboardImport
+      parentRoute: typeof AuthenticatedImport
     }
-    '/_authed/settings': {
-      id: '/_authed/settings'
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof AuthedSettingsLazyImport
-      parentRoute: typeof AuthedImport
+      preLoaderRoute: typeof AuthenticatedSettingsLazyImport
+      parentRoute: typeof AuthenticatedImport
     }
-    '/_authed/users': {
-      id: '/_authed/users'
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
       path: '/users'
       fullPath: '/users'
-      preLoaderRoute: typeof AuthedUsersLazyImport
-      parentRoute: typeof AuthedImport
+      preLoaderRoute: typeof AuthenticatedUsersLazyImport
+      parentRoute: typeof AuthenticatedImport
     }
-    '/_authed/settings/papercut': {
-      id: '/_authed/settings/papercut'
-      path: '/papercut'
-      fullPath: '/settings/papercut'
-      preLoaderRoute: typeof AuthedSettingsPapercutImport
-      parentRoute: typeof AuthedSettingsLazyImport
+    '/_authenticated/settings/integrations': {
+      id: '/_authenticated/settings/integrations'
+      path: '/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof AuthenticatedSettingsIntegrationsImport
+      parentRoute: typeof AuthenticatedSettingsLazyImport
     }
-    '/_authed/settings/': {
-      id: '/_authed/settings/'
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
       path: '/'
       fullPath: '/settings/'
-      preLoaderRoute: typeof AuthedSettingsIndexImport
-      parentRoute: typeof AuthedSettingsLazyImport
+      preLoaderRoute: typeof AuthenticatedSettingsIndexImport
+      parentRoute: typeof AuthenticatedSettingsLazyImport
     }
   }
 }
@@ -122,13 +129,13 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 export const routeTree = rootRoute.addChildren({
-  AuthedRoute: AuthedRoute.addChildren({
-    AuthedDashboardRoute,
-    AuthedSettingsLazyRoute: AuthedSettingsLazyRoute.addChildren({
-      AuthedSettingsPapercutRoute,
-      AuthedSettingsIndexRoute,
+  AuthenticatedRoute: AuthenticatedRoute.addChildren({
+    AuthenticatedDashboardRoute,
+    AuthenticatedSettingsLazyRoute: AuthenticatedSettingsLazyRoute.addChildren({
+      AuthenticatedSettingsIntegrationsRoute,
+      AuthenticatedSettingsIndexRoute,
     }),
-    AuthedUsersLazyRoute,
+    AuthenticatedUsersLazyRoute,
   }),
   LoginRoute,
 })
@@ -141,44 +148,44 @@ export const routeTree = rootRoute.addChildren({
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_authed",
+        "/_authenticated",
         "/login"
       ]
     },
-    "/_authed": {
-      "filePath": "_authed.tsx",
+    "/_authenticated": {
+      "filePath": "_authenticated.tsx",
       "children": [
-        "/_authed/dashboard",
-        "/_authed/settings",
-        "/_authed/users"
+        "/_authenticated/dashboard",
+        "/_authenticated/settings",
+        "/_authenticated/users"
       ]
     },
     "/login": {
       "filePath": "login.tsx"
     },
-    "/_authed/dashboard": {
-      "filePath": "_authed.dashboard.tsx",
-      "parent": "/_authed"
+    "/_authenticated/dashboard": {
+      "filePath": "_authenticated.dashboard.tsx",
+      "parent": "/_authenticated"
     },
-    "/_authed/settings": {
-      "filePath": "_authed.settings.lazy.tsx",
-      "parent": "/_authed",
+    "/_authenticated/settings": {
+      "filePath": "_authenticated.settings.lazy.tsx",
+      "parent": "/_authenticated",
       "children": [
-        "/_authed/settings/papercut",
-        "/_authed/settings/"
+        "/_authenticated/settings/integrations",
+        "/_authenticated/settings/"
       ]
     },
-    "/_authed/users": {
-      "filePath": "_authed.users.lazy.tsx",
-      "parent": "/_authed"
+    "/_authenticated/users": {
+      "filePath": "_authenticated.users.lazy.tsx",
+      "parent": "/_authenticated"
     },
-    "/_authed/settings/papercut": {
-      "filePath": "_authed.settings.papercut.tsx",
-      "parent": "/_authed/settings"
+    "/_authenticated/settings/integrations": {
+      "filePath": "_authenticated.settings.integrations.tsx",
+      "parent": "/_authenticated/settings"
     },
-    "/_authed/settings/": {
-      "filePath": "_authed.settings.index.tsx",
-      "parent": "/_authed/settings"
+    "/_authenticated/settings/": {
+      "filePath": "_authenticated.settings.index.tsx",
+      "parent": "/_authenticated/settings"
     }
   }
 }

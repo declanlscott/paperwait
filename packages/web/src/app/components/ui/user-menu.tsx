@@ -20,7 +20,7 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
-import { useAuthed, useLogout } from "~/app/lib/hooks/auth";
+import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { userMenuTriggerButtonStyles } from "~/shared/styles/components/user-menu";
 
@@ -29,7 +29,7 @@ import type { Organization } from "@paperwait/core/organization";
 export function UserMenu() {
   const replicache = useReplicache();
 
-  const { user } = useAuthed();
+  const { user } = useAuthenticated();
 
   const org = useSubscribe(replicache, (tx) =>
     tx

@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { useForm, valiForm } from "@modular-forms/react";
+import { ApplicationError } from "@paperwait/core/errors";
 import { PapercutParameter } from "@paperwait/core/schemas";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, EyeOff, FlaskConical, RefreshCw, Settings2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  FlaskConical,
+  RefreshCw,
+  RotateCw,
+  Settings2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { TextInput } from "~/app/components/ui/form";
@@ -26,11 +34,16 @@ import {
 import { useOptionsFactory } from "~/app/lib/hooks/options-factory";
 import { labelStyles } from "~/shared/styles/components/primitives/field";
 
+import type { ComponentProps } from "react";
 import type { SubmitHandler } from "@modular-forms/react";
+import type { ErrorRouteComponent } from "@tanstack/react-router";
 import type * as v from "valibot";
 
-export const Route = createFileRoute("/_authed/settings/papercut")({
+export const Route = createFileRoute("/_authenticated/settings/integrations")({
+  beforeLoad: ({ context, location }) =>
+    context.authStore.actions.authorizeRoute(location.href, []),
   component: Component,
+  errorComponent: ErrorComponent,
 });
 
 function Component() {
@@ -260,5 +273,29 @@ function SyncAccounts() {
         </>
       )}
     </Button>
+  );
+}
+
+function ErrorComponent(props: ComponentProps<ErrorRouteComponent>) {
+  const message =
+    props.error instanceof ApplicationError
+      ? props.error.message
+      : "Something went wrong...";
+
+  return (
+    <Card className="border-destructive">
+      <CardHeader className="flex-row justify-between gap-4 space-y-0">
+        <div className="flex flex-col space-y-1.5">
+          <CardTitle>Error!</CardTitle>
+
+          <CardDescription>{message}</CardDescription>
+        </div>
+
+        <Button variant="destructive" onPress={props.reset}>
+          <RotateCw className="mr-2 size-4" />
+          Retry
+        </Button>
+      </CardHeader>
+    </Card>
   );
 }

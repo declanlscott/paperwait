@@ -1,6 +1,6 @@
 import { assertRole } from "@paperwait/core/user";
 
-import { useAuthed } from "~/app/lib/hooks/auth";
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 import type { PropsWithChildren } from "react";
 import type { UserRole } from "@paperwait/core/user";
@@ -10,7 +10,7 @@ export interface AuthorizeProps extends PropsWithChildren {
 }
 
 export function Authorize({ roles, children }: AuthorizeProps) {
-  const { user } = useAuthed();
+  const { user } = useAuthenticated();
 
   if (!assertRole(user, roles)) return null;
 

@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { InvalidUserRoleError } from "@paperwait/core/errors";
+import { assertRole } from "@paperwait/core/user";
 import { redirect } from "@tanstack/react-router";
 import { produce } from "immer";
 import ky from "ky";
 import { createStore } from "zustand";
 
-import { AuthContext, AuthedContext } from "~/app/lib/contexts";
+import { AuthContext, AuthenticatedContext } from "~/app/lib/contexts";
 import { useAuth } from "~/app/lib/hooks/auth";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
@@ -29,12 +31,21 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
           await ky.post("/api/auth/logout").then((res) => {
             if (res.ok) get().actions.reset();
           }),
-        protectRoute: (from) => {
-          if (!get().user)
+        authenticateRoute: (from) => {
+          const user = get().user;
+
+          if (!user)
             throw redirect({
               to: "/login",
               search: { redirect: from, ...initialLoginSearchParams },
             });
+
+          return user;
+        },
+        authorizeRoute: (from, roles) => {
+          const user = get().actions.authenticateRoute(from);
+
+          if (!assertRole(user, roles)) throw new InvalidUserRoleError();
         },
         updateRole: (newRole) =>
           set(
@@ -51,7 +62,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
   );
 }
 
-export function AuthedProvider(props: PropsWithChildren) {
+export function AuthenticatedProvider(props: PropsWithChildren) {
   const auth = useAuth();
 
   const { loadingIndicator } = useSlot();
@@ -66,8 +77,8 @@ export function AuthedProvider(props: PropsWithChildren) {
 
   // Otherwise render children in the Authed context
   return (
-    <AuthedContext.Provider value={auth}>
+    <AuthenticatedContext.Provider value={auth}>
       {props.children}
-    </AuthedContext.Provider>
+    </AuthenticatedContext.Provider>
   );
 }

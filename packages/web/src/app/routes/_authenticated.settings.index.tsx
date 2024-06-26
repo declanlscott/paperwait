@@ -39,7 +39,7 @@ import { labelStyles } from "~/shared/styles/components/primitives/field";
 
 import type { Organization } from "@paperwait/core/organization";
 
-export const Route = createFileRoute("/_authed/settings/")({
+export const Route = createFileRoute("/_authenticated/settings/")({
   component: Component,
 });
 

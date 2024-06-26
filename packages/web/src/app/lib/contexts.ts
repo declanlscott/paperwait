@@ -5,12 +5,13 @@ import type { UserRole } from "@paperwait/core/user";
 import type { Replicache } from "replicache";
 import type { StoreApi } from "zustand";
 import type { Mutators } from "~/app/lib/hooks/replicache";
-import type { Auth, Authed, CommandBarPage, Slot } from "~/app/types";
+import type { Auth, Authenticated, CommandBarPage, Slot } from "~/app/types";
 
 type AuthActions = {
   reset: () => void;
   logout: () => Promise<void>;
-  protectRoute: (from: string) => void;
+  authenticateRoute: (from: string) => Authenticated["user"];
+  authorizeRoute: (from: string, roles: Array<UserRole>) => void;
   updateRole: (newRole: UserRole) => void;
 };
 
@@ -20,7 +21,7 @@ export interface AuthStore extends Auth {
 
 export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
-export const AuthedContext = createContext<Authed | null>(null);
+export const AuthenticatedContext = createContext<Authenticated | null>(null);
 
 export type ReplicacheContext = Replicache<Mutators>;
 
