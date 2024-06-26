@@ -19,13 +19,13 @@ import type { Provider } from "@paperwait/core/organization";
 import type { UserRole } from "@paperwait/core/user";
 
 export const authorization = (roles?: Array<UserRole>) =>
-  createMiddleware(async (c, next) => {
+  createMiddleware<object>(async (c, next) => {
     authorize(c.get("locals"), roles);
 
     await next();
   });
 
-export const provider = createMiddleware(async (c, next) => {
+export const provider = createMiddleware<object>(async (c, next) => {
   const session = c.get("locals").session;
   if (!session) throw new UnauthorizedError("Session not found");
 
