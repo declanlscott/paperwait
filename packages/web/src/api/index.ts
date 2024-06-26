@@ -5,8 +5,8 @@ import { logger } from "hono/logger";
 import { parse } from "superjson";
 
 import auth from "~/api/routes/auth";
+import integrations from "~/api/routes/integrations";
 import organization from "~/api/routes/organization";
-import papercut from "~/api/routes/papercut";
 import replicache from "~/api/routes/replicache";
 import user from "~/api/routes/user";
 
@@ -35,7 +35,7 @@ const api = new Hono<{ Bindings: Bindings }>()
   })
   .route("/auth", auth)
   .route("/organization", organization)
-  .route("/papercut", papercut)
+  .route("/integrations", integrations)
   .route("/replicache", replicache)
   .route("/user", user)
   .onError((e, c) => {

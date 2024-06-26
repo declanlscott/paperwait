@@ -17,9 +17,10 @@ export function useOptionsFactory() {
         papercutCredentials: () => ({
           mutationKey: ["papercut", "credentials"] as const,
           mutationFn: async (json: PapercutParameter) => {
-            const response = await client.api.papercut.credentials.$put({
-              json,
-            });
+            const response =
+              await client.api.integrations.papercut.credentials.$put({
+                json,
+              });
 
             if (!response.ok) throw new Error(response.statusText);
           },
@@ -27,7 +28,8 @@ export function useOptionsFactory() {
         testConnection: () => ({
           mutationKey: ["papercut", "test"] as const,
           mutationFn: async () => {
-            const response = await client.api.papercut.test.$post();
+            const response =
+              await client.api.integrations.papercut.test.$post();
 
             if (!response.ok) throw new Error(response.statusText);
           },
@@ -35,9 +37,10 @@ export function useOptionsFactory() {
         syncAccounts: () => ({
           mutationKey: ["papercut", "accounts", "sync"] as const,
           mutationFn: async () => {
-            const response = await client.api.papercut.accounts.$put({
-              json: undefined,
-            });
+            const response =
+              await client.api.integrations.papercut.accounts.$put({
+                json: undefined,
+              });
 
             if (!response.ok) throw new Error(response.statusText);
           },
