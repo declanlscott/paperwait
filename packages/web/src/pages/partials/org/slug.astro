@@ -12,14 +12,18 @@ export const partial = true;
 
 const formData = await Astro.request.formData();
 
-const props = (await fn(
-  v.object({ slug: Registration.entries.slug }),
-  async ({ slug }) => {
+const getProps = fn(
+  v.fallback(v.object({ slug: Registration.entries.slug }), { slug: "" }),
+  async ({ slug }): Promise<OrgSlugProps> => {
+    if (!slug) return { value: "" };
+
     const isValid = await isOrgSlugValid(slug);
 
     return { value: slug, isValid };
   },
-)(Object.fromEntries(formData.entries()))) satisfies OrgSlugProps;
+);
+
+const props = await getProps(Object.fromEntries(formData.entries()));
 ---
 
 <OrgSlug {...props} />
