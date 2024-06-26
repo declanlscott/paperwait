@@ -3,7 +3,7 @@ import { TextField as AriaTextField } from "react-aria-components";
 import { OrgStatus } from "@paperwait/core/organization";
 import { fn } from "@paperwait/core/valibot";
 import { createFileRoute } from "@tanstack/react-router";
-import { Lock, LockOpen } from "lucide-react";
+import { Lock, LockOpen, Pencil } from "lucide-react";
 import { useSubscribe } from "replicache-react";
 import * as v from "valibot";
 
@@ -171,7 +171,10 @@ function DangerZoneCard(org: Organization) {
           </div>
 
           <DialogTrigger>
-            <Button variant="destructive">Change status</Button>
+            <Button variant="destructive">
+              <Pencil className="mr-2 size-5" />
+              Change status
+            </Button>
 
             <DialogOverlay>
               <ChangeStatus {...org} />

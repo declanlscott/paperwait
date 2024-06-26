@@ -3,7 +3,7 @@ import { useForm, valiForm } from "@modular-forms/react";
 import { PapercutParameter } from "@paperwait/core/schemas";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, FlaskConical, RefreshCw, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { TextInput } from "~/app/components/ui/form";
@@ -42,11 +42,11 @@ function Component() {
 }
 
 function PapercutCard() {
-  const { mutation } = useOptionsFactory();
+  const options = useOptionsFactory();
 
   const isConfiguring =
     useIsMutating({
-      mutationKey: mutation.papercutCredentials().mutationKey,
+      mutationKey: options.mutation.papercutCredentials().mutationKey,
     }) > 0;
 
   return (
@@ -55,7 +55,7 @@ function PapercutCard() {
         <CardTitle>PaperCut</CardTitle>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="grid gap-6">
         <div className="flex justify-between gap-4">
           <div>
             <span className={labelStyles()}>Server Credentials</span>
@@ -67,13 +67,44 @@ function PapercutCard() {
 
           <DialogTrigger>
             <Button isLoading={isConfiguring}>
-              {isConfiguring ? "Configuring" : "Configure"}
+              {isConfiguring ? (
+                "Configuring"
+              ) : (
+                <>
+                  <Settings2 className="mr-2 size-5" />
+                  Configure
+                </>
+              )}
             </Button>
 
             <DialogOverlay>
               <ConfigureCredentials />
             </DialogOverlay>
           </DialogTrigger>
+        </div>
+
+        <div className="flex justify-between gap-4">
+          <div>
+            <span className={labelStyles()}>Test Connection</span>
+
+            <CardDescription>
+              Test the connection to your PaperCut server.
+            </CardDescription>
+          </div>
+
+          <TestConnection />
+        </div>
+
+        <div className="flex justify-between gap-4">
+          <div>
+            <span className={labelStyles()}>Shared Accounts</span>
+
+            <CardDescription>
+              Sync the shared accounts from your PaperCut server.
+            </CardDescription>
+          </div>
+
+          <SyncAccounts />
         </div>
       </CardContent>
     </Card>
@@ -87,10 +118,10 @@ function ConfigureCredentials() {
     validate: valiForm(PapercutParameter),
   });
 
-  const { mutation } = useOptionsFactory();
+  const options = useOptionsFactory();
 
   const { mutate } = useMutation({
-    ...mutation.papercutCredentials(),
+    ...options.mutation.papercutCredentials(),
     onSuccess: () =>
       toast.success("Successfully configured PaperCut server credentials."),
   });
@@ -182,5 +213,52 @@ function ConfigureCredentials() {
         </Form>
       )}
     </DialogContent>
+  );
+}
+
+function TestConnection() {
+  const options = useOptionsFactory();
+
+  const { mutate, isPending } = useMutation({
+    ...options.mutation.testConnection(),
+    onSuccess: () =>
+      toast.success("Successfully connected to PaperCut server."),
+    onError: () => toast.error("Failed to connect to PaperCut server."),
+  });
+
+  return (
+    <Button onPress={() => mutate()} isLoading={isPending}>
+      {isPending ? (
+        "Testing"
+      ) : (
+        <>
+          <FlaskConical className="mr-2 size-5" />
+          Test
+        </>
+      )}
+    </Button>
+  );
+}
+
+function SyncAccounts() {
+  const options = useOptionsFactory();
+
+  const { mutate, isPending } = useMutation({
+    ...options.mutation.syncAccounts(),
+    onSuccess: () => toast.success("Successfully synced shared accounts."),
+    onError: () => toast.error("Failed to sync shared accounts."),
+  });
+
+  return (
+    <Button onPress={() => mutate()} isLoading={isPending}>
+      {isPending ? (
+        "Syncing"
+      ) : (
+        <>
+          <RefreshCw className="mr-2 size-5" />
+          Sync
+        </>
+      )}
+    </Button>
   );
 }

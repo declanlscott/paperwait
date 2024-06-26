@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 import { useApi } from "~/app/lib/hooks/api";
 
@@ -8,21 +8,43 @@ import type { MutationOptionsFactory } from "~/app/types";
 export function useOptionsFactory() {
   const { client } = useApi();
 
-  const query = {
-    syncPapercutAccounts: () =>
-      queryOptions({
-        queryKey: ["papercut", "accounts", "sync"] as const,
-        queryFn: () => client.api.papercut.accounts.$put({ json: undefined }),
-      }),
-  };
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, react-hooks/exhaustive-deps
+  const query = useMemo(() => {}, []);
 
-  const mutation = {
-    papercutCredentials: () => ({
-      mutationKey: ["papercut", "credentials"] as const,
-      mutationFn: (json: PapercutParameter) =>
-        client.api.papercut.credentials.$put({ json }),
-    }),
-  } satisfies MutationOptionsFactory;
+  const mutation = useMemo(
+    () =>
+      ({
+        papercutCredentials: () => ({
+          mutationKey: ["papercut", "credentials"] as const,
+          mutationFn: async (json: PapercutParameter) => {
+            const response = await client.api.papercut.credentials.$put({
+              json,
+            });
+
+            if (!response.ok) throw new Error(response.statusText);
+          },
+        }),
+        testConnection: () => ({
+          mutationKey: ["papercut", "test"] as const,
+          mutationFn: async () => {
+            const response = await client.api.papercut.test.$post();
+
+            if (!response.ok) throw new Error(response.statusText);
+          },
+        }),
+        syncAccounts: () => ({
+          mutationKey: ["papercut", "accounts", "sync"] as const,
+          mutationFn: async () => {
+            const response = await client.api.papercut.accounts.$put({
+              json: undefined,
+            });
+
+            if (!response.ok) throw new Error(response.statusText);
+          },
+        }),
+      }) satisfies MutationOptionsFactory,
+    [client],
+  );
 
   return { query, mutation };
 }

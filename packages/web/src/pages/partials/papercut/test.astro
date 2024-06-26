@@ -20,7 +20,7 @@ const { orgId, authToken } = validate(
 
 let props: PapercutTestProps;
 try {
-  await testPapercut({ orgId, input: { authToken } });
+  await testPapercut({ orgId, input: { authorized: false, authToken } });
   props = { status: "success" };
 } catch (e) {
   props = {

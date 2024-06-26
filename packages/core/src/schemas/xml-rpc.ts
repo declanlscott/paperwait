@@ -179,9 +179,15 @@ export type ListUserSharedAccountsResult = v.InferOutput<
 >;
 
 // Test PaperCut
-export const TestPapercutInput = v.object({
-  authToken: v.string(),
-});
+export const TestPapercutInput = v.variant("authorized", [
+  v.object({
+    authorized: v.literal(false),
+    authToken: v.string(),
+  }),
+  v.object({
+    authorized: v.literal(true),
+  }),
+]);
 export type TestPapercutInput = v.InferOutput<typeof TestPapercutInput>;
 export const TestPapercutEvent = v.object({
   ...BaseEvent.entries,

@@ -15,13 +15,11 @@ import {
 
 import type { Transaction } from "../database/transaction";
 import type { Organization } from "../organization";
-import type { SyncPapercutAccountsMutationArgs } from "../schemas/mutators";
 import type { OmitTimestamps } from "../types";
 
 export async function syncPapercutAccounts(
   tx: Transaction,
   orgId: Organization["id"],
-  _args: SyncPapercutAccountsMutationArgs,
 ) {
   const names = await listSharedAccounts({ orgId, input: {} });
 

@@ -23,7 +23,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
     const { client, authToken } = await buildClient(orgId);
 
-    if (input.authToken !== authToken)
+    if (!input.authorized && input.authToken !== authToken)
       throw new BadRequestError("Invalid auth token");
 
     const value = await client.methodCall(xmlRpcMethod.isUserExists, [

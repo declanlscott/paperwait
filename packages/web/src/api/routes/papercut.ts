@@ -4,16 +4,10 @@ import { BadRequestError } from "@paperwait/core/errors";
 import { syncPapercutAccounts, testPapercut } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
-import {
-  NanoId,
-  PapercutParameter,
-  rolePermissions,
-  SyncPapercutAccountsMutationArgs,
-} from "@paperwait/core/schemas";
+import { PapercutParameter, rolePermissions } from "@paperwait/core/schemas";
 import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
 import { validator as honoValidator } from "hono/validator";
-import * as v from "valibot";
 
 import { authorization } from "~/api/middleware";
 
@@ -21,20 +15,10 @@ export default new Hono()
   .put(
     "/accounts",
     authorization(rolePermissions.syncPapercutAccounts),
-    honoValidator(
-      "json",
-      validator(SyncPapercutAccountsMutationArgs, {
-        Error: BadRequestError,
-        message: "Invalid body",
-      }),
-    ),
     async (c) => {
       const orgId = c.get("locals").user!.orgId;
 
-      await transact(
-        async (tx) =>
-          await syncPapercutAccounts(tx, orgId, c.req.valid("json")),
-      );
+      await transact(async (tx) => await syncPapercutAccounts(tx, orgId));
 
       await poke([formatChannel("org", orgId)]);
 
@@ -62,20 +46,11 @@ export default new Hono()
       return c.body(null, { status: 204 });
     },
   )
-  .post(
-    "/test",
-    honoValidator(
-      "form",
-      validator(v.object({ orgId: NanoId, authToken: v.string() }), {
-        Error: BadRequestError,
-        message: "Invalid form data",
-      }),
-    ),
-    async (c) => {
-      const { orgId, authToken } = c.req.valid("form");
+  .post("/test", authorization(["administrator"]), async (c) => {
+    await testPapercut({
+      orgId: c.get("locals").user!.orgId,
+      input: { authorized: true },
+    });
 
-      await testPapercut({ orgId, input: { authToken } });
-
-      return c.body(null, { status: 204 });
-    },
-  );
+    return c.body(null, { status: 204 });
+  });
