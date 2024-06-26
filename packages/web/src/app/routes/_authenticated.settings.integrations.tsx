@@ -40,8 +40,8 @@ import type { ErrorRouteComponent } from "@tanstack/react-router";
 import type * as v from "valibot";
 
 export const Route = createFileRoute("/_authenticated/settings/integrations")({
-  beforeLoad: ({ context, location }) =>
-    context.authStore.actions.authorizeRoute(location.href, []),
+  beforeLoad: ({ context }) =>
+    context.authStore.actions.authorizeRoute(context.user, ["administrator"]),
   component: Component,
   errorComponent: ErrorComponent,
 });

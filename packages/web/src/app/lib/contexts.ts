@@ -10,8 +10,8 @@ import type { Auth, Authenticated, CommandBarPage, Slot } from "~/app/types";
 type AuthActions = {
   reset: () => void;
   logout: () => Promise<void>;
-  authenticateRoute: (from: string) => Authenticated["user"];
-  authorizeRoute: (from: string, roles: Array<UserRole>) => void;
+  authenticateRoute: (from: string) => Omit<Authenticated, "isAuthed">;
+  authorizeRoute: (user: Authenticated["user"], roles: Array<UserRole>) => void;
   updateRole: (newRole: UserRole) => void;
 };
 

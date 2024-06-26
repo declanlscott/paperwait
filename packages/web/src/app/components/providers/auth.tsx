@@ -32,21 +32,18 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
             if (res.ok) get().actions.reset();
           }),
         authenticateRoute: (from) => {
-          const user = get().user;
+          const { user, session, org } = get();
 
-          if (!user)
+          if (!user || !session || !org)
             throw redirect({
               to: "/login",
               search: { redirect: from, ...initialLoginSearchParams },
             });
 
-          return user;
+          return { user, session, org };
         },
-        authorizeRoute: (from, roles) => {
-          const user = get().actions.authenticateRoute(from);
-
-          if (!assertRole(user, roles)) throw new InvalidUserRoleError();
-        },
+        authorizeRoute: (user, roles) =>
+          assertRole(user, roles, InvalidUserRoleError),
         updateRole: (newRole) =>
           set(
             produce((store: AuthStore) => {
@@ -67,7 +64,7 @@ export function AuthenticatedProvider(props: PropsWithChildren) {
 
   const { loadingIndicator } = useSlot();
 
-  // Render the login page if the user is not Authed
+  // Render the login page if the user is not authenticated
   if (!auth.isAuthed) {
     if (location.href.includes("/login")) return props.children;
 
@@ -75,7 +72,7 @@ export function AuthenticatedProvider(props: PropsWithChildren) {
     return loadingIndicator;
   }
 
-  // Otherwise render children in the Authed context
+  // Otherwise render children in the authenticated context
   return (
     <AuthenticatedContext.Provider value={auth}>
       {props.children}
