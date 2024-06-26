@@ -8,14 +8,9 @@ import {
 } from "@tanstack/react-router";
 
 import type { QueryClient } from "@tanstack/react-query";
-import type {
-  NavigateOptions,
-  RegisteredRouter,
-  RoutePaths,
-  ToOptions,
-  ToPathOption,
-} from "@tanstack/react-router";
+import type { NavigateOptions, ToOptions } from "@tanstack/react-router";
 import type { AuthStore, ResourceContext } from "~/app/lib/contexts";
+import type { Href } from "~/app/types";
 
 const TanStackRouterDevtools = import.meta.env.DEV
   ? lazy(() =>
@@ -38,11 +33,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 declare module "react-aria-components" {
   interface RouterConfig {
-    href: ToPathOption<
-      RegisteredRouter,
-      RoutePaths<RegisteredRouter["routeTree"]>,
-      ""
-    >;
+    href: Href;
     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
   }
 }

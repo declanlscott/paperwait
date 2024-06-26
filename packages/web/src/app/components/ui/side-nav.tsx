@@ -5,11 +5,20 @@ import { linkStyles } from "~/shared/styles/components/side-nav";
 
 import type { ComponentProps } from "react";
 
-export function SideNav() {
+export type SideNavProps = {
+  links: Array<{
+    name: string;
+    props: LinkProps;
+  }>;
+};
+export function SideNav(props: SideNavProps) {
   return (
     <nav className="text-muted-foreground grid text-sm">
-      <Link href="/settings">General</Link>
-      <Link href="/settings/papercut">PaperCut</Link>
+      {props.links.map((link) => (
+        <Link key={link.name} {...link.props}>
+          {link.name}
+        </Link>
+      ))}
     </nav>
   );
 }

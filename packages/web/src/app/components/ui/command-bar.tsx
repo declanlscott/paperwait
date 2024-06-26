@@ -35,11 +35,7 @@ import { useReplicache } from "~/app/lib/hooks/replicache";
 
 import type { Room } from "@paperwait/core/room";
 import type { User } from "@paperwait/core/user";
-import type {
-  RegisteredRouter,
-  RoutePaths,
-  ToPathOption,
-} from "@tanstack/react-router";
+import type { Href } from "~/app/types";
 
 export function CommandBar() {
   const state = useContext(OverlayTriggerStateContext);
@@ -107,13 +103,8 @@ function HomeCommand() {
     tx.scan<User>({ prefix: "user/" }).toArray(),
   );
 
-  const handleNavigation = async (
-    to: ToPathOption<
-      RegisteredRouter,
-      RoutePaths<RegisteredRouter["routeTree"]>,
-      ""
-    >,
-  ) => navigate({ to }).then(() => state.close());
+  const handleNavigation = async (to: Href) =>
+    navigate({ to }).then(() => state.close());
 
   const navigationKeywords = ["navigation", "navigate"];
 
