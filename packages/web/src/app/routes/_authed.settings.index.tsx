@@ -163,7 +163,7 @@ function DangerZoneCard(org: Organization) {
       </CardHeader>
 
       <CardContent>
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-4">
           <div>
             <span className={labelStyles()}>Status</span>
 

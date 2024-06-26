@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { Toaster } from "sonner";
 
 import { AuthStoreProvider } from "~/app/components/providers/auth";
 import { ResourceProvider } from "~/app/components/providers/resource";
@@ -57,6 +58,8 @@ export function App(props: AppProps) {
         <SlotProvider slot={{ loadingIndicator, logo }}>
           <QueryClientProvider client={queryClient}>
             <AppRouter router={router} />
+
+            <Toaster richColors />
           </QueryClientProvider>
         </SlotProvider>
       </AuthStoreProvider>

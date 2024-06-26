@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Input as AriaInput, composeRenderProps } from "react-aria-components";
 
 import { inputStyles } from "~/shared/styles/components/primitives/input";
@@ -7,13 +8,14 @@ import type { InputStyles } from "~/shared/styles/components/primitives/input";
 
 export interface InputProps extends AriaInputProps, InputStyles {}
 
-export function Input(props: InputProps) {
-  return (
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className, ...props }, ref) => (
     <AriaInput
       {...props}
-      className={composeRenderProps(props.className, (className, renderProps) =>
+      ref={ref}
+      className={composeRenderProps(className, (className, renderProps) =>
         inputStyles({ ...renderProps, className }),
       )}
     />
-  );
-}
+  ),
+);
