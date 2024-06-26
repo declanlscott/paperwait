@@ -172,7 +172,7 @@ function DangerZoneCard(org: Organization) {
 
           <DialogTrigger>
             <Button variant="destructive">
-              <Pencil className="mr-2 size-5" />
+              <Pencil className="mr-2 size-4" />
               Change status
             </Button>
 

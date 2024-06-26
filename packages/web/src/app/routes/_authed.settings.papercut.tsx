@@ -71,7 +71,7 @@ function PapercutCard() {
                 "Configuring"
               ) : (
                 <>
-                  <Settings2 className="mr-2 size-5" />
+                  <Settings2 className="mr-2 size-4" />
                   Configure
                 </>
               )}
@@ -232,7 +232,7 @@ function TestConnection() {
         "Testing"
       ) : (
         <>
-          <FlaskConical className="mr-2 size-5" />
+          <FlaskConical className="mr-2 size-4" />
           Test
         </>
       )}
@@ -255,7 +255,7 @@ function SyncAccounts() {
         "Syncing"
       ) : (
         <>
-          <RefreshCw className="mr-2 size-5" />
+          <RefreshCw className="mr-2 size-4" />
           Sync
         </>
       )}
