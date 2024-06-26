@@ -92,7 +92,7 @@ function ConfigureCredentials() {
     mutationFn: (json: PapercutParameter) =>
       client.api.papercut.credentials.$put({ json }),
     onSuccess: () =>
-      toast.success("Successfully configured PaperCut credentials."),
+      toast.success("Successfully configured PaperCut server credentials."),
   });
 
   const [showAuthToken, setShowAuthToken] = useState(false);
