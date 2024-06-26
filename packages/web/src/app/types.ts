@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Room } from "@paperwait/core/room";
+import type { MutationOptions } from "@tanstack/react-query";
 
 export type Auth = Pick<App.Locals, "user" | "session" | "org">;
 
@@ -19,3 +20,13 @@ export type Slot = {
 export type CommandBarPage =
   | { type: "home" }
   | { type: "room"; roomId: Room["id"] };
+
+export type MutationOptionsFactory = Record<
+  string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  () => MutationOptions<any, any, any, any>
+>;
+
+export type OptionsFactory = {
+  mutation: MutationOptionsFactory;
+};

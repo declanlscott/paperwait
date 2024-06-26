@@ -23,7 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/app/components/ui/primitives/dialog";
-import { useApi } from "~/app/lib/hooks/api";
+import { useOptionsFactory } from "~/app/lib/hooks/options-factory";
 import { labelStyles } from "~/shared/styles/components/primitives/field";
 
 import type { SubmitHandler } from "@modular-forms/react";
@@ -42,9 +42,11 @@ function Component() {
 }
 
 function PapercutCard() {
+  const { mutation } = useOptionsFactory();
+
   const isConfiguring =
     useIsMutating({
-      mutationKey: ["papercut", "credentials"],
+      mutationKey: mutation.papercutCredentials().mutationKey,
     }) > 0;
 
   return (
@@ -85,12 +87,10 @@ function ConfigureCredentials() {
     validate: valiForm(PapercutParameter),
   });
 
-  const { client } = useApi();
+  const { mutation } = useOptionsFactory();
 
   const { mutate } = useMutation({
-    mutationKey: ["papercut", "credentials"],
-    mutationFn: (json: PapercutParameter) =>
-      client.api.papercut.credentials.$put({ json }),
+    ...mutation.papercutCredentials(),
     onSuccess: () =>
       toast.success("Successfully configured PaperCut server credentials."),
   });
