@@ -26,12 +26,13 @@ import {
 } from "~/app/components/ui/primitives/command";
 import { DialogOverlay } from "~/app/components/ui/primitives/dialog";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
-import { useLogout } from "~/app/lib/hooks/auth";
+import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
 import {
   useCommandBar,
   useCommandBarActions,
 } from "~/app/lib/hooks/command-bar";
 import { useReplicache } from "~/app/lib/hooks/replicache";
+import { links } from "~/app/lib/links";
 
 import type { Room } from "@paperwait/core/room";
 import type { User } from "@paperwait/core/user";
@@ -83,6 +84,8 @@ export function CommandBar() {
 }
 
 function HomeCommand() {
+  const { user } = useAuthenticated();
+
   const state = useContext(OverlayTriggerStateContext);
 
   const { pushPage } = useCommandBarActions();
@@ -128,7 +131,7 @@ function HomeCommand() {
             <LayoutDashboard className="mr-2 size-4" />
 
             <p>
-              Go to <span className="font-medium">Dashboard</span>
+              Jump to <span className="font-medium">Dashboard</span>
             </p>
           </CommandItem>
 
@@ -139,7 +142,7 @@ function HomeCommand() {
             <Settings className="mr-2 size-4" />
 
             <p>
-              Go to <span className="font-medium">Settings</span>
+              Jump to <span className="font-medium">Settings</span>
             </p>
           </CommandItem>
 
@@ -190,6 +193,25 @@ function HomeCommand() {
             </CommandGroup>
           </>
         )}
+
+        <CommandSeparator />
+
+        <CommandGroup heading="Scope">
+          {links.settings[user.role].map((link) => (
+            <CommandItem
+              key={link.name}
+              onSelect={() => handleNavigation(link.props.href)}
+              keywords={["scope", "settings"]}
+            >
+              <Settings className="mr-2 size-4" />
+
+              <p>
+                Jump to <span className="font-medium">Settings</span>{" "}
+                {link.name}
+              </p>
+            </CommandItem>
+          ))}
+        </CommandGroup>
       </CommandList>
     </>
   );

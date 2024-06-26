@@ -2,29 +2,11 @@ import { createLazyFileRoute, Outlet } from "@tanstack/react-router";
 
 import { SideNav } from "~/app/components/ui/side-nav";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
-
-import type { UserRole } from "@paperwait/core/user";
-import type { Links } from "~/app/types";
+import { links } from "~/app/lib/links";
 
 export const Route = createLazyFileRoute("/_authenticated/settings")({
   component: Component,
 });
-
-const links = {
-  administrator: [
-    {
-      name: "General",
-      props: { href: "/settings" },
-    },
-    {
-      name: "Integrations",
-      props: { href: "/settings/integrations" },
-    },
-  ],
-  operator: [],
-  manager: [],
-  customer: [],
-} satisfies Record<UserRole, Links>;
 
 function Component() {
   const { user } = useAuthenticated();
@@ -36,7 +18,7 @@ function Component() {
       </div>
 
       <div className="mx-auto grid w-full max-w-6xl items-start gap-6 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]">
-        <SideNav links={links[user.role]} />
+        <SideNav links={links.settings[user.role]} />
 
         <Outlet />
       </div>
