@@ -26,6 +26,11 @@ export const focusRing = tv({
       isFocused: true,
       className: "ring-destructive",
     },
+    {
+      isHtml: true,
+      variant: "destructive",
+      className: "ring-destructive",
+    },
   ],
 });
 
