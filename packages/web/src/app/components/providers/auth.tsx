@@ -38,8 +38,8 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
         },
         updateRole: (newRole) =>
           set(
-            produce((state: Auth) => {
-              if (state.user) state.user.role = newRole;
+            produce((store: AuthStore) => {
+              if (store.user) store.user.role = newRole;
             }),
           ),
       },

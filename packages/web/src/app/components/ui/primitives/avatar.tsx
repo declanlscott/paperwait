@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import * as RadixAvatar from "@radix-ui/react-avatar";
 
 import {
   avatarFallbackStyles,
@@ -10,39 +10,39 @@ import {
 import type { ComponentPropsWithoutRef, ElementRef } from "react";
 
 const Avatar = forwardRef<
-  ElementRef<typeof AvatarPrimitive.Root>,
-  ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
+  ElementRef<typeof RadixAvatar.Root>,
+  ComponentPropsWithoutRef<typeof RadixAvatar.Root>
 >(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Root
+  <RadixAvatar.Root
     ref={ref}
     className={avatarStyles({ className })}
     {...props}
   />
 ));
-Avatar.displayName = AvatarPrimitive.Root.displayName;
+Avatar.displayName = RadixAvatar.Root.displayName;
 
 const AvatarImage = forwardRef<
-  ElementRef<typeof AvatarPrimitive.Image>,
-  ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
+  ElementRef<typeof RadixAvatar.Image>,
+  ComponentPropsWithoutRef<typeof RadixAvatar.Image>
 >(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
+  <RadixAvatar.Image
     ref={ref}
     className={avatarImageStyles({ className })}
     {...props}
   />
 ));
-AvatarImage.displayName = AvatarPrimitive.Image.displayName;
+AvatarImage.displayName = RadixAvatar.Image.displayName;
 
 const AvatarFallback = forwardRef<
-  ElementRef<typeof AvatarPrimitive.Fallback>,
-  ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
+  ElementRef<typeof RadixAvatar.Fallback>,
+  ComponentPropsWithoutRef<typeof RadixAvatar.Fallback>
 >(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Fallback
+  <RadixAvatar.Fallback
     ref={ref}
     className={avatarFallbackStyles({ className })}
     {...props}
   />
 ));
-AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
+AvatarFallback.displayName = RadixAvatar.Fallback.displayName;
 
 export { Avatar, AvatarImage, AvatarFallback };
