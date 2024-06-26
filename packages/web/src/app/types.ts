@@ -26,7 +26,3 @@ export type MutationOptionsFactory = Record<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   () => MutationOptions<any, any, any, any>
 >;
-
-export type OptionsFactory = {
-  mutation: MutationOptionsFactory;
-};
