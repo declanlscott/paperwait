@@ -19,6 +19,10 @@ import {
 import { DialogTrigger } from "~/app/components/ui/primitives/dialog";
 import { KeyboardShortcut } from "~/app/components/ui/primitives/keyboard-shortcut";
 import { Separator } from "~/app/components/ui/primitives/separator";
+import {
+  Tooltip,
+  TooltipTrigger,
+} from "~/app/components/ui/primitives/tooltip";
 import { UserMenu } from "~/app/components/ui/user-menu";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
@@ -119,11 +123,17 @@ function NavList() {
     <ul className="flex items-center">
       {links.mainNav[user.role].map((link) => (
         <li key={link.name}>
-          <Link href={link.props.href} className="flex items-center gap-2">
-            <div className="flex size-5 shrink items-center">{link.icon}</div>
+          <TooltipTrigger>
+            <Link href={link.props.href} className="flex items-center gap-2">
+              <div className="flex size-5 shrink items-center">{link.icon}</div>
 
-            <span className="hidden lg:block">{link.name}</span>
-          </Link>
+              <span className="hidden lg:block">{link.name}</span>
+            </Link>
+
+            <Tooltip placement="bottom" className="lg:hidden">
+              <p>{link.name}</p>
+            </Tooltip>
+          </TooltipTrigger>
         </li>
       ))}
     </ul>
