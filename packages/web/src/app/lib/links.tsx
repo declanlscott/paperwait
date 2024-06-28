@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Users } from "lucide-react";
+import { LayoutDashboard, Package, Settings, Users } from "lucide-react";
 
 import type { UserRole } from "@paperwait/core/user";
 import type { Links } from "~/app/types";
@@ -15,6 +15,11 @@ export const links = {
         name: "Users",
         props: { href: "/users" },
         icon: <Users />,
+      },
+      {
+        name: "Products",
+        props: { href: "/products" },
+        icon: <Package />,
       },
       {
         name: "Settings",
@@ -55,8 +60,23 @@ export const links = {
         props: { href: "/settings/integrations" },
       },
     ],
-    operator: [],
-    manager: [],
-    customer: [],
+    operator: [
+      {
+        name: "General",
+        props: { href: "/settings" },
+      },
+    ],
+    manager: [
+      {
+        name: "General",
+        props: { href: "/settings" },
+      },
+    ],
+    customer: [
+      {
+        name: "General",
+        props: { href: "/settings" },
+      },
+    ],
   },
 } satisfies Record<string, Record<UserRole, Links>>;

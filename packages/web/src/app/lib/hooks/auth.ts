@@ -1,15 +1,13 @@
 import { useCallback, useContext } from "react";
 import { MissingContextProviderError } from "@paperwait/core/errors";
 import { useRouter } from "@tanstack/react-router";
-import { useSubscribe } from "replicache-react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
 import { AuthContext, AuthenticatedContext } from "~/app/lib/contexts";
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
-import type { Organization } from "@paperwait/core/organization";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { Authenticated, Unauthenticated } from "~/app/types";
 
@@ -52,14 +50,7 @@ export function useLogout() {
 
   const { invalidate, navigate } = useRouter();
 
-  const replicache = useReplicache();
-
-  const org = useSubscribe(replicache, (tx) =>
-    tx
-      .scan<Organization>({ prefix: "organization/" })
-      .toArray()
-      .then((values) => values.at(0)),
-  );
+  const org = useQuery(queryFactory.organization);
 
   return useCallback(async () => {
     await logout();

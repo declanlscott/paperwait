@@ -41,6 +41,6 @@ export function composeTwRenderProps<T>(
   return composeRenderProps(className, (className) => twMerge(tw, className));
 }
 
-export function cn(...inputs: ClassValue[]) {
+export function cn(...inputs: Array<ClassValue>) {
   return twMerge(clsx(inputs));
 }

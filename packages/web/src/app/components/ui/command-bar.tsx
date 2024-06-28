@@ -3,15 +3,13 @@ import { OverlayTriggerStateContext } from "react-aria-components";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import {
-  Book,
-  BookDashed,
   Check,
-  Cuboid,
-  LayoutDashboard,
+  CircleCheck,
+  CircleDashed,
+  Home,
   LogOut,
   Settings,
 } from "lucide-react";
-import { useSubscribe } from "replicache-react";
 
 import { Authorize } from "~/app/components/ui/authorize";
 import { Avatar, AvatarImage } from "~/app/components/ui/primitives/avatar";
@@ -31,11 +29,10 @@ import {
   useCommandBar,
   useCommandBarActions,
 } from "~/app/lib/hooks/command-bar";
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
 import { links } from "~/app/lib/links";
 
 import type { Room } from "@paperwait/core/room";
-import type { User } from "@paperwait/core/user";
 import type { Href } from "~/app/types";
 
 export function CommandBar() {
@@ -96,15 +93,8 @@ function HomeCommand() {
 
   const logout = useLogout();
 
-  const replicache = useReplicache();
-
-  const rooms = useSubscribe(replicache, async (tx) =>
-    tx.scan<Room>({ prefix: "room/" }).toArray(),
-  );
-
-  const users = useSubscribe(replicache, async (tx) =>
-    tx.scan<User>({ prefix: "user/" }).toArray(),
-  );
+  const rooms = useQuery(queryFactory.rooms);
+  const users = useQuery(queryFactory.users);
 
   const handleNavigation = async (to: Href) =>
     navigate({ to }).then(() => state.close());
@@ -124,33 +114,25 @@ function HomeCommand() {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Navigation">
-          <CommandItem
-            onSelect={() => handleNavigation("/dashboard")}
-            keywords={navigationKeywords}
-          >
-            <LayoutDashboard className="mr-2 size-4" />
+          {links.mainNav[user.role].map((link) => (
+            <CommandItem
+              key={link.name}
+              onSelect={() => handleNavigation(link.props.href)}
+              keywords={navigationKeywords}
+            >
+              <div className="mr-2 size-5">{link.icon}</div>
 
-            <p>
-              Jump to <span className="font-medium">Dashboard</span>
-            </p>
-          </CommandItem>
-
-          <CommandItem
-            onSelect={() => handleNavigation("/settings")}
-            keywords={navigationKeywords}
-          >
-            <Settings className="mr-2 size-4" />
-
-            <p>
-              Jump to <span className="font-medium">Settings</span>
-            </p>
-          </CommandItem>
+              <p>
+                Jump to <span className="font-medium">{link.name}</span>
+              </p>
+            </CommandItem>
+          ))}
 
           <CommandItem
             onSelect={() => logout()}
             keywords={[...navigationKeywords, "log out"]}
           >
-            <LogOut className="text-destructive mr-2 size-4" />
+            <LogOut className="text-destructive mr-2 size-5" />
 
             <span className="text-destructive">Logout</span>
           </CommandItem>
@@ -167,7 +149,7 @@ function HomeCommand() {
                   onSelect={() => pushPage({ type: "room", roomId: room.id })}
                   keywords={["rooms", "room"]}
                 >
-                  <Cuboid className="mr-2 size-4" />
+                  <Home className="mr-2 size-5" />
 
                   <span>{room.name}</span>
                 </CommandItem>
@@ -203,7 +185,7 @@ function HomeCommand() {
               onSelect={() => handleNavigation(link.props.href)}
               keywords={["scope", "settings"]}
             >
-              <Settings className="mr-2 size-4" />
+              <Settings className="mr-2 size-5" />
 
               <p>
                 Jump to <span className="font-medium">Settings</span>{" "}
@@ -228,11 +210,9 @@ function RoomCommand(props: RoomCommandProps) {
 
   const [, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
 
-  const replicache = useReplicache();
+  const { updateRoom } = useMutation();
 
-  const room = useSubscribe(replicache, async (tx) =>
-    tx.get<Room>(`room/${props.roomId}`),
-  );
+  const room = useQuery(queryFactory.room(props.roomId));
 
   function selectRoom() {
     setSelectedRoomId(props.roomId);
@@ -241,7 +221,7 @@ function RoomCommand(props: RoomCommandProps) {
   }
 
   async function updateRoomStatus(status: Room["status"]) {
-    await replicache.mutate.updateRoom({
+    await updateRoom({
       id: props.roomId,
       status,
       updatedAt: new Date().toISOString(),
@@ -267,7 +247,7 @@ function RoomCommand(props: RoomCommandProps) {
           {room && (
             <>
               <CommandItem onSelect={() => selectRoom()}>
-                <Check className="mr-2 size-4" />
+                <Check className="mr-2 size-5" />
 
                 <p>
                   <span className="font-medium">Select</span> {room.name}
@@ -277,7 +257,7 @@ function RoomCommand(props: RoomCommandProps) {
               <Authorize roles={["administrator", "operator"]}>
                 {room.status === "draft" ? (
                   <CommandItem onSelect={() => updateRoomStatus("published")}>
-                    <Book className="mr-2 size-4" />
+                    <CircleCheck className="mr-2 size-5" />
 
                     <p>
                       <span className="font-medium">Publish</span> {room.name}
@@ -285,7 +265,7 @@ function RoomCommand(props: RoomCommandProps) {
                   </CommandItem>
                 ) : (
                   <CommandItem onSelect={() => updateRoomStatus("draft")}>
-                    <BookDashed className="mr-2 size-4" />
+                    <CircleDashed className="mr-2 size-5" />
 
                     <p>
                       <span className="font-medium">Unpublish</span> {room.name}

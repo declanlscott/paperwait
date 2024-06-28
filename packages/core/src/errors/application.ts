@@ -1,3 +1,6 @@
+import type { Order } from "../order/order.sql";
+import type { User } from "../user/user.sql";
+
 export class ApplicationError extends Error {
   constructor(message: string) {
     super(message);
@@ -22,7 +25,7 @@ export class EntityNotFoundError extends ApplicationError {
 }
 
 export class OrderAccessDeniedError extends ApplicationError {
-  constructor(info?: { orderId: string; userId: string }) {
+  constructor(info?: { orderId: Order["id"]; userId: User["id"] }) {
     super(
       info
         ? `User "${info.userId}" does not have access to order "${info.orderId}."`

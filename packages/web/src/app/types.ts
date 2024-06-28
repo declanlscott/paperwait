@@ -7,6 +7,7 @@ import type {
   RoutePaths,
   ToPathOption,
 } from "@tanstack/react-router";
+import type { ReadTransaction } from "replicache";
 
 export type Auth = Pick<App.Locals, "user" | "session" | "org">;
 

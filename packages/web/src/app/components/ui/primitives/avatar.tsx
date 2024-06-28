@@ -9,7 +9,7 @@ import {
 
 import type { ComponentPropsWithoutRef, ElementRef } from "react";
 
-const Avatar = forwardRef<
+export const Avatar = forwardRef<
   ElementRef<typeof RadixAvatar.Root>,
   ComponentPropsWithoutRef<typeof RadixAvatar.Root>
 >(({ className, ...props }, ref) => (
@@ -19,9 +19,8 @@ const Avatar = forwardRef<
     {...props}
   />
 ));
-Avatar.displayName = RadixAvatar.Root.displayName;
 
-const AvatarImage = forwardRef<
+export const AvatarImage = forwardRef<
   ElementRef<typeof RadixAvatar.Image>,
   ComponentPropsWithoutRef<typeof RadixAvatar.Image>
 >(({ className, ...props }, ref) => (
@@ -31,9 +30,8 @@ const AvatarImage = forwardRef<
     {...props}
   />
 ));
-AvatarImage.displayName = RadixAvatar.Image.displayName;
 
-const AvatarFallback = forwardRef<
+export const AvatarFallback = forwardRef<
   ElementRef<typeof RadixAvatar.Fallback>,
   ComponentPropsWithoutRef<typeof RadixAvatar.Fallback>
 >(({ className, ...props }, ref) => (
@@ -43,6 +41,3 @@ const AvatarFallback = forwardRef<
     {...props}
   />
 ));
-AvatarFallback.displayName = RadixAvatar.Fallback.displayName;
-
-export { Avatar, AvatarImage, AvatarFallback };

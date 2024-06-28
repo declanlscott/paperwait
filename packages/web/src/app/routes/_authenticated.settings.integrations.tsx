@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/app/components/ui/primitives/dialog";
-import { useOptionsFactory } from "~/app/lib/hooks/options-factory";
+import { useMutationOptionsFactory } from "~/app/lib/hooks/data";
 import { labelStyles } from "~/shared/styles/components/primitives/field";
 
 import type { ComponentProps } from "react";
@@ -55,11 +55,11 @@ function Component() {
 }
 
 function PapercutCard() {
-  const options = useOptionsFactory();
+  const { papercutCredentials } = useMutationOptionsFactory();
 
   const isConfiguring =
     useIsMutating({
-      mutationKey: options.mutation.papercutCredentials().mutationKey,
+      mutationKey: papercutCredentials().mutationKey,
     }) > 0;
 
   return (
@@ -105,7 +105,7 @@ function PapercutCard() {
             </CardDescription>
           </div>
 
-          <TestConnection />
+          <TestPapercutConnection />
         </div>
 
         <div className="flex justify-between gap-4">
@@ -131,10 +131,10 @@ function ConfigureCredentials() {
     validate: valiForm(PapercutParameter),
   });
 
-  const options = useOptionsFactory();
+  const { papercutCredentials } = useMutationOptionsFactory();
 
   const { mutate } = useMutation({
-    ...options.mutation.papercutCredentials(),
+    ...papercutCredentials(),
     onSuccess: () =>
       toast.success("Successfully configured PaperCut server credentials."),
   });
@@ -229,11 +229,11 @@ function ConfigureCredentials() {
   );
 }
 
-function TestConnection() {
-  const options = useOptionsFactory();
+function TestPapercutConnection() {
+  const { testPapercutConnection } = useMutationOptionsFactory();
 
   const { mutate, isPending } = useMutation({
-    ...options.mutation.testConnection(),
+    ...testPapercutConnection(),
     onSuccess: () =>
       toast.success("Successfully connected to PaperCut server."),
     onError: () => toast.error("Failed to connect to PaperCut server."),
@@ -254,10 +254,10 @@ function TestConnection() {
 }
 
 function SyncAccounts() {
-  const options = useOptionsFactory();
+  const { syncPapercutAccounts } = useMutationOptionsFactory();
 
   const { mutate, isPending } = useMutation({
-    ...options.mutation.syncAccounts(),
+    ...syncPapercutAccounts(),
     onSuccess: () => toast.success("Successfully synced shared accounts."),
     onError: () => toast.error("Failed to sync shared accounts."),
   });

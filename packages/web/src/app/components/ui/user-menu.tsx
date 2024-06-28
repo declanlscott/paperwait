@@ -4,8 +4,8 @@ import {
 } from "react-aria-components";
 import { getUserInitials } from "@paperwait/core/utils";
 import { Building2, LogOut } from "lucide-react";
-import { useSubscribe } from "replicache-react";
 
+import { Authorize } from "~/app/components/ui/authorize";
 import {
   Avatar,
   AvatarFallback,
@@ -21,22 +21,13 @@ import {
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
 import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { userMenuTriggerButtonStyles } from "~/shared/styles/components/user-menu";
 
-import type { Organization } from "@paperwait/core/organization";
-
 export function UserMenu() {
-  const replicache = useReplicache();
-
   const { user } = useAuthenticated();
 
-  const org = useSubscribe(replicache, (tx) =>
-    tx
-      .scan<Organization>({ prefix: "organization" })
-      .toArray()
-      .then((values) => values.at(0)),
-  );
+  const org = useQuery(queryFactory.organization);
 
   const logout = useLogout();
 
@@ -70,6 +61,11 @@ export function UserMenu() {
 
                   <span className="text-muted-foreground text-xs leading-none">
                     {org?.slug}
+
+                    <Authorize roles={["administrator"]}>
+                      {" "}
+                      ({org?.status})
+                    </Authorize>
                   </span>
                 </div>
               </div>

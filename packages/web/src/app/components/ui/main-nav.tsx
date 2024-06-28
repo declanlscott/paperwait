@@ -1,9 +1,9 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import { BookDashed, Cuboid, Search } from "lucide-react";
-import { useSubscribe } from "replicache-react";
+import { CircleCheck, CircleDashed, Home, Search } from "lucide-react";
 
+import { Authorize } from "~/app/components/ui/authorize";
 import { CommandBar } from "~/app/components/ui/command-bar";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
@@ -27,13 +27,13 @@ import { UserMenu } from "~/app/components/ui/user-menu";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useCommandBarActions } from "~/app/lib/hooks/command-bar";
-import { useIsSyncing, useReplicache } from "~/app/lib/hooks/replicache";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useIsSyncing } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { links } from "~/app/lib/links";
 import { linkStyles, logoStyles } from "~/shared/styles/components/main-nav";
 
 import type { ComponentProps } from "react";
-import type { Room } from "@paperwait/core/room";
 
 export function MainNav() {
   const { logo } = useSlot();
@@ -64,11 +64,7 @@ export function MainNav() {
 }
 
 function RoomSelector() {
-  const replicache = useReplicache();
-
-  const rooms = useSubscribe(replicache, async (tx) =>
-    tx.scan<Room>({ prefix: "room/" }).toArray(),
-  );
+  const rooms = useQuery(queryFactory.rooms);
 
   const [selectedRoomId, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
 
@@ -82,7 +78,7 @@ function RoomSelector() {
         <ComboboxInput
           placeholder="Select a room..."
           className="w-28"
-          icon={<Cuboid className="size-4 opacity-50" />}
+          icon={<Home className="size-4 opacity-50" />}
           aria-controls="room-selector-listbox"
         />
 
@@ -101,9 +97,13 @@ function RoomSelector() {
                     <div className="flex w-full items-center justify-between">
                       {room.name}
 
-                      {room.status === "draft" && (
-                        <BookDashed className="size-4" />
-                      )}
+                      <Authorize roles={["administrator", "operator"]}>
+                        {room.status === "draft" ? (
+                          <CircleDashed className="size-4 opacity-50" />
+                        ) : (
+                          <CircleCheck className="size-4 opacity-50" />
+                        )}
+                      </Authorize>
                     </div>
                   </ComboboxItem>
                 )}
@@ -123,7 +123,7 @@ function NavList() {
     <ul className="flex items-center">
       {links.mainNav[user.role].map((link) => (
         <li key={link.name}>
-          <TooltipTrigger delay={500}>
+          <TooltipTrigger>
             <Link href={link.props.href} className="flex items-center gap-2">
               <div className="flex size-5 shrink items-center">{link.icon}</div>
 
