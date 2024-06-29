@@ -11,17 +11,7 @@ import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { ClientResourceType } from "@paperwait/core/types";
-import type { Auth, Slot } from "~/app/types";
-
-type AppRouter = ReturnType<
-  typeof createRouter<typeof routeTree, "always" | "never" | "preserve">
->;
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: AppRouter;
-  }
-}
+import type { AppRouter, Auth, Slot } from "~/app/types";
 
 const queryClient = new QueryClient();
 

@@ -1,13 +1,45 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
 import type { Room } from "@paperwait/core/room";
+import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import type { MutationOptions } from "@tanstack/react-query";
 import type {
+  createRouter,
+  NavigateOptions,
   RegisteredRouter,
   RoutePaths,
+  ToOptions,
   ToPathOption,
 } from "@tanstack/react-router";
-import type { ReadTransaction } from "replicache";
+import type { FilterFn } from "@tanstack/react-table";
+import type { routeTree } from "~/app/routeTree.gen";
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: AppRouter;
+  }
+}
+
+declare module "react-aria-components" {
+  interface RouterConfig {
+    href: Href;
+    routerOptions: Omit<NavigateOptions, keyof ToOptions>;
+  }
+}
+
+declare module "@tanstack/react-table" {
+  //add fuzzy filter to the filterFns
+  interface FilterFns {
+    fuzzy: FilterFn<unknown>;
+  }
+  interface FilterMeta {
+    itemRank: RankingInfo;
+  }
+}
+
+export type AppRouter = ReturnType<
+  typeof createRouter<typeof routeTree, "always" | "never" | "preserve">
+>;
 
 export type Auth = Pick<App.Locals, "user" | "session" | "org">;
 

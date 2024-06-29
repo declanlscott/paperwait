@@ -10,15 +10,6 @@ import organization from "~/api/routes/organization";
 import replicache from "~/api/routes/replicache";
 import user from "~/api/routes/user";
 
-import type { ProviderData } from "@paperwait/core/auth-provider";
-
-declare module "hono" {
-  interface ContextVariableMap {
-    locals: App.Locals;
-    provider?: ProviderData;
-  }
-}
-
 export type Bindings = Record<keyof App.Locals, string>;
 
 const api = new Hono<{ Bindings: Bindings }>()
