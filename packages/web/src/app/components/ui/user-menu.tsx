@@ -85,8 +85,8 @@ export function UserMenu() {
                   {user.email}
                 </span>
 
-                <span className="text-muted-foreground/90 text-xs font-thin leading-none">
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                <span className="text-muted-foreground/90 text-xs font-thin capitalize leading-none">
+                  {user.role}
                 </span>
               </div>
             </MenuHeader>

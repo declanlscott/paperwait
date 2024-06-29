@@ -4,7 +4,7 @@ import type { UserRole } from "@paperwait/core/user";
 import type { VariantProps } from "tailwind-variants";
 
 export const badgeStyles = tv({
-  base: "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  base: "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 capitalize",
   variants: {
     variant: {
       default:

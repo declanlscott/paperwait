@@ -242,9 +242,12 @@ function OrganizationStatus() {
                               }))}
                           >
                             {(item) => (
-                              <SelectItem id={item.name} textValue={item.name}>
-                                {item.name.charAt(0).toUpperCase() +
-                                  item.name.slice(1)}
+                              <SelectItem
+                                id={item.name}
+                                textValue={item.name}
+                                className="capitalize"
+                              >
+                                {item.name}
                               </SelectItem>
                             )}
                           </SelectCollection>
