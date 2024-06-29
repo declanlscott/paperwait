@@ -62,6 +62,36 @@ export const buttonStyles = tv({
     },
     {
       variant: "default",
+      isPressed: true,
+      className: "bg-primary/90",
+    },
+    {
+      variant: "destructive",
+      isPressed: true,
+      className: "bg-destructive/90",
+    },
+    {
+      variant: "outline",
+      isPressed: true,
+      className: "bg-accent text-accent-foreground",
+    },
+    {
+      variant: "secondary",
+      isPressed: true,
+      className: "bg-secondary/80",
+    },
+    {
+      variant: "ghost",
+      isPressed: true,
+      className: "bg-accent text-accent-foreground",
+    },
+    {
+      variant: "link",
+      isPressed: true,
+      className: "underline",
+    },
+    {
+      variant: "default",
       isHtml: true,
       className: "hover:bg-primary/90",
     },
