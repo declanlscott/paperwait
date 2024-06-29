@@ -1,53 +1,38 @@
 import { LayoutDashboard, Package, Settings, Users } from "lucide-react";
 
 import type { UserRole } from "@paperwait/core/user";
-import type { Links } from "~/app/types";
+import type { AppLink } from "~/app/types";
+
+const dashboardLink = {
+  name: "Dashboard",
+  props: { href: "/dashboard" },
+  icon: <LayoutDashboard />,
+} satisfies AppLink;
+
+const usersLink = {
+  name: "Users",
+  props: { href: "/users" },
+  icon: <Users />,
+} satisfies AppLink;
+
+const productsLink = {
+  name: "Products",
+  props: { href: "/products" },
+  icon: <Package />,
+} satisfies AppLink;
+
+const settingsLink = {
+  name: "Settings",
+  props: { href: "/settings" },
+  icon: <Settings />,
+} satisfies AppLink;
 
 export const links = {
   mainNav: {
-    administrator: [
-      {
-        name: "Dashboard",
-        props: { href: "/dashboard" },
-        icon: <LayoutDashboard />,
-      },
-      {
-        name: "Users",
-        props: { href: "/users" },
-        icon: <Users />,
-      },
-      {
-        name: "Products",
-        props: { href: "/products" },
-        icon: <Package />,
-      },
-      {
-        name: "Settings",
-        props: { href: "/settings" },
-        icon: <Settings />,
-      },
-    ],
-    operator: [
-      {
-        name: "Dashboard",
-        props: { href: "/dashboard" },
-        icon: <LayoutDashboard />,
-      },
-    ],
-    manager: [
-      {
-        name: "Dashboard",
-        props: { href: "/dashboard" },
-        icon: <LayoutDashboard />,
-      },
-    ],
-    customer: [
-      {
-        name: "Dashboard",
-        props: { href: "/dashboard" },
-        icon: <LayoutDashboard />,
-      },
-    ],
+    administrator: [dashboardLink, usersLink, productsLink, settingsLink],
+    operator: [dashboardLink, usersLink, productsLink, settingsLink],
+    manager: [dashboardLink, usersLink, settingsLink],
+    customer: [dashboardLink, usersLink, settingsLink],
   },
   settings: {
     administrator: [
@@ -79,4 +64,4 @@ export const links = {
       },
     ],
   },
-} satisfies Record<string, Record<UserRole, Links>>;
+} satisfies Record<string, Record<UserRole, Array<AppLink>>>;

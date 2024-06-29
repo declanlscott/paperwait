@@ -66,11 +66,11 @@ export type MutationOptionsFactory = Record<
   () => MutationOptions<any, any, any, any>
 >;
 
-export type Links = Array<{
+export type AppLink = {
   name: string;
   props: ComponentProps<typeof AriaLink>;
   icon?: ReactNode;
-}>;
+};
 
 export type Href = ToPathOption<
   RegisteredRouter,
