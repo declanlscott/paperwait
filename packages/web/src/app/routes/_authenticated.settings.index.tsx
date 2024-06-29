@@ -3,10 +3,11 @@ import { TextField as AriaTextField } from "react-aria-components";
 import { OrgStatus } from "@paperwait/core/organization";
 import { fn } from "@paperwait/core/valibot";
 import { createFileRoute } from "@tanstack/react-router";
-import { Lock, LockOpen, Pencil } from "lucide-react";
+import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 import * as v from "valibot";
 
 import { Authorize } from "~/app/components/ui/authorize";
+import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   Card,
@@ -34,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/app/components/ui/primitives/select";
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
 import { labelStyles } from "~/shared/styles/components/primitives/field";
 
@@ -151,12 +153,37 @@ function DangerZoneCard() {
         <CardTitle>Danger Zone</CardTitle>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="grid gap-6">
+        <DeleteAccount />
+
         <Authorize roles={["administrator"]}>
           <OrganizationStatus />
         </Authorize>
       </CardContent>
     </Card>
+  );
+}
+
+function DeleteAccount() {
+  const { user } = useAuthenticated();
+
+  return (
+    <div className="flex justify-between gap-4">
+      <div>
+        <span className={labelStyles()}>Delete User Account</span>
+
+        <CardDescription>Delete your user account.</CardDescription>
+      </div>
+
+      <DialogTrigger>
+        <Button variant="destructive">
+          <UserRoundX className="mr-2 size-5" />
+          Delete Account
+        </Button>
+
+        <DeleteUserDialog userId={user.id} />
+      </DialogTrigger>
+    </div>
   );
 }
 
@@ -171,7 +198,7 @@ function OrganizationStatus() {
 
   const isConfirmed = confirmationText === org?.name;
 
-  async function mutateStatus() {
+  async function mutate() {
     if (org && status) {
       if (status === "initializing") return;
       if (status === org.status) return;
@@ -194,12 +221,12 @@ function OrganizationStatus() {
 
       <DialogTrigger>
         <Button variant="destructive">
-          <Pencil className="mr-2 size-4" />
+          <Pencil className="mr-2 size-5" />
           Change status
         </Button>
 
-        <DialogOverlay onOpenChange={console.log}>
-          <DialogContent onOpenChange={console.log}>
+        <DialogOverlay>
+          <DialogContent>
             {({ close: closeStatusDialog }) => (
               <>
                 <DialogHeader>
@@ -264,7 +291,7 @@ function OrganizationStatus() {
 
                   {status === "active" ? (
                     <Button
-                      onPress={() => mutateStatus().then(closeStatusDialog)}
+                      onPress={() => mutate().then(closeStatusDialog)}
                       isDisabled={status === org?.status}
                     >
                       Save
@@ -321,7 +348,7 @@ function OrganizationStatus() {
 
                                 <Button
                                   onPress={() =>
-                                    mutateStatus().then(() => {
+                                    mutate().then(() => {
                                       closeConfirmationDialog();
                                       closeStatusDialog();
                                     })

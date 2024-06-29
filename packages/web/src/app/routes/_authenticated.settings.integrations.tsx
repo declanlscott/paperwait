@@ -84,7 +84,7 @@ function PapercutCard() {
                 "Configuring"
               ) : (
                 <>
-                  <Settings2 className="mr-2 size-4" />
+                  <Settings2 className="mr-2 size-5" />
                   Configure
                 </>
               )}
@@ -245,7 +245,7 @@ function TestPapercutConnection() {
         "Testing"
       ) : (
         <>
-          <FlaskConical className="mr-2 size-4" />
+          <FlaskConical className="mr-2 size-5" />
           Test
         </>
       )}
@@ -268,7 +268,7 @@ function SyncAccounts() {
         "Syncing"
       ) : (
         <>
-          <RefreshCw className="mr-2 size-4" />
+          <RefreshCw className="mr-2 size-5" />
           Sync
         </>
       )}
@@ -292,7 +292,7 @@ function ErrorComponent(props: ComponentProps<ErrorRouteComponent>) {
         </div>
 
         <Button variant="destructive" onPress={props.reset}>
-          <RotateCw className="mr-2 size-4" />
+          <RotateCw className="mr-2 size-5" />
           Retry
         </Button>
       </CardHeader>

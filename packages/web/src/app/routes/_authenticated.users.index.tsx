@@ -233,7 +233,7 @@ function UsersCard() {
                   table.getRowModel().rows.map((row) => (
                     <TableRow
                       key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
+                      className={row.original.deletedAt ? "opacity-50" : ""}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>

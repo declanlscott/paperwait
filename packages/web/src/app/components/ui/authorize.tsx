@@ -12,7 +12,9 @@ export interface AuthorizeProps extends PropsWithChildren {
 export function Authorize({ roles, children }: AuthorizeProps) {
   const { user } = useAuthenticated();
 
-  if (!assertRole(user, roles)) return null;
+  const hasRole = assertRole(user, roles);
+
+  if (!hasRole) return null;
 
   return children;
 }

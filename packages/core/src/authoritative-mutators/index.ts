@@ -140,7 +140,11 @@ const updateUserRole = (user: LuciaUser) =>
 const deleteUser = (user: LuciaUser) =>
   buildMutator(
     DeleteUserMutationArgs,
-    () => authorizeRole("deleteUser", user),
+    (_tx, { id: userId }) => {
+      const isRoleAuthorized = authorizeRole("deleteUser", user, false);
+
+      if (!isRoleAuthorized && userId !== user.id) throw new ForbiddenError();
+    },
     () =>
       async (tx, { id: userId, ...values }) => {
         await tx
