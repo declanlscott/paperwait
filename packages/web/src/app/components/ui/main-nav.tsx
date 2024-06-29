@@ -41,7 +41,7 @@ export function MainNav() {
   const isSyncing = useIsSyncing();
 
   return (
-    <header className="bg-background sticky top-0 flex h-16 items-center justify-between border-b px-4">
+    <header className="bg-background sticky top-0 z-50 flex h-16 items-center justify-between border-b px-4">
       <nav className="flex items-center space-x-4 lg:space-x-6">
         <a href="/" className={logoStyles({ isAnimating: isSyncing })}>
           {logo}
