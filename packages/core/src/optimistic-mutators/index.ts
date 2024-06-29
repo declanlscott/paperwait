@@ -85,7 +85,7 @@ const buildMutator =
 
     const mutator = mutatorWithContext({ authorized });
 
-    return mutator(tx, v.parse(schema, args));
+    return mutator(tx, output);
   };
 
 const updateOrganization = (user: LuciaUser) =>
