@@ -37,6 +37,8 @@ export function useMutators() {
 
   const deleteUser = useCallback(mutators.deleteUser(user), [user]);
 
+  const restoreUser = useCallback(mutators.restoreUser(user), [user]);
+
   const deletePapercutAccount = useCallback(
     mutators.deletePapercutAccount(user),
     [user],
@@ -96,6 +98,7 @@ export function useMutators() {
       // User
       updateUserRole,
       deleteUser,
+      restoreUser,
 
       // Papercut Account
       deletePapercutAccount,
@@ -131,26 +134,27 @@ export function useMutators() {
     }),
     [
       updateOrganization,
-      createAnnouncement,
-      createComment,
-      createOrder,
-      createPapercutAccountManagerAuthorization,
-      createProduct,
-      createRoom,
-      deleteAnnouncement,
-      deleteComment,
-      deleteOrder,
-      deletePapercutAccount,
-      deletePapercutAccountManagerAuthorization,
-      deleteProduct,
-      deleteRoom,
-      deleteUser,
-      updateAnnouncement,
-      updateComment,
-      updateOrder,
-      updateProduct,
-      updateRoom,
       updateUserRole,
+      deleteUser,
+      restoreUser,
+      deletePapercutAccount,
+      createPapercutAccountManagerAuthorization,
+      deletePapercutAccountManagerAuthorization,
+      createRoom,
+      updateRoom,
+      deleteRoom,
+      createAnnouncement,
+      deleteAnnouncement,
+      updateAnnouncement,
+      createProduct,
+      deleteProduct,
+      updateProduct,
+      createOrder,
+      updateOrder,
+      deleteOrder,
+      createComment,
+      deleteComment,
+      updateComment,
     ],
   );
 }

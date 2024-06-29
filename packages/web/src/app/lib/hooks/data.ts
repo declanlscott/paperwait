@@ -28,6 +28,8 @@ export const queryFactory = {
       .toArray()
       .then((values) => values.at(0)),
   users: (tx: ReadTransaction) => tx.scan<User>({ prefix: "user/" }).toArray(),
+  user: (userId: User["id"]) => (tx: ReadTransaction) =>
+    tx.get<User>(`user/${userId}`),
   rooms: (tx: ReadTransaction) => tx.scan<Room>({ prefix: "room/" }).toArray(),
   room: (roomId: Room["id"]) => (tx: ReadTransaction) =>
     tx.get<Room>(`room/${roomId}`),

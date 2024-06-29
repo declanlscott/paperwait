@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 
+import { Authorize } from "~/app/components/ui/authorize";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   DialogContent,
@@ -12,16 +13,20 @@ import {
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
 import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
-import { useMutation } from "~/app/lib/hooks/data";
+import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
 
 import type { User } from "@paperwait/core/user";
+import type { DialogOverlayProps } from "~/app/components/ui/primitives/dialog";
 
-export type DeleteUserDialogProps = {
+export interface DeleteUserDialogProps {
   userId: User["id"];
-};
+  dialogOverlayProps?: DialogOverlayProps;
+}
 
 export function DeleteUserDialog(props: DeleteUserDialogProps) {
   const { user } = useAuthenticated();
+
+  const userToDelete = useQuery(queryFactory.user(props.userId));
 
   const isSelf = user?.id === props.userId;
 
@@ -46,20 +51,26 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
   }
 
   return (
-    <DialogOverlay isDismissable={false}>
+    <DialogOverlay isDismissable={false} {...props.dialogOverlayProps}>
       <DialogContent role="alertdialog">
         {({ close }) => (
           <>
             <DialogHeader>
               <DialogTitle>
-                {isSelf ? "Delete Account" : "Delete User"}?
+                {isSelf ? "Delete Account" : `Delete "${userToDelete?.name}"`}?
               </DialogTitle>
 
               <p className="text-muted-foreground text-sm">
-                Are you sure you want to continue? {isSelf ? "You" : "The user"}{" "}
-                will not be able to access {isSelf ? "your" : "their"} account
-                after deletion.
+                Are you sure you want to continue?{" "}
+                {isSelf ? "You" : `${userToDelete?.name}`} will not be able to
+                access {isSelf ? "your" : "their"} account after deletion.
               </p>
+
+              <Authorize roles={["administrator"]}>
+                <p className="text-muted-foreground text-sm">
+                  This action can be undone by an administrator.
+                </p>
+              </Authorize>
 
               <p className="text-muted-foreground text-sm">
                 To confirm deletion, enter "{targetConfirmationText}" in the
@@ -93,7 +104,11 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
 
               <Button
                 variant="destructive"
-                onPress={() => mutate().then(close)}
+                onPress={() =>
+                  mutate()
+                    .then(close)
+                    .then(() => setConfirmationText(""))
+                }
                 isDisabled={!isConfirmed}
               >
                 Delete

@@ -21,6 +21,7 @@ import {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
+  RestoreUserMutationArgs,
   rolePermissions,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
@@ -133,6 +134,21 @@ const deleteUser = (user: LuciaUser) =>
         if (!prev) throw new EntityNotFoundError("user", userId);
 
         const next = { ...prev, ...values } satisfies User;
+
+        return await tx.set(`user/${userId}`, next);
+      },
+  );
+
+const restoreUser = (user: LuciaUser) =>
+  buildMutator(
+    RestoreUserMutationArgs,
+    () => authorizeRole("restoreUser", user),
+    () =>
+      async (tx, { id: userId }) => {
+        const prev = await tx.get<User>(`user/${userId}`);
+        if (!prev) throw new EntityNotFoundError("user", userId);
+
+        const next = { ...prev, deletedAt: null } satisfies User;
 
         return await tx.set(`user/${userId}`, next);
       },
@@ -409,6 +425,7 @@ export const mutators = {
   // User
   updateUserRole,
   deleteUser,
+  restoreUser,
 
   // Papercut Account
   deletePapercutAccount,

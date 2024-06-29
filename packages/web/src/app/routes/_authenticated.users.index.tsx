@@ -9,8 +9,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  MoreHorizontal,
+  UserRoundCheck,
+  UserRoundX,
+} from "lucide-react";
 
+import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
 import {
   Avatar,
   AvatarFallback,
@@ -29,6 +36,8 @@ import { Input } from "~/app/components/ui/primitives/input";
 import {
   Menu,
   MenuCheckboxItem,
+  MenuHeader,
+  MenuItem,
   MenuPopover,
   MenuSection,
   MenuTrigger,
@@ -42,7 +51,8 @@ import {
   TableRow,
 } from "~/app/components/ui/primitives/table";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
+import { cn } from "~/shared/styles/utils";
 
 import type { User } from "@paperwait/core/user";
 import type {
@@ -58,7 +68,9 @@ export const Route = createFileRoute("/_authenticated/users/")({
 function Component() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
-      <UsersCard />
+      <div className="mx-auto w-full max-w-6xl">
+        <UsersCard />
+      </div>
     </div>
   );
 }
@@ -66,6 +78,7 @@ function Component() {
 const columns: Array<ColumnDef<User>> = [
   {
     accessorKey: "name",
+    enableHiding: false,
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -123,6 +136,11 @@ const columns: Array<ColumnDef<User>> = [
 
       return <Badge variant={role}>{role}</Badge>;
     },
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => <UserActionsMenu user={row.original} />,
   },
 ];
 
@@ -283,5 +301,57 @@ function UsersCard() {
         </div>
       </CardFooter>
     </Card>
+  );
+}
+
+interface UserActionsMenuProps {
+  user: User;
+}
+function UserActionsMenu(props: UserActionsMenuProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const { restoreUser } = useMutation();
+
+  async function mutate() {
+    await restoreUser({ id: props.user.id });
+  }
+
+  return (
+    <MenuTrigger>
+      <Button size="icon" variant="ghost" aria-label="Open user actions menu">
+        <MoreHorizontal className="size-4" />
+      </Button>
+
+      <MenuPopover>
+        <Menu className="w-32">
+          <MenuSection>
+            <MenuHeader>Actions</MenuHeader>
+
+            {props.user.deletedAt ? (
+              <MenuItem onAction={mutate} className="text-green-600">
+                <UserRoundCheck className="mr-2 size-4" />
+                Restore
+              </MenuItem>
+            ) : (
+              <MenuItem
+                onAction={() => setIsDeleteDialogOpen(true)}
+                className="text-destructive"
+              >
+                <UserRoundX className="mr-2 size-4" />
+                Delete
+              </MenuItem>
+            )}
+          </MenuSection>
+        </Menu>
+      </MenuPopover>
+
+      <DeleteUserDialog
+        userId={props.user.id}
+        dialogOverlayProps={{
+          isOpen: isDeleteDialogOpen,
+          onOpenChange: setIsDeleteDialogOpen,
+        }}
+      />
+    </MenuTrigger>
   );
 }

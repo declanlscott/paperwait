@@ -26,6 +26,7 @@ export const Mutation = v.object({
       v.literal("updateOrganization"),
       v.literal("updateUserRole"),
       v.literal("deleteUser"),
+      v.literal("restoreUser"),
       v.literal("syncPapercutAccounts"),
       v.literal("deletePapercutAccount"),
       v.literal("createPapercutAccountManagerAuthorization"),
@@ -77,6 +78,7 @@ export const rolePermissions = {
   updateOrganization: ["administrator"],
   updateUserRole: ["administrator"],
   deleteUser: ["administrator"],
+  restoreUser: ["administrator"],
   syncPapercutAccounts: ["administrator"],
   deletePapercutAccount: ["administrator"],
   createPapercutAccountManagerAuthorization: ["administrator"],
@@ -131,6 +133,13 @@ export const DeleteUserMutationArgs = v.object({
 });
 export type DeleteUserMutationArgs = v.InferOutput<
   typeof DeleteUserMutationArgs
+>;
+
+export const RestoreUserMutationArgs = v.object({
+  id: NanoId,
+});
+export type RestoreUserMutationArgs = v.InferOutput<
+  typeof RestoreUserMutationArgs
 >;
 
 export const SyncPapercutAccountsMutationArgs = v.undefined_();

@@ -35,6 +35,7 @@ import {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
+  RestoreUserMutationArgs,
   rolePermissions,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
@@ -150,6 +151,21 @@ const deleteUser = (user: LuciaUser) =>
         await tx
           .update(User)
           .set(values)
+          .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
+
+        return [formatChannel("org", user.orgId)];
+      },
+  );
+
+const restoreUser = (user: LuciaUser) =>
+  buildMutator(
+    RestoreUserMutationArgs,
+    () => authorizeRole("restoreUser", user),
+    () =>
+      async (tx, { id: userId }) => {
+        await tx
+          .update(User)
+          .set({ deletedAt: null })
           .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
         return [formatChannel("org", user.orgId)];
@@ -521,6 +537,7 @@ export const mutators = {
   // User
   updateUserRole,
   deleteUser,
+  restoreUser,
 
   // Papercut Account
   syncPapercutAccounts,
