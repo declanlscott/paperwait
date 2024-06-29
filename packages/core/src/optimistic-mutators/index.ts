@@ -2,9 +2,9 @@ import { unique } from "remeda";
 import * as v from "valibot";
 
 import {
+  AccessDeniedError,
   EntityNotFoundError,
   InvalidUserRoleError,
-  OrderAccessDeniedError,
 } from "../errors/application";
 import {
   CreateAnnouncementMutationArgs,
@@ -95,7 +95,7 @@ const updateOrganization = (user: LuciaUser) =>
     () =>
       async (tx, { id: orgId, ...values }) => {
         const prev = await tx.get<Organization>(`organization/${orgId}`);
-        if (!prev) throw new EntityNotFoundError("Organization", orgId);
+        if (!prev) throw new EntityNotFoundError("organization", orgId);
 
         const next = { ...prev, ...values } satisfies Organization;
 
@@ -110,7 +110,7 @@ const updateUserRole = (user: LuciaUser) =>
     () =>
       async (tx, { id: userId, ...values }) => {
         const prev = await tx.get<User>(`user/${userId}`);
-        if (!prev) throw new EntityNotFoundError("User", userId);
+        if (!prev) throw new EntityNotFoundError("user", userId);
 
         const next = { ...prev, ...values } satisfies User;
 
@@ -121,11 +121,16 @@ const updateUserRole = (user: LuciaUser) =>
 const deleteUser = (user: LuciaUser) =>
   buildMutator(
     DeleteUserMutationArgs,
-    () => authorizeRole("deleteUser", user),
+    (_tx, { id: userId }) => {
+      const isRoleAuthorized = authorizeRole("deleteUser", user, false);
+
+      if (!isRoleAuthorized && user.id !== userId)
+        throw new AccessDeniedError();
+    },
     () =>
       async (tx, { id: userId, ...values }) => {
         const prev = await tx.get<User>(`user/${userId}`);
-        if (!prev) throw new EntityNotFoundError("User", userId);
+        if (!prev) throw new EntityNotFoundError("user", userId);
 
         const next = { ...prev, ...values } satisfies User;
 
@@ -143,7 +148,7 @@ const deletePapercutAccount = (user: LuciaUser) =>
           `papercutAccount/${papercutAccountId}`,
         );
         if (!prev)
-          throw new EntityNotFoundError("PapercutAccount", papercutAccountId);
+          throw new EntityNotFoundError("papercutAccount", papercutAccountId);
 
         const next = { ...prev, ...values } satisfies PapercutAccount;
 
@@ -170,7 +175,7 @@ const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
         );
         if (!prev)
           throw new EntityNotFoundError(
-            "PapercutAccountManagerAuthorization",
+            "papercutAccountManagerAuthorization",
             papercutAccountManagerAuthorizationId,
           );
 
@@ -200,7 +205,7 @@ const updateRoom = (user: LuciaUser) =>
     () =>
       async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
-        if (!prev) throw new EntityNotFoundError("Room", roomId);
+        if (!prev) throw new EntityNotFoundError("room", roomId);
         const next = { ...prev, ...values } satisfies Room;
 
         return await tx.set(`room/${roomId}`, next);
@@ -214,7 +219,7 @@ const deleteRoom = (user: LuciaUser) =>
     () =>
       async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
-        if (!prev) throw new EntityNotFoundError("Room", roomId);
+        if (!prev) throw new EntityNotFoundError("room", roomId);
         const next = { ...prev, ...values } satisfies Room;
 
         return await tx.set(`room/${roomId}`, next);
@@ -238,7 +243,7 @@ const updateAnnouncement = (user: LuciaUser) =>
           `announcement/${announcementId}`,
         );
         if (!prev)
-          throw new EntityNotFoundError("Announcement", announcementId);
+          throw new EntityNotFoundError("announcement", announcementId);
         const next = { ...prev, ...values } satisfies Announcement;
 
         return await tx.set(`announcement/${announcementId}`, next);
@@ -255,7 +260,7 @@ const deleteAnnouncement = (user: LuciaUser) =>
           `announcement/${announcementId}`,
         );
         if (!prev)
-          throw new EntityNotFoundError("Announcement", announcementId);
+          throw new EntityNotFoundError("announcement", announcementId);
         const next = { ...prev, ...values } satisfies Announcement;
 
         return await tx.set(`announcement/${announcementId}`, next);
@@ -276,7 +281,7 @@ const updateProduct = (user: LuciaUser) =>
     () =>
       async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
-        if (!prev) throw new EntityNotFoundError("Product", productId);
+        if (!prev) throw new EntityNotFoundError("product", productId);
         const next = { ...prev, ...values } satisfies Product;
 
         return await tx.set(`product/${productId}`, next);
@@ -290,7 +295,7 @@ const deleteProduct = (user: LuciaUser) =>
     () =>
       async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
-        if (!prev) throw new EntityNotFoundError("Product", productId);
+        if (!prev) throw new EntityNotFoundError("product", productId);
         const next = { ...prev, ...values } satisfies Product;
 
         return await tx.set(`product/${productId}`, next);
@@ -315,7 +320,7 @@ const updateOrder = (user: LuciaUser) =>
     () =>
       async (tx, { id: orderId, ...values }) => {
         const prev = await tx.get<Order>(`order/${orderId}`);
-        if (!prev) throw new EntityNotFoundError("Order", orderId);
+        if (!prev) throw new EntityNotFoundError("order", orderId);
 
         const next = { ...prev, ...values } satisfies Order;
 
@@ -334,7 +339,7 @@ const deleteOrder = (user: LuciaUser) =>
     () =>
       async (tx, { id: orderId, ...values }) => {
         const prev = await tx.get<Order>(`order/${orderId}`);
-        if (!prev) throw new EntityNotFoundError("Order", orderId);
+        if (!prev) throw new EntityNotFoundError("order", orderId);
 
         const next = { ...prev, ...values } satisfies Order;
 
@@ -364,7 +369,7 @@ const updateComment = (user: LuciaUser) =>
     () =>
       async (tx, { id: commentId, ...values }) => {
         const prev = await tx.get<Comment>(`comment/${commentId}`);
-        if (!prev) throw new EntityNotFoundError("Comment", commentId);
+        if (!prev) throw new EntityNotFoundError("comment", commentId);
 
         const next = {
           ...prev,
@@ -386,7 +391,7 @@ const deleteComment = (user: LuciaUser) =>
     () =>
       async (tx, { id: commentId, ...values }) => {
         const prev = await tx.get<Comment>(`comment/${commentId}`);
-        if (!prev) throw new EntityNotFoundError("Comment", commentId);
+        if (!prev) throw new EntityNotFoundError("comment", commentId);
 
         const next = {
           ...prev,
@@ -445,7 +450,7 @@ async function requireAccessToOrder(
 ) {
   const userIds = await getUsersWithAccessToOrder(tx, orderId);
 
-  if (!userIds.includes(user.id)) throw new OrderAccessDeniedError();
+  if (!userIds.includes(user.id)) throw new AccessDeniedError();
 
   return userIds;
 }
@@ -455,7 +460,7 @@ async function getUsersWithAccessToOrder(
   orderId: Order["id"],
 ) {
   const order = await tx.get<Order>(`order/${orderId}`);
-  if (!order) throw new EntityNotFoundError("Order", orderId);
+  if (!order) throw new EntityNotFoundError("order", orderId);
 
   const [adminsOps, papercutAccountManagerAuthorizations] = await Promise.all([
     tx
