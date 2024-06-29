@@ -61,6 +61,10 @@ const authorizeRole = (
 const buildMutator =
   <
     TSchema extends v.GenericSchema,
+    TAuthorizer extends (
+      tx: WriteTransaction,
+      values: v.InferOutput<TSchema>,
+    ) => ReturnType<TAuthorizer>,
     TMutator extends (
       tx: WriteTransaction,
       values: v.InferOutput<TSchema>,
@@ -68,22 +72,26 @@ const buildMutator =
       ReturnType<OptimisticMutators<TSchema>[keyof OptimisticMutators]>
     >,
   >(
-    roleAuthorizer: () => ReturnType<typeof authorizeRole>,
     schema: TSchema,
-    withRoleAuthorizer: (
-      isRoleAuthorized: ReturnType<typeof roleAuthorizer>,
-    ) => TMutator,
+    authorizer: TAuthorizer,
+    mutatorWithContext: (context: {
+      authorized: Awaited<ReturnType<TAuthorizer>>;
+    }) => TMutator,
   ) =>
-  (tx: WriteTransaction, args: v.InferInput<TSchema>) => {
-    const mutator = withRoleAuthorizer(roleAuthorizer());
+  async (tx: WriteTransaction, args: v.InferInput<TSchema>) => {
+    const output = v.parse(schema, args);
+
+    const authorized = await Promise.resolve(authorizer(tx, output));
+
+    const mutator = mutatorWithContext({ authorized });
 
     return mutator(tx, v.parse(schema, args));
   };
 
 const updateOrganization = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateOrganization", user),
     UpdateOrganizationMutationArgs,
+    () => authorizeRole("updateOrganization", user),
     () =>
       async (tx, { id: orgId, ...values }) => {
         const prev = await tx.get<Organization>(`organization/${orgId}`);
@@ -97,8 +105,8 @@ const updateOrganization = (user: LuciaUser) =>
 
 const updateUserRole = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateUserRole", user),
     UpdateUserRoleMutationArgs,
+    () => authorizeRole("updateUserRole", user),
     () =>
       async (tx, { id: userId, ...values }) => {
         const prev = await tx.get<User>(`user/${userId}`);
@@ -112,8 +120,8 @@ const updateUserRole = (user: LuciaUser) =>
 
 const deleteUser = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteUser", user),
     DeleteUserMutationArgs,
+    () => authorizeRole("deleteUser", user),
     () =>
       async (tx, { id: userId, ...values }) => {
         const prev = await tx.get<User>(`user/${userId}`);
@@ -127,8 +135,8 @@ const deleteUser = (user: LuciaUser) =>
 
 const deletePapercutAccount = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deletePapercutAccount", user),
     DeletePapercutAccountMutationArgs,
+    () => authorizeRole("deletePapercutAccount", user),
     () =>
       async (tx, { id: papercutAccountId, ...values }) => {
         const prev = await tx.get<PapercutAccount>(
@@ -145,16 +153,16 @@ const deletePapercutAccount = (user: LuciaUser) =>
 
 const createPapercutAccountManagerAuthorization = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createPapercutAccountManagerAuthorization", user),
     CreatePapercutAccountManagerAuthorizationMutationArgs,
-    () => async (tx, values) =>
+    () => authorizeRole("createPapercutAccountManagerAuthorization", user),
+    () => (tx, values) =>
       tx.set(`papercutAccountManagerAuthorization/${values.id}`, values),
   );
 
 const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deletePapercutAccountManagerAuthorization", user),
     DeletePapercutAccountManagerAuthorizationMutationArgs,
+    () => authorizeRole("deletePapercutAccountManagerAuthorization", user),
     () =>
       async (tx, { id: papercutAccountManagerAuthorizationId, ...values }) => {
         const prev = await tx.get<PapercutAccountManagerAuthorization>(
@@ -180,15 +188,15 @@ const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
 
 const createRoom = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createRoom", user),
     CreateRoomMutationArgs,
-    () => async (tx, values) => tx.set(`room/${values.id}`, values),
+    () => authorizeRole("createRoom", user),
+    () => (tx, values) => tx.set(`room/${values.id}`, values),
   );
 
 const updateRoom = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateRoom", user),
     UpdateRoomMutationArgs,
+    () => authorizeRole("updateRoom", user),
     () =>
       async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
@@ -201,8 +209,8 @@ const updateRoom = (user: LuciaUser) =>
 
 const deleteRoom = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteRoom", user),
     DeleteRoomMutationArgs,
+    () => authorizeRole("deleteRoom", user),
     () =>
       async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
@@ -215,15 +223,15 @@ const deleteRoom = (user: LuciaUser) =>
 
 const createAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createAnnouncement", user),
     CreateAnnouncementMutationArgs,
-    () => async (tx, values) => tx.set(`announcement/${values.id}`, values),
+    () => authorizeRole("createAnnouncement", user),
+    () => (tx, values) => tx.set(`announcement/${values.id}`, values),
   );
 
 const updateAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateAnnouncement", user),
     UpdateAnnouncementMutationArgs,
+    () => authorizeRole("updateAnnouncement", user),
     () =>
       async (tx, { id: announcementId, ...values }) => {
         const prev = await tx.get<Announcement>(
@@ -239,8 +247,8 @@ const updateAnnouncement = (user: LuciaUser) =>
 
 const deleteAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteAnnouncement", user),
     DeleteAnnouncementMutationArgs,
+    () => authorizeRole("deleteAnnouncement", user),
     () =>
       async (tx, { id: announcementId, ...values }) => {
         const prev = await tx.get<Announcement>(
@@ -256,15 +264,15 @@ const deleteAnnouncement = (user: LuciaUser) =>
 
 const createProduct = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createProduct", user),
     CreateProductMutationArgs,
-    () => async (tx, values) => tx.set(`product/${values.id}`, values),
+    () => authorizeRole("createProduct", user),
+    () => (tx, values) => tx.set(`product/${values.id}`, values),
   );
 
 const updateProduct = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateProduct", user),
     UpdateProductMutationArgs,
+    () => authorizeRole("updateProduct", user),
     () =>
       async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
@@ -277,8 +285,8 @@ const updateProduct = (user: LuciaUser) =>
 
 const deleteProduct = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteProduct", user),
     DeleteProductMutationArgs,
+    () => authorizeRole("deleteProduct", user),
     () =>
       async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
@@ -291,19 +299,21 @@ const deleteProduct = (user: LuciaUser) =>
 
 const createOrder = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createOrder", user),
     CreateOrderMutationArgs,
-    () => async (tx, values) => tx.set(`order/${values.id}`, values),
+    () => authorizeRole("createOrder", user),
+    () => (tx, values) => tx.set(`order/${values.id}`, values),
   );
 
 const updateOrder = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateOrder", user, false),
     UpdateOrderMutationArgs,
-    (isRoleAuthorized) =>
-      async (tx, { id: orderId, ...values }) => {
-        if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
+    async (tx, { id: orderId }) => {
+      const isRoleAuthorized = authorizeRole("updateOrder", user, false);
 
+      if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
+    },
+    () =>
+      async (tx, { id: orderId, ...values }) => {
         const prev = await tx.get<Order>(`order/${orderId}`);
         if (!prev) throw new EntityNotFoundError("Order", orderId);
 
@@ -315,12 +325,14 @@ const updateOrder = (user: LuciaUser) =>
 
 const deleteOrder = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteOrder", user, false),
     DeleteOrderMutationArgs,
-    (isRoleAuthorized) =>
-      async (tx, { id: orderId, ...values }) => {
-        if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
+    async (tx, { id: orderId }) => {
+      const isRoleAuthorized = authorizeRole("deleteOrder", user, false);
 
+      if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
+    },
+    () =>
+      async (tx, { id: orderId, ...values }) => {
         const prev = await tx.get<Order>(`order/${orderId}`);
         if (!prev) throw new EntityNotFoundError("Order", orderId);
 
@@ -332,25 +344,25 @@ const deleteOrder = (user: LuciaUser) =>
 
 const createComment = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateOrder", user, false),
     CreateCommentMutationArgs,
-    (isRoleAuthorized) => async (tx, values) => {
-      if (!isRoleAuthorized)
-        await requireAccessToOrder(tx, user, values.orderId);
+    async (tx, { orderId }) => {
+      const isRoleAuthorized = authorizeRole("updateOrder", user, false);
 
-      return await tx.set(`comment/${values.id}`, values);
+      if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
     },
+    () => (tx, values) => tx.set(`comment/${values.id}`, values),
   );
 
 const updateComment = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateComment", user, false),
     UpdateCommentMutationArgs,
-    (isRoleAuthorized) =>
-      async (tx, { id: commentId, ...values }) => {
-        if (!isRoleAuthorized)
-          await requireAccessToOrder(tx, user, values.orderId);
+    async (tx, { orderId }) => {
+      const isRoleAuthorized = authorizeRole("updateComment", user, false);
 
+      if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
+    },
+    () =>
+      async (tx, { id: commentId, ...values }) => {
         const prev = await tx.get<Comment>(`comment/${commentId}`);
         if (!prev) throw new EntityNotFoundError("Comment", commentId);
 
@@ -365,12 +377,14 @@ const updateComment = (user: LuciaUser) =>
 
 const deleteComment = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteComment", user, false),
     DeleteCommentMutationArgs,
-    (isRoleAuthorized) =>
-      async (tx, { id: commentId, orderId, ...values }) => {
-        if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
+    async (tx, { orderId }) => {
+      const isRoleAuthorized = authorizeRole("deleteComment", user, false);
 
+      if (!isRoleAuthorized) await requireAccessToOrder(tx, user, orderId);
+    },
+    () =>
+      async (tx, { id: commentId, ...values }) => {
         const prev = await tx.get<Comment>(`comment/${commentId}`);
         if (!prev) throw new EntityNotFoundError("Comment", commentId);
 

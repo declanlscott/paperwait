@@ -70,28 +70,38 @@ const authorizeRole = (
 const buildMutator =
   <
     TSchema extends v.GenericSchema,
+    TAuthorizer extends (
+      tx: Transaction,
+      values: v.InferOutput<TSchema>,
+    ) => ReturnType<TAuthorizer>,
     TMutator extends (
       tx: Transaction,
-      args: v.InferOutput<TSchema>,
+      values: v.InferOutput<TSchema>,
     ) => ReturnType<
       ReturnType<AuthoritativeMutators<TSchema>[keyof AuthoritativeMutators]>
     >,
   >(
-    roleAuthorizer: (() => ReturnType<typeof authorizeRole>) | undefined,
     schema: TSchema,
-    mutator: TMutator,
+    authorizer: TAuthorizer,
+    mutatorWithContext: (context: {
+      authorized: Awaited<ReturnType<TAuthorizer>>;
+    }) => TMutator,
   ) =>
-  (tx: Transaction, args: unknown) => {
-    roleAuthorizer?.();
+  async (tx: Transaction, args: unknown) => {
+    const output = v.parse(schema, args);
 
-    return mutator(tx, v.parse(schema, args));
+    const authorized = await Promise.resolve(authorizer(tx, output));
+
+    const mutator = mutatorWithContext({ authorized });
+
+    return mutator(tx, output);
   };
 
 const updateOrganization = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateOrganization", user),
     UpdateOrganizationMutationArgs,
-    async (tx, values) => {
+    () => authorizeRole("updateOrganization", user),
+    () => async (tx, values) => {
       await tx
         .update(Organization)
         .set(values)
@@ -114,97 +124,102 @@ const updateOrganization = (user: LuciaUser) =>
 
 const updateUserRole = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateUserRole", user),
     UpdateUserRoleMutationArgs,
-    async (tx, { id: userId, ...values }) => {
-      await tx
-        .update(User)
-        .set(values)
-        .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
+    () => authorizeRole("updateUserRole", user),
+    () =>
+      async (tx, { id: userId, ...values }) => {
+        await tx
+          .update(User)
+          .set(values)
+          .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const deleteUser = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteUser", user),
     DeleteUserMutationArgs,
-    async (tx, { id: userId, ...values }) => {
-      await tx
-        .update(User)
-        .set(values)
-        .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
+    () => authorizeRole("deleteUser", user),
+    () =>
+      async (tx, { id: userId, ...values }) => {
+        await tx
+          .update(User)
+          .set(values)
+          .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const syncPapercutAccounts = () => {
   throw new NotImplementedError(
-    'Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT /api/papercut/accounts)',
+    'Mutation "syncPapercutAccounts" is not implemented with replicache, call directly instead (PUT /api/integrations/papercut/accounts)',
   );
 };
 
 const deletePapercutAccount = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deletePapercutAccount", user),
     DeletePapercutAccountMutationArgs,
-    async (tx, { id: papercutAccountId, ...values }) => {
-      const [adminsOps, managers, customers] = await Promise.all([
-        getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
-        tx
-          .select({
-            managerId: PapercutAccountManagerAuthorization.managerId,
-          })
-          .from(PapercutAccountManagerAuthorization)
-          .where(
-            and(
-              eq(
-                PapercutAccountManagerAuthorization.papercutAccountId,
-                papercutAccountId,
+    () => authorizeRole("deletePapercutAccount", user),
+    () =>
+      async (tx, { id: papercutAccountId, ...values }) => {
+        const [adminsOps, managers, customers] = await Promise.all([
+          getUsersByRoles(tx, user.orgId, ["administrator", "operator"]),
+          tx
+            .select({
+              managerId: PapercutAccountManagerAuthorization.managerId,
+            })
+            .from(PapercutAccountManagerAuthorization)
+            .where(
+              and(
+                eq(
+                  PapercutAccountManagerAuthorization.papercutAccountId,
+                  papercutAccountId,
+                ),
+                eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
               ),
-              eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
             ),
-          ),
-        tx
-          .select({
-            customerId: PapercutAccountCustomerAuthorization.customerId,
-          })
-          .from(PapercutAccountCustomerAuthorization)
-          .where(
-            and(
-              eq(
-                PapercutAccountCustomerAuthorization.papercutAccountId,
-                papercutAccountId,
+          tx
+            .select({
+              customerId: PapercutAccountCustomerAuthorization.customerId,
+            })
+            .from(PapercutAccountCustomerAuthorization)
+            .where(
+              and(
+                eq(
+                  PapercutAccountCustomerAuthorization.papercutAccountId,
+                  papercutAccountId,
+                ),
+                eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
               ),
-              eq(PapercutAccountCustomerAuthorization.orgId, user.orgId),
             ),
-          ),
-        tx
-          .update(PapercutAccount)
-          .set(values)
-          .where(
-            and(
-              eq(PapercutAccount.id, papercutAccountId),
-              eq(PapercutAccount.orgId, user.orgId),
+          tx
+            .update(PapercutAccount)
+            .set(values)
+            .where(
+              and(
+                eq(PapercutAccount.id, papercutAccountId),
+                eq(PapercutAccount.orgId, user.orgId),
+              ),
             ),
-          ),
-      ]);
+        ]);
 
-      return [
-        ...adminsOps.map(({ id }) => formatChannel("user", id)),
-        ...customers.map(({ customerId }) => formatChannel("user", customerId)),
-        ...managers.map(({ managerId }) => formatChannel("user", managerId)),
-      ];
-    },
+        return [
+          ...adminsOps.map(({ id }) => formatChannel("user", id)),
+          ...customers.map(({ customerId }) =>
+            formatChannel("user", customerId),
+          ),
+          ...managers.map(({ managerId }) => formatChannel("user", managerId)),
+        ];
+      },
   );
 
 const createPapercutAccountManagerAuthorization = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createPapercutAccountManagerAuthorization", user),
     CreatePapercutAccountManagerAuthorizationMutationArgs,
-    async (tx, values) => {
+    () => authorizeRole("createPapercutAccountManagerAuthorization", user),
+    () => async (tx, values) => {
       const [managerAuthorization] = await tx
         .insert(PapercutAccountManagerAuthorization)
         .values(values)
@@ -219,31 +234,32 @@ const createPapercutAccountManagerAuthorization = (user: LuciaUser) =>
 
 const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deletePapercutAccountManagerAuthorization", user),
     DeletePapercutAccountManagerAuthorizationMutationArgs,
-    async (tx, { id: papercutAccountManagerAuthorizationId, ...values }) => {
-      await tx
-        .update(PapercutAccountManagerAuthorization)
-        .set(values)
-        .where(
-          and(
-            eq(
-              PapercutAccountManagerAuthorization.id,
-              papercutAccountManagerAuthorizationId,
+    () => authorizeRole("deletePapercutAccountManagerAuthorization", user),
+    () =>
+      async (tx, { id: papercutAccountManagerAuthorizationId, ...values }) => {
+        await tx
+          .update(PapercutAccountManagerAuthorization)
+          .set(values)
+          .where(
+            and(
+              eq(
+                PapercutAccountManagerAuthorization.id,
+                papercutAccountManagerAuthorizationId,
+              ),
+              eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
             ),
-            eq(PapercutAccountManagerAuthorization.orgId, user.orgId),
-          ),
-        );
+          );
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const createRoom = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createRoom", user),
     CreateRoomMutationArgs,
-    async (tx, values) => {
+    () => authorizeRole("createRoom", user),
+    () => async (tx, values) => {
       const [room] = await tx
         .insert(Room)
         .values(values)
@@ -257,37 +273,39 @@ const createRoom = (user: LuciaUser) =>
 
 const updateRoom = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateRoom", user),
     UpdateRoomMutationArgs,
-    async (tx, { id: roomId, ...values }) => {
-      await tx
-        .update(Room)
-        .set(values)
-        .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
+    () => authorizeRole("updateRoom", user),
+    () =>
+      async (tx, { id: roomId, ...values }) => {
+        await tx
+          .update(Room)
+          .set(values)
+          .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const deleteRoom = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteRoom", user),
     DeleteRoomMutationArgs,
-    async (tx, { id: roomId, ...values }) => {
-      await tx
-        .update(Room)
-        .set(values)
-        .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
+    () => authorizeRole("deleteRoom", user),
+    () =>
+      async (tx, { id: roomId, ...values }) => {
+        await tx
+          .update(Room)
+          .set(values)
+          .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const createAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createAnnouncement", user),
     CreateAnnouncementMutationArgs,
-    async (tx, values) => {
+    () => authorizeRole("createAnnouncement", user),
+    () => async (tx, values) => {
       await tx.insert(Announcement).values(values);
 
       return [formatChannel("org", user.orgId)];
@@ -296,47 +314,49 @@ const createAnnouncement = (user: LuciaUser) =>
 
 const updateAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateAnnouncement", user),
     UpdateAnnouncementMutationArgs,
-    async (tx, { id: announcementId, ...values }) => {
-      await tx
-        .update(Announcement)
-        .set(values)
-        .where(
-          and(
-            eq(Announcement.id, announcementId),
-            eq(Announcement.orgId, user.orgId),
-          ),
-        );
+    () => authorizeRole("updateAnnouncement", user),
+    () =>
+      async (tx, { id: announcementId, ...values }) => {
+        await tx
+          .update(Announcement)
+          .set(values)
+          .where(
+            and(
+              eq(Announcement.id, announcementId),
+              eq(Announcement.orgId, user.orgId),
+            ),
+          );
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const deleteAnnouncement = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteAnnouncement", user),
     DeleteAnnouncementMutationArgs,
-    async (tx, { id: announcementId, ...values }) => {
-      await tx
-        .update(Announcement)
-        .set(values)
-        .where(
-          and(
-            eq(Announcement.id, announcementId),
-            eq(Announcement.orgId, user.orgId),
-          ),
-        );
+    () => authorizeRole("deleteAnnouncement", user),
+    () =>
+      async (tx, { id: announcementId, ...values }) => {
+        await tx
+          .update(Announcement)
+          .set(values)
+          .where(
+            and(
+              eq(Announcement.id, announcementId),
+              eq(Announcement.orgId, user.orgId),
+            ),
+          );
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const createProduct = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createProduct", user),
     CreateProductMutationArgs,
-    async (tx, values) => {
+    () => authorizeRole("createProduct", user),
+    () => async (tx, values) => {
       await tx.insert(Product).values(values);
 
       return [formatChannel("org", user.orgId)];
@@ -345,37 +365,39 @@ const createProduct = (user: LuciaUser) =>
 
 const updateProduct = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("updateProduct", user),
     UpdateProductMutationArgs,
-    async (tx, { id: productId, ...values }) => {
-      await tx
-        .update(Product)
-        .set(values)
-        .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
+    () => authorizeRole("updateProduct", user),
+    () =>
+      async (tx, { id: productId, ...values }) => {
+        await tx
+          .update(Product)
+          .set(values)
+          .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const deleteProduct = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("deleteProduct", user),
     DeleteProductMutationArgs,
-    async (tx, { id: productId, ...values }) => {
-      await tx
-        .update(Product)
-        .set(values)
-        .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
+    () => authorizeRole("deleteProduct", user),
+    () =>
+      async (tx, { id: productId, ...values }) => {
+        await tx
+          .update(Product)
+          .set(values)
+          .where(and(eq(Product.id, productId), eq(Product.orgId, user.orgId)));
 
-      return [formatChannel("org", user.orgId)];
-    },
+        return [formatChannel("org", user.orgId)];
+      },
   );
 
 const createOrder = (user: LuciaUser) =>
   buildMutator(
-    () => authorizeRole("createOrder", user),
     CreateOrderMutationArgs,
-    async (tx, values) => {
+    () => authorizeRole("createOrder", user),
+    () => async (tx, values) => {
       const [order] = await tx
         .insert(Order)
         .values(values)
@@ -389,75 +411,103 @@ const createOrder = (user: LuciaUser) =>
 
 const updateOrder = (user: LuciaUser) =>
   buildMutator(
-    undefined,
     UpdateOrderMutationArgs,
-    async (tx, { id: orderId, ...values }) => {
-      const users = await requireAccessToOrder(tx, user, orderId);
+    async (tx, { id: orderId }) => {
+      const usersWithAccess = await requireAccessToOrder(tx, user, orderId);
 
-      await tx
-        .update(Order)
-        .set(values)
-        .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
-
-      return users.map(({ id }) => formatChannel("user", id));
+      return { usersWithAccess };
     },
+    (context) =>
+      async (tx, { id: orderId, ...values }) => {
+        await tx
+          .update(Order)
+          .set(values)
+          .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
+
+        return context.authorized.usersWithAccess.map(({ id }) =>
+          formatChannel("user", id),
+        );
+      },
   );
 
 const deleteOrder = (user: LuciaUser) =>
   buildMutator(
-    undefined,
     DeleteOrderMutationArgs,
-    async (tx, { id: orderId, ...values }) => {
-      const users = await requireAccessToOrder(tx, user, orderId);
+    async (tx, { id: orderId }) => {
+      const usersWithAccess = await requireAccessToOrder(tx, user, orderId);
 
-      await tx
-        .update(Order)
-        .set(values)
-        .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
-
-      return users.map(({ id }) => formatChannel("user", id));
+      return { usersWithAccess };
     },
+    (context) =>
+      async (tx, { id: orderId, ...values }) => {
+        await tx
+          .update(Order)
+          .set(values)
+          .where(and(eq(Order.id, orderId), eq(Order.orgId, user.orgId)));
+
+        return context.authorized.usersWithAccess.map(({ id }) =>
+          formatChannel("user", id),
+        );
+      },
   );
 
 const createComment = (user: LuciaUser) =>
-  buildMutator(undefined, CreateCommentMutationArgs, async (tx, values) => {
-    const users = await requireAccessToOrder(tx, user, values.orderId);
+  buildMutator(
+    CreateCommentMutationArgs,
+    async (tx, { id: orderId }) => {
+      const usersWithAccess = await requireAccessToOrder(tx, user, orderId);
 
-    await tx.insert(Comment).values(values);
+      return { usersWithAccess };
+    },
+    (context) => async (tx, values) => {
+      await tx.insert(Comment).values(values);
 
-    return users.map(({ id }) => formatChannel("user", id));
-  });
+      return context.authorized.usersWithAccess.map(({ id }) =>
+        formatChannel("user", id),
+      );
+    },
+  );
 
 const updateComment = (user: LuciaUser) =>
   buildMutator(
-    undefined,
     UpdateCommentMutationArgs,
-    async (tx, { id: commentId, ...values }) => {
-      const users = await requireAccessToOrder(tx, user, values.orderId);
+    async (tx, { orderId }) => {
+      const usersWithAccess = await requireAccessToOrder(tx, user, orderId);
 
-      await tx
-        .update(Comment)
-        .set(values)
-        .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
-
-      return users.map(({ id }) => formatChannel("user", id));
+      return { usersWithAccess };
     },
+    (context) =>
+      async (tx, { id: commentId, ...values }) => {
+        await tx
+          .update(Comment)
+          .set(values)
+          .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
+
+        return context.authorized.usersWithAccess.map(({ id }) =>
+          formatChannel("user", id),
+        );
+      },
   );
 
 const deleteComment = (user: LuciaUser) =>
   buildMutator(
-    undefined,
     DeleteCommentMutationArgs,
-    async (tx, { id: commentId, orderId, ...values }) => {
-      const users = await requireAccessToOrder(tx, user, orderId);
+    async (tx, { orderId }) => {
+      const usersWithAccess = await requireAccessToOrder(tx, user, orderId);
 
-      await tx
-        .update(Comment)
-        .set(values)
-        .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
-
-      return users.map(({ id }) => formatChannel("user", id));
+      return { usersWithAccess };
     },
+    (context) =>
+      async (tx, { id: commentId, ...values }) => {
+        await tx
+          .update(Comment)
+          .set(values)
+          .where(and(eq(Comment.id, commentId), eq(Comment.orgId, user.orgId)));
+
+        return context.authorized.usersWithAccess.map(({ id }) =>
+          formatChannel("user", id),
+        );
+      },
   );
 
 export const mutators = {
