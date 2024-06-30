@@ -19,7 +19,7 @@ export const linkStyles = tv({
   base: "text-muted-foreground text-sm font-medium transition-colors p-3 cursor-pointer outline-none rounded-md",
   variants: {
     isActive: {
-      true: "text-primary",
+      true: "text-primary bg-accent lg:bg-transparent",
     },
     isHovered: {
       true: "text-primary/80",

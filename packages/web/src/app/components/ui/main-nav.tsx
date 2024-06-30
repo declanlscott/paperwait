@@ -77,7 +77,7 @@ function RoomSelector() {
       >
         <ComboboxInput
           placeholder="Select a room..."
-          className="w-28"
+          className="w-32"
           icon={<Home className="size-4 opacity-50" />}
           aria-controls="room-selector-listbox"
         />
