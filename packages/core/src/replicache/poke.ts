@@ -11,10 +11,9 @@ export async function poke(channels: Array<Channel>) {
   const results = await Promise.allSettled(
     uniqueChannels.map(async (channel) => {
       try {
-        await ky.post(
-          `http${Resource.ClientIsDev ? "://localhost:4321" : `s://${Resource.ClientDomain.value}`}`,
-          { headers: { "x-api-key": Resource.PartyKitApiKey.value } },
-        );
+        await ky.post(`${Resource.ClientPartyKitUrl.value}/party/${channel}`, {
+          headers: { "x-api-key": Resource.PartyKitApiKey.value },
+        });
       } catch (e) {
         console.error(`Failed to poke ${channel}`);
 
