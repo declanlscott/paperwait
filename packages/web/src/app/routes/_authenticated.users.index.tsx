@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { rolePermissions } from "@paperwait/core/schemas";
 import { getUserInitials } from "@paperwait/core/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -17,6 +18,7 @@ import {
   UserRoundX,
 } from "lucide-react";
 
+import { Authorize } from "~/app/components/ui/authorize";
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
 import {
   Avatar,
@@ -327,18 +329,22 @@ function UserActionsMenu(props: UserActionsMenuProps) {
             <MenuHeader>Actions</MenuHeader>
 
             {props.user.deletedAt ? (
-              <MenuItem onAction={mutate} className="text-green-600">
-                <UserRoundCheck className="mr-2 size-4" />
-                Restore
-              </MenuItem>
+              <Authorize roles={rolePermissions.restoreUser}>
+                <MenuItem onAction={mutate} className="text-green-600">
+                  <UserRoundCheck className="mr-2 size-4" />
+                  Restore
+                </MenuItem>
+              </Authorize>
             ) : (
-              <MenuItem
-                onAction={() => setIsDeleteDialogOpen(true)}
-                className="text-destructive"
-              >
-                <UserRoundX className="mr-2 size-4" />
-                Delete
-              </MenuItem>
+              <Authorize roles={rolePermissions.deleteUser}>
+                <MenuItem
+                  onAction={() => setIsDeleteDialogOpen(true)}
+                  className="text-destructive"
+                >
+                  <UserRoundX className="mr-2 size-4" />
+                  Delete
+                </MenuItem>
+              </Authorize>
             )}
           </MenuSection>
         </Menu>
