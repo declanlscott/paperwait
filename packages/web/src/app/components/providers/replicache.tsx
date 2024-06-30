@@ -21,13 +21,13 @@ export function ReplicacheProvider(props: PropsWithChildren) {
 
   const mutators = useMutators();
 
-  const { logout } = useAuthActions();
+  const { reset } = useAuthActions();
 
   const { invalidate, navigate } = useRouter();
 
-  const handleLogout = useCallback(
+  const resetAuth = useCallback(
     async (replicache: ReplicacheContext) => {
-      await logout();
+      reset();
 
       const org = await replicache.query((tx) =>
         tx
@@ -48,7 +48,7 @@ export function ReplicacheProvider(props: PropsWithChildren) {
 
       return null;
     },
-    [invalidate, logout, navigate],
+    [reset, invalidate, navigate],
   );
 
   useEffect(() => {
@@ -61,18 +61,12 @@ export function ReplicacheProvider(props: PropsWithChildren) {
       logLevel: IsDev.value === "true" ? "info" : "error",
     });
 
-    replicache.getAuth = () => handleLogout(replicache);
+    replicache.getAuth = () => resetAuth(replicache);
 
     setReplicache(() => replicache);
 
     return () => void replicache.close();
-  }, [
-    user.id,
-    ReplicacheLicenseKey.value,
-    IsDev.value,
-    mutators,
-    handleLogout,
-  ]);
+  }, [user.id, ReplicacheLicenseKey.value, IsDev.value, mutators, resetAuth]);
 
   const { loadingIndicator } = useSlot();
 
