@@ -105,9 +105,10 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
               <Button
                 variant="destructive"
                 onPress={() =>
-                  mutate()
-                    .then(close)
-                    .then(() => setConfirmationText(""))
+                  mutate().then(() => {
+                    close();
+                    setConfirmationText("");
+                  })
                 }
                 isDisabled={!isConfirmed}
               >

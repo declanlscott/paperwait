@@ -52,7 +52,6 @@ import {
 } from "~/app/components/ui/primitives/table";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
 import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
-import { cn } from "~/shared/styles/utils";
 
 import type { User } from "@paperwait/core/user";
 import type {

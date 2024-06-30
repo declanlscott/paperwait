@@ -172,7 +172,7 @@ export async function processUser(
 
   // User already exists, continue processing
 
-  if (existingUser.deletedAt) throw new UnauthorizedError("User is deleted");
+  if (existingUser.deletedAt) throw new UnauthorizedError("user deleted");
 
   if (org.status === "suspended" && existingUser.role !== "administrator")
     throw new UnauthorizedError("Organization is suspended");
