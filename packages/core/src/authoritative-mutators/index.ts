@@ -153,6 +153,8 @@ const deleteUser = (user: LuciaUser) =>
           .set(values)
           .where(and(eq(User.id, userId), eq(User.orgId, user.orgId)));
 
+        await lucia.invalidateUserSessions(userId);
+
         return [formatChannel("org", user.orgId)];
       },
   );
