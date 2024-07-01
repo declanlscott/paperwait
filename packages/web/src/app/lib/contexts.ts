@@ -23,7 +23,12 @@ export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
 export const AuthenticatedContext = createContext<Authenticated | null>(null);
 
-export type ReplicacheContext = Replicache<Mutators>;
+export type ReplicacheContext =
+  | { status: "unauthenticated" }
+  | {
+      status: "authenticated";
+      client: Replicache<Mutators>;
+    };
 
 export const ReplicacheContext = createContext<ReplicacheContext | null>(null);
 

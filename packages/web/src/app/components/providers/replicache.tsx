@@ -1,21 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "@tanstack/react-router";
 import { Replicache } from "replicache";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
-import { useAuthActions, useAuthenticated } from "~/app/lib/hooks/auth";
+import { useAuth, useAuthActions } from "~/app/lib/hooks/auth";
+import { queryFactory } from "~/app/lib/hooks/data";
 import { useMutators } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
-import type { Organization } from "@paperwait/core/organization";
+import type { Mutators } from "~/app/lib/hooks/replicache";
+import type { AppRouter } from "~/app/types";
 
-export function ReplicacheProvider(props: PropsWithChildren) {
-  const [replicache, setReplicache] = useState<ReplicacheContext | null>(null);
+export interface ReplicacheProviderProps extends PropsWithChildren {
+  router: AppRouter;
+}
+export function ReplicacheProvider(props: ReplicacheProviderProps) {
+  const { invalidate, navigate } = props.router;
 
-  const { user } = useAuthenticated();
+  const [context, setContext] = useState<ReplicacheContext | null>(null);
+
+  const { user } = useAuth();
 
   const { ReplicacheLicenseKey, IsDev } = useResource();
 
@@ -23,18 +29,11 @@ export function ReplicacheProvider(props: PropsWithChildren) {
 
   const { reset } = useAuthActions();
 
-  const { invalidate, navigate } = useRouter();
-
   const resetAuth = useCallback(
-    async (replicache: ReplicacheContext) => {
+    async (replicache: Replicache<Mutators>) => {
       reset();
 
-      const org = await replicache.query((tx) =>
-        tx
-          .scan<Organization>({ prefix: "organization/" })
-          .toArray()
-          .then((values) => values.at(0)),
-      );
+      const org = await replicache.query(queryFactory.organization);
 
       await invalidate().finally(
         () =>
@@ -52,28 +51,36 @@ export function ReplicacheProvider(props: PropsWithChildren) {
   );
 
   useEffect(() => {
-    const replicache = new Replicache({
-      name: user.id,
-      licenseKey: ReplicacheLicenseKey.value,
-      mutators,
-      pushURL: "/api/replicache/push",
-      pullURL: "/api/replicache/pull",
-      logLevel: IsDev.value === "true" ? "info" : "error",
-    });
+    if (user?.id) {
+      const replicache = new Replicache({
+        name: user.id,
+        licenseKey: ReplicacheLicenseKey.value,
+        mutators,
+        pushURL: "/api/replicache/push",
+        pullURL: "/api/replicache/pull",
+        logLevel: IsDev.value === "true" ? "info" : "error",
+      });
 
-    replicache.getAuth = () => resetAuth(replicache);
+      replicache.getAuth = () => resetAuth(replicache);
 
-    setReplicache(() => replicache);
+      setContext(() => ({
+        status: "authenticated",
+        client: replicache,
+      }));
 
-    return () => void replicache.close();
-  }, [user.id, ReplicacheLicenseKey.value, IsDev.value, mutators, resetAuth]);
+      return () => {
+        void replicache.close();
+        setContext(null);
+      };
+    }
+  }, [user?.id, ReplicacheLicenseKey.value, IsDev.value, mutators, resetAuth]);
 
   const { loadingIndicator } = useSlot();
 
-  if (!replicache) return loadingIndicator;
+  if (!context) return loadingIndicator;
 
   return (
-    <ReplicacheContext.Provider value={replicache}>
+    <ReplicacheContext.Provider value={context}>
       {props.children}
     </ReplicacheContext.Provider>
   );

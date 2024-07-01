@@ -9,14 +9,16 @@ import type { Room } from "@paperwait/core/room";
 import type { PapercutParameter } from "@paperwait/core/schemas";
 import type { User } from "@paperwait/core/user";
 import type { ReadTransaction } from "replicache";
+import type { UseSubscribeOptions } from "replicache-react";
 import type { MutationOptionsFactory } from "~/app/types";
 
-export function useQuery<TData>(
+export function useQuery<TData, TDefaultData = undefined>(
   query: (tx: ReadTransaction) => Promise<TData>,
+  options?: UseSubscribeOptions<TData, TDefaultData>,
 ) {
   const replicache = useReplicache();
 
-  const data = useSubscribe(replicache, query);
+  const data = useSubscribe(replicache, query, options);
 
   return data;
 }

@@ -1,17 +1,22 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { MissingContextProviderError } from "@paperwait/core/errors";
+import {
+  MissingContextProviderError,
+  UnauthenticatedError,
+} from "@paperwait/core/errors";
 import { mutators } from "@paperwait/core/optimistic-mutators";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
-import { useAuthenticated } from "~/app/lib/hooks/auth";
+import { useAuth } from "~/app/lib/hooks/auth";
 
 export function useReplicache() {
-  const replicache = useContext(ReplicacheContext);
+  const context = useContext(ReplicacheContext);
 
-  if (!replicache) throw new MissingContextProviderError("Replicache");
+  if (!context) throw new MissingContextProviderError("Replicache");
 
-  return replicache;
+  if (context.status !== "authenticated")
+    throw new UnauthenticatedError("Replicache context is not authenticated.");
+
+  return context.client;
 }
 
 export function useIsSyncing() {
@@ -27,68 +32,132 @@ export function useIsSyncing() {
 }
 
 export function useMutators() {
-  const { user } = useAuthenticated();
+  const { user } = useAuth();
 
-  const updateOrganization = useCallback(mutators.updateOrganization(user), [
-    user,
-  ]);
-
-  const updateUserRole = useCallback(mutators.updateUserRole(user), [user]);
-
-  const deleteUser = useCallback(mutators.deleteUser(user), [user]);
-
-  const restoreUser = useCallback(mutators.restoreUser(user), [user]);
-
-  const deletePapercutAccount = useCallback(
-    mutators.deletePapercutAccount(user),
-    [user],
+  const withUser = useCallback(
+    <
+      TMutator extends (
+        user: NonNullable<App.Locals["user"]>,
+      ) => (
+        ...params: Parameters<ReturnType<TMutator>>
+      ) => ReturnType<ReturnType<TMutator>>,
+    >(
+      user: App.Locals["user"],
+      mutator: TMutator,
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+    ) => (user ? mutator(user) : () => {}),
+    [],
   );
 
-  const createPapercutAccountManagerAuthorization = useCallback(
-    mutators.createPapercutAccountManagerAuthorization(user),
-    [user],
+  const updateOrganization = useMemo(
+    () => withUser(user, mutators.updateOrganization),
+    [withUser, user],
   );
 
-  const deletePapercutAccountManagerAuthorization = useCallback(
-    mutators.deletePapercutAccountManagerAuthorization(user),
-    [user],
+  const updateUserRole = useMemo(
+    () => withUser(user, mutators.updateUserRole),
+    [withUser, user],
   );
 
-  const createRoom = useCallback(mutators.createRoom(user), [user]);
+  const deleteUser = useMemo(
+    () => withUser(user, mutators.deleteUser),
+    [withUser, user],
+  );
 
-  const updateRoom = useCallback(mutators.updateRoom(user), [user]);
+  const restoreUser = useMemo(
+    () => withUser(user, mutators.restoreUser),
+    [withUser, user],
+  );
 
-  const deleteRoom = useCallback(mutators.deleteRoom(user), [user]);
+  const deletePapercutAccount = useMemo(
+    () => withUser(user, mutators.deletePapercutAccount),
+    [withUser, user],
+  );
 
-  const createAnnouncement = useCallback(mutators.createAnnouncement(user), [
-    user,
-  ]);
+  const createPapercutAccountManagerAuthorization = useMemo(
+    () => withUser(user, mutators.createPapercutAccountManagerAuthorization),
+    [withUser, user],
+  );
 
-  const updateAnnouncement = useCallback(mutators.updateAnnouncement(user), [
-    user,
-  ]);
+  const deletePapercutAccountManagerAuthorization = useMemo(
+    () => withUser(user, mutators.deletePapercutAccountManagerAuthorization),
+    [withUser, user],
+  );
 
-  const deleteAnnouncement = useCallback(mutators.deleteAnnouncement(user), [
-    user,
-  ]);
+  const createRoom = useMemo(
+    () => withUser(user, mutators.createRoom),
+    [withUser, user],
+  );
 
-  const createProduct = useCallback(mutators.createProduct(user), [user]);
+  const updateRoom = useMemo(
+    () => withUser(user, mutators.updateRoom),
+    [withUser, user],
+  );
 
-  const updateProduct = useCallback(mutators.updateProduct(user), [user]);
+  const deleteRoom = useMemo(
+    () => withUser(user, mutators.deleteRoom),
+    [withUser, user],
+  );
 
-  const deleteProduct = useCallback(mutators.deleteProduct(user), [user]);
+  const createAnnouncement = useMemo(
+    () => withUser(user, mutators.createAnnouncement),
+    [withUser, user],
+  );
 
-  const createOrder = useCallback(mutators.createOrder(user), [user]);
+  const updateAnnouncement = useMemo(
+    () => withUser(user, mutators.updateAnnouncement),
+    [withUser, user],
+  );
 
-  const updateOrder = useCallback(mutators.updateOrder(user), [user]);
+  const deleteAnnouncement = useMemo(
+    () => withUser(user, mutators.deleteAnnouncement),
+    [withUser, user],
+  );
 
-  const deleteOrder = useCallback(mutators.deleteOrder(user), [user]);
+  const createProduct = useMemo(
+    () => withUser(user, mutators.createProduct),
+    [withUser, user],
+  );
 
-  const createComment = useCallback(mutators.createComment(user), [user]);
+  const updateProduct = useMemo(
+    () => withUser(user, mutators.updateProduct),
+    [withUser, user],
+  );
 
-  const updateComment = useCallback(mutators.updateComment(user), [user]);
+  const deleteProduct = useMemo(
+    () => withUser(user, mutators.deleteProduct),
+    [withUser, user],
+  );
 
-  const deleteComment = useCallback(mutators.deleteComment(user), [user]);
+  const createOrder = useMemo(
+    () => withUser(user, mutators.createOrder),
+    [withUser, user],
+  );
+
+  const updateOrder = useMemo(
+    () => withUser(user, mutators.updateOrder),
+    [withUser, user],
+  );
+
+  const deleteOrder = useMemo(
+    () => withUser(user, mutators.deleteOrder),
+    [withUser, user],
+  );
+
+  const createComment = useMemo(
+    () => withUser(user, mutators.createComment),
+    [withUser, user],
+  );
+
+  const updateComment = useMemo(
+    () => withUser(user, mutators.updateComment),
+    [withUser, user],
+  );
+
+  const deleteComment = useMemo(
+    () => withUser(user, mutators.deleteComment),
+    [withUser, user],
+  );
 
   return useMemo(
     () => ({

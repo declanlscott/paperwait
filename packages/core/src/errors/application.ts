@@ -7,6 +7,13 @@ export class ApplicationError extends Error {
   }
 }
 
+export class UnauthenticatedError extends ApplicationError {
+  constructor(message = "Unauthenticated.") {
+    super(message);
+    this.name = "UnauthenticatedError";
+  }
+}
+
 export class InvalidMutationError extends ApplicationError {
   constructor(message = "Invalid mutation.") {
     super(message);

@@ -63,6 +63,7 @@ import type {
 } from "@tanstack/react-table";
 
 export const Route = createFileRoute("/_authenticated/users/")({
+  loader: async ({ context }) => context.replicache.query(queryFactory.users),
   component: Component,
 });
 
@@ -146,7 +147,9 @@ const columns: Array<ColumnDef<User>> = [
 ];
 
 function UsersCard() {
-  const data = useQuery(queryFactory.users) ?? [];
+  const defaultData = Route.useLoaderData();
+
+  const data = useQuery(queryFactory.users, { default: defaultData });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
