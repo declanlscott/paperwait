@@ -9,7 +9,7 @@ export function assertRole<TCustomError extends HttpError | ApplicationError>(
   CustomError?: new () => TCustomError,
 ) {
   if (!roles.includes(user.role)) {
-    console.error(`Role assertion failed for user id "${user.id}".`);
+    console.warn(`Role assertion failed for user id "${user.id}".`);
 
     if (!CustomError) return false;
 
