@@ -175,7 +175,7 @@ function SearchCommand() {
     <DialogTrigger onOpenChange={(isOpen) => isOpen && reset()}>
       <Button variant="outline" className="w-fit justify-between md:w-40">
         <div className="flex items-center">
-          <Search className="h-4 w-4 shrink-0 opacity-50 md:mr-2" />
+          <Search className="size-4 shrink-0 opacity-50 md:mr-2" />
 
           <span className="text-muted-foreground hidden font-normal md:block">
             Search...

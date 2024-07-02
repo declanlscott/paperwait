@@ -200,7 +200,7 @@ function UsersCard() {
           <MenuTrigger>
             <Button variant="outline">
               Columns
-              <ChevronDown className="ml-2 h-4 w-4" />
+              <ChevronDown className="ml-2 size-4" />
             </Button>
 
             <MenuPopover placement="bottom" className="w-28">

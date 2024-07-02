@@ -6,11 +6,11 @@ export const avatarStyles = tv({
 export type AvatarStyles = typeof avatarStyles;
 
 export const avatarImageStyles = tv({
-  base: "aspect-square h-full w-full",
+  base: "aspect-square size-full",
 });
 export type AvatarImageStyles = typeof avatarImageStyles;
 
 export const avatarFallbackStyles = tv({
-  base: "bg-muted flex h-full w-full items-center justify-center rounded-full",
+  base: "bg-muted flex size-full items-center justify-center rounded-full",
 });
 export type AvatarFallbackStyles = typeof avatarFallbackStyles;

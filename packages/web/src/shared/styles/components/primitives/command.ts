@@ -5,12 +5,12 @@ import { focusRing } from "~/shared/styles/utils";
 import type { VariantProps } from "tailwind-variants";
 
 export const commandStyles = tv({
-  base: "bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
+  base: "bg-popover text-popover-foreground flex size-full flex-col overflow-hidden rounded-md",
 });
 export type CommandStyles = VariantProps<typeof commandStyles>;
 
 export const commandDialogContentStyles = tv({
-  base: "[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
+  base: "[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:size-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:size-5",
 });
 export type CommandDialogContentStyles = VariantProps<
   typeof commandDialogContentStyles

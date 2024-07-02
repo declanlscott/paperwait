@@ -67,7 +67,7 @@ export const SelectTrigger = ({
     {(values) => (
       <>
         {typeof children === "function" ? children(values) : children}
-        <ChevronDown aria-hidden="true" className="h-4 w-4 opacity-50" />
+        <ChevronDown aria-hidden="true" className="size-4 opacity-50" />
       </>
     )}
   </AriaButton>
@@ -93,8 +93,8 @@ export const SelectItem = ({
     {(values) => (
       <>
         {values.isSelected && (
-          <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
-            <Check className="h-4 w-4" />
+          <span className="absolute left-2 flex size-4 items-center justify-center">
+            <Check className="size-4" />
           </span>
         )}
         {typeof children === "function" ? children(values) : children}
