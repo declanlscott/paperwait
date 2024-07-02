@@ -12,6 +12,8 @@ import type {
   ToPathOption,
 } from "@tanstack/react-router";
 import type { FilterFn } from "@tanstack/react-table";
+import type { Replicache } from "replicache";
+import type { Mutators } from "~/app/lib/hooks/replicache";
 import type { routeTree } from "~/app/routeTree.gen";
 
 declare module "@tanstack/react-router" {
@@ -45,11 +47,11 @@ export type Auth = Pick<App.Locals, "user" | "session" | "org">;
 
 export type Authenticated = {
   [TKey in keyof Auth]: NonNullable<Auth[TKey]>;
-} & { isAuthed: true };
+} & { isAuthed: true; replicache: Replicache<Mutators> };
 
 export type Unauthenticated = {
   [TKey in keyof Auth]: null;
-} & { isAuthed: false };
+} & { isAuthed: false; replicache: null };
 
 export type Slot = {
   loadingIndicator: ReactNode;

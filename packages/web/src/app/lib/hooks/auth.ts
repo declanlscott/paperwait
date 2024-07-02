@@ -21,16 +21,23 @@ export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
 
 export const useAuth = () =>
   useAuthStore(
-    useShallow(({ user, session, org }) => {
-      if (!user || !session || !org)
+    useShallow(({ user, session, org, replicache }) => {
+      if (!user || !session || !org || replicache?.status !== "ready")
         return {
           isAuthed: false,
           user: null,
           session: null,
           org: null,
+          replicache: null,
         } satisfies Unauthenticated;
 
-      return { isAuthed: true, user, session, org } satisfies Authenticated;
+      return {
+        isAuthed: true,
+        user,
+        session,
+        org,
+        replicache: replicache.client,
+      } satisfies Authenticated;
     }),
   );
 

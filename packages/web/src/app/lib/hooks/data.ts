@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useSubscribe } from "replicache-react";
 
 import { useApi } from "~/app/lib/hooks/api";
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 import type { Organization } from "@paperwait/core/organization";
 import type { Room } from "@paperwait/core/room";
@@ -16,7 +16,7 @@ export function useQuery<TData, TDefaultData = undefined>(
   query: (tx: ReadTransaction) => Promise<TData>,
   options?: UseSubscribeOptions<TData, TDefaultData>,
 ) {
-  const replicache = useReplicache();
+  const { replicache } = useAuthenticated();
 
   const data = useSubscribe(replicache, query, options);
 
@@ -37,8 +37,8 @@ export const queryFactory = {
     tx.get<Room>(`room/${roomId}`),
 };
 
-  const replicache = useReplicache();
 export function useMutator() {
+  const { replicache } = useAuthenticated();
 
   return replicache.mutate;
 }

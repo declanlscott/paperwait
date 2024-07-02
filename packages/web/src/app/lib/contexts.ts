@@ -8,6 +8,7 @@ import type { Mutators } from "~/app/lib/hooks/replicache";
 import type { Auth, Authenticated, CommandBarPage, Slot } from "~/app/types";
 
 type AuthActions = {
+  initializeReplicache: (client: Replicache<Mutators>) => void;
   reset: () => void;
   logout: () => Promise<void>;
   authenticateRoute: (from: string) => Omit<Authenticated, "isAuthed">;
@@ -16,21 +17,16 @@ type AuthActions = {
 };
 
 export interface AuthStore extends Auth {
+  replicache:
+    | { status: "initializing" }
+    | { status: "ready"; client: Replicache<Mutators> }
+    | null;
   actions: AuthActions;
 }
 
 export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
 export const AuthenticatedContext = createContext<Authenticated | null>(null);
-
-export type ReplicacheContext =
-  | { status: "unauthenticated" }
-  | {
-      status: "authenticated";
-      client: Replicache<Mutators>;
-    };
-
-export const ReplicacheContext = createContext<ReplicacheContext | null>(null);
 
 export type ResourceContext = ClientResourceType;
 

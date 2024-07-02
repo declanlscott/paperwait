@@ -1,7 +1,7 @@
 import { POKE } from "@paperwait/core/constants";
 import usePartySocket from "partysocket/react";
 
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useResource } from "~/app/lib/hooks/resource";
 
 type RealtimeProps = {
@@ -11,7 +11,7 @@ type RealtimeProps = {
 export function useRealtime(props: RealtimeProps) {
   const { PartyKitUrl, ReplicacheLicenseKey } = useResource();
 
-  const replicache = useReplicache();
+  const { replicache } = useAuthenticated();
 
   return usePartySocket({
     host: PartyKitUrl.value,

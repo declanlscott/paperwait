@@ -34,12 +34,17 @@ import {
   SelectPopover,
 } from "~/app/components/ui/primitives/select";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
-import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { labelStyles } from "~/shared/styles/components/primitives/field";
 
 import type { Organization } from "@paperwait/core/organization";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
+  loader: async ({ context }) => {
+    const org = await context.replicache.query(queryFactory.organization);
+
+    return { org };
+  },
   component: Component,
 });
 
@@ -56,14 +61,16 @@ function Component() {
 }
 
 function OrganizationCard() {
-  const org = useQuery(queryFactory.organization);
+  const { org: defaultData } = Route.useLoaderData();
+
+  const org = useQuery(queryFactory.organization, { default: defaultData });
 
   const [isLocked, setIsLocked] = useState(true);
 
   const [fullName, setFullName] = useState<Organization["name"]>();
   const [shortName, setShortName] = useState<Organization["slug"]>();
 
-  const { updateOrganization } = useMutation();
+  const { updateOrganization } = useMutator();
 
   async function mutateName() {
     if (org && fullName) {
@@ -186,9 +193,11 @@ function DeleteAccount() {
 }
 
 function OrganizationStatus() {
-  const org = useQuery(queryFactory.organization);
+  const { org: defaultData } = Route.useLoaderData();
 
-  const { updateOrganization } = useMutation();
+  const org = useQuery(queryFactory.organization, { default: defaultData });
+
+  const { updateOrganization } = useMutator();
 
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
     useState(false);

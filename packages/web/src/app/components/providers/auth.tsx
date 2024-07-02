@@ -1,46 +1,65 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { InvalidUserRoleError } from "@paperwait/core/errors";
 import { assertRole } from "@paperwait/core/user";
 import { redirect } from "@tanstack/react-router";
 import { produce } from "immer";
 import ky from "ky";
-import { createStore } from "zustand";
+import { Replicache } from "replicache";
+import { createStore, useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 
 import { AuthContext, AuthenticatedContext } from "~/app/lib/contexts";
 import { useAuth } from "~/app/lib/hooks/auth";
+import { queryFactory } from "~/app/lib/hooks/data";
+import { useMutators } from "~/app/lib/hooks/replicache";
+import { useResource } from "~/app/lib/hooks/resource";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
 import type { AuthStore } from "~/app/lib/contexts";
-import type { Auth } from "~/app/types";
+import type { Mutators } from "~/app/lib/hooks/replicache";
+import type { AppRouter, Auth } from "~/app/types";
 
 interface AuthStoreProviderProps extends PropsWithChildren {
   initialAuth: Auth;
+  router: AppRouter;
 }
 
 export function AuthStoreProvider(props: AuthStoreProviderProps) {
+  const { initialAuth, router } = props;
+  const { invalidate, navigate } = router;
+
   const [store] = useState(() =>
     createStore<AuthStore>((set, get) => ({
-      user: props.initialAuth.user,
-      session: props.initialAuth.session,
-      org: props.initialAuth.org,
+      user: initialAuth.user,
+      session: initialAuth.session,
+      org: initialAuth.org,
+      replicache: initialAuth.user ? { status: "initializing" } : null,
       actions: {
-        reset: () => set(() => ({ user: null, session: null })),
+        initializeReplicache: (client) =>
+          set(() => ({ replicache: { status: "ready", client } })),
+        reset: () =>
+          set(() => ({
+            user: null,
+            session: null,
+            org: null,
+            replicache: null,
+          })),
         logout: async () =>
           await ky.post("/api/auth/logout").then((res) => {
             if (res.ok) get().actions.reset();
           }),
         authenticateRoute: (from) => {
-          const { user, session, org } = get();
+          const { user, session, org, replicache } = get();
 
-          if (!user || !session || !org)
+          if (!user || !session || !org || replicache?.status !== "ready")
             throw redirect({
               to: "/login",
               search: { redirect: from, ...initialLoginSearchParams },
             });
 
-          return { user, session, org };
+          return { user, session, org, replicache: replicache.client };
         },
         authorizeRoute: (user, roles) =>
           assertRole(user, roles, InvalidUserRoleError),
@@ -53,6 +72,73 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
       },
     })),
   );
+
+  const { user, replicache, reset, initializeReplicache } = useStore(
+    store,
+    useShallow(({ user, replicache, actions }) => ({
+      user,
+      replicache,
+      reset: actions.reset,
+      initializeReplicache: actions.initializeReplicache,
+    })),
+  );
+
+  const { ReplicacheLicenseKey, IsDev } = useResource();
+
+  const mutators = useMutators(user);
+
+  const { loadingIndicator } = useSlot();
+
+  const getAuth = useCallback(
+    async (replicache: Replicache<Mutators>) => {
+      reset();
+
+      const org = await replicache.query(queryFactory.organization);
+
+      await invalidate().finally(
+        () =>
+          void navigate({
+            to: "/login",
+            search: org?.slug
+              ? { ...initialLoginSearchParams, org: org.slug }
+              : initialLoginSearchParams,
+          }),
+      );
+
+      return null;
+    },
+    [reset, invalidate, navigate],
+  );
+
+  useEffect(() => {
+    if (user?.id) {
+      const replicache = new Replicache({
+        name: user.id,
+        licenseKey: ReplicacheLicenseKey.value,
+        mutators,
+        pushURL: "/api/replicache/push",
+        pullURL: "/api/replicache/pull",
+        logLevel: IsDev.value === "true" ? "info" : "error",
+      });
+
+      replicache.getAuth = () => getAuth(replicache);
+
+      initializeReplicache(replicache);
+
+      return () => {
+        void replicache.close();
+      };
+    }
+  }, [
+    user?.id,
+    ReplicacheLicenseKey.value,
+    IsDev.value,
+    mutators,
+    getAuth,
+    initializeReplicache,
+  ]);
+
+  if (replicache?.status === "initializing") return loadingIndicator;
 
   return (
     <AuthContext.Provider value={store}>{props.children}</AuthContext.Provider>

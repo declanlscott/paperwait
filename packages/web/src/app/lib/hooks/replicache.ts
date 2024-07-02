@@ -1,28 +1,12 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import {
-  MissingContextProviderError,
-  UnauthenticatedError,
-} from "@paperwait/core/errors";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { mutators } from "@paperwait/core/optimistic-mutators";
 
-import { ReplicacheContext } from "~/app/lib/contexts";
-import { useAuth } from "~/app/lib/hooks/auth";
-
-export function useReplicache() {
-  const context = useContext(ReplicacheContext);
-
-  if (!context) throw new MissingContextProviderError("Replicache");
-
-  if (context.status !== "authenticated")
-    throw new UnauthenticatedError("Replicache context is not authenticated.");
-
-  return context.client;
-}
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 export function useIsSyncing() {
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const replicache = useReplicache();
+  const { replicache } = useAuthenticated();
 
   useEffect(() => {
     replicache.onSync = setIsSyncing;

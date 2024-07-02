@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { rolePermissions } from "@paperwait/core/schemas";
+import { mutatorsRoles } from "@paperwait/core/schemas";
 import { getUserInitials } from "@paperwait/core/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -53,7 +53,7 @@ import {
   TableRow,
 } from "~/app/components/ui/primitives/table";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
-import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 
 import type { User } from "@paperwait/core/user";
 import type {
@@ -63,7 +63,11 @@ import type {
 } from "@tanstack/react-table";
 
 export const Route = createFileRoute("/_authenticated/users/")({
-  loader: async ({ context }) => context.replicache.query(queryFactory.users),
+  loader: async ({ context }) => {
+    const users = await context.replicache.query(queryFactory.users);
+
+    return { users };
+  },
   component: Component,
 });
 
@@ -147,7 +151,7 @@ const columns: Array<ColumnDef<User>> = [
 ];
 
 function UsersCard() {
-  const defaultData = Route.useLoaderData();
+  const { users: defaultData } = Route.useLoaderData();
 
   const data = useQuery(queryFactory.users, { default: defaultData });
 
@@ -314,7 +318,7 @@ interface UserActionsMenuProps {
 function UserActionsMenu(props: UserActionsMenuProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { restoreUser } = useMutation();
+  const { restoreUser } = useMutator();
 
   async function mutate() {
     await restoreUser({ id: props.user.id });
@@ -332,14 +336,14 @@ function UserActionsMenu(props: UserActionsMenuProps) {
             <MenuHeader>Actions</MenuHeader>
 
             {props.user.deletedAt ? (
-              <Authorize roles={rolePermissions.restoreUser}>
+              <Authorize roles={mutatorsRoles.restoreUser}>
                 <MenuItem onAction={mutate} className="text-green-600">
                   <UserRoundCheck className="mr-2 size-4" />
                   Restore
                 </MenuItem>
               </Authorize>
             ) : (
-              <Authorize roles={rolePermissions.deleteUser}>
+              <Authorize roles={mutatorsRoles.deleteUser}>
                 <MenuItem
                   onAction={() => setIsDeleteDialogOpen(true)}
                   className="text-destructive"

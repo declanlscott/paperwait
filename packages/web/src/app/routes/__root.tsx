@@ -8,9 +8,7 @@ import {
 } from "@tanstack/react-router";
 
 import type { QueryClient } from "@tanstack/react-query";
-import type { Replicache } from "replicache";
 import type { AuthStore, ResourceContext } from "~/app/lib/contexts";
-import type { Mutators } from "~/app/lib/hooks/replicache";
 
 const TanStackRouterDevtools = import.meta.env.DEV
   ? lazy(() =>
@@ -24,7 +22,6 @@ const TanStackRouterDevtools = import.meta.env.DEV
 type RouterContext = {
   resource: ResourceContext;
   authStore: AuthStore;
-  replicache: Replicache<Mutators>;
   queryClient: QueryClient;
 };
 
