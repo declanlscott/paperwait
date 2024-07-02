@@ -64,9 +64,19 @@ export function MainNav() {
 }
 
 function RoomSelector() {
-  const rooms = useQuery(queryFactory.rooms);
-
   const [selectedRoomId, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
+
+  const rooms = useQuery(async (tx) => {
+    const rooms = await queryFactory.rooms(tx);
+
+    if (
+      selectedRoomId &&
+      !rooms.map(({ id }) => id).includes(selectedRoomId.toString())
+    )
+      setSelectedRoomId(null);
+
+    return rooms;
+  });
 
   return (
     <div className="hidden md:flex">
