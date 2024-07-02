@@ -29,7 +29,7 @@ import {
   useCommandBar,
   useCommandBarActions,
 } from "~/app/lib/hooks/command-bar";
-import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { links } from "~/app/lib/links";
 
 import type { Room } from "@paperwait/core/room";
@@ -210,7 +210,7 @@ function RoomCommand(props: RoomCommandProps) {
 
   const [, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
 
-  const { updateRoom } = useMutation();
+  const { updateRoom } = useMutator();
 
   const room = useQuery(queryFactory.room(props.roomId));
 

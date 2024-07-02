@@ -21,8 +21,8 @@ import {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
+  mutatorsRoles,
   RestoreUserMutationArgs,
-  rolePermissions,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
   UpdateOrderMutationArgs,
@@ -49,13 +49,13 @@ import type { OptimisticMutators } from "../schemas/mutators";
 import type { User } from "../user/user.sql";
 
 const authorizeRole = (
-  mutationName: keyof typeof rolePermissions,
+  mutationName: keyof typeof mutatorsRoles,
   user: LuciaUser,
   shouldThrow = true,
 ) =>
   assertRole(
     user,
-    rolePermissions[mutationName],
+    mutatorsRoles[mutationName],
     shouldThrow ? InvalidUserRoleError : undefined,
   );
 

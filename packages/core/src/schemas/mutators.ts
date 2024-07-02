@@ -74,7 +74,7 @@ export type OptimisticMutators<TSchema extends v.GenericSchema = any> = Record<
 /**
  * Global role permissions required to perform each mutation to any entity within the organization.
  */
-export const rolePermissions = {
+export const mutatorsRoles = {
   updateOrganization: ["administrator"],
   updateUserRole: ["administrator"],
   deleteUser: ["administrator"],

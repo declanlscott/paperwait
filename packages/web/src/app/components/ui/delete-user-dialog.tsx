@@ -13,7 +13,7 @@ import {
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
 import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
-import { queryFactory, useMutation, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 
 import type { User } from "@paperwait/core/user";
 import type { DialogOverlayProps } from "~/app/components/ui/primitives/dialog";
@@ -30,7 +30,7 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
 
   const isSelf = user?.id === props.userId;
 
-  const { deleteUser } = useMutation();
+  const { deleteUser } = useMutator();
 
   const targetConfirmationText = "delete";
   const [confirmationText, setConfirmationText] = useState("");

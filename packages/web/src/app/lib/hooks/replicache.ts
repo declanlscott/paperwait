@@ -31,9 +31,7 @@ export function useIsSyncing() {
   return isSyncing;
 }
 
-export function useMutators() {
-  const { user } = useAuth();
-
+export function useMutators(user: App.Locals["user"]) {
   const withUser = useCallback(
     <
       TMutator extends (
@@ -213,17 +211,17 @@ export function useMutators() {
       updateRoom,
       deleteRoom,
       createAnnouncement,
-      deleteAnnouncement,
       updateAnnouncement,
+      deleteAnnouncement,
       createProduct,
-      deleteProduct,
       updateProduct,
+      deleteProduct,
       createOrder,
       updateOrder,
       deleteOrder,
       createComment,
-      deleteComment,
       updateComment,
+      deleteComment,
     ],
   );
 }

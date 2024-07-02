@@ -37,8 +37,8 @@ export const queryFactory = {
     tx.get<Room>(`room/${roomId}`),
 };
 
-export function useMutation() {
   const replicache = useReplicache();
+export function useMutator() {
 
   return replicache.mutate;
 }

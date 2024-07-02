@@ -35,8 +35,8 @@ import {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
+  mutatorsRoles,
   RestoreUserMutationArgs,
-  rolePermissions,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
   UpdateOrderMutationArgs,
@@ -53,13 +53,13 @@ import type { Transaction } from "../database/transaction";
 import type { AuthoritativeMutators } from "../schemas/mutators";
 
 const authorizeRole = (
-  mutationName: keyof typeof rolePermissions,
+  mutationName: keyof typeof mutatorsRoles,
   user: LuciaUser,
   shouldThrow = true,
 ) => {
   const isAuthorized = assertRole(
     user,
-    rolePermissions[mutationName],
+    mutatorsRoles[mutationName],
     shouldThrow ? ForbiddenError : undefined,
   );
 

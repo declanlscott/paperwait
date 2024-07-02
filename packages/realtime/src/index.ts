@@ -1,3 +1,4 @@
+import { POKE } from "@paperwait/core/constants";
 import {
   HttpError,
   MethodNotAllowedError,
@@ -51,7 +52,7 @@ export default class Server implements Party.Server {
   }
 
   onRequest() {
-    this.room.broadcast("poke");
+    this.room.broadcast(POKE);
 
     return new Response(null, { status: 204 });
   }

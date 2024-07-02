@@ -1,3 +1,4 @@
+import { POKE } from "@paperwait/core/constants";
 import usePartySocket from "partysocket/react";
 
 import { useReplicache } from "~/app/lib/hooks/replicache";
@@ -16,7 +17,7 @@ export function useRealtime(props: RealtimeProps) {
     host: PartyKitUrl.value,
     room: props.channel,
     onMessage: (message) => {
-      if (message.data === "poke") void replicache?.pull();
+      if (message.data === POKE) void replicache.pull();
     },
     query: {
       replicacheLicenseKey: ReplicacheLicenseKey.value,
