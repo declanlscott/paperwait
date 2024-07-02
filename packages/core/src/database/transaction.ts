@@ -16,13 +16,15 @@ export type Transaction = PgTransaction<
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
-export async function transact<Return>(
-  callback: (tx: Transaction) => Promise<Return>,
+export async function transact<TResult>(
+  callback: (tx: Transaction) => Promise<TResult>,
   isolationLevel: PgTransactionConfig["isolationLevel"] = "serializable",
 ) {
   for (let i = 0; i < DB_TRANSACTION_MAX_RETRIES; i++) {
     try {
-      return db.transaction(callback, { isolationLevel });
+      const result = await db.transaction(callback, { isolationLevel });
+
+      return result;
     } catch (e) {
       if (shouldRetryTransaction(e)) {
         console.log(
