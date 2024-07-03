@@ -5,6 +5,11 @@ import { useApi } from "~/app/lib/hooks/api";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 import type { Organization } from "@paperwait/core/organization";
+import type {
+  PapercutAccount,
+  PapercutAccountCustomerAuthorization,
+  PapercutAccountManagerAuthorization,
+} from "@paperwait/core/papercut";
 import type { Room } from "@paperwait/core/room";
 import type { PapercutParameter } from "@paperwait/core/schemas";
 import type { User } from "@paperwait/core/user";
@@ -32,6 +37,52 @@ export const queryFactory = {
   users: (tx: ReadTransaction) => tx.scan<User>({ prefix: "user/" }).toArray(),
   user: (userId: User["id"]) => (tx: ReadTransaction) =>
     tx.get<User>(`user/${userId}`),
+  papercutAccounts: (tx: ReadTransaction) =>
+    tx.scan<PapercutAccount>({ prefix: "papercutAccount/" }).toArray(),
+  papercutAccount:
+    (accountId: PapercutAccount["id"]) => (tx: ReadTransaction) =>
+      tx.get<PapercutAccount>(`papercutAccount/${accountId}`),
+  managedPapercutAccountIds:
+    (managerId: User["id"]) => async (tx: ReadTransaction) => {
+      const managerAuthorizations = await queryFactory
+        .papercutAccountManagerAuthorizations(tx)
+        .then((authorizations) =>
+          authorizations.filter((a) => a.managerId === managerId),
+        );
+
+      return managerAuthorizations.map(
+        ({ papercutAccountId }) => papercutAccountId,
+      );
+    },
+  papercutAccountCustomerAuthorizations: (tx: ReadTransaction) =>
+    tx
+      .scan<PapercutAccountCustomerAuthorization>({
+        prefix: "papercutAccountCustomerAuthorization/",
+      })
+      .toArray(),
+  papercutAccountManagerAuthorizations: (tx: ReadTransaction) =>
+    tx
+      .scan<PapercutAccountManagerAuthorization>({
+        prefix: "papercutAccountManagerAuthorization/",
+      })
+      .toArray(),
+  managedCustomerIds:
+    (managerId: User["id"]) => async (tx: ReadTransaction) => {
+      const getManagedPapercutAccountIds =
+        queryFactory.managedPapercutAccountIds(managerId);
+
+      const managedPapercutAccountIds = await getManagedPapercutAccountIds(tx);
+
+      const managedCustomers = await queryFactory
+        .papercutAccountCustomerAuthorizations(tx)
+        .then((authorizations) =>
+          authorizations.filter((a) =>
+            managedPapercutAccountIds.includes(a.papercutAccountId),
+          ),
+        );
+
+      return managedCustomers.map(({ customerId }) => customerId);
+    },
   rooms: (tx: ReadTransaction) => tx.scan<Room>({ prefix: "room/" }).toArray(),
   room: (roomId: Room["id"]) => (tx: ReadTransaction) =>
     tx.get<Room>(`room/${roomId}`),
