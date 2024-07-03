@@ -33,7 +33,7 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { links } from "~/app/lib/links";
 
 import type { Room } from "@paperwait/core/room";
-import type { Href } from "~/app/types";
+import type { ToOptions } from "@tanstack/react-router";
 
 export function CommandBar() {
   const state = useContext(OverlayTriggerStateContext);
@@ -96,8 +96,8 @@ function HomeCommand() {
   const rooms = useQuery(queryFactory.rooms);
   const users = useQuery(queryFactory.users);
 
-  const handleNavigation = async (to: Href) =>
-    navigate({ to }).then(() => state.close());
+  const handleNavigation = async (to: ToOptions) =>
+    navigate(to).then(() => state.close());
 
   const navigationKeywords = ["navigation", "navigate"];
 

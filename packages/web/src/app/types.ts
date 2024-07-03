@@ -6,10 +6,7 @@ import type { MutationOptions } from "@tanstack/react-query";
 import type {
   createRouter,
   NavigateOptions,
-  RegisteredRouter,
-  RoutePaths,
   ToOptions,
-  ToPathOption,
 } from "@tanstack/react-router";
 import type { FilterFn } from "@tanstack/react-table";
 import type { Replicache } from "replicache";
@@ -24,7 +21,7 @@ declare module "@tanstack/react-router" {
 
 declare module "react-aria-components" {
   interface RouterConfig {
-    href: Href;
+    href: ToOptions;
     routerOptions: Omit<NavigateOptions, keyof ToOptions>;
   }
 }
@@ -73,9 +70,3 @@ export type AppLink = {
   props: ComponentProps<typeof AriaLink>;
   icon?: ReactNode;
 };
-
-export type Href = ToPathOption<
-  RegisteredRouter,
-  RoutePaths<RegisteredRouter["routeTree"]>,
-  ""
->;

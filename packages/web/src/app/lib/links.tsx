@@ -5,25 +5,25 @@ import type { AppLink } from "~/app/types";
 
 const dashboardLink = {
   name: "Dashboard",
-  props: { href: "/dashboard" },
+  props: { href: { to: "/dashboard" } },
   icon: <LayoutDashboard />,
 } satisfies AppLink;
 
 const usersLink = {
   name: "Users",
-  props: { href: "/users" },
+  props: { href: { to: "/users" } },
   icon: <Users />,
 } satisfies AppLink;
 
 const productsLink = {
   name: "Products",
-  props: { href: "/products" },
+  props: { href: { to: "/products" } },
   icon: <Package />,
 } satisfies AppLink;
 
 const settingsLink = {
   name: "Settings",
-  props: { href: "/settings" },
+  props: { href: { to: "/settings" } },
   icon: <Settings />,
 } satisfies AppLink;
 
@@ -38,29 +38,29 @@ export const links = {
     administrator: [
       {
         name: "General",
-        props: { href: "/settings" },
+        props: { href: { to: "/settings" } },
       },
       {
         name: "Integrations",
-        props: { href: "/settings/integrations" },
+        props: { href: { to: "/settings/integrations" } },
       },
     ],
     operator: [
       {
         name: "General",
-        props: { href: "/settings" },
+        props: { href: { to: "/settings" } },
       },
     ],
     manager: [
       {
         name: "General",
-        props: { href: "/settings" },
+        props: { href: { to: "/settings" } },
       },
     ],
     customer: [
       {
         name: "General",
-        props: { href: "/settings" },
+        props: { href: { to: "/settings" } },
       },
     ],
   },

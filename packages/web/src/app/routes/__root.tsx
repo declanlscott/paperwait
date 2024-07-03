@@ -34,8 +34,8 @@ function Component() {
 
   return (
     <RouterProvider
-      navigate={(to, options) => navigate({ to, ...options })}
-      useHref={(to) => buildLocation({ to }).href}
+      navigate={(to, options) => navigate({ ...to, ...options })}
+      useHref={(to) => buildLocation(to).href}
     >
       <Outlet />
 

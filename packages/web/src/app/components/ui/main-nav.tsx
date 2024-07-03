@@ -1,5 +1,5 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
-import { useRouterState } from "@tanstack/react-router";
+import { useRouter, useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
 import { CircleCheck, CircleDashed, Home, Search } from "lucide-react";
 
@@ -156,7 +156,11 @@ function Link(props: LinkProps) {
     select: (state) => state.location,
   });
 
-  const isActive = href.includes(props.href ?? "");
+  const { buildLocation } = useRouter();
+
+  const isActive = href.includes(
+    props.href ? buildLocation(props.href).href : "",
+  );
 
   return (
     <AriaLink
