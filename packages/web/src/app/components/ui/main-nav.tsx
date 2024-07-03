@@ -1,5 +1,5 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
-import { useRouter, useRouterState } from "@tanstack/react-router";
+import { getRouteApi, useRouter, useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
 import { CircleCheck, CircleDashed, Home, Search } from "lucide-react";
 
@@ -35,6 +35,8 @@ import { linkStyles, logoStyles } from "~/shared/styles/components/main-nav";
 
 import type { ComponentProps } from "react";
 
+const authenticatedRouteApi = getRouteApi("/_authenticated");
+
 export function MainNav() {
   const { logo } = useSlot();
 
@@ -66,17 +68,22 @@ export function MainNav() {
 function RoomSelector() {
   const [selectedRoomId, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
 
-  const rooms = useQuery(async (tx) => {
-    const rooms = await queryFactory.rooms(tx);
+  const { initialRooms } = authenticatedRouteApi.useLoaderData();
 
-    if (
-      selectedRoomId &&
-      !rooms.map(({ id }) => id).includes(selectedRoomId.toString())
-    )
-      setSelectedRoomId(null);
+  const rooms = useQuery(
+    async (tx) => {
+      const rooms = await queryFactory.rooms(tx);
 
-    return rooms;
-  });
+      if (
+        selectedRoomId &&
+        !rooms.map(({ id }) => id).includes(selectedRoomId.toString())
+      )
+        setSelectedRoomId(null);
+
+      return rooms;
+    },
+    { default: initialRooms },
+  );
 
   return (
     <div className="hidden md:flex">

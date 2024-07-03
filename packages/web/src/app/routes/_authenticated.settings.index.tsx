@@ -41,9 +41,11 @@ import type { Organization } from "@paperwait/core/organization";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   loader: async ({ context }) => {
-    const org = await context.replicache.query(queryFactory.organization);
+    const initialOrg = await context.replicache.query(
+      queryFactory.organization,
+    );
 
-    return { org };
+    return { initialOrg };
   },
   component: Component,
 });
@@ -61,9 +63,9 @@ function Component() {
 }
 
 function OrganizationCard() {
-  const { org: defaultData } = Route.useLoaderData();
+  const { initialOrg } = Route.useLoaderData();
 
-  const org = useQuery(queryFactory.organization, { default: defaultData });
+  const org = useQuery(queryFactory.organization, { default: initialOrg });
 
   const [isLocked, setIsLocked] = useState(true);
 
@@ -193,9 +195,9 @@ function DeleteAccount() {
 }
 
 function OrganizationStatus() {
-  const { org: defaultData } = Route.useLoaderData();
+  const { initialOrg } = Route.useLoaderData();
 
-  const org = useQuery(queryFactory.organization, { default: defaultData });
+  const org = useQuery(queryFactory.organization, { default: initialOrg });
 
   const { updateOrganization } = useMutator();
 
