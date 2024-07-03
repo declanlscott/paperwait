@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { mutatorRbac } from "@paperwait/core/schemas";
+import { UserRole } from "@paperwait/core/user";
 import { getUserInitials } from "@paperwait/core/utils";
+import { fn } from "@paperwait/core/valibot";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   flexRender,
@@ -14,10 +16,13 @@ import {
   Activity,
   ArrowUpDown,
   ChevronDown,
+  ChevronRight,
   MoreHorizontal,
+  UserCog,
   UserRoundCheck,
   UserRoundX,
 } from "lucide-react";
+import * as v from "valibot";
 
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
@@ -42,9 +47,11 @@ import {
   MenuHeader,
   MenuItem,
   MenuPopover,
+  MenuRadioItem,
   MenuSection,
   MenuSeparator,
   MenuTrigger,
+  SubmenuTrigger,
 } from "~/app/components/ui/primitives/menu";
 import {
   Table,
@@ -55,6 +62,7 @@ import {
   TableRow,
 } from "~/app/components/ui/primitives/table";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { useManager } from "~/app/lib/hooks/manager";
 
@@ -319,13 +327,13 @@ interface UserActionsMenuProps {
   user: User;
 }
 function UserActionsMenu(props: UserActionsMenuProps) {
+  const { user } = useAuthenticated();
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { restoreUser } = useMutator();
+  const { updateUserRole, restoreUser } = useMutator();
 
-  async function mutate() {
-    await restoreUser({ id: props.user.id });
-  }
+  const isSelf = user.id === props.user.id;
 
   return (
     <MenuTrigger>
@@ -353,6 +361,50 @@ function UserActionsMenu(props: UserActionsMenuProps) {
             <EnforceRbac roles={["operator"]}>
               <ManagerUserActionItems user={props.user} />
             </EnforceRbac>
+
+            {!isSelf && (
+              <EnforceRbac roles={["administrator"]}>
+                <SubmenuTrigger>
+                  <MenuItem>
+                    <UserCog className="mr-2 size-4" />
+                    Role
+                    <ChevronRight className="ml-auto size-4" />
+                  </MenuItem>
+
+                  <MenuPopover>
+                    <Menu
+                      items={UserRole.enumValues.map((role) => ({ role }))}
+                      selectionMode="single"
+                      selectedKeys={new Set([props.user.role])}
+                      onSelectionChange={fn(
+                        v.set(v.picklist(UserRole.enumValues)),
+                        async (selection) => {
+                          const next = selection.values().next();
+
+                          if (!next.done)
+                            await updateUserRole({
+                              id: props.user.id,
+                              role: next.value,
+                              updatedAt: new Date().toISOString(),
+                            });
+                        },
+                      )}
+                      aria-label={`Select role for ${props.user.name}`}
+                    >
+                      {({ role }) => (
+                        <MenuRadioItem
+                          key={role}
+                          id={role}
+                          className="capitalize"
+                        >
+                          <Badge variant={role}>{role}</Badge>
+                        </MenuRadioItem>
+                      )}
+                    </Menu>
+                  </MenuPopover>
+                </SubmenuTrigger>
+              </EnforceRbac>
+            )}
           </MenuSection>
 
           {props.user.deletedAt ? (
@@ -360,7 +412,10 @@ function UserActionsMenu(props: UserActionsMenuProps) {
               <MenuSeparator />
 
               <MenuSection>
-                <MenuItem onAction={mutate} className="text-green-600">
+                <MenuItem
+                  onAction={() => restoreUser({ id: props.user.id })}
+                  className="text-green-600"
+                >
                   <UserRoundCheck className="mr-2 size-4" />
                   Restore
                 </MenuItem>
