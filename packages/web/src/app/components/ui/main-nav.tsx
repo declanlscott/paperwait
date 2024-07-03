@@ -3,8 +3,8 @@ import { useRouter, useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
 import { CircleCheck, CircleDashed, Home, Search } from "lucide-react";
 
-import { Authorize } from "~/app/components/ui/authorize";
 import { CommandBar } from "~/app/components/ui/command-bar";
+import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   Combobox,
@@ -107,13 +107,13 @@ function RoomSelector() {
                     <div className="flex w-full items-center justify-between">
                       {room.name}
 
-                      <Authorize roles={["administrator", "operator"]}>
+                      <EnforceRbac roles={["administrator", "operator"]}>
                         {room.status === "draft" ? (
                           <CircleDashed className="size-4 opacity-50" />
                         ) : (
                           <CircleCheck className="size-4 opacity-50" />
                         )}
-                      </Authorize>
+                      </EnforceRbac>
                     </div>
                   </ComboboxItem>
                 )}

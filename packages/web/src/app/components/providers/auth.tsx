@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { InvalidUserRoleError } from "@paperwait/core/errors";
-import { assertRole } from "@paperwait/core/user";
+import { enforceRbac } from "@paperwait/core/utils";
 import { redirect } from "@tanstack/react-router";
 import { produce } from "immer";
 import ky from "ky";
@@ -62,7 +62,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
           return { user, session, org, replicache: replicache.client };
         },
         authorizeRoute: (user, roles) =>
-          assertRole(user, roles, InvalidUserRoleError),
+          enforceRbac(user, roles, InvalidUserRoleError),
         updateRole: (newRole) =>
           set(
             produce((store: AuthStore) => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { mutatorsRoles } from "@paperwait/core/schemas";
+import { mutatorRbac } from "@paperwait/core/schemas";
 import { getUserInitials } from "@paperwait/core/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -11,6 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
+  Activity,
   ArrowUpDown,
   ChevronDown,
   MoreHorizontal,
@@ -18,8 +19,8 @@ import {
   UserRoundX,
 } from "lucide-react";
 
-import { Authorize } from "~/app/components/ui/authorize";
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
+import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import {
   Avatar,
   AvatarFallback,
@@ -42,6 +43,7 @@ import {
   MenuItem,
   MenuPopover,
   MenuSection,
+  MenuSeparator,
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
 import {
@@ -54,6 +56,7 @@ import {
 } from "~/app/components/ui/primitives/table";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { useManager } from "~/app/lib/hooks/manager";
 
 import type { User } from "@paperwait/core/user";
 import type {
@@ -81,7 +84,7 @@ function Component() {
   );
 }
 
-const columns: Array<ColumnDef<User>> = [
+const columns = [
   {
     accessorKey: "name",
     enableHiding: false,
@@ -148,7 +151,7 @@ const columns: Array<ColumnDef<User>> = [
     enableHiding: false,
     cell: ({ row }) => <UserActionsMenu user={row.original} />,
   },
-];
+] satisfies Array<ColumnDef<User>>;
 
 function UsersCard() {
   const { users: defaultData } = Route.useLoaderData();
@@ -335,15 +338,39 @@ function UserActionsMenu(props: UserActionsMenuProps) {
           <MenuSection>
             <MenuHeader>Actions</MenuHeader>
 
-            {props.user.deletedAt ? (
-              <Authorize roles={mutatorsRoles.restoreUser}>
+            <EnforceRbac roles={["administrator", "operator"]}>
+              <MenuItem
+                href={{
+                  to: "/users/$userId",
+                  params: { userId: props.user.id },
+                }}
+              >
+                <Activity className="mr-2 size-4" />
+                Activity
+              </MenuItem>
+            </EnforceRbac>
+
+            <EnforceRbac roles={["operator"]}>
+              <ManagerUserActionItems user={props.user} />
+            </EnforceRbac>
+          </MenuSection>
+
+          {props.user.deletedAt ? (
+            <EnforceRbac roles={mutatorRbac.restoreUser}>
+              <MenuSeparator />
+
+              <MenuSection>
                 <MenuItem onAction={mutate} className="text-green-600">
                   <UserRoundCheck className="mr-2 size-4" />
                   Restore
                 </MenuItem>
-              </Authorize>
-            ) : (
-              <Authorize roles={mutatorsRoles.deleteUser}>
+              </MenuSection>
+            </EnforceRbac>
+          ) : (
+            <EnforceRbac roles={mutatorRbac.deleteUser}>
+              <MenuSeparator />
+
+              <MenuSection>
                 <MenuItem
                   onAction={() => setIsDeleteDialogOpen(true)}
                   className="text-destructive"
@@ -351,9 +378,9 @@ function UserActionsMenu(props: UserActionsMenuProps) {
                   <UserRoundX className="mr-2 size-4" />
                   Delete
                 </MenuItem>
-              </Authorize>
-            )}
-          </MenuSection>
+              </MenuSection>
+            </EnforceRbac>
+          )}
         </Menu>
       </MenuPopover>
 
@@ -365,5 +392,34 @@ function UserActionsMenu(props: UserActionsMenuProps) {
         }}
       />
     </MenuTrigger>
+  );
+}
+
+interface ManagerUserActionItemsProps {
+  user: User;
+}
+function ManagerUserActionItems(props: ManagerUserActionItemsProps) {
+  const { customerIds } = useManager();
+
+  if (!customerIds.includes(props.user.id)) return null;
+
+  return (
+    <>
+      <UserActivityItem user={props.user} />
+    </>
+  );
+}
+
+interface UserActivityItemProps {
+  user: User;
+}
+function UserActivityItem(props: UserActivityItemProps) {
+  return (
+    <MenuItem
+      href={{ to: "/users/$userId", params: { userId: props.user.id } }}
+    >
+      <Activity className="mr-2 size-4" />
+      Activity
+    </MenuItem>
   );
 }

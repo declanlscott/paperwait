@@ -1,5 +1,5 @@
 import { ForbiddenError, UnauthorizedError } from "@paperwait/core/errors";
-import { assertRole } from "@paperwait/core/user";
+import { enforceRbac } from "@paperwait/core/utils";
 
 import type { UserRole } from "@paperwait/core/user";
 
@@ -9,7 +9,7 @@ export function authorize(
 ) {
   if (!session || !user) throw new UnauthorizedError();
 
-  assertRole(user, roles, ForbiddenError);
+  enforceRbac(user, roles, ForbiddenError);
 
   return { user, session };
 }

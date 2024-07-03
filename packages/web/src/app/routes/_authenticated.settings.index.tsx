@@ -6,8 +6,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 import * as v from "valibot";
 
-import { Authorize } from "~/app/components/ui/authorize";
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
+import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   Card,
@@ -51,9 +51,9 @@ export const Route = createFileRoute("/_authenticated/settings/")({
 function Component() {
   return (
     <div className="grid gap-6">
-      <Authorize roles={["administrator"]}>
+      <EnforceRbac roles={["administrator"]}>
         <OrganizationCard />
-      </Authorize>
+      </EnforceRbac>
 
       <DangerZoneCard />
     </div>
@@ -161,9 +161,9 @@ function DangerZoneCard() {
       <CardContent className="grid gap-6">
         <DeleteAccount />
 
-        <Authorize roles={["administrator"]}>
+        <EnforceRbac roles={["administrator"]}>
           <OrganizationStatus />
-        </Authorize>
+        </EnforceRbac>
       </CardContent>
     </Card>
   );

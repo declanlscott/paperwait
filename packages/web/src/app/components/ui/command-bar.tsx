@@ -11,7 +11,7 @@ import {
   Settings,
 } from "lucide-react";
 
-import { Authorize } from "~/app/components/ui/authorize";
+import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Avatar, AvatarImage } from "~/app/components/ui/primitives/avatar";
 import {
   CommandDialog,
@@ -254,7 +254,7 @@ function RoomCommand(props: RoomCommandProps) {
                 </p>
               </CommandItem>
 
-              <Authorize roles={["administrator", "operator"]}>
+              <EnforceRbac roles={["administrator", "operator"]}>
                 {room.status === "draft" ? (
                   <CommandItem onSelect={() => updateRoomStatus("published")}>
                     <CircleCheck className="mr-2 size-5" />
@@ -272,7 +272,7 @@ function RoomCommand(props: RoomCommandProps) {
                     </p>
                   </CommandItem>
                 )}
-              </Authorize>
+              </EnforceRbac>
             </>
           )}
         </CommandGroup>

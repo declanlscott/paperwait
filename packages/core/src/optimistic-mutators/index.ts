@@ -21,7 +21,7 @@ import {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
-  mutatorsRoles,
+  mutatorRbac,
   RestoreUserMutationArgs,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
@@ -31,7 +31,7 @@ import {
   UpdateRoomMutationArgs,
   UpdateUserRoleMutationArgs,
 } from "../schemas/mutators";
-import { assertRole } from "../user/assert";
+import { enforceRbac } from "../utils";
 
 import type { DeepReadonlyObject, WriteTransaction } from "replicache";
 import type { Announcement } from "../announcement/announcement.sql";
@@ -49,13 +49,13 @@ import type { OptimisticMutators } from "../schemas/mutators";
 import type { User } from "../user/user.sql";
 
 const authorizeRole = (
-  mutationName: keyof typeof mutatorsRoles,
+  mutationName: keyof typeof mutatorRbac,
   user: LuciaUser,
   shouldThrow = true,
 ) =>
-  assertRole(
+  enforceRbac(
     user,
-    mutatorsRoles[mutationName],
+    mutatorRbac[mutationName],
     shouldThrow ? InvalidUserRoleError : undefined,
   );
 

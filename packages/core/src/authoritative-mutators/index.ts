@@ -35,7 +35,7 @@ import {
   DeleteProductMutationArgs,
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
-  mutatorsRoles,
+  mutatorRbac,
   RestoreUserMutationArgs,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
@@ -45,27 +45,27 @@ import {
   UpdateRoomMutationArgs,
   UpdateUserRoleMutationArgs,
 } from "../schemas/mutators";
-import { assertRole } from "../user/assert";
 import { User } from "../user/user.sql";
+import { enforceRbac } from "../utils";
 
 import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
 import type { AuthoritativeMutators } from "../schemas/mutators";
 
 const authorizeRole = (
-  mutationName: keyof typeof mutatorsRoles,
+  mutationName: keyof typeof mutatorRbac,
   user: LuciaUser,
   shouldThrow = true,
 ) => {
-  const isAuthorized = assertRole(
+  const isRoleAuthorized = enforceRbac(
     user,
-    mutatorsRoles[mutationName],
+    mutatorRbac[mutationName],
     shouldThrow ? ForbiddenError : undefined,
   );
 
-  if (!isAuthorized && shouldThrow) throw new ForbiddenError();
+  if (!isRoleAuthorized && shouldThrow) throw new ForbiddenError();
 
-  return isAuthorized;
+  return isRoleAuthorized;
 };
 
 const buildMutator =

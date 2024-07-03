@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 
-import { Authorize } from "~/app/components/ui/authorize";
+import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   DialogContent,
@@ -66,11 +66,11 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
                 access {isSelf ? "your" : "their"} account after deletion.
               </p>
 
-              <Authorize roles={["administrator"]}>
+              <EnforceRbac roles={["administrator"]}>
                 <p className="text-muted-foreground text-sm">
                   This action can be undone by an administrator.
                 </p>
-              </Authorize>
+              </EnforceRbac>
 
               <p className="text-muted-foreground text-sm">
                 To confirm deletion, enter "{targetConfirmationText}" in the

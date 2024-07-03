@@ -1,4 +1,24 @@
+import type { User } from "lucia";
+import type { ApplicationError } from "../errors/application";
+import type { HttpError } from "../errors/http";
 import type { PrefixedRecord } from "../types/utils";
+import type { UserRole } from "../user/user.sql";
+
+export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
+  user: User,
+  roles: Array<UserRole>,
+  CustomError?: new () => TCustomError,
+) {
+  const hasAccess = roles.includes(user.role);
+
+  if (!hasAccess) {
+    console.log(`Role-based access control failed for user id "${user.id}".`);
+
+    if (CustomError) throw new CustomError();
+  }
+
+  return hasAccess;
+}
 
 export function createPrefixedRecord<
   TKey extends string,

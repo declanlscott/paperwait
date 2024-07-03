@@ -5,7 +5,7 @@ import {
 import { getUserInitials } from "@paperwait/core/utils";
 import { Building2, LogOut } from "lucide-react";
 
-import { Authorize } from "~/app/components/ui/authorize";
+import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import {
   Avatar,
   AvatarFallback,
@@ -62,10 +62,10 @@ export function UserMenu() {
                   <span className="text-muted-foreground text-xs leading-none">
                     {org?.slug}
 
-                    <Authorize roles={["administrator"]}>
+                    <EnforceRbac roles={["administrator"]}>
                       {" "}
                       ({org?.status})
-                    </Authorize>
+                    </EnforceRbac>
                   </span>
                 </div>
               </div>

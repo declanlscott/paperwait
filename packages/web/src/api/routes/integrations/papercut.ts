@@ -4,7 +4,7 @@ import { BadRequestError } from "@paperwait/core/errors";
 import { syncPapercutAccounts, testPapercut } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
-import { mutatorsRoles, PapercutParameter } from "@paperwait/core/schemas";
+import { mutatorRbac, PapercutParameter } from "@paperwait/core/schemas";
 import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
 import { validator as honoValidator } from "hono/validator";
@@ -14,7 +14,7 @@ import { authorization } from "~/api/middleware";
 export default new Hono()
   .put(
     "/accounts",
-    authorization(mutatorsRoles.syncPapercutAccounts),
+    authorization(mutatorRbac.syncPapercutAccounts),
     async (c) => {
       const orgId = c.get("locals").user!.orgId;
 
