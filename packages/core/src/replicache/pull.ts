@@ -362,7 +362,7 @@ export async function pull(
 function buildPatch(
   entities: Record<
     string,
-    { puts: ReadonlyJSONObject[]; dels: Array<Metadata["id"]> }
+    { puts: Array<ReadonlyJSONObject>; dels: Array<Metadata["id"]> }
   >,
   clear: boolean,
 ) {

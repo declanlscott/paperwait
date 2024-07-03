@@ -33,7 +33,7 @@ const resource = new Proxy(rawResource, {
   },
 }) as Resource;
 
-function buildCommand(customArgs: string[] = []) {
+function buildCommand(customArgs: Array<string> = []) {
   const mode = process.argv[2];
 
   switch (mode) {

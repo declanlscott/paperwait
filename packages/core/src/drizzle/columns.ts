@@ -45,7 +45,7 @@ export type Timestamp = keyof typeof timestamps;
 export function buildConflictUpdateColumns<
   TTable extends PgTable,
   TColumnName extends keyof TTable["_"]["columns"],
->(table: TTable, columnNames: TColumnName[]) {
+>(table: TTable, columnNames: Array<TColumnName>) {
   const tableColumns = getTableColumns(table);
 
   return columnNames.reduce(

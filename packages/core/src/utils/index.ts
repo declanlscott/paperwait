@@ -23,7 +23,7 @@ export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
 export function createPrefixedRecord<
   TKey extends string,
   TPrefix extends string,
->(prefix: TPrefix, keys: TKey[]): PrefixedRecord<TPrefix, TKey> {
+>(prefix: TPrefix, keys: Array<TKey>): PrefixedRecord<TPrefix, TKey> {
   return keys.reduce(
     (prefixedRecord, key) => {
       prefixedRecord[key] = `${prefix}${key}`;

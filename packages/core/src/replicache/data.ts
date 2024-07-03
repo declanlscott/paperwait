@@ -61,7 +61,7 @@ export async function getData<
     id: TIdColumn;
     orgId: TOrgIdColumn;
   },
-  data: { orgId: Organization["id"]; ids: unknown[] },
+  data: { orgId: Organization["id"]; ids: Array<unknown> },
 ) {
   if (!data.ids.length) return [];
 
