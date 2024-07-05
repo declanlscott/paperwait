@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { mutators } from "@paperwait/core/optimistic-mutators";
+import { mutators } from "@paperwait/core/client-optimism";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 

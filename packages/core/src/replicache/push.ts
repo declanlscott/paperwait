@@ -1,9 +1,9 @@
 import { eq, sql } from "drizzle-orm";
 
-import { mutators } from "../authoritative-mutators";
 import { transact } from "../database/transaction";
 import { BadRequestError } from "../errors/http";
 import { Mutation } from "../schemas/mutators";
+import { mutators } from "../server-authority/mutators";
 import { fn } from "../valibot";
 import { poke } from "./poke";
 import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
