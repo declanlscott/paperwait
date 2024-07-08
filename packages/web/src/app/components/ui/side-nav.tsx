@@ -1,5 +1,5 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
-import { useRouterState } from "@tanstack/react-router";
+import { useRouter, useRouterState } from "@tanstack/react-router";
 
 import { linkStyles } from "~/shared/styles/components/side-nav";
 
@@ -29,7 +29,11 @@ function Link(props: LinkProps) {
     select: (state) => state.location,
   });
 
-  const isActive = props.href === href;
+  const { buildLocation } = useRouter();
+
+  const isActive = href.endsWith(
+    props.href ? buildLocation(props.href).href : "",
+  );
 
   return (
     <AriaLink

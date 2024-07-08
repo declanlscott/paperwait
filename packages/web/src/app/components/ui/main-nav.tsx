@@ -161,7 +161,7 @@ function Link(props: LinkProps) {
 
   const { buildLocation } = useRouter();
 
-  const isActive = href.includes(
+  const isActive = href.startsWith(
     props.href ? buildLocation(props.href).href : "",
   );
 
