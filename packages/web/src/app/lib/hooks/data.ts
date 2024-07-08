@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useSubscribe } from "replicache-react";
 
 import { useApi } from "~/app/lib/hooks/api";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
+import { useSubscribe } from "~/app/lib/hooks/replicache";
 
 import type { Organization } from "@paperwait/core/organization";
 import type {
@@ -14,19 +14,11 @@ import type { Room } from "@paperwait/core/room";
 import type { PapercutParameter } from "@paperwait/core/schemas";
 import type { User } from "@paperwait/core/user";
 import type { ReadTransaction } from "replicache";
-import type { UseSubscribeOptions } from "replicache-react";
 import type { MutationOptionsFactory } from "~/app/types";
 
-export function useQuery<TData, TDefaultData = undefined>(
-  query: (tx: ReadTransaction) => Promise<TData>,
-  options?: UseSubscribeOptions<TData, TDefaultData>,
-) {
-  const { replicache } = useAuthenticated();
-
-  const data = useSubscribe(replicache, query, options);
-
-  return data;
-}
+export const useQuery = <TData, TDefaultData = undefined>(
+  ...params: Parameters<typeof useSubscribe<TData, TDefaultData>>
+) => useSubscribe(...params);
 
 export const queryFactory = {
   organization: (tx: ReadTransaction) =>

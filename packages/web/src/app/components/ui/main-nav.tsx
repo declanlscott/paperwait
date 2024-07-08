@@ -70,20 +70,16 @@ function RoomSelector() {
 
   const { initialRooms } = authenticatedRouteApi.useLoaderData();
 
-  const rooms = useQuery(
-    async (tx) => {
-      const rooms = await queryFactory.rooms(tx);
-
+  const rooms = useQuery(queryFactory.rooms, {
+    defaultData: initialRooms,
+    onData: (rooms) => {
       if (
         selectedRoomId &&
         !rooms.map(({ id }) => id).includes(selectedRoomId.toString())
       )
         setSelectedRoomId(null);
-
-      return rooms;
     },
-    { default: initialRooms },
-  );
+  });
 
   return (
     <div className="hidden md:flex">

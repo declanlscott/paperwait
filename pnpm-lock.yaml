@@ -274,9 +274,6 @@ importers:
       replicache:
         specifier: ^14.2.2
         version: 14.2.2
-      replicache-react:
-        specifier: ^5.0.1
-        version: 5.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       sonner:
         specifier: ^1.5.0
         version: 1.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -5134,12 +5131,6 @@ packages:
 
   remove-accents@0.5.0:
     resolution: {integrity: sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==}
-
-  replicache-react@5.0.1:
-    resolution: {integrity: sha512-xwiVdoANIX9oagqK8sT/txx9ltfEmkKgbJivdVvyz13bj5PAT+b8o9xuMtY4X1bJgu+9mn04muWPKtPv9MV/ZA==}
-    peerDependencies:
-      react: '>=16.0 <19.0'
-      react-dom: '>=16.0 <19.0'
 
   replicache@14.2.2:
     resolution: {integrity: sha512-PBlt6C2X7wSPVUUVBKumHPTXXmPZYO/rqoTQXYLgvzPabYkKBdJbCEHjh9hXNUU5vpkzDeEmOPQqlVus9zCiBg==}
@@ -12352,11 +12343,6 @@ snapshots:
       type-fest: 4.21.0
 
   remove-accents@0.5.0: {}
-
-  replicache-react@5.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
 
   replicache@14.2.2:
     dependencies:

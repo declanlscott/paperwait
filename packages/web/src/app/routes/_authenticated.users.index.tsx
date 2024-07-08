@@ -164,7 +164,7 @@ const columns = [
 function UsersCard() {
   const { initialUsers } = Route.useLoaderData();
 
-  const data = useQuery(queryFactory.users, { default: initialUsers });
+  const data = useQuery(queryFactory.users, { defaultData: initialUsers });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");

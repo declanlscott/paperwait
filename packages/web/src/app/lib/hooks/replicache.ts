@@ -3,6 +3,51 @@ import { mutators } from "@paperwait/core/client-optimism";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 
+import type { ReadTransaction, SubscribeOptions } from "replicache";
+
+export interface UseSubscribeOptions<TData, TDefaultData>
+  extends Partial<SubscribeOptions<TData>> {
+  defaultData?: TDefaultData;
+}
+
+export function useSubscribe<TData, TDefaultData = undefined>(
+  query: (tx: ReadTransaction) => Promise<TData>,
+  {
+    onData,
+    onError,
+    onDone,
+    isEqual,
+    defaultData,
+  }: UseSubscribeOptions<TData, TDefaultData> = {},
+): TData | TDefaultData {
+  const { replicache } = useAuthenticated();
+
+  const [data, setData] = useState<TData>();
+
+  useEffect(() => {
+    const unsubscribe = replicache.subscribe(query, {
+      onData: (data) => {
+        setData(() => data);
+
+        onData?.(data);
+      },
+      onError,
+      onDone,
+      isEqual,
+    });
+
+    return () => {
+      unsubscribe();
+      setData(undefined);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replicache]);
+
+  if (!data) return defaultData as TDefaultData;
+
+  return data;
+}
+
 export function useIsSyncing() {
   const [isSyncing, setIsSyncing] = useState(false);
 

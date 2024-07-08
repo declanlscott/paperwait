@@ -65,7 +65,7 @@ function Component() {
 function OrganizationCard() {
   const { initialOrg } = Route.useLoaderData();
 
-  const org = useQuery(queryFactory.organization, { default: initialOrg });
+  const org = useQuery(queryFactory.organization, { defaultData: initialOrg });
 
   const [isLocked, setIsLocked] = useState(true);
 
@@ -197,7 +197,7 @@ function DeleteAccount() {
 function OrganizationStatus() {
   const { initialOrg } = Route.useLoaderData();
 
-  const org = useQuery(queryFactory.organization, { default: initialOrg });
+  const org = useQuery(queryFactory.organization, { defaultData: initialOrg });
 
   const { updateOrganization } = useMutator();
 
