@@ -1,5 +1,6 @@
 import { useContext, useEffect } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
+import { enforceRbac } from "@paperwait/core/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import {
@@ -81,7 +82,7 @@ export function CommandBar() {
 }
 
 function HomeCommand() {
-  const { user } = useAuthenticated();
+  const { user, replicache } = useAuthenticated();
 
   const state = useContext(OverlayTriggerStateContext);
 
@@ -138,7 +139,7 @@ function HomeCommand() {
           </CommandItem>
         </CommandGroup>
 
-        {rooms && rooms.length > 0 && (
+        {rooms?.length ? (
           <>
             <CommandSeparator />
 
@@ -156,25 +157,47 @@ function HomeCommand() {
               ))}
             </CommandGroup>
           </>
-        )}
+        ) : null}
 
-        {users && users.length > 0 && (
+        {users?.length ? (
           <>
             <CommandSeparator />
 
             <CommandGroup heading="Users">
-              {users.map((user) => (
-                <CommandItem key={user.id} keywords={["users", "user"]}>
+              {users.map((u) => (
+                <CommandItem
+                  key={u.id}
+                  keywords={["users", "user"]}
+                  onSelect={async () => {
+                    if (enforceRbac(user, ["administrator", "operator"]))
+                      return await handleNavigation({
+                        to: "/users/$userId",
+                        params: { userId: u.id },
+                      });
+
+                    if (enforceRbac(user, ["manager"])) {
+                      const customerIds = await replicache.query(
+                        queryFactory.managedCustomerIds(user.id),
+                      );
+
+                      if (customerIds.includes(u.id))
+                        return await handleNavigation({
+                          to: "/users/$userId",
+                          params: { userId: u.id },
+                        });
+                    }
+                  }}
+                >
                   <Avatar className="mr-3 size-8">
-                    <AvatarImage src={`/api/user/${user.id}/photo`} />
+                    <AvatarImage src={`/api/user/${u.id}/photo`} />
                   </Avatar>
 
-                  <span>{user.name}</span>
+                  <span>{u.name}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
           </>
-        )}
+        ) : null}
 
         <CommandSeparator />
 
