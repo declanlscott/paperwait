@@ -358,7 +358,7 @@ function UserActionsMenu(props: UserActionsMenuProps) {
               </MenuItem>
             </EnforceRbac>
 
-            <EnforceRbac roles={["operator"]}>
+            <EnforceRbac roles={["manager"]}>
               <ManagerUserActionItems user={props.user} />
             </EnforceRbac>
 
