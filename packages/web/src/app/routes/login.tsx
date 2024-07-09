@@ -99,6 +99,7 @@ function Component() {
               href="/register"
               className={buttonStyles({
                 variant: "link",
+                isHtml: true,
                 className: "h-fit p-0",
               })}
             >
