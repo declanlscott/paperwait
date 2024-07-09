@@ -14,7 +14,7 @@ import {
 import { Product } from "../product/product.sql";
 import { Room } from "../room/room.sql";
 import { User } from "../user/user.sql";
-import { buildCvrEntries, diffCvr, isCvrDiffEmpty } from "./client-view-record";
+import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { getClientGroup, getData } from "./data";
 import {
   searchAnnouncements,
@@ -36,15 +36,16 @@ import type {
   PatchOperation,
   PullRequest,
   PullResponseOKV1,
-  ReadonlyJSONObject,
   VersionNotSupportedResponse,
 } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
+import type { Transaction } from "../database/transaction";
+import type { OmitTimestamps } from "../types/drizzle";
 import type {
-  ClientViewRecord,
+  ClientViewRecordDiff,
   ClientViewRecordEntries,
 } from "./client-view-record";
-import type { Metadata } from "./metadata";
+import type { DomainsMetadata, Metadata } from "./metadata";
 
 type PullResult =
   | {
@@ -97,21 +98,7 @@ export async function pull(
       : [undefined];
 
     // 2: Initialize base client view record
-    const baseCvr =
-      prevClientView?.record ??
-      ({
-        organization: {},
-        user: {},
-        papercutAccount: {},
-        papercutAccountCustomerAuthorization: {},
-        papercutAccountManagerAuthorization: {},
-        room: {},
-        product: {},
-        announcement: {},
-        order: {},
-        comment: {},
-        client: {},
-      } satisfies ClientViewRecord);
+    const baseCvr = buildCvr({ kind: "base", prev: prevClientView?.record });
 
     // 4: Get client group
     const baseClientGroup = await getClientGroup(
@@ -126,50 +113,10 @@ export async function pull(
 
     // 6: Read all domain data, just ids and versions
     // 7: Read all clients in the client group
-    const [
-      organizationsMetadata,
-      usersMetadata,
-      papercutAccountsMetadata,
-      papercutAccountCustomerAuthorizationsMetadata,
-      papercutAccountManagerAuthorizationsMetadata,
-      roomsMetadata,
-      announcementsMetadata,
-      productsMetadata,
-      ordersMetadata,
-      commentsMetadata,
-      clientsMetadata,
-    ] = await Promise.all([
-      searchOrganizations(tx, user),
-      searchUsers(tx, user),
-      searchPapercutAccounts(tx, user),
-      searchPapercutAccountCustomerAuthorizations(tx, user),
-      searchPapercutAccountManagerAuthorizations(tx, user),
-      searchRooms(tx, user),
-      searchAnnouncements(tx, user),
-      searchProducts(tx, user),
-      searchOrders(tx, user),
-      searchComments(tx, user),
-      searchClients(tx, baseClientGroup.id),
-    ]);
+    const metadata = await getMetadata(tx, user, baseClientGroup);
 
     // 8: Build next client view record
-    const nextCvr = {
-      organization: buildCvrEntries(organizationsMetadata),
-      user: buildCvrEntries(usersMetadata),
-      papercutAccount: buildCvrEntries(papercutAccountsMetadata),
-      papercutAccountCustomerAuthorization: buildCvrEntries(
-        papercutAccountCustomerAuthorizationsMetadata,
-      ),
-      papercutAccountManagerAuthorization: buildCvrEntries(
-        papercutAccountManagerAuthorizationsMetadata,
-      ),
-      room: buildCvrEntries(roomsMetadata),
-      announcement: buildCvrEntries(announcementsMetadata),
-      product: buildCvrEntries(productsMetadata),
-      order: buildCvrEntries(ordersMetadata),
-      comment: buildCvrEntries(commentsMetadata),
-      client: buildCvrEntries(clientsMetadata),
-    } satisfies ClientViewRecord;
+    const nextCvr = buildCvr({ kind: "next", metadata });
 
     // 9: Calculate diff
     const diff = diffCvr(baseCvr, nextCvr);
@@ -178,94 +125,7 @@ export async function pull(
     if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
     // 11: Get entities
-    const [
-      organizations,
-      users,
-      papercutAccounts,
-      papercutAccountCustomerAuthorizations,
-      papercutAccountManagerAuthorizations,
-      rooms,
-      announcements,
-      products,
-      orders,
-      comments,
-    ] = await Promise.all([
-      getData(
-        tx,
-        Organization,
-        { orgId: Organization.id, id: Organization.id },
-        { orgId: user.orgId, ids: diff.organization.puts },
-      ),
-      getData(
-        tx,
-        User,
-        { orgId: User.orgId, id: User.id },
-        { orgId: user.orgId, ids: diff.user.puts },
-      ),
-      getData(
-        tx,
-        PapercutAccount,
-        { orgId: PapercutAccount.orgId, id: PapercutAccount.id },
-        { orgId: user.orgId, ids: diff.papercutAccount.puts },
-      ),
-      getData(
-        tx,
-        PapercutAccountCustomerAuthorization,
-        {
-          orgId: PapercutAccountCustomerAuthorization.orgId,
-          id: PapercutAccountCustomerAuthorization.id,
-        },
-        {
-          orgId: user.orgId,
-          ids: diff.papercutAccountCustomerAuthorization.puts,
-        },
-      ),
-      getData(
-        tx,
-        PapercutAccountManagerAuthorization,
-        {
-          orgId: PapercutAccountManagerAuthorization.orgId,
-          id: PapercutAccountManagerAuthorization.id,
-        },
-        {
-          orgId: user.orgId,
-          ids: diff.papercutAccountManagerAuthorization.puts,
-        },
-      ),
-      getData(
-        tx,
-        Room,
-        { orgId: Room.orgId, id: Room.id },
-        { orgId: user.orgId, ids: diff.room.puts },
-      ),
-      getData(
-        tx,
-        Announcement,
-        {
-          orgId: Announcement.orgId,
-          id: Announcement.id,
-        },
-        { orgId: user.orgId, ids: diff.announcement.puts },
-      ),
-      getData(
-        tx,
-        Product,
-        { orgId: Product.orgId, id: Product.id },
-        { orgId: user.orgId, ids: diff.product.puts },
-      ),
-      getData(
-        tx,
-        Order,
-        { orgId: Order.orgId, id: Order.id },
-        { orgId: user.orgId, ids: diff.order.puts },
-      ),
-      getData(
-        tx,
-        Comment,
-        { orgId: Comment.orgId, id: Comment.id },
-        { orgId: user.orgId, ids: diff.comment.puts },
-      ),
-    ]);
+    const entities = await getEntities(tx, user, diff);
 
     // 12: Changed clients - no need to re-read clients from database,
     // we already have their versions.
@@ -305,27 +165,7 @@ export async function pull(
 
     // 15: Commit transaction
     return {
-      entities: {
-        organization: { puts: organizations, dels: diff.organization.dels },
-        user: { puts: users, dels: diff.user.dels },
-        papercutAccount: {
-          puts: papercutAccounts,
-          dels: diff.papercutAccount.dels,
-        },
-        papercutAccountCustomerAuthorization: {
-          puts: papercutAccountCustomerAuthorizations,
-          dels: diff.papercutAccountCustomerAuthorization.dels,
-        },
-        papercutAccountManagerAuthorization: {
-          puts: papercutAccountManagerAuthorizations,
-          dels: diff.papercutAccountManagerAuthorization.dels,
-        },
-        room: { puts: rooms, dels: diff.room.dels },
-        announcement: { puts: announcements, dels: diff.announcement.dels },
-        product: { puts: products, dels: diff.product.dels },
-        order: { puts: orders, dels: diff.order.dels },
-        comment: { puts: comments, dels: diff.comment.dels },
-      },
+      entities,
       clients,
       prevCvr: prevClientView?.record,
       nextCvr,
@@ -359,13 +199,190 @@ export async function pull(
   };
 }
 
-function buildPatch(
-  entities: Record<
-    string,
-    { puts: Array<ReadonlyJSONObject>; dels: Array<Metadata["id"]> }
-  >,
-  clear: boolean,
+async function getMetadata(
+  tx: Transaction,
+  user: LuciaUser,
+  clientGroup: OmitTimestamps<ReplicacheClientGroup>,
 ) {
+  const [
+    organizationsMetadata,
+    usersMetadata,
+    papercutAccountsMetadata,
+    papercutAccountCustomerAuthorizationsMetadata,
+    papercutAccountManagerAuthorizationsMetadata,
+    roomsMetadata,
+    announcementsMetadata,
+    productsMetadata,
+    ordersMetadata,
+    commentsMetadata,
+    clientsMetadata,
+  ] = await Promise.all([
+    searchOrganizations(tx, user),
+    searchUsers(tx, user),
+    searchPapercutAccounts(tx, user),
+    searchPapercutAccountCustomerAuthorizations(tx, user),
+    searchPapercutAccountManagerAuthorizations(tx, user),
+    searchRooms(tx, user),
+    searchAnnouncements(tx, user),
+    searchProducts(tx, user),
+    searchOrders(tx, user),
+    searchComments(tx, user),
+    searchClients(tx, clientGroup.id),
+  ]);
+
+  return {
+    organization: organizationsMetadata,
+    user: usersMetadata,
+    papercutAccount: papercutAccountsMetadata,
+    papercutAccountCustomerAuthorization:
+      papercutAccountCustomerAuthorizationsMetadata,
+    papercutAccountManagerAuthorization:
+      papercutAccountManagerAuthorizationsMetadata,
+    room: roomsMetadata,
+    announcement: announcementsMetadata,
+    product: productsMetadata,
+    order: ordersMetadata,
+    comment: commentsMetadata,
+    client: clientsMetadata,
+  } satisfies DomainsMetadata;
+}
+
+type PutsDels<TEntity> = {
+  puts: Array<TEntity>;
+  dels: Array<Metadata["id"]>;
+};
+
+type Entities = {
+  organization: PutsDels<Organization>;
+  user: PutsDels<User>;
+  papercutAccount: PutsDels<PapercutAccount>;
+  papercutAccountCustomerAuthorization: PutsDels<PapercutAccountCustomerAuthorization>;
+  papercutAccountManagerAuthorization: PutsDels<PapercutAccountManagerAuthorization>;
+  room: PutsDels<Room>;
+  announcement: PutsDels<Announcement>;
+  product: PutsDels<Product>;
+  order: PutsDels<Order>;
+  comment: PutsDels<Comment>;
+};
+
+async function getEntities(
+  tx: Transaction,
+  user: LuciaUser,
+  diff: ClientViewRecordDiff,
+) {
+  const [
+    organizations,
+    users,
+    papercutAccounts,
+    papercutAccountCustomerAuthorizations,
+    papercutAccountManagerAuthorizations,
+    rooms,
+    announcements,
+    products,
+    orders,
+    comments,
+  ] = await Promise.all([
+    getData(
+      tx,
+      Organization,
+      { orgId: Organization.id, id: Organization.id },
+      { orgId: user.orgId, ids: diff.organization.puts },
+    ),
+    getData(
+      tx,
+      User,
+      { orgId: User.orgId, id: User.id },
+      { orgId: user.orgId, ids: diff.user.puts },
+    ),
+    getData(
+      tx,
+      PapercutAccount,
+      { orgId: PapercutAccount.orgId, id: PapercutAccount.id },
+      { orgId: user.orgId, ids: diff.papercutAccount.puts },
+    ),
+    getData(
+      tx,
+      PapercutAccountCustomerAuthorization,
+      {
+        orgId: PapercutAccountCustomerAuthorization.orgId,
+        id: PapercutAccountCustomerAuthorization.id,
+      },
+      {
+        orgId: user.orgId,
+        ids: diff.papercutAccountCustomerAuthorization.puts,
+      },
+    ),
+    getData(
+      tx,
+      PapercutAccountManagerAuthorization,
+      {
+        orgId: PapercutAccountManagerAuthorization.orgId,
+        id: PapercutAccountManagerAuthorization.id,
+      },
+      {
+        orgId: user.orgId,
+        ids: diff.papercutAccountManagerAuthorization.puts,
+      },
+    ),
+    getData(
+      tx,
+      Room,
+      { orgId: Room.orgId, id: Room.id },
+      { orgId: user.orgId, ids: diff.room.puts },
+    ),
+    getData(
+      tx,
+      Announcement,
+      {
+        orgId: Announcement.orgId,
+        id: Announcement.id,
+      },
+      { orgId: user.orgId, ids: diff.announcement.puts },
+    ),
+    getData(
+      tx,
+      Product,
+      { orgId: Product.orgId, id: Product.id },
+      { orgId: user.orgId, ids: diff.product.puts },
+    ),
+    getData(
+      tx,
+      Order,
+      { orgId: Order.orgId, id: Order.id },
+      { orgId: user.orgId, ids: diff.order.puts },
+    ),
+    getData(
+      tx,
+      Comment,
+      { orgId: Comment.orgId, id: Comment.id },
+      { orgId: user.orgId, ids: diff.comment.puts },
+    ),
+  ]);
+
+  return {
+    organization: { puts: organizations, dels: diff.organization.dels },
+    user: { puts: users, dels: diff.user.dels },
+    papercutAccount: {
+      puts: papercutAccounts,
+      dels: diff.papercutAccount.dels,
+    },
+    papercutAccountCustomerAuthorization: {
+      puts: papercutAccountCustomerAuthorizations,
+      dels: diff.papercutAccountCustomerAuthorization.dels,
+    },
+    papercutAccountManagerAuthorization: {
+      puts: papercutAccountManagerAuthorizations,
+      dels: diff.papercutAccountManagerAuthorization.dels,
+    },
+    room: { puts: rooms, dels: diff.room.dels },
+    announcement: { puts: announcements, dels: diff.announcement.dels },
+    product: { puts: products, dels: diff.product.dels },
+    order: { puts: orders, dels: diff.order.dels },
+    comment: { puts: comments, dels: diff.comment.dels },
+  } satisfies Entities;
+}
+
+function buildPatch(entities: Entities, clear: boolean) {
   const patch: Array<PatchOperation> = [];
 
   if (clear) patch.push({ op: "clear" });
@@ -375,12 +392,11 @@ function buildPatch(
       dels.forEach((id) => patch.push({ op: "del", key: `${name}/${id}` }));
 
       puts.forEach((entity) => {
-        if (typeof entity.id === "string")
-          patch.push({
-            op: "put",
-            key: `${name}/${entity.id}`,
-            value: entity,
-          });
+        patch.push({
+          op: "put",
+          key: `${name}/${entity.id}`,
+          value: entity,
+        });
       });
 
       return patch;

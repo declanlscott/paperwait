@@ -1,10 +1,11 @@
 import { unique } from "remeda";
 import * as v from "valibot";
 
+import { InternalServerError } from "../errors/http";
 import { Domain } from "../schemas/replicache";
 import { validate } from "../valibot";
 
-import type { Metadata } from "./metadata";
+import type { DomainsMetadata, Metadata } from "./metadata";
 
 export type ClientViewRecord = Record<Domain, ClientViewRecordEntries>;
 export type ClientViewRecordEntries = Record<
@@ -23,6 +24,55 @@ export const buildCvrEntries = (domainMetadata: Array<Metadata>) =>
 
     return entries;
   }, {} as ClientViewRecordEntries);
+
+export function buildCvr(
+  args:
+    | { kind: "base"; prev?: ClientViewRecord }
+    | { kind: "next"; metadata: DomainsMetadata },
+): ClientViewRecord {
+  const kind = args.kind;
+
+  switch (kind) {
+    case "base":
+      return (
+        args.prev ?? {
+          organization: {},
+          user: {},
+          papercutAccount: {},
+          papercutAccountCustomerAuthorization: {},
+          papercutAccountManagerAuthorization: {},
+          room: {},
+          product: {},
+          announcement: {},
+          order: {},
+          comment: {},
+          client: {},
+        }
+      );
+    case "next":
+      return {
+        organization: buildCvrEntries(args.metadata.organization),
+        user: buildCvrEntries(args.metadata.user),
+        papercutAccount: buildCvrEntries(args.metadata.papercutAccount),
+        papercutAccountCustomerAuthorization: buildCvrEntries(
+          args.metadata.papercutAccountCustomerAuthorization,
+        ),
+        papercutAccountManagerAuthorization: buildCvrEntries(
+          args.metadata.papercutAccountManagerAuthorization,
+        ),
+        room: buildCvrEntries(args.metadata.room),
+        announcement: buildCvrEntries(args.metadata.announcement),
+        product: buildCvrEntries(args.metadata.product),
+        order: buildCvrEntries(args.metadata.order),
+        comment: buildCvrEntries(args.metadata.comment),
+        client: buildCvrEntries(args.metadata.client),
+      };
+    default:
+      kind satisfies never;
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      throw new InternalServerError(`Unknown cvr kind: ${kind}`);
+  }
+}
 
 export const diffCvr = (prev: ClientViewRecord, next: ClientViewRecord) =>
   unique([

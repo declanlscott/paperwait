@@ -17,11 +17,14 @@ import { ReplicacheClient } from "./replicache.sql";
 
 import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";
+import type { Domain } from "../schemas/replicache";
 
 export type Metadata = {
   id: string | number;
   rowVersion: number;
 };
+
+export type DomainsMetadata = Record<Domain, Array<Metadata>>;
 
 export async function searchOrganizations(tx: Transaction, user: LuciaUser) {
   const select = async () =>
@@ -395,7 +398,7 @@ async function searchAsRole(
 export async function searchClients(
   tx: Transaction,
   clientGroupId: ReplicacheClient["clientGroupId"],
-) {
+): Promise<Array<Metadata>> {
   return await tx
     .select({
       id: ReplicacheClient.id,
