@@ -17,11 +17,11 @@ const queryClient = new QueryClient();
 
 export interface AppProps extends Partial<Slot> {
   clientResource: ClientResourceType;
-  initialAuth: Auth;
+  auth: Auth;
 }
 
 export function App(props: AppProps) {
-  const { clientResource, initialAuth, loadingIndicator, logo } = props;
+  const { clientResource, auth, loadingIndicator, logo } = props;
 
   const [router] = useState(() =>
     createRouter({
@@ -45,7 +45,7 @@ export function App(props: AppProps) {
   return (
     <ResourceProvider resource={clientResource}>
       <SlotProvider slot={{ loadingIndicator, logo }}>
-        <AuthStoreProvider initialAuth={initialAuth} router={router}>
+        <AuthStoreProvider auth={auth} router={router}>
           <QueryClientProvider client={queryClient}>
             <AppRouter router={router} />
 

@@ -13,7 +13,6 @@ type AuthActions = {
   logout: () => Promise<void>;
   authenticateRoute: (from: string) => Omit<Authenticated, "isAuthed">;
   authorizeRoute: (user: Authenticated["user"], roles: Array<UserRole>) => void;
-  updateRole: (newRole: UserRole) => void;
 };
 
 export interface AuthStore extends Auth {

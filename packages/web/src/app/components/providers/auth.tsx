@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { InvalidUserRoleError } from "@paperwait/core/errors";
 import { enforceRbac } from "@paperwait/core/utils";
 import { redirect } from "@tanstack/react-router";
-import { produce } from "immer";
 import ky from "ky";
 import { Replicache } from "replicache";
 import { createStore, useStore } from "zustand";
@@ -22,20 +21,20 @@ import type { Mutators } from "~/app/lib/hooks/replicache";
 import type { AppRouter, Auth } from "~/app/types";
 
 interface AuthStoreProviderProps extends PropsWithChildren {
-  initialAuth: Auth;
+  auth: Auth;
   router: AppRouter;
 }
 
 export function AuthStoreProvider(props: AuthStoreProviderProps) {
-  const { initialAuth, router } = props;
+  const { auth, router } = props;
   const { invalidate, navigate } = router;
 
   const [store] = useState(() =>
     createStore<AuthStore>((set, get) => ({
-      user: initialAuth.user,
-      session: initialAuth.session,
-      org: initialAuth.org,
-      replicache: initialAuth.user ? { status: "initializing" } : null,
+      user: auth.user,
+      session: auth.session,
+      org: auth.org,
+      replicache: auth.user ? { status: "initializing" } : null,
       actions: {
         initializeReplicache: (client) =>
           set(() => ({ replicache: { status: "ready", client } })),
@@ -63,12 +62,6 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
         },
         authorizeRoute: (user, roles) =>
           enforceRbac(user, roles, InvalidUserRoleError),
-        updateRole: (newRole) =>
-          set(
-            produce((store: AuthStore) => {
-              if (store.user) store.user.role = newRole;
-            }),
-          ),
       },
     })),
   );
@@ -125,9 +118,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
 
       initializeReplicache(replicache);
 
-      return () => {
-        void replicache.close();
-      };
+      return () => void replicache.close();
     }
   }, [
     user?.id,

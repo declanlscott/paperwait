@@ -1,10 +1,13 @@
 import { formatChannel } from "@paperwait/core/realtime";
 import { Outlet } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 import { AuthenticatedProvider } from "~/app/components/providers/auth";
 import { CommandBarProvider } from "~/app/components/providers/command-bar";
 import { MainNav } from "~/app/components/ui/main-nav";
+import { Button } from "~/app/components/ui/primitives/button";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { useRealtime } from "~/app/lib/hooks/realtime";
 
 import type { PropsWithChildren } from "react";
@@ -30,6 +33,34 @@ function Realtime(props: PropsWithChildren) {
 
   useRealtime({ channel: formatChannel("org", user.orgId) });
   useRealtime({ channel: formatChannel("user", user.id) });
+
+  useQuery(queryFactory.user(user.id), {
+    onData: (u) => {
+      if (u && u.role !== user.role)
+        toast(
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-2">
+              <p className="text-muted-foreground text-sm">
+                Your role has been updated to "
+                <span className="font-bold capitalize">{u.role}</span>".
+              </p>
+
+              <p className="text-muted-foreground text-sm">
+                Reload the app to apply the changes.
+              </p>
+            </div>
+
+            <Button
+              variant="secondary"
+              onPress={() => window.location.reload()}
+            >
+              Reload
+            </Button>
+          </div>,
+          { duration: Infinity },
+        );
+    },
+  });
 
   return props.children;
 }
