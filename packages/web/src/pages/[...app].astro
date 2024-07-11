@@ -1,5 +1,5 @@
 ---
-import { ClientResource } from "@paperwait/core/resource";
+import { clientResource } from "@paperwait/core/resource";
 
 import { App } from "~/app/index";
 import AppLoadingIndicator from "~/components/app-loading-indicator.astro";
@@ -9,7 +9,7 @@ import Layout from "~/layouts/app.astro";
 import type { AppProps } from "~/app/index";
 
 const appProps = {
-  clientResource: ClientResource,
+  clientResource,
   auth: {
     user: Astro.locals.user,
     session: Astro.locals.session,

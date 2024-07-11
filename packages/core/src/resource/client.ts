@@ -2,14 +2,14 @@ import { Resource } from "sst";
 
 import { CLIENT_RESOURCE_PREFIX } from "../constants";
 
-import type { ClientResourceType } from "../types/resource";
+import type { ClientResource } from "../types/resource";
 
-export const ClientResource = Object.entries({ ...Resource }).reduce(
-  (clientResource, [key, value]) => {
+export const clientResource = Object.entries({ ...Resource }).reduce(
+  (result, [key, value]) => {
     if (key.startsWith(CLIENT_RESOURCE_PREFIX) && value)
-      clientResource[key.slice(CLIENT_RESOURCE_PREFIX.length)] = value;
+      result[key.slice(CLIENT_RESOURCE_PREFIX.length)] = value;
 
-    return clientResource;
+    return result;
   },
   {} as Record<string, unknown>,
-) as ClientResourceType;
+) as ClientResource;
