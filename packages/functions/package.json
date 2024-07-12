@@ -7,12 +7,12 @@
   "dependencies": {
     "@paperwait/core": "workspace:*",
     "fast-xml-parser": "^4.4.0",
-    "hono": "^4.4.12",
+    "hono": "^4.4.13",
     "valibot": "^0.35.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240620.0",
+    "@cloudflare/workers-types": "^4.20240701.0",
     "@paperwait/eslint-config": "workspace:*",
-    "@types/aws-lambda": "^8.10.140"
+    "@types/aws-lambda": "^8.10.141"
   }
 }
