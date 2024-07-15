@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { mutatorRbac } from "@paperwait/core/schemas";
 import { UserRole } from "@paperwait/core/user";
-import { getUserInitials } from "@paperwait/core/utils";
+import { enforceRbac, getUserInitials } from "@paperwait/core/utils";
 import { fn } from "@paperwait/core/valibot";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -195,6 +195,18 @@ function UsersCard() {
     },
   });
 
+  const { user } = useAuthenticated();
+
+  const shouldShowColumn = useCallback(
+    (columnId: string) => {
+      if (columnId === "actions")
+        return enforceRbac(user, ["administrator", "operator", "manager"]);
+
+      return true;
+    },
+    [user],
+  );
+
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
@@ -245,22 +257,24 @@ function UsersCard() {
       </CardHeader>
 
       <CardContent>
-        {table.getVisibleFlatColumns().length > 0 && (
+        {table.getVisibleFlatColumns().length && (
           <div className="bg-background rounded-md border">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    ))}
+                    {headerGroup.headers.map((header) =>
+                      shouldShowColumn(header.id) ? (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </TableHead>
+                      ) : null,
+                    )}
                   </TableRow>
                 ))}
               </TableHeader>
@@ -272,14 +286,18 @@ function UsersCard() {
                       key={row.id}
                       className={row.original.deletedAt ? "opacity-50" : ""}
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
+                      {row
+                        .getVisibleCells()
+                        .map((cell) =>
+                          shouldShowColumn(cell.column.id) ? (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </TableCell>
+                          ) : null,
+                        )}
                     </TableRow>
                   ))
                 ) : (
