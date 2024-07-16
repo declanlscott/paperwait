@@ -1,12 +1,15 @@
 import { SessionTokens } from "@paperwait/core/auth";
 import { entraId, google } from "@paperwait/core/auth-provider";
 import { db } from "@paperwait/core/database";
-import { NotImplementedError, UnauthorizedError } from "@paperwait/core/errors";
+import {
+  ForbiddenError,
+  NotImplementedError,
+  UnauthorizedError,
+} from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
+import { enforceRbac } from "@paperwait/core/utils";
 import { eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
-
-import { authorize } from "~/api/lib/auth/authorize";
 
 import type { LuciaSession } from "@paperwait/core/auth";
 import type {
@@ -19,9 +22,14 @@ import type { Provider } from "@paperwait/core/organization";
 import type { UserRole } from "@paperwait/core/user";
 import type { HonoEnv } from "~/api/types";
 
-export const authorization = (roles?: Array<UserRole>) =>
-  createMiddleware<HonoParameters>(async (c, next) => {
-    authorize(c.env, roles);
+export const authorization = (
+  roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],
+) =>
+  createMiddleware<HonoEnv>(async (c, next) => {
+    const { session, user } = c.env.locals;
+    if (!session || !user) throw new UnauthorizedError();
+
+    enforceRbac(user, roles, ForbiddenError);
 
     await next();
   });
