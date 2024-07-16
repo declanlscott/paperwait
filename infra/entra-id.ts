@@ -2,18 +2,6 @@ import { AUTH_CALLBACK_PATH } from "@paperwait/core/constants";
 
 import { domain } from "./secrets";
 
-sst.linkable(azuread.Application, (resource) => ({
-  properties: {
-    clientId: resource.clientId,
-  },
-}));
-
-sst.linkable(azuread.ApplicationPassword, (resource) => ({
-  properties: {
-    value: resource.value,
-  },
-}));
-
 const wellKnownOutput = azuread.getApplicationPublishedAppIdsOutput({});
 
 const microsoftGraphAppId = wellKnownOutput.result?.MicrosoftGraph;

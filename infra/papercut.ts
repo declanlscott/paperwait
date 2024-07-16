@@ -1,3 +1,4 @@
+import { isDev } from "./secrets";
 import { natInstance, natSecurityGroup, privateSubnetsOutput } from "./vpc";
 
 export const papercutApiGateway = new sst.aws.ApiGatewayV2(
@@ -174,7 +175,7 @@ export const mockPapercutApi = new sst.cloudflare.Worker("MockPapercutApi", {
   handler: "packages/functions/src/mock-papercut-api.ts",
   url: true,
   environment: {
-    IP_WHITELIST: natInstance.publicIp,
     AUTH_TOKEN: "auth-token",
   },
+  link: [natInstance, isDev],
 });
