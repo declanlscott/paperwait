@@ -35,8 +35,9 @@ import { authorization } from "~/api/middleware";
 import { Registration } from "~/shared/lib/schemas";
 
 import type { IdToken, ProviderTokens } from "@paperwait/core/auth-provider";
+import type { HonoParameters } from "~/api/types";
 
-export default new Hono()
+export default new Hono<HonoParameters>()
   // Login
   .get(
     "/login",
@@ -249,7 +250,7 @@ export default new Hono()
   )
   // Logout
   .post("/logout", authorization(), async (c) => {
-    const { cookie } = await invalidateSession(c.get("locals").session!.id);
+    const { cookie } = await invalidateSession(c.env.session!.id);
 
     setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
@@ -272,9 +273,7 @@ export default new Hono()
       const exists = await db
         .select({})
         .from(User)
-        .where(
-          and(eq(User.id, userId), eq(User.orgId, c.get("locals").user!.orgId)),
-        )
+        .where(and(eq(User.id, userId), eq(User.orgId, c.env.org!.id)))
         .execute()
         .then((rows) => rows.length > 0);
       if (!exists) throw new NotFoundError(`User "${userId}" not found`);

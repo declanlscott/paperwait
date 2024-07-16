@@ -16,8 +16,9 @@ import * as v from "valibot";
 import { authorization, provider } from "~/api/middleware";
 
 import type { StatusCode } from "hono/utils/http-status";
+import type { HonoParameters } from "~/api/types";
 
-export default new Hono()
+export default new Hono<HonoParameters>()
   .use(authorization())
   .use(provider)
   .get(
@@ -42,7 +43,7 @@ export default new Hono()
         .where(
           and(
             eq(User.id, c.req.valid("param").id),
-            eq(User.orgId, c.get("locals").user!.orgId),
+            eq(User.orgId, c.env.org!.id),
           ),
         );
       if (!user) throw new NotFoundError("User not found");

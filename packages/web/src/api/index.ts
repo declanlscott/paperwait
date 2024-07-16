@@ -2,7 +2,6 @@ import { DatabaseError, HttpError, OAuthError } from "@paperwait/core/errors";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
-import { parse } from "superjson";
 
 import auth from "~/api/routes/auth";
 import integrations from "~/api/routes/integrations";
@@ -10,20 +9,11 @@ import organization from "~/api/routes/organization";
 import replicache from "~/api/routes/replicache";
 import user from "~/api/routes/user";
 
-export type Bindings = Record<keyof App.Locals, string>;
+import type { HonoParameters } from "~/api/types";
 
-const api = new Hono<{ Bindings: Bindings }>()
+const api = new Hono<HonoParameters>()
   .basePath("/api/")
   .use(logger())
-  .use(async (c, next) => {
-    c.set("locals", {
-      session: parse<App.Locals["session"]>(c.env.session),
-      user: parse<App.Locals["user"]>(c.env.user),
-      org: parse<App.Locals["org"]>(c.env.org),
-    });
-
-    await next();
-  })
   .route("/auth", auth)
   .route("/organization", organization)
   .route("/integrations", integrations)
