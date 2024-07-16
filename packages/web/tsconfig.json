@@ -5,8 +5,8 @@
     "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
-      "~/api/*": ["src/api/*"],
-      "~/app/*": ["src/app/*"],
+      "~/api/*": ["src/pages/_api/*"],
+      "~/app/*": ["src/pages/_app/*"],
       "~/components/*": ["src/components/*"],
       "~/layouts/*": ["src/layouts/*"],
       "~/pages/*": ["src/pages/*"],
