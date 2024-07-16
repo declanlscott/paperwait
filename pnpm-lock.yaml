@@ -13,7 +13,7 @@ importers:
         version: link:packages/core
       sst:
         specifier: ion
-        version: 0.0.529(hono@4.4.13)(valibot@0.30.0)
+        version: 0.0.529(hono@4.5.0)(valibot@0.30.0)
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.3.1
@@ -143,11 +143,11 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
       hono:
-        specifier: ^4.4.13
-        version: 4.4.13
+        specifier: ^4.5.0
+        version: 4.5.0
       valibot:
-        specifier: ^0.35.0
-        version: 0.35.0
+        specifier: ^0.36.0
+        version: 0.36.0
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240712.0
@@ -242,8 +242,8 @@ importers:
         specifier: ^0.32.0
         version: 0.32.0(@cloudflare/workers-types@4.20240712.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(react@18.3.1)
       hono:
-        specifier: ^4.4.13
-        version: 4.4.13
+        specifier: ^4.5.0
+        version: 4.5.0
       jotai:
         specifier: ^2.9.0
         version: 2.9.0(@types/react@18.3.3)(react@18.3.1)
@@ -4100,8 +4100,8 @@ packages:
   hastscript@9.0.0:
     resolution: {integrity: sha512-jzaLBGavEDKHrc5EfFImKN7nZKKBdSLIdGvCwDZ9TfzbF2ffXiov8CKE445L2Z1Ek2t/m4SKQ2j6Ipv7NyUolw==}
 
-  hono@4.4.13:
-    resolution: {integrity: sha512-c6qqenclmQ6wpXzqiElMa2jt423PVCmgBreDfC5s2lPPpGk7d0lOymd8QTzFZyYC5mSSs6imiTMPip+gLwuW/g==}
+  hono@4.5.0:
+    resolution: {integrity: sha512-ZbezypZfn4odyApjCCv+Fw5OgweBqRLA/EsMyc4FUknFvBJcBIKhHy4sqmD1rWpBc/3wUlaQ6tqOPjk36R1ckg==}
     engines: {node: '>=16.0.0'}
 
   html-escaper@3.0.3:
@@ -5598,9 +5598,6 @@ packages:
 
   valibot@0.30.0:
     resolution: {integrity: sha512-5POBdbSkM+3nvJ6ZlyQHsggisfRtyT4tVTo1EIIShs6qCdXJnyWU5TJ68vr8iTg5zpOLjXLRiBqNx+9zwZz/rA==}
-
-  valibot@0.35.0:
-    resolution: {integrity: sha512-+i2aCRkReTrd5KBN/dW2BrPOvFnU5LXTV2xjZnjnqUIO8YUx6P2+MgRrkwF2FhkexgyKq/NIZdPdknhHf5A/Ww==}
 
   valibot@0.36.0:
     resolution: {integrity: sha512-CjF1XN4sUce8sBK9TixrDqFM7RwNkuXdJu174/AwmQUB62QbCQADg5lLe8ldBalFgtj1uKj+pKwDJiNo4Mn+eQ==}
@@ -10989,7 +10986,7 @@ snapshots:
       property-information: 6.5.0
       space-separated-tokens: 2.0.2
 
-  hono@4.4.13: {}
+  hono@4.5.0: {}
 
   html-escaper@3.0.3: {}
 
@@ -12525,14 +12522,14 @@ snapshots:
   sst-linux-x86@0.0.529:
     optional: true
 
-  sst@0.0.529(hono@4.4.13)(valibot@0.30.0):
+  sst@0.0.529(hono@4.5.0)(valibot@0.30.0):
     dependencies:
       '@aws-sdk/client-lambda': 3.478.0
       aws4fetch: 1.0.18
       jose: 5.2.3
       openid-client: 5.6.4
     optionalDependencies:
-      hono: 4.4.13
+      hono: 4.5.0
       sst-darwin-arm64: 0.0.529
       sst-darwin-x64: 0.0.529
       sst-linux-arm64: 0.0.529
@@ -12852,8 +12849,6 @@ snapshots:
 
   valibot@0.30.0:
     optional: true
-
-  valibot@0.35.0: {}
 
   valibot@0.36.0: {}
 
