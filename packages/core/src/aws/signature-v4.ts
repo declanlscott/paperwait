@@ -4,17 +4,11 @@ import { SignatureV4 } from "@smithy/signature-v4";
 
 import { AWS_REGION } from "../constants";
 
-import type {
-  SignatureV4CryptoInit,
-  SignatureV4Init,
-} from "@smithy/signature-v4";
+import type { SignatureV4Init } from "@smithy/signature-v4";
 
 interface BuildSignerProps
-  extends Omit<SignatureV4Init, "credentials" | "region">,
-    Omit<SignatureV4CryptoInit, "sha256"> {
-  credentials?: SignatureV4Init["credentials"];
-  region?: SignatureV4Init["region"];
-  sha256?: SignatureV4CryptoInit["sha256"];
+  extends Exclude<Partial<SignatureV4Init>, "service"> {
+  service: SignatureV4Init["service"];
 }
 
 export const buildSigner = ({

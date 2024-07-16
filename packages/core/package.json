@@ -18,21 +18,21 @@
     "@foxglove/xmlrpc": "^1.3.0",
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@neondatabase/serverless": "^0.9.4",
-    "@smithy/signature-v4": "^2.3.0",
-    "arctic": "^1.9.1",
-    "drizzle-orm": "^0.31.4",
+    "@smithy/signature-v4": "^4.0.0",
+    "arctic": "^1.9.2",
+    "drizzle-orm": "^0.32.0",
     "ky": "^1.4.0",
     "lucia": "^3.2.0",
     "nanoid": "^5.0.7",
     "oslo": "^1.2.1",
     "remeda": "^2.5.0",
     "replicache": "^14.2.2",
-    "valibot": "^0.35.0",
+    "valibot": "^0.36.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.11",
-    "drizzle-kit": "^0.22.8"
+    "drizzle-kit": "^0.23.0"
   }
 }
