@@ -6,6 +6,8 @@ declare module "hono" {
   }
 }
 
-export type HonoParameters = {
-  Bindings: App.Locals;
+export type HonoEnv = {
+  Bindings: {
+    locals: App.Locals;
+  };
 };

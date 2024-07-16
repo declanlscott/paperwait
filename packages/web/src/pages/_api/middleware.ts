@@ -17,7 +17,7 @@ import type {
 } from "@paperwait/core/auth-provider";
 import type { Provider } from "@paperwait/core/organization";
 import type { UserRole } from "@paperwait/core/user";
-import type { HonoParameters } from "~/api/types";
+import type { HonoEnv } from "~/api/types";
 
 export const authorization = (roles?: Array<UserRole>) =>
   createMiddleware<HonoParameters>(async (c, next) => {
@@ -26,8 +26,8 @@ export const authorization = (roles?: Array<UserRole>) =>
     await next();
   });
 
-export const provider = createMiddleware<HonoParameters>(async (c, next) => {
-  const session = c.env.session;
+export const provider = createMiddleware<HonoEnv>(async (c, next) => {
+  const session = c.env.locals.session;
   if (!session) throw new UnauthorizedError("Session not found");
 
   c.set("provider", await validateProvider(session.id));

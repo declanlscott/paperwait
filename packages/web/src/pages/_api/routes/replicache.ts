@@ -7,9 +7,9 @@ import { validator as honoValidator } from "hono/validator";
 
 import { authorization } from "~/api/middleware";
 
-import type { HonoParameters } from "~/api/types";
+import type { HonoEnv } from "~/api/types";
 
-export default new Hono<HonoParameters>()
+export default new Hono<HonoEnv>()
   .use(authorization())
   .post(
     "/pull",
@@ -21,7 +21,7 @@ export default new Hono<HonoParameters>()
       }),
     ),
     async (c) => {
-      const pullResult = await pull(c.env.user!, c.req.valid("json"));
+      const pullResult = await pull(c.env.locals.user!, c.req.valid("json"));
 
       if (pullResult.type !== "success")
         return c.json(pullResult.response, { status: 400 });
@@ -39,7 +39,7 @@ export default new Hono<HonoParameters>()
       }),
     ),
     async (c) => {
-      const pushResult = await push(c.env.user!, c.req.valid("json"));
+      const pushResult = await push(c.env.locals.user!, c.req.valid("json"));
 
       if (pushResult.type !== "success")
         return c.json(pushResult.response, { status: 400 });

@@ -11,9 +11,9 @@ import * as v from "valibot";
 import { isOrgSlugValid } from "~/api/lib/organization";
 import { Registration } from "~/shared/lib/schemas";
 
-import type { HonoParameters } from "~/api/types";
+import type { HonoEnv } from "~/api/types";
 
-export default new Hono<HonoParameters>()
+export default new Hono<HonoEnv>()
   .post(
     "/",
     honoValidator(

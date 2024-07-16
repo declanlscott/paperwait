@@ -11,14 +11,14 @@ import { validator as honoValidator } from "hono/validator";
 
 import { authorization } from "~/api/middleware";
 
-import type { HonoParameters } from "~/api/types";
+import type { HonoEnv } from "~/api/types";
 
-export default new Hono<HonoParameters>()
+export default new Hono<HonoEnv>()
   .put(
     "/accounts",
     authorization(mutatorRbac.syncPapercutAccounts),
     async (c) => {
-      const orgId = c.env.org!.id;
+      const orgId = c.env.locals.org!.id;
 
       await transact(async (tx) => await syncPapercutAccounts(tx, orgId));
 
@@ -39,7 +39,7 @@ export default new Hono<HonoParameters>()
     ),
     async (c) => {
       await putParameter({
-        Name: `/paperwait/org/${c.env.org!.id}/papercut`,
+        Name: `/paperwait/org/${c.env.locals.org!.id}/papercut`,
         Value: JSON.stringify(c.req.valid("json")),
         Type: "SecureString",
         Overwrite: true,
@@ -50,7 +50,7 @@ export default new Hono<HonoParameters>()
   )
   .post("/test", authorization(["administrator"]), async (c) => {
     await testPapercut({
-      orgId: c.env.org!.id,
+      orgId: c.env.locals.org!.id,
       input: { authorized: true },
     });
 
