@@ -6,6 +6,7 @@ import { ProductStatus } from "../product/product.sql";
 import { RoomStatus } from "../room/room.sql";
 import { UserRole } from "../user/user.sql";
 import { NanoId, PapercutAccountId } from "./id";
+import { ProductConfiguration } from "./product-configuration";
 
 export const TimestampsSchema = v.object({
   createdAt: v.pipe(v.string(), v.isoTimestamp()),
@@ -81,6 +82,7 @@ export const ProductSchema = v.object({
   name: v.string(),
   status: v.picklist(ProductStatus.enumValues),
   roomId: NanoId,
+  config: ProductConfiguration,
 });
 
 export const RoomSchema = v.object({
