@@ -98,7 +98,10 @@ const updateOrganization = (user: LuciaUser) =>
         const prev = await tx.get<Organization>(`organization/${orgId}`);
         if (!prev) throw new EntityNotFoundError("organization", orgId);
 
-        const next = { ...prev, ...values } satisfies Organization;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<Organization>;
 
         return await tx.set(`organization/${orgId}`, next);
       },
@@ -113,7 +116,7 @@ const updateUserRole = (user: LuciaUser) =>
         const prev = await tx.get<User>(`user/${userId}`);
         if (!prev) throw new EntityNotFoundError("user", userId);
 
-        const next = { ...prev, ...values } satisfies User;
+        const next = { ...prev, ...values } satisfies DeepReadonlyObject<User>;
 
         return await tx.set(`user/${userId}`, next);
       },
@@ -133,7 +136,7 @@ const deleteUser = (user: LuciaUser) =>
         const prev = await tx.get<User>(`user/${userId}`);
         if (!prev) throw new EntityNotFoundError("user", userId);
 
-        const next = { ...prev, ...values } satisfies User;
+        const next = { ...prev, ...values } satisfies DeepReadonlyObject<User>;
 
         return await tx.set(`user/${userId}`, next);
       },
@@ -148,7 +151,10 @@ const restoreUser = (user: LuciaUser) =>
         const prev = await tx.get<User>(`user/${userId}`);
         if (!prev) throw new EntityNotFoundError("user", userId);
 
-        const next = { ...prev, deletedAt: null } satisfies User;
+        const next = {
+          ...prev,
+          deletedAt: null,
+        } satisfies DeepReadonlyObject<User>;
 
         return await tx.set(`user/${userId}`, next);
       },
@@ -166,7 +172,10 @@ const deletePapercutAccount = (user: LuciaUser) =>
         if (!prev)
           throw new EntityNotFoundError("papercutAccount", papercutAccountId);
 
-        const next = { ...prev, ...values } satisfies PapercutAccount;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<PapercutAccount>;
 
         return await tx.set(`papercutAccount/${papercutAccountId}`, next);
       },
@@ -198,7 +207,7 @@ const deletePapercutAccountManagerAuthorization = (user: LuciaUser) =>
         const next = {
           ...prev,
           ...values,
-        } satisfies PapercutAccountManagerAuthorization;
+        } satisfies DeepReadonlyObject<PapercutAccountManagerAuthorization>;
 
         return await tx.set(
           `papercutAccountManagerAuthorization/${papercutAccountManagerAuthorizationId}`,
@@ -222,7 +231,7 @@ const updateRoom = (user: LuciaUser) =>
       async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
         if (!prev) throw new EntityNotFoundError("room", roomId);
-        const next = { ...prev, ...values } satisfies Room;
+        const next = { ...prev, ...values } satisfies DeepReadonlyObject<Room>;
 
         return await tx.set(`room/${roomId}`, next);
       },
@@ -236,7 +245,7 @@ const deleteRoom = (user: LuciaUser) =>
       async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
         if (!prev) throw new EntityNotFoundError("room", roomId);
-        const next = { ...prev, ...values } satisfies Room;
+        const next = { ...prev, ...values } satisfies DeepReadonlyObject<Room>;
 
         return await tx.set(`room/${roomId}`, next);
       },
@@ -260,7 +269,10 @@ const updateAnnouncement = (user: LuciaUser) =>
         );
         if (!prev)
           throw new EntityNotFoundError("announcement", announcementId);
-        const next = { ...prev, ...values } satisfies Announcement;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<Announcement>;
 
         return await tx.set(`announcement/${announcementId}`, next);
       },
@@ -277,7 +289,10 @@ const deleteAnnouncement = (user: LuciaUser) =>
         );
         if (!prev)
           throw new EntityNotFoundError("announcement", announcementId);
-        const next = { ...prev, ...values } satisfies Announcement;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<Announcement>;
 
         return await tx.set(`announcement/${announcementId}`, next);
       },
@@ -298,7 +313,10 @@ const updateProduct = (user: LuciaUser) =>
       async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
         if (!prev) throw new EntityNotFoundError("product", productId);
-        const next = { ...prev, ...values } satisfies Product;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<Product>;
 
         return await tx.set(`product/${productId}`, next);
       },
@@ -312,7 +330,10 @@ const deleteProduct = (user: LuciaUser) =>
       async (tx, { id: productId, ...values }) => {
         const prev = await tx.get<Product>(`product/${productId}`);
         if (!prev) throw new EntityNotFoundError("product", productId);
-        const next = { ...prev, ...values } satisfies Product;
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<Product>;
 
         return await tx.set(`product/${productId}`, next);
       },
@@ -338,7 +359,7 @@ const updateOrder = (user: LuciaUser) =>
         const prev = await tx.get<Order>(`order/${orderId}`);
         if (!prev) throw new EntityNotFoundError("order", orderId);
 
-        const next = { ...prev, ...values } satisfies Order;
+        const next = { ...prev, ...values } satisfies DeepReadonlyObject<Order>;
 
         return await tx.set(`order/${orderId}`, next);
       },
@@ -357,7 +378,7 @@ const deleteOrder = (user: LuciaUser) =>
         const prev = await tx.get<Order>(`order/${orderId}`);
         if (!prev) throw new EntityNotFoundError("order", orderId);
 
-        const next = { ...prev, ...values } satisfies Order;
+        const next = { ...prev, ...values } satisfies DeepReadonlyObject<Order>;
 
         return await tx.set(`order/${orderId}`, next);
       },
