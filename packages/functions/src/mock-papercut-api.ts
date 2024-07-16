@@ -8,38 +8,18 @@ import { xmlRpcMethod } from "@paperwait/core/constants";
 import { validate } from "@paperwait/core/valibot";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { Hono } from "hono";
+import { getConnInfo } from "hono/cloudflare-workers";
+import { except } from "hono/combine";
 import { cors } from "hono/cors";
+import { ipRestriction } from "hono/ip-restriction";
 import { logger } from "hono/logger";
+import { Resource } from "sst";
 import * as v from "valibot";
 
 const xmlParser = new XMLParser();
 const xmlBuilder = new XMLBuilder();
 
 const sharedAccountPrefix = "shared-account-";
-
-type Bindings = {
-  IP_WHITELIST: string;
-  AUTH_TOKEN: string;
-};
-
-const api = new Hono<{ Bindings: Bindings }>();
-
-api.use("*", cors());
-api.use(logger());
-api.use(async (c, next) => {
-  c.header("Content-Type", "text/xml");
-  c.header("Cache-Control", "no-transform");
-  await next();
-});
-api.use(async (c, next) => {
-  const ip = c.req.header("cf-connecting-ip");
-  if (!ip) throw new Error("Missing IP");
-
-  if (c.env.IP_WHITELIST.split(",").includes(ip))
-    throw new Error("IP not whitelisted");
-
-  await next();
-});
 
 const stringParamSchema = v.object({ value: v.object({ string: v.string() }) });
 const intParamSchema = v.object({
@@ -130,169 +110,191 @@ const schema = v.object({
   ]),
 });
 
-api.post("/", async (c) => {
-  const text = await c.req.text();
+const api = new Hono<{
+  Bindings: {
+    AUTH_TOKEN: string;
+  };
+}>()
+  .use("*", cors())
+  .use("*", logger())
+  .use("*", async (c, next) => {
+    c.header("Content-Type", "text/xml");
+    c.header("Cache-Control", "no-transform");
 
-  const rpc = validate(schema, xmlParser.parse(text));
+    await next();
+  })
+  .use("*", async (c, next) => {
+    const natIp = Resource.NatInstance.publicIp;
 
-  if (rpc.methodCall.params.param[0].value.string !== c.env.AUTH_TOKEN)
-    throw new Error("Invalid auth token");
+    const whitelistIp = except(
+      () => Resource.ClientIsDev.value === "true",
+      ipRestriction(getConnInfo, { denyList: [], allowList: [natIp] }),
+    );
 
-  const methodName = rpc.methodCall.methodName;
-  switch (methodName) {
-    case xmlRpcMethod.adjustSharedAccountAccountBalance:
-      return c.body(
-        `<?xml version="1.0"?>${xmlBuilder.build({
-          methodResponse: {
-            params: {
-              param: {
-                value: {
-                  boolean: 1,
+    await whitelistIp(c, next);
+  })
+  .post("/", async (c) => {
+    const text = await c.req.text();
+
+    const rpc = validate(schema, xmlParser.parse(text));
+
+    if (rpc.methodCall.params.param[0].value.string !== c.env.AUTH_TOKEN)
+      throw new Error("Invalid auth token");
+
+    const methodName = rpc.methodCall.methodName;
+    switch (methodName) {
+      case xmlRpcMethod.adjustSharedAccountAccountBalance:
+        return c.body(
+          `<?xml version="1.0"?>${xmlBuilder.build({
+            methodResponse: {
+              params: {
+                param: {
+                  value: {
+                    boolean: 1,
+                  },
                 },
               },
             },
-          },
-        })}`,
-        200,
-      );
-    case xmlRpcMethod.getSharedAccountProperties: {
-      const num = Number(
-        rpc.methodCall.params.param[1].value.string.split(
-          sharedAccountPrefix,
-        )[1],
-      );
+          })}`,
+          200,
+        );
+      case xmlRpcMethod.getSharedAccountProperties: {
+        const num = Number(
+          rpc.methodCall.params.param[1].value.string.split(
+            sharedAccountPrefix,
+          )[1],
+        );
 
-      if (isNaN(num)) throw new Error("Invalid shared account name");
+        if (isNaN(num)) throw new Error("Invalid shared account name");
 
-      return c.body(
-        `<?xml version="1.0"?>${xmlBuilder.build({
-          methodResponse: {
-            params: {
-              param: {
-                value: {
-                  array: {
-                    data: {
-                      value: [
-                        "access-groups",
-                        "access-users",
-                        num,
-                        0,
-                        "comment-option",
-                        false,
-                        "invoice-option",
-                        "notes",
-                        0,
-                        "pin",
-                        false,
-                      ],
+        return c.body(
+          `<?xml version="1.0"?>${xmlBuilder.build({
+            methodResponse: {
+              params: {
+                param: {
+                  value: {
+                    array: {
+                      data: {
+                        value: [
+                          "access-groups",
+                          "access-users",
+                          num,
+                          0,
+                          "comment-option",
+                          false,
+                          "invoice-option",
+                          "notes",
+                          0,
+                          "pin",
+                          false,
+                        ],
+                      },
                     },
                   },
                 },
               },
             },
-          },
-        })}`,
-        200,
-      );
+          })}`,
+          200,
+        );
+      }
+      case xmlRpcMethod.isUserExists:
+        return c.body(
+          `<?xml version="1.0"?>${xmlBuilder.build({
+            methodResponse: {
+              params: {
+                param: {
+                  value: {
+                    boolean: 1,
+                  },
+                },
+              },
+            },
+          })}`,
+          200,
+        );
+      case xmlRpcMethod.listSharedAccounts:
+        return c.body(
+          `<?xml version="1.0"?>${xmlBuilder.build({
+            methodResponse: {
+              params: {
+                param: {
+                  value: {
+                    array: {
+                      data: {
+                        value: [
+                          `${sharedAccountPrefix}1`,
+                          `${sharedAccountPrefix}2`,
+                          `${sharedAccountPrefix}3`,
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          })}`,
+          200,
+        );
+      case xmlRpcMethod.listUserSharedAccounts:
+        return c.body(
+          `<?xml version="1.0"?>${xmlBuilder.build({
+            methodResponse: {
+              params: {
+                param: {
+                  value: {
+                    array: {
+                      data: {
+                        value: [
+                          `${sharedAccountPrefix}1`,
+                          `${sharedAccountPrefix}3`,
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          })}`,
+          200,
+        );
+      default:
+        methodName satisfies never;
+
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        throw new Error(`Unknown method: ${methodName}`);
     }
-    case xmlRpcMethod.isUserExists:
-      return c.body(
-        `<?xml version="1.0"?>${xmlBuilder.build({
-          methodResponse: {
-            params: {
-              param: {
-                value: {
-                  boolean: 1,
-                },
-              },
-            },
-          },
-        })}`,
-        200,
-      );
-    case xmlRpcMethod.listSharedAccounts:
-      return c.body(
-        `<?xml version="1.0"?>${xmlBuilder.build({
-          methodResponse: {
-            params: {
-              param: {
-                value: {
-                  array: {
-                    data: {
-                      value: [
-                        `${sharedAccountPrefix}1`,
-                        `${sharedAccountPrefix}2`,
-                        `${sharedAccountPrefix}3`,
-                      ],
+  })
+  .onError((error, c) => {
+    console.error({ error });
+
+    return c.body(
+      `<?xml version="1.0"?>${xmlBuilder.build({
+        methodResponse: {
+          fault: {
+            value: {
+              struct: {
+                member: [
+                  {
+                    name: "faultCode",
+                    value: {
+                      int: -32500,
                     },
                   },
-                },
-              },
-            },
-          },
-        })}`,
-        200,
-      );
-    case xmlRpcMethod.listUserSharedAccounts:
-      return c.body(
-        `<?xml version="1.0"?>${xmlBuilder.build({
-          methodResponse: {
-            params: {
-              param: {
-                value: {
-                  array: {
-                    data: {
-                      value: [
-                        `${sharedAccountPrefix}1`,
-                        `${sharedAccountPrefix}3`,
-                      ],
+                  {
+                    name: "faultString",
+                    value: {
+                      string: error.message,
                     },
                   },
-                },
+                ],
               },
-            },
-          },
-        })}`,
-        200,
-      );
-    default:
-      methodName satisfies never;
-
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      throw new Error(`Unknown method: ${methodName}`);
-  }
-});
-
-api.onError((error, c) => {
-  console.error({ error });
-
-  return c.body(
-    `<?xml version="1.0"?>${xmlBuilder.build({
-      methodResponse: {
-        fault: {
-          value: {
-            struct: {
-              member: [
-                {
-                  name: "faultCode",
-                  value: {
-                    int: -32500,
-                  },
-                },
-                {
-                  name: "faultString",
-                  value: {
-                    string: error.message,
-                  },
-                },
-              ],
             },
           },
         },
-      },
-    })}`,
-    200,
-  );
-});
+      })}`,
+      200,
+    );
+  });
 
 export default api;

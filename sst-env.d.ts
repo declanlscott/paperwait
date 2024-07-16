@@ -47,6 +47,10 @@ declare module "sst" {
       type: "sst.cloudflare.Worker"
       url: string
     }
+    NatInstance: {
+      publicIp: string
+      type: "aws.ec2/instance.Instance"
+    }
     PapercutApiGateway: {
       type: "sst.aws.ApiGatewayV2"
       url: string
