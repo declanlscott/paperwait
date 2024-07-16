@@ -14,8 +14,7 @@ export const Route = createFileRoute("/login")({
   validateSearch: (search) =>
     validate(v.fallback(LoginSearchParams, initialLoginSearchParams), search),
   beforeLoad: ({ context }) => {
-    // Uncomment when https://www.github.com/TanStack/router/pull/1907 is merged
-    // if (context.authStore.user) throw redirect({ to: "/dashboard" });
+    if (context.authStore.user) throw redirect({ to: "/dashboard" });
   },
   component: Component,
 });
