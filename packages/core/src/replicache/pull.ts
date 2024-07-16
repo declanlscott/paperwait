@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 
 import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
@@ -75,7 +75,7 @@ export async function pull(
 
   const order = Number(
     typeof pullRequest.cookie === "object"
-      ? pullRequest.cookie?.order ?? 0
+      ? (pullRequest.cookie?.order ?? 0)
       : pullRequest.cookie,
   );
 
@@ -137,31 +137,43 @@ export async function pull(
     // 13: new client view record version
     const nextCvrVersion = Math.max(order, baseClientGroup.cvrVersion) + 1;
 
-    // 14: Write client group record
     const nextClientGroup = {
       ...baseClientGroup,
       cvrVersion: nextCvrVersion,
     };
-    await tx
-      .insert(ReplicacheClientGroup)
-      .values(nextClientGroup)
-      .onConflictDoUpdate({
-        target: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
-        set: {
-          orgId: nextClientGroup.orgId,
-          userId: nextClientGroup.userId,
-          cvrVersion: nextClientGroup.cvrVersion,
-          updatedAt: sql`now()`,
-        },
-      });
 
-    // 16-17: Generate client view record id, store client view record
-    await tx.insert(ReplicacheClientView).values({
-      clientGroupId: baseClientGroup.id,
-      orgId: user.orgId,
-      version: nextCvrVersion,
-      record: nextCvr,
-    });
+    await Promise.all([
+      // 14: Write client group record
+      tx
+        .insert(ReplicacheClientGroup)
+        .values(nextClientGroup)
+        .onConflictDoUpdate({
+          target: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
+          set: {
+            orgId: nextClientGroup.orgId,
+            userId: nextClientGroup.userId,
+            cvrVersion: nextClientGroup.cvrVersion,
+            updatedAt: sql`now()`,
+          },
+        }),
+      // 16-17: Generate client view record id, store client view record
+      tx.insert(ReplicacheClientView).values({
+        clientGroupId: baseClientGroup.id,
+        orgId: user.orgId,
+        version: nextCvrVersion,
+        record: nextCvr,
+      }),
+      // Delete old client view records
+      tx
+        .delete(ReplicacheClientView)
+        .where(
+          and(
+            eq(ReplicacheClientView.clientGroupId, baseClientGroup.id),
+            eq(ReplicacheClientView.orgId, user.orgId),
+            lt(ReplicacheClientView.version, nextCvrVersion - 10),
+          ),
+        ),
+    ]);
 
     // 15: Commit transaction
     return {
