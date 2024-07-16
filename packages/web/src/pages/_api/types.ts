@@ -1,4 +1,5 @@
 import type { ProviderData } from "@paperwait/core/auth-provider";
+import type { Env } from "hono";
 
 declare module "hono" {
   interface ContextVariableMap {
@@ -6,8 +7,8 @@ declare module "hono" {
   }
 }
 
-export type HonoEnv = {
+export interface HonoEnv extends Env {
   Bindings: {
     locals: App.Locals;
   };
-};
+}
