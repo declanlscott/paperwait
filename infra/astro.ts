@@ -1,3 +1,9 @@
+import {
+  assetsBucket,
+  assetsDistribution,
+  assetsDistributionKeyPair,
+  documentsBucket,
+} from "./buckets";
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
 import { papercutApiGateway } from "./papercut";
 import {
@@ -22,6 +28,10 @@ export const astro = new sst.aws.Astro("Paperwait", {
     ...Object.values(googleCredentials),
     papercutApiGateway,
     domain,
+    assetsBucket,
+    ...Object.values(assetsDistributionKeyPair),
+    assetsDistribution,
+    documentsBucket,
   ],
   permissions: [
     {

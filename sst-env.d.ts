@@ -11,6 +11,23 @@ declare module "sst" {
       type: "sst.aws.Queue"
       url: string
     }
+    AssetsBucket: {
+      name: string
+      type: "sst.aws.Bucket"
+    }
+    AssetsDistribution: {
+      domainName: string
+      type: "aws.cloudfront/distribution.Distribution"
+    }
+    AssetsDistributionPrivateKey: {
+      privateKeyPem: string
+      type: "tls.index/privateKey.PrivateKey"
+    }
+    AssetsDistributionPublicKey: {
+      encodedKey: string
+      id: string
+      type: "aws.cloudfront/publicKey.PublicKey"
+    }
     ClientDomain: {
       type: "sst.sst.Secret"
       value: string
@@ -26,6 +43,10 @@ declare module "sst" {
     ClientReplicacheLicenseKey: {
       type: "sst.sst.Secret"
       value: string
+    }
+    DocumentsBucket: {
+      name: string
+      type: "sst.aws.Bucket"
     }
     EntraIdApplication: {
       clientId: string
@@ -50,6 +71,10 @@ declare module "sst" {
     NatInstance: {
       publicIp: string
       type: "aws.ec2/instance.Instance"
+    }
+    NatSshKey: {
+      privateKeyPem: string
+      type: "tls.index/privateKey.PrivateKey"
     }
     PapercutApiGateway: {
       type: "sst.aws.ApiGatewayV2"
