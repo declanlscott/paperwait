@@ -138,7 +138,7 @@ function NavList() {
         <li key={link.name}>
           <TooltipTrigger>
             <Link href={link.props.href} className="flex items-center gap-2">
-              <div className="flex size-5 shrink items-center">{link.icon}</div>
+              <div className="[&>svg]:size-5">{link.icon}</div>
 
               <span className="hidden lg:block">{link.name}</span>
             </Link>

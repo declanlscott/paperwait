@@ -3,14 +3,7 @@ import { OverlayTriggerStateContext } from "react-aria-components";
 import { enforceRbac } from "@paperwait/core/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
-import {
-  Check,
-  CircleCheck,
-  CircleDashed,
-  Home,
-  LogOut,
-  Settings,
-} from "lucide-react";
+import { Check, CircleCheck, CircleDashed, Home, LogOut } from "lucide-react";
 
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Avatar, AvatarImage } from "~/app/components/ui/primitives/avatar";
@@ -121,7 +114,7 @@ function HomeCommand() {
               onSelect={() => handleNavigation(link.props.href)}
               keywords={navigationKeywords}
             >
-              <div className="mr-2 size-5">{link.icon}</div>
+              <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
 
               <p>
                 Jump to <span className="font-medium">{link.name}</span>
@@ -208,7 +201,7 @@ function HomeCommand() {
               onSelect={() => handleNavigation(link.props.href)}
               keywords={["scope", "settings"]}
             >
-              <Settings className="mr-2 size-5" />
+              <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
 
               <p>
                 Jump to <span className="font-medium">Settings</span>{" "}

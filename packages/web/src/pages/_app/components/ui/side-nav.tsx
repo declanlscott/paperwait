@@ -4,18 +4,18 @@ import { useRouter, useRouterState } from "@tanstack/react-router";
 import { linkStyles } from "~/shared/styles/components/side-nav";
 
 import type { ComponentProps } from "react";
+import type { AppLink } from "~/app/types";
 
 export type SideNavProps = {
-  links: Array<{
-    name: string;
-    props: LinkProps;
-  }>;
+  links: Array<AppLink>;
 };
 export function SideNav(props: SideNavProps) {
   return (
     <nav className="text-muted-foreground grid text-sm">
       {props.links.map((link) => (
         <Link key={link.name} {...link.props}>
+          {link.icon}
+
           {link.name}
         </Link>
       ))}

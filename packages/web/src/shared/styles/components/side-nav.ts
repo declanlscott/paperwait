@@ -6,7 +6,7 @@ import type { VariantProps } from "tailwind-variants";
 
 export const linkStyles = tv({
   extend: focusRing,
-  base: "rounded-md transition-colors py-2.5 text-muted-foreground font-medium",
+  base: "rounded-md transition-colors py-2.5 text-muted-foreground font-medium flex items-center gap-3 [&>svg]:size-5",
   variants: {
     isActive: {
       true: "text-primary",

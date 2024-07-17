@@ -68,5 +68,5 @@ export type MutationOptionsFactory = Record<
 export type AppLink = {
   name: string;
   props: ComponentProps<typeof AriaLink>;
-  icon?: ReactNode;
+  icon: ReactNode;
 };
