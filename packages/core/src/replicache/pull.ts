@@ -98,7 +98,7 @@ export async function pull(
       : [undefined];
 
     // 2: Initialize base client view record
-    const baseCvr = buildCvr({ kind: "base", prev: prevClientView?.record });
+    const baseCvr = buildCvr({ variant: "base", prev: prevClientView?.record });
 
     // 4: Get client group
     const baseClientGroup = await getClientGroup(
@@ -116,7 +116,7 @@ export async function pull(
     const metadata = await getMetadata(tx, user, baseClientGroup);
 
     // 8: Build next client view record
-    const nextCvr = buildCvr({ kind: "next", metadata });
+    const nextCvr = buildCvr({ variant: "next", metadata });
 
     // 9: Calculate diff
     const diff = diffCvr(baseCvr, nextCvr);

@@ -27,12 +27,12 @@ export const buildCvrEntries = (domainMetadata: Array<Metadata>) =>
 
 export function buildCvr(
   args:
-    | { kind: "base"; prev?: ClientViewRecord }
-    | { kind: "next"; metadata: DomainsMetadata },
+    | { variant: "base"; prev?: ClientViewRecord }
+    | { variant: "next"; metadata: DomainsMetadata },
 ): ClientViewRecord {
-  const kind = args.kind;
+  const variant = args.variant;
 
-  switch (kind) {
+  switch (variant) {
     case "base":
       return (
         args.prev ?? {
@@ -68,9 +68,9 @@ export function buildCvr(
         client: buildCvrEntries(args.metadata.client),
       };
     default:
-      kind satisfies never;
+      variant satisfies never;
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      throw new InternalServerError(`Unknown cvr kind: ${kind}`);
+      throw new InternalServerError(`Unknown cvr variant: ${variant}`);
   }
 }
 
