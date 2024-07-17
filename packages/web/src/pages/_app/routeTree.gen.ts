@@ -18,18 +18,16 @@ import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as AuthenticatedDashboardImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedUsersIndexImport } from './routes/_authenticated.users.index'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated.settings.index'
-import { Route as AuthenticatedProductsIndexImport } from './routes/_authenticated.products.index'
 import { Route as AuthenticatedUsersUserIdImport } from './routes/_authenticated.users.$userId'
+import { Route as AuthenticatedSettingsProductsImport } from './routes/_authenticated.settings.products'
 import { Route as AuthenticatedSettingsIntegrationsImport } from './routes/_authenticated.settings.integrations'
+import { Route as AuthenticatedSettingsImagesImport } from './routes/_authenticated.settings.images'
 
 // Create Virtual Routes
 
 const AuthenticatedUsersLazyImport = createFileRoute('/_authenticated/users')()
 const AuthenticatedSettingsLazyImport = createFileRoute(
   '/_authenticated/settings',
-)()
-const AuthenticatedProductsLazyImport = createFileRoute(
-  '/_authenticated/products',
 )()
 
 // Create/Update Routes
@@ -58,13 +56,6 @@ const AuthenticatedSettingsLazyRoute = AuthenticatedSettingsLazyImport.update({
   import('./routes/_authenticated.settings.lazy').then((d) => d.Route),
 )
 
-const AuthenticatedProductsLazyRoute = AuthenticatedProductsLazyImport.update({
-  path: '/products',
-  getParentRoute: () => AuthenticatedRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated.products.lazy').then((d) => d.Route),
-)
-
 const AuthenticatedDashboardRoute = AuthenticatedDashboardImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
@@ -82,21 +73,26 @@ const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
   } as any,
 )
 
-const AuthenticatedProductsIndexRoute = AuthenticatedProductsIndexImport.update(
-  {
-    path: '/',
-    getParentRoute: () => AuthenticatedProductsLazyRoute,
-  } as any,
-)
-
 const AuthenticatedUsersUserIdRoute = AuthenticatedUsersUserIdImport.update({
   path: '/$userId',
   getParentRoute: () => AuthenticatedUsersLazyRoute,
 } as any)
 
+const AuthenticatedSettingsProductsRoute =
+  AuthenticatedSettingsProductsImport.update({
+    path: '/products',
+    getParentRoute: () => AuthenticatedSettingsLazyRoute,
+  } as any)
+
 const AuthenticatedSettingsIntegrationsRoute =
   AuthenticatedSettingsIntegrationsImport.update({
     path: '/integrations',
+    getParentRoute: () => AuthenticatedSettingsLazyRoute,
+  } as any)
+
+const AuthenticatedSettingsImagesRoute =
+  AuthenticatedSettingsImagesImport.update({
+    path: '/images',
     getParentRoute: () => AuthenticatedSettingsLazyRoute,
   } as any)
 
@@ -125,13 +121,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardImport
       parentRoute: typeof AuthenticatedImport
     }
-    '/_authenticated/products': {
-      id: '/_authenticated/products'
-      path: '/products'
-      fullPath: '/products'
-      preLoaderRoute: typeof AuthenticatedProductsLazyImport
-      parentRoute: typeof AuthenticatedImport
-    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -146,11 +135,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersLazyImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/settings/images': {
+      id: '/_authenticated/settings/images'
+      path: '/images'
+      fullPath: '/settings/images'
+      preLoaderRoute: typeof AuthenticatedSettingsImagesImport
+      parentRoute: typeof AuthenticatedSettingsLazyImport
+    }
     '/_authenticated/settings/integrations': {
       id: '/_authenticated/settings/integrations'
       path: '/integrations'
       fullPath: '/settings/integrations'
       preLoaderRoute: typeof AuthenticatedSettingsIntegrationsImport
+      parentRoute: typeof AuthenticatedSettingsLazyImport
+    }
+    '/_authenticated/settings/products': {
+      id: '/_authenticated/settings/products'
+      path: '/products'
+      fullPath: '/settings/products'
+      preLoaderRoute: typeof AuthenticatedSettingsProductsImport
       parentRoute: typeof AuthenticatedSettingsLazyImport
     }
     '/_authenticated/users/$userId': {
@@ -159,13 +162,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/users/$userId'
       preLoaderRoute: typeof AuthenticatedUsersUserIdImport
       parentRoute: typeof AuthenticatedUsersLazyImport
-    }
-    '/_authenticated/products/': {
-      id: '/_authenticated/products/'
-      path: '/'
-      fullPath: '/products/'
-      preLoaderRoute: typeof AuthenticatedProductsIndexImport
-      parentRoute: typeof AuthenticatedProductsLazyImport
     }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
@@ -189,11 +185,10 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   AuthenticatedRoute: AuthenticatedRoute.addChildren({
     AuthenticatedDashboardRoute,
-    AuthenticatedProductsLazyRoute: AuthenticatedProductsLazyRoute.addChildren({
-      AuthenticatedProductsIndexRoute,
-    }),
     AuthenticatedSettingsLazyRoute: AuthenticatedSettingsLazyRoute.addChildren({
+      AuthenticatedSettingsImagesRoute,
       AuthenticatedSettingsIntegrationsRoute,
+      AuthenticatedSettingsProductsRoute,
       AuthenticatedSettingsIndexRoute,
     }),
     AuthenticatedUsersLazyRoute: AuthenticatedUsersLazyRoute.addChildren({
@@ -220,7 +215,6 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/dashboard",
-        "/_authenticated/products",
         "/_authenticated/settings",
         "/_authenticated/users"
       ]
@@ -232,18 +226,13 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated.dashboard.tsx",
       "parent": "/_authenticated"
     },
-    "/_authenticated/products": {
-      "filePath": "_authenticated.products.lazy.tsx",
-      "parent": "/_authenticated",
-      "children": [
-        "/_authenticated/products/"
-      ]
-    },
     "/_authenticated/settings": {
       "filePath": "_authenticated.settings.lazy.tsx",
       "parent": "/_authenticated",
       "children": [
+        "/_authenticated/settings/images",
         "/_authenticated/settings/integrations",
+        "/_authenticated/settings/products",
         "/_authenticated/settings/"
       ]
     },
@@ -255,17 +244,21 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/users/"
       ]
     },
+    "/_authenticated/settings/images": {
+      "filePath": "_authenticated.settings.images.tsx",
+      "parent": "/_authenticated/settings"
+    },
     "/_authenticated/settings/integrations": {
       "filePath": "_authenticated.settings.integrations.tsx",
+      "parent": "/_authenticated/settings"
+    },
+    "/_authenticated/settings/products": {
+      "filePath": "_authenticated.settings.products.tsx",
       "parent": "/_authenticated/settings"
     },
     "/_authenticated/users/$userId": {
       "filePath": "_authenticated.users.$userId.tsx",
       "parent": "/_authenticated/users"
-    },
-    "/_authenticated/products/": {
-      "filePath": "_authenticated.products.index.tsx",
-      "parent": "/_authenticated/products"
     },
     "/_authenticated/settings/": {
       "filePath": "_authenticated.settings.index.tsx",
