@@ -182,7 +182,7 @@ function HomeCommand() {
                   }}
                 >
                   <Avatar className="mr-3 size-8">
-                    <AvatarImage src={`/api/user/${u.id}/photo`} />
+                    <AvatarImage src={`/api/users/${u.id}/photo`} />
                   </Avatar>
 
                   <span>{u.name}</span>

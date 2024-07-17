@@ -109,7 +109,7 @@ const columns = [
       <div className="flex items-center gap-4">
         <Avatar className="size-8">
           <AvatarImage
-            src={`/api/user/${row.id}/photo`}
+            src={`/api/users/${row.id}/photo`}
             alt={row.getValue("name")}
           />
 

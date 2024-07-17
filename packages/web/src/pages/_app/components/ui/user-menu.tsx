@@ -39,7 +39,7 @@ export function UserMenu() {
         )}
       >
         <Avatar>
-          <AvatarImage src={`/api/user/${user.id}/photo`} alt={user.name} />
+          <AvatarImage src={`/api/users/${user.id}/photo`} alt={user.name} />
 
           <AvatarFallback className="text-foreground bg-muted border-primary border-2">
             {getUserInitials(user.name)}

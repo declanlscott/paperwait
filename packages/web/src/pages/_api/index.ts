@@ -5,9 +5,9 @@ import { logger } from "hono/logger";
 
 import auth from "~/api/routes/auth";
 import integrations from "~/api/routes/integrations";
-import organization from "~/api/routes/organization";
+import organizations from "~/api/routes/organizations";
 import replicache from "~/api/routes/replicache";
-import user from "~/api/routes/user";
+import users from "~/api/routes/users";
 
 import type { HonoEnv } from "~/api/types";
 
@@ -15,10 +15,10 @@ const api = new Hono<HonoEnv>()
   .basePath("/api/")
   .use(logger())
   .route("/auth", auth)
-  .route("/organization", organization)
+  .route("/organizations", organizations)
   .route("/integrations", integrations)
   .route("/replicache", replicache)
-  .route("/user", user)
+  .route("/users", users)
   .onError((e, c) => {
     console.error(e);
 
