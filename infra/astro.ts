@@ -41,6 +41,12 @@ export const astro = new sst.aws.Astro("Paperwait", {
       ],
     },
     {
+      actions: ["ssm:PutParameter", "ssm:GetParameter"],
+      resources: [
+        $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/maxFileSizes`,
+      ],
+    },
+    {
       actions: ["execute-api:Invoke"],
       resources: [
         $interpolate`arn:aws:execute-api:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:${papercutApiGateway.nodes.api.id}/*/POST/*`,

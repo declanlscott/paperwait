@@ -1,15 +1,16 @@
 import { deleteParameter, putParameter } from "@paperwait/core/aws";
-import { db } from "@paperwait/core/database";
+import { defaultMaxFileSizes } from "@paperwait/core/constants";
+import { transact } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { Room } from "@paperwait/core/room";
+import { Registration } from "@paperwait/core/schemas";
 import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
 import { validator as honoValidator } from "hono/validator";
 import * as v from "valibot";
 
 import { isOrgSlugValid } from "~/api/lib/organization";
-import { Registration } from "~/shared/lib/schemas";
 
 import type { HonoEnv } from "~/api/types";
 
@@ -26,15 +27,11 @@ export default new Hono<HonoEnv>()
     async (c) => {
       const registration = c.req.valid("form");
 
-      let putParameterCommandOutput:
-        | Awaited<ReturnType<typeof putParameter>>
-        | undefined;
-
       let org: Pick<Organization, "id" | "slug"> | undefined;
 
-      try {
-        org = await db.transaction(async (tx) => {
-          [org] = await tx
+      const result = await transact(
+        async (tx) => {
+          org = await tx
             .insert(Organization)
             .values({
               name: registration.name,
@@ -42,9 +39,13 @@ export default new Hono<HonoEnv>()
               provider: registration.authProvider,
               providerId: registration.providerId,
             })
-            .returning({ id: Organization.id, slug: Organization.slug });
+            .returning({ id: Organization.id, slug: Organization.slug })
+            .execute()
+            .then((rows) => rows.at(0));
 
-          [putParameterCommandOutput] = await Promise.all([
+          if (!org) return tx.rollback();
+
+          await Promise.all([
             // Store the PaperCut server details in SSM
             putParameter({
               Name: `/paperwait/org/${org.id}/papercut`,
@@ -55,25 +56,42 @@ export default new Hono<HonoEnv>()
               Type: "SecureString",
               Overwrite: false,
             }),
+            // Store the max file sizes in SSM
+            putParameter({
+              Name: `/paperwait/org/${org.id}/maxFileSizes`,
+              Value: JSON.stringify(defaultMaxFileSizes),
+              Type: "String",
+              Overwrite: false,
+            }),
             // Create a default room for the organization
             tx
               .insert(Room)
               .values({ name: "Default", status: "draft", orgId: org.id }),
           ]);
 
-          return org;
-        });
+          return { org };
+        },
+        {
+          onRollback: async () => {
+            if (org)
+              // Rollback the parameters if the transaction fails
+              await Promise.all([
+                deleteParameter({
+                  Name: `/paperwait/org/${org.id}/papercut`,
+                }),
+                deleteParameter({
+                  Name: `/paperwait/org/${org.id}/maxFileSizes`,
+                }),
+              ]);
 
-        return c.redirect(`/org/${org.slug}`);
-      } catch (e) {
-        // Rollback the parameter if the transaction fails
-        if (org && putParameterCommandOutput)
-          await deleteParameter({
-            Name: `/paperwait/org/${org.id}/papercut`,
-          });
+            return true;
+          },
+        },
+      );
 
-        throw e;
-      }
+      if (result.status === "error") throw result.error;
+
+      return c.redirect(`/org/${result.output.org.slug}`);
     },
   )
   .post(
