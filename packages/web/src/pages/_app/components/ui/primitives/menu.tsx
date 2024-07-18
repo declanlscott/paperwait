@@ -21,7 +21,7 @@ import {
   menuRadioItemStyles,
   menuSeparatorStyles,
   menuStyles,
-} from "~/shared/styles/components/primitives/menu";
+} from "~/styles/components/primitives/menu";
 
 import type { ComponentProps, HTMLAttributes } from "react";
 import type {

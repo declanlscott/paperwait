@@ -21,7 +21,7 @@ import {
   selectSeparatorStyles,
   selectTriggerStyles,
   selectValueStyles,
-} from "~/shared/styles/components/primitives/select";
+} from "~/styles/components/primitives/select";
 
 import type { ComponentProps } from "react";
 import type {

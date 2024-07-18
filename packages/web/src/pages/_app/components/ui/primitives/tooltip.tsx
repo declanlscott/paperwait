@@ -3,7 +3,7 @@ import {
   composeRenderProps,
 } from "react-aria-components";
 
-import { tooltipStyles } from "~/shared/styles/components/primitives/tooltip";
+import { tooltipStyles } from "~/styles/components/primitives/tooltip";
 
 import type { TooltipProps as AriaTooltipProps } from "react-aria-components";
 

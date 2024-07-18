@@ -4,10 +4,10 @@ import {
 } from "react-aria-components";
 import { Loader2 } from "lucide-react";
 
-import { buttonStyles } from "~/shared/styles/components/primitives/button";
+import { buttonStyles } from "~/styles/components/primitives/button";
 
 import type { ButtonProps as AriaButtonProps } from "react-aria-components";
-import type { ButtonStyles } from "~/shared/styles/components/primitives/button";
+import type { ButtonStyles } from "~/styles/components/primitives/button";
 
 export interface ButtonProps extends AriaButtonProps, ButtonStyles {
   isLoading?: boolean;

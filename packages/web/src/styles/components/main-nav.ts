@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/shared/styles/utils";
+import { focusRing } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 

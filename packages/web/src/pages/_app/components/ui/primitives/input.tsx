@@ -1,10 +1,10 @@
 import { forwardRef } from "react";
 import { Input as AriaInput, composeRenderProps } from "react-aria-components";
 
-import { inputStyles } from "~/shared/styles/components/primitives/input";
+import { inputStyles } from "~/styles/components/primitives/input";
 
 import type { InputProps as AriaInputProps } from "react-aria-components";
-import type { InputStyles } from "~/shared/styles/components/primitives/input";
+import type { InputStyles } from "~/styles/components/primitives/input";
 
 export interface InputProps extends AriaInputProps, InputStyles {}
 

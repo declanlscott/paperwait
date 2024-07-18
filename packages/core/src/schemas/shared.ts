@@ -1,6 +1,7 @@
-import { Provider } from "@paperwait/core/organization";
-import { PapercutParameter } from "@paperwait/core/schemas";
 import * as v from "valibot";
+
+import { Provider } from "../organization/organization.sql";
+import { PapercutParameter } from "./papercut";
 
 export const Registration = v.pipe(
   v.object({
@@ -26,3 +27,9 @@ export const IsOrgSlugValid = v.object({
   isValid: v.boolean(),
 });
 export type IsOrgSlugValid = v.InferOutput<typeof IsOrgSlugValid>;
+
+export const MaxFileSizes = v.object({
+  assets: v.pipe(v.number(), v.integer(), v.minValue(0)),
+  documents: v.pipe(v.number(), v.integer(), v.minValue(0)),
+});
+export type MaxFileSizes = v.InferOutput<typeof MaxFileSizes>;

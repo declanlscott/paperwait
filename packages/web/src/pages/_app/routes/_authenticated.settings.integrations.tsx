@@ -32,7 +32,7 @@ import {
   DialogTrigger,
 } from "~/app/components/ui/primitives/dialog";
 import { useMutationOptionsFactory } from "~/app/lib/hooks/data";
-import { labelStyles } from "~/shared/styles/components/primitives/field";
+import { labelStyles } from "~/styles/components/primitives/field";
 
 import type { ComponentProps } from "react";
 import type { SubmitHandler } from "@modular-forms/react";

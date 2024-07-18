@@ -21,7 +21,7 @@ import {
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import { isUserExists } from "@paperwait/core/papercut";
-import { NanoId } from "@paperwait/core/schemas";
+import { NanoId, Registration } from "@paperwait/core/schemas";
 import { User } from "@paperwait/core/user";
 import { validator } from "@paperwait/core/valibot";
 import { and, eq, or, sql } from "drizzle-orm";
@@ -32,7 +32,6 @@ import * as v from "valibot";
 
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
 import { authorization } from "~/api/middleware";
-import { Registration } from "~/shared/lib/schemas";
 
 import type { IdToken, ProviderTokens } from "@paperwait/core/auth-provider";
 import type { HonoEnv } from "~/api/types";

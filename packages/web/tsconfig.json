@@ -10,7 +10,7 @@
       "~/components/*": ["src/components/*"],
       "~/layouts/*": ["src/layouts/*"],
       "~/pages/*": ["src/pages/*"],
-      "~/shared/*": ["src/shared/*"],
+      "~/styles/*": ["src/styles/*"],
       "~/types/*": ["src/types/*"]
     }
   }

@@ -10,8 +10,8 @@ import { twMerge } from "tailwind-merge";
 import {
   fieldGroupStyles,
   labelStyles,
-} from "~/shared/styles/components/primitives/field";
-import { composeTwRenderProps } from "~/shared/styles/utils";
+} from "~/styles/components/primitives/field";
+import { composeTwRenderProps } from "~/styles/utils";
 
 import type {
   FieldErrorProps as AriaFieldErrorProps,

@@ -8,7 +8,7 @@ import {
   tableHeadStyles,
   tableRowStyles,
   tableStyles,
-} from "~/shared/styles/components/primitives/table";
+} from "~/styles/components/primitives/table";
 
 import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 

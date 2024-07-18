@@ -31,7 +31,7 @@ import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { useIsSyncing } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { links } from "~/app/lib/links";
-import { linkStyles, logoStyles } from "~/shared/styles/components/main-nav";
+import { linkStyles, logoStyles } from "~/styles/components/main-nav";
 
 import type { ComponentProps } from "react";
 

@@ -22,7 +22,7 @@ import {
 } from "~/app/components/ui/primitives/menu";
 import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
-import { userMenuTriggerButtonStyles } from "~/shared/styles/components/user-menu";
+import { userMenuTriggerButtonStyles } from "~/styles/components/user-menu";
 
 export function UserMenu() {
   const { user } = useAuthenticated();

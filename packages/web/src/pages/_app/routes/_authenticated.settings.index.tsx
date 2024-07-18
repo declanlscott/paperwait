@@ -35,7 +35,7 @@ import {
 } from "~/app/components/ui/primitives/select";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
-import { labelStyles } from "~/shared/styles/components/primitives/field";
+import { labelStyles } from "~/styles/components/primitives/field";
 
 import type { Organization } from "@paperwait/core/organization";
 

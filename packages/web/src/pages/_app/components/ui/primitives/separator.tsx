@@ -1,6 +1,6 @@
 import { Separator as AriaSeparator } from "react-aria-components";
 
-import { separatorStyles } from "~/shared/styles/components/primitives/separator";
+import { separatorStyles } from "~/styles/components/primitives/separator";
 
 import type { SeparatorProps as AriaSeparatorProps } from "react-aria-components";
 

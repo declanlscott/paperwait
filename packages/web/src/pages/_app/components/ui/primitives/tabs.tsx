@@ -11,7 +11,7 @@ import {
   tabPanelStyles,
   tabsStyles,
   tabStyles,
-} from "~/shared/styles/components/primitives/tabs";
+} from "~/styles/components/primitives/tabs";
 
 import type {
   TabListProps as AriaTabListProps,

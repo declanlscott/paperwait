@@ -1,7 +1,7 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { useRouter, useRouterState } from "@tanstack/react-router";
 
-import { linkStyles } from "~/shared/styles/components/side-nav";
+import { linkStyles } from "~/styles/components/side-nav";
 
 import type { ComponentProps } from "react";
 import type { AppLink } from "~/app/types";
