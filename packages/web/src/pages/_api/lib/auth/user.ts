@@ -1,4 +1,5 @@
 import { getSharedAccountPropertiesOutputIndex } from "@paperwait/core/constants";
+import { getUsersByRoles } from "@paperwait/core/data";
 import { db, serializable } from "@paperwait/core/database";
 import { NotImplementedError, UnauthorizedError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
@@ -10,7 +11,7 @@ import {
   PapercutAccountManagerAuthorization,
 } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
-import { getUsersByRoles, poke } from "@paperwait/core/replicache";
+import { poke } from "@paperwait/core/replicache";
 import { User } from "@paperwait/core/user";
 import { and, eq } from "drizzle-orm";
 import ky from "ky";
