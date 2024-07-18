@@ -11,9 +11,9 @@ import {
   PapercutAccountManagerAuthorization,
 } from "../papercut/account.sql";
 import { Product } from "../product/product.sql";
+import { ReplicacheClient } from "../replicache/replicache.sql";
 import { Room } from "../room/room.sql";
 import { User } from "../user/user.sql";
-import { ReplicacheClient } from "./replicache.sql";
 
 import type { LuciaUser } from "../auth/lucia";
 import type { Transaction } from "../database/transaction";

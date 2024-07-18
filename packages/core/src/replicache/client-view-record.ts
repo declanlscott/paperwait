@@ -5,7 +5,7 @@ import { InternalServerError } from "../errors/http";
 import { Domain } from "../schemas/replicache";
 import { validate } from "../valibot";
 
-import type { DomainsMetadata, Metadata } from "./metadata";
+import type { DomainsMetadata, Metadata } from "../data/search";
 
 export type ClientViewRecord = Record<Domain, ClientViewRecordEntries>;
 export type ClientViewRecordEntries = Record<

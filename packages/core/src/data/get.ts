@@ -7,8 +7,8 @@ import {
   PapercutAccount,
   PapercutAccountManagerAuthorization,
 } from "../papercut/account.sql";
+import { ReplicacheClientGroup } from "../replicache/replicache.sql";
 import { User } from "../user/user.sql";
-import { ReplicacheClientGroup } from "./replicache.sql";
 
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { ClientGroupID } from "replicache";

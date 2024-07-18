@@ -2,6 +2,20 @@ import { and, eq, lt, sql } from "drizzle-orm";
 
 import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
+import { getClientGroup, getData } from "../data/get";
+import {
+  searchAnnouncements,
+  searchClients,
+  searchComments,
+  searchOrders,
+  searchOrganizations,
+  searchPapercutAccountCustomerAuthorizations,
+  searchPapercutAccountManagerAuthorizations,
+  searchPapercutAccounts,
+  searchProducts,
+  searchRooms,
+  searchUsers,
+} from "../data/search";
 import { serializable } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
@@ -15,20 +29,6 @@ import { Product } from "../product/product.sql";
 import { Room } from "../room/room.sql";
 import { User } from "../user/user.sql";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
-import { getClientGroup, getData } from "./data";
-import {
-  searchAnnouncements,
-  searchClients,
-  searchComments,
-  searchOrders,
-  searchOrganizations,
-  searchPapercutAccountCustomerAuthorizations,
-  searchPapercutAccountManagerAuthorizations,
-  searchPapercutAccounts,
-  searchProducts,
-  searchRooms,
-  searchUsers,
-} from "./metadata";
 import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
 
 import type {
@@ -39,13 +39,13 @@ import type {
   VersionNotSupportedResponse,
 } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
+import type { DomainsMetadata, Metadata } from "../data/search";
 import type { Transaction } from "../database/transaction";
 import type { OmitTimestamps } from "../types/drizzle";
 import type {
   ClientViewRecordDiff,
   ClientViewRecordEntries,
 } from "./client-view-record";
-import type { DomainsMetadata, Metadata } from "./metadata";
 
 type PullResult =
   | {
