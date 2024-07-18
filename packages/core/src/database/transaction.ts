@@ -16,27 +16,61 @@ export type Transaction = PgTransaction<
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
-export async function transact<TResult>(
-  callback: (tx: Transaction) => Promise<TResult>,
-  isolationLevel: PgTransactionConfig["isolationLevel"] = "serializable",
+export type TransactionResult<TOutput> =
+  | { status: "success"; output: TOutput }
+  | { status: "error"; error: unknown; shouldRethrow: boolean };
+
+export async function transact<
+  TOutput,
+  TOnRollback extends (e: unknown) => boolean | Promise<boolean>,
+>(
+  callback: (tx: Transaction) => Promise<TOutput>,
+  options?: {
+    transaction?: PgTransactionConfig;
+    onRollback?: TOnRollback;
+  },
+): Promise<TransactionResult<TOutput>> {
+  try {
+    const output = await db.transaction(callback, options?.transaction);
+
+    return { status: "success", output };
+  } catch (error) {
+    if (!options?.onRollback)
+      return { status: "error", error, shouldRethrow: true };
+
+    const shouldRethrow = await Promise.resolve(options.onRollback(error));
+
+    return { status: "error", error, shouldRethrow };
+  }
+}
+
+export async function serializable<TOutput>(
+  callback: (tx: Transaction) => Promise<TOutput>,
 ) {
   for (let i = 0; i < DB_TRANSACTION_MAX_RETRIES; i++) {
-    try {
-      const result = await db.transaction(callback, { isolationLevel });
+    const result = await transact(callback, {
+      transaction: { isolationLevel: "serializable" },
+      onRollback: (e) => {
+        if (shouldRetryTransaction(e)) {
+          console.log(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Retrying transaction due to error ${e} - attempt number ${i}`,
+          );
 
-      return result;
-    } catch (e) {
-      if (shouldRetryTransaction(e)) {
-        console.log(
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          `Retrying transaction due to error ${e} - attempt number ${i}`,
-        );
+          return false;
+        }
 
-        continue;
-      }
+        return true;
+      },
+    });
 
-      throw e;
+    if (result.status === "error") {
+      if (result.shouldRethrow) throw result.error;
+
+      continue;
     }
+
+    return result.output;
   }
 
   throw new InternalServerError(

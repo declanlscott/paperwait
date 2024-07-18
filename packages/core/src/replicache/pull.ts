@@ -2,7 +2,7 @@ import { and, eq, lt, sql } from "drizzle-orm";
 
 import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
-import { transact } from "../database/transaction";
+import { serializable } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import { Organization } from "../organization/organization.sql";
@@ -82,7 +82,7 @@ export async function pull(
   if (isNaN(order)) throw new BadRequestError("Cookie order is not a number");
 
   // 3: Begin transaction
-  const result = await transact(async (tx) => {
+  const result = await serializable(async (tx) => {
     // 1: Fetch previous client view record
     const [prevClientView] = pullRequest.cookie
       ? await tx

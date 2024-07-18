@@ -1,5 +1,5 @@
 import { getSharedAccountPropertiesOutputIndex } from "@paperwait/core/constants";
-import { db, transact } from "@paperwait/core/database";
+import { db, serializable } from "@paperwait/core/database";
 import { NotImplementedError, UnauthorizedError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import {
@@ -99,7 +99,7 @@ export async function processUser(
     if (org.status === "suspended")
       throw new UnauthorizedError("Organization is suspended");
 
-    const { channels, newUser } = await transact(async (tx) => {
+    const { channels, newUser } = await serializable(async (tx) => {
       const isInitializing = org.status === "initializing";
 
       const [recipients, [newUser], sharedAccountNames] = await Promise.all([
@@ -189,7 +189,7 @@ export async function processUser(
   };
 
   if (!isDeepEqual(existingUserInfo, freshUserInfo)) {
-    const channels = await transact(async (tx) => {
+    const channels = await serializable(async (tx) => {
       const [adminsOps, managers] = await Promise.all([
         getUsersByRoles(tx, org.id, ["administrator", "operator"]),
         tx

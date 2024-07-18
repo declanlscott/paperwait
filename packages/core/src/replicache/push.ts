@@ -1,6 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 
-import { transact } from "../database/transaction";
+import { serializable } from "../database/transaction";
 import { BadRequestError } from "../errors/http";
 import { Mutation } from "../schemas/mutators";
 import { mutators } from "../server-authority/mutators";
@@ -64,7 +64,7 @@ async function processMutation(
   errorMode = false,
 ) {
   // 2: Begin transaction
-  return await transact(async (tx) => {
+  return await serializable(async (tx) => {
     let channels: Array<string> = [];
 
     // 3: Get client group

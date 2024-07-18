@@ -1,5 +1,5 @@
 import { putParameter } from "@paperwait/core/aws";
-import { transact } from "@paperwait/core/database";
+import { serializable } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { syncPapercutAccounts, testPapercut } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
@@ -20,7 +20,7 @@ export default new Hono<HonoEnv>()
     async (c) => {
       const orgId = c.env.locals.org!.id;
 
-      await transact(async (tx) => await syncPapercutAccounts(tx, orgId));
+      await serializable(async (tx) => await syncPapercutAccounts(tx, orgId));
 
       await poke([formatChannel("org", orgId)]);
 
