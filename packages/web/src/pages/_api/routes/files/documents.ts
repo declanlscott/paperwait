@@ -1,6 +1,8 @@
+/* eslint-disable drizzle/enforce-delete-with-where */
 import {
   buildS3ObjectKey,
   buildSsmParameterPath,
+  deleteS3Object,
   getS3SignedGetUrl,
   getS3SignedPutUrl,
   getSsmParameter,
@@ -22,7 +24,7 @@ import type { HonoEnv } from "~/api/types";
 
 export default new Hono<HonoEnv>()
   .get(
-    "/signed-put-urls",
+    "/signed-put-url",
     honoValidator(
       "query",
       validator(
@@ -73,7 +75,7 @@ export default new Hono<HonoEnv>()
     },
   )
   .get(
-    "/signed-get-urls",
+    "/signed-get-url",
     honoValidator(
       "query",
       validator(v.object({ name: v.string(), orderId: NanoId }), {
@@ -100,5 +102,32 @@ export default new Hono<HonoEnv>()
       });
 
       return c.json({ signedUrl });
+    },
+  )
+  .delete(
+    "/",
+    honoValidator(
+      "query",
+      validator(v.object({ name: v.string(), orderId: NanoId })),
+    ),
+    async (c, next) => {
+      const { orderId } = c.req.valid("query");
+
+      await serializable((tx) =>
+        requireAccessToOrder(tx, c.env.locals.user!, orderId),
+      );
+
+      await next();
+    },
+    async (c) => {
+      const orgId = c.env.locals.org!.id;
+      const { name, orderId } = c.req.valid("query");
+
+      await deleteS3Object({
+        Bucket: Resource.DocumentsBucket.name,
+        Key: buildS3ObjectKey(orgId, orderId, name),
+      });
+
+      return c.body(null, 204);
     },
   );

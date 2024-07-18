@@ -23,6 +23,11 @@ export const ssmClient = new SSMClient({
   credentials: fromNodeProviderChain(),
 });
 
+export const buildSsmParameterPath = (
+  orgId: NanoId,
+  ...segments: Array<string>
+) => `/paperwait/org/${orgId}/${segments.join("/")}`;
+
 export async function putSsmParameter(input: PutParameterCommandInput) {
   try {
     await ssmClient.send(new PutParameterCommand(input));
@@ -60,8 +65,3 @@ export async function deleteSsmParameter(input: DeleteParameterCommandInput) {
     throw e;
   }
 }
-
-export const buildSsmParameterPath = (
-  orgId: NanoId,
-  ...segments: Array<string>
-) => `/paperwait/org/${orgId}/${segments.join("/")}`;

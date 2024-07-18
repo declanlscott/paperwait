@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
 
 import auth from "~/api/routes/auth";
+import files from "~/api/routes/files";
 import integrations from "~/api/routes/integrations";
 import organizations from "~/api/routes/organizations";
 import replicache from "~/api/routes/replicache";
@@ -15,8 +16,9 @@ const api = new Hono<HonoEnv>()
   .basePath("/api/")
   .use(logger())
   .route("/auth", auth)
-  .route("/organizations", organizations)
+  .route("/files", files)
   .route("/integrations", integrations)
+  .route("/organizations", organizations)
   .route("/replicache", replicache)
   .route("/users", users)
   .onError((e, c) => {

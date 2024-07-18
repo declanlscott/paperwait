@@ -1,6 +1,8 @@
+/* eslint-disable drizzle/enforce-delete-with-where */
 import {
   buildCloudfrontUrl,
   buildS3ObjectKey,
+  deleteS3Object,
   getCloudfrontSignedUrl,
   getS3SignedPutUrl,
 } from "@paperwait/core/aws";
@@ -18,7 +20,7 @@ import type { HonoEnv } from "~/api/types";
 
 export default new Hono<HonoEnv>()
   .get(
-    "/signed-put-urls",
+    "/signed-put-url",
     authorization(["administrator", "operator"]),
     honoValidator(
       "query",
@@ -56,7 +58,7 @@ export default new Hono<HonoEnv>()
     },
   )
   .get(
-    "/signed-get-urls",
+    "/signed-get-url",
     honoValidator("query", validator(v.object({ name: v.string() }))),
     async (c) => {
       const orgId = c.env.locals.org!.id;
@@ -73,5 +75,20 @@ export default new Hono<HonoEnv>()
       });
 
       return c.json({ signedUrl });
+    },
+  )
+  .delete(
+    "/",
+    honoValidator("query", validator(v.object({ name: v.string() }))),
+    async (c) => {
+      const orgId = c.env.locals.org!.id;
+      const { name } = c.req.valid("query");
+
+      await deleteS3Object({
+        Bucket: Resource.AssetsBucket.name,
+        Key: buildS3ObjectKey(orgId, name),
+      });
+
+      return c.body(null, 204);
     },
   );
