@@ -1,5 +1,15 @@
-import { deleteParameter, putParameter } from "@paperwait/core/aws";
-import { defaultMaxFileSizes } from "@paperwait/core/constants";
+import {
+  buildSsmParameterPath,
+  deleteSsmParameter,
+  putSsmParameter,
+} from "@paperwait/core/aws";
+import {
+  DEFAULT_DOCUMENTS_MIME_TYPES,
+  defaultMaxFileSizes,
+  DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+  MAX_FILE_SIZES_PARAMETER_NAME,
+  PAPERCUT_PARAMETER_NAME,
+} from "@paperwait/core/constants";
 import { transact } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
@@ -47,20 +57,33 @@ export default new Hono<HonoEnv>()
 
           await Promise.all([
             // Store the PaperCut server details in SSM
-            putParameter({
-              Name: `/paperwait/org/${org.id}/papercut`,
+            putSsmParameter({
+              Name: buildSsmParameterPath(org.id, PAPERCUT_PARAMETER_NAME),
+              Type: "SecureString",
               Value: JSON.stringify({
                 serverUrl: registration.serverUrl,
                 authToken: registration.authToken,
               }),
-              Type: "SecureString",
+              Overwrite: false,
+            }),
+            // Store the documents mime types in SSM
+            putSsmParameter({
+              Name: buildSsmParameterPath(
+                org.id,
+                DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+              ),
+              Type: "StringList",
+              Value: DEFAULT_DOCUMENTS_MIME_TYPES.join(","),
               Overwrite: false,
             }),
             // Store the max file sizes in SSM
-            putParameter({
-              Name: `/paperwait/org/${org.id}/maxFileSizes`,
-              Value: JSON.stringify(defaultMaxFileSizes),
+            putSsmParameter({
+              Name: buildSsmParameterPath(
+                org.id,
+                MAX_FILE_SIZES_PARAMETER_NAME,
+              ),
               Type: "String",
+              Value: JSON.stringify(defaultMaxFileSizes),
               Overwrite: false,
             }),
             // Create a default room for the organization
@@ -73,16 +96,26 @@ export default new Hono<HonoEnv>()
         },
         {
           onRollback: async () => {
-            if (org)
+            if (org) {
               // Rollback the parameters if the transaction fails
               await Promise.all([
-                deleteParameter({
-                  Name: `/paperwait/org/${org.id}/papercut`,
+                deleteSsmParameter({
+                  Name: buildSsmParameterPath(org.id, PAPERCUT_PARAMETER_NAME),
                 }),
-                deleteParameter({
-                  Name: `/paperwait/org/${org.id}/maxFileSizes`,
+                deleteSsmParameter({
+                  Name: buildSsmParameterPath(
+                    org.id,
+                    DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+                  ),
+                }),
+                deleteSsmParameter({
+                  Name: buildSsmParameterPath(
+                    org.id,
+                    MAX_FILE_SIZES_PARAMETER_NAME,
+                  ),
                 }),
               ]);
+            }
 
             return true;
           },
@@ -106,6 +139,6 @@ export default new Hono<HonoEnv>()
     async (c) => {
       const isValid = await isOrgSlugValid(c.req.valid("param").slug);
 
-      return c.json({ isValid }, { status: 501 });
+      return c.json({ isValid });
     },
   );

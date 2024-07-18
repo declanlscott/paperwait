@@ -1,4 +1,5 @@
-import { putParameter } from "@paperwait/core/aws";
+import { buildSsmParameterPath, putSsmParameter } from "@paperwait/core/aws";
+import { PAPERCUT_PARAMETER_NAME } from "@paperwait/core/constants";
 import { serializable } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { syncPapercutAccounts, testPapercut } from "@paperwait/core/papercut";
@@ -38,8 +39,11 @@ export default new Hono<HonoEnv>()
       }),
     ),
     async (c) => {
-      await putParameter({
-        Name: `/paperwait/org/${c.env.locals.org!.id}/papercut`,
+      await putSsmParameter({
+        Name: buildSsmParameterPath(
+          c.env.locals.org!.id,
+          PAPERCUT_PARAMETER_NAME,
+        ),
         Value: JSON.stringify(c.req.valid("json")),
         Type: "SecureString",
         Overwrite: true,

@@ -1,15 +1,22 @@
 import { SessionTokens } from "@paperwait/core/auth";
 import { entraId, google } from "@paperwait/core/auth-provider";
+import { buildSsmParameterPath, getSsmParameter } from "@paperwait/core/aws";
+import { MAX_FILE_SIZES_PARAMETER_NAME } from "@paperwait/core/constants";
 import { db } from "@paperwait/core/database";
 import {
+  BadRequestError,
   ForbiddenError,
+  InternalServerError,
   NotImplementedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
+import { MaxFileSizes } from "@paperwait/core/schemas";
 import { enforceRbac } from "@paperwait/core/utils";
+import { validate } from "@paperwait/core/valibot";
 import { eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
+import * as v from "valibot";
 
 import type { LuciaSession } from "@paperwait/core/auth";
 import type {
@@ -112,3 +119,33 @@ async function refreshAccessToken(provider: {
       );
   }
 }
+
+export const maxContentLength = (
+  variant: keyof MaxFileSizes,
+  contentLength: number,
+) =>
+  createMiddleware<HonoEnv>(async (c, next) => {
+    const orgId = c.env.locals.org!.id;
+
+    const maxFileSizes = validate(
+      MaxFileSizes,
+      await getSsmParameter({
+        Name: buildSsmParameterPath(orgId, MAX_FILE_SIZES_PARAMETER_NAME),
+      }),
+      {
+        Error: InternalServerError,
+        message: "Failed to parse max file sizes",
+      },
+    );
+
+    validate(
+      v.pipe(v.number(), v.minValue(0), v.maxValue(maxFileSizes[variant])),
+      contentLength,
+      {
+        Error: BadRequestError,
+        message: "Content length exceeds maximum file size",
+      },
+    );
+
+    await next();
+  });

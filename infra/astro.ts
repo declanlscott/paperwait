@@ -1,4 +1,9 @@
 import {
+  MAX_FILE_SIZES_PARAMETER_NAME,
+  PAPERCUT_PARAMETER_NAME,
+} from "@paperwait/core/constants";
+
+import {
   assetsBucket,
   assetsDistribution,
   assetsDistributionKeyPair,
@@ -37,13 +42,13 @@ export const astro = new sst.aws.Astro("Paperwait", {
     {
       actions: ["ssm:PutParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/papercut`,
+        $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/${PAPERCUT_PARAMETER_NAME}`,
       ],
     },
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/maxFileSizes`,
+        $interpolate`arn:aws:ssm:${aws.getRegionOutput().name}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/${MAX_FILE_SIZES_PARAMETER_NAME}`,
       ],
     },
     {

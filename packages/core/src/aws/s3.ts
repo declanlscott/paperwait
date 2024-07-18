@@ -12,6 +12,7 @@ import type {
   GetObjectCommandInput,
   PutObjectCommandInput,
 } from "@aws-sdk/client-s3";
+import type { NanoId } from "../schemas";
 
 type RequestPresigningArguments = Parameters<typeof getSignedUrl>[2];
 
@@ -29,3 +30,6 @@ export const getS3SignedGetUrl = (
   input: GetObjectCommandInput,
   args?: RequestPresigningArguments,
 ) => getSignedUrl(s3Client, new GetObjectCommand(input), args);
+
+export const buildS3ObjectKey = (orgId: NanoId, ...segments: Array<string>) =>
+  `${orgId}/${segments.join("/")}`;
