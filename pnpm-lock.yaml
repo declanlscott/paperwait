@@ -13,7 +13,7 @@ importers:
         version: link:packages/core
       sst:
         specifier: ion
-        version: 0.0.545(hono@4.5.0)(valibot@0.30.0)
+        version: 0.1.3(hono@4.5.0)(valibot@0.30.0)
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.3.1
@@ -274,6 +274,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      react-dropzone:
+        specifier: ^14.2.3
+        version: 14.2.3(react@18.3.1)
       remeda:
         specifier: ^2.6.0
         version: 2.6.0
@@ -3404,6 +3407,10 @@ packages:
     peerDependencies:
       '@astrojs/compiler': '>=0.27.0'
 
+  attr-accept@2.2.2:
+    resolution: {integrity: sha512-7prDjvt9HmqiZ0cl5CRjtS84sEyhsHP2coDkaZKRKVfCDo9s7iw7ChVmar78Gu9pC4SoR/28wFu/G5JJhTnqEg==}
+    engines: {node: '>=4'}
+
   autoprefixer@10.4.19:
     resolution: {integrity: sha512-BaENR2+zBZ8xXhM4pUaKUxlVdxZ0EZhjvbopwnXmxRUfqDmwSpC2lAi/QXvx7NRdPCo1WKEcEF6mV64si1z4Ew==}
     engines: {node: ^10 || ^12 || >=14}
@@ -4000,6 +4007,10 @@ packages:
   file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}
     engines: {node: ^10.12.0 || >=12.0.0}
+
+  file-selector@0.6.0:
+    resolution: {integrity: sha512-QlZ5yJC0VxHxQQsQhXvBaC7VRJ2uaxTf+Tfpu4Z/OcVQJVpZO+DGU0rkoVW5ce2SccxugvpBJoMvUs59iILYdw==}
+    engines: {node: '>= 12'}
 
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
@@ -5084,6 +5095,9 @@ packages:
     resolution: {integrity: sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==}
     engines: {node: '>= 6'}
 
+  prop-types@15.8.1:
+    resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
+
   property-information@6.5.0:
     resolution: {integrity: sha512-PgTgs/BlvHxOu8QuEN7wi5A0OmXaBcHpmCSTehcs6Uuu9IkDIEo13Hy7n898RHfrQ49vKCoGeWZSaAK01nwVig==}
 
@@ -5110,6 +5124,15 @@ packages:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
     peerDependencies:
       react: ^18.3.1
+
+  react-dropzone@14.2.3:
+    resolution: {integrity: sha512-O3om8I+PkFKbxCukfIR3QAGftYXDZfOE2N1mr/7qebQJHs7U+/RSL/9xomJNpRg9kM5h9soQSdf0Gc7OHF5Fug==}
+    engines: {node: '>= 10.13'}
+    peerDependencies:
+      react: '>= 16.8 || 18.0.0'
+
+  react-is@16.13.1:
+    resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
@@ -5361,33 +5384,33 @@ packages:
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  sst-darwin-arm64@0.0.545:
-    resolution: {integrity: sha512-WuVHORAPVQ2DSgDqMyOMhc7qOnMXCefCBDwkZrjrd5P1QWKRp4wnMokGgO+w2DOR3sAeb4RNlQ5yMczt+mupug==}
+  sst-darwin-arm64@0.1.3:
+    resolution: {integrity: sha512-P4O8fRYfFryVpmCymNGxyUpe6Pg1C//Tc2FLiPG5BP5JbJZ64WdzXRBzsig4xBAILq3PepibfvehBIQ7SajduA==}
     cpu: [arm64]
     os: [darwin]
 
-  sst-darwin-x64@0.0.545:
-    resolution: {integrity: sha512-JnmGvlLYdmmhGFhBzIace8c+ItsEH35GzkbHqkNPtoJvAoComDF3Xpqv9ou0UPObwTuGv0fflu/VHdb81ttYRw==}
+  sst-darwin-x64@0.1.3:
+    resolution: {integrity: sha512-Fu/srE3ihy784Di1HyJpPltJDymAtruGvBTvAN8qp4ZqJS6onI21vBoaixGqbFUoBM3zAjeet6YZMGgtUG8K/A==}
     cpu: [x64]
     os: [darwin]
 
-  sst-linux-arm64@0.0.545:
-    resolution: {integrity: sha512-6QtPyLq94k1lP5zmqIoJMG2mSv5NKvtx2KJowTfJ5Jhb6dC1ga5sy3Y/aiXYwjma4aIHDqGDq/pBrVondszP5g==}
+  sst-linux-arm64@0.1.3:
+    resolution: {integrity: sha512-ktr+UmZyX0bloR0MDbbzc/xqhrxsoU23R+BI/N+aOn6j7cnry5A+jDSX7tE8jNrEErlJpXp5wvYKyJI7jt/XcQ==}
     cpu: [arm64]
     os: [linux]
 
-  sst-linux-x64@0.0.545:
-    resolution: {integrity: sha512-RuPmpaYkMhiqB4rHge3iyjHKNN7YptIwxRSyHo1F26WaZJp1UmHG/tsbWYJNjMQBVXafQs2f73KGkMuBgmoqiw==}
+  sst-linux-x64@0.1.3:
+    resolution: {integrity: sha512-/2NHfgxmI2+1Ex6v1yj5tcZZO0H+7NQM89twl5yq7pfuuAZF9MVEOvJTosdK7zByIJNil339m6UIPLtpoPZXYg==}
     cpu: [x64]
     os: [linux]
 
-  sst-linux-x86@0.0.545:
-    resolution: {integrity: sha512-oKk6sjQdc4VIzgqLJeK2fW5f55a03p78pC/8r4QNT3IJzHt3kmN2qwSIULFgSAPuoa0+Y+jgVz4CLrQVg5lhuA==}
+  sst-linux-x86@0.1.3:
+    resolution: {integrity: sha512-GgoYgDTOjH93ytRyx6wligy/4gUiN0MkfgGs+ta7em3OWkGmbTnLUeOLCJ6mZhH7MdjQyuCR0WvsOIjhSB6Uww==}
     cpu: [x86]
     os: [linux]
 
-  sst@0.0.545:
-    resolution: {integrity: sha512-OYQ9xG6BOPgUx99i4ZMFy5h+RnpkEICp6hfmP17KncwZlOJHqqQuyx80RLVoUJfT2IrgqMhrIO4zoP9la14dIQ==}
+  sst@0.1.3:
+    resolution: {integrity: sha512-sEnHJpKu6js8wfLNEgjUWUxFwQKW/bsP+AX2Q2bwrBOpJzYMEiyh9PdQ4WJfnUfTVPh0wEA1IiR3PUwbvleSjw==}
     hasBin: true
     peerDependencies:
       hono: 4.x
@@ -10396,6 +10419,8 @@ snapshots:
       '@astrojs/compiler': 2.9.2
       synckit: 0.9.1
 
+  attr-accept@2.2.2: {}
+
   autoprefixer@10.4.19(postcss@8.4.39):
     dependencies:
       browserslist: 4.23.2
@@ -11000,6 +11025,10 @@ snapshots:
   file-entry-cache@6.0.1:
     dependencies:
       flat-cache: 3.2.0
+
+  file-selector@0.6.0:
+    dependencies:
+      tslib: 2.6.3
 
   fill-range@7.1.1:
     dependencies:
@@ -12393,6 +12422,12 @@ snapshots:
       kleur: 3.0.3
       sisteransi: 1.0.5
 
+  prop-types@15.8.1:
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+      react-is: 16.13.1
+
   property-information@6.5.0: {}
 
   punycode@2.3.1: {}
@@ -12474,6 +12509,15 @@ snapshots:
       loose-envify: 1.4.0
       react: 18.3.1
       scheduler: 0.23.2
+
+  react-dropzone@14.2.3(react@18.3.1):
+    dependencies:
+      attr-accept: 2.2.2
+      file-selector: 0.6.0
+      prop-types: 15.8.1
+      react: 18.3.1
+
+  react-is@16.13.1: {}
 
   react-refresh@0.14.2: {}
 
@@ -12841,22 +12885,22 @@ snapshots:
 
   sprintf-js@1.0.3: {}
 
-  sst-darwin-arm64@0.0.545:
+  sst-darwin-arm64@0.1.3:
     optional: true
 
-  sst-darwin-x64@0.0.545:
+  sst-darwin-x64@0.1.3:
     optional: true
 
-  sst-linux-arm64@0.0.545:
+  sst-linux-arm64@0.1.3:
     optional: true
 
-  sst-linux-x64@0.0.545:
+  sst-linux-x64@0.1.3:
     optional: true
 
-  sst-linux-x86@0.0.545:
+  sst-linux-x86@0.1.3:
     optional: true
 
-  sst@0.0.545(hono@4.5.0)(valibot@0.30.0):
+  sst@0.1.3(hono@4.5.0)(valibot@0.30.0):
     dependencies:
       '@aws-sdk/client-lambda': 3.478.0
       aws4fetch: 1.0.18
@@ -12864,11 +12908,11 @@ snapshots:
       openid-client: 5.6.4
     optionalDependencies:
       hono: 4.5.0
-      sst-darwin-arm64: 0.0.545
-      sst-darwin-x64: 0.0.545
-      sst-linux-arm64: 0.0.545
-      sst-linux-x64: 0.0.545
-      sst-linux-x86: 0.0.545
+      sst-darwin-arm64: 0.1.3
+      sst-darwin-x64: 0.1.3
+      sst-linux-arm64: 0.1.3
+      sst-linux-x64: 0.1.3
+      sst-linux-x86: 0.1.3
       valibot: 0.30.0
     transitivePeerDependencies:
       - aws-crt

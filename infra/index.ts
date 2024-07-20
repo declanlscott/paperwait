@@ -1,24 +1,24 @@
-sst.linkable(azuread.Application, ({ clientId }) => ({
+sst.Linkable.wrap(azuread.Application, ({ clientId }) => ({
   properties: { clientId },
 }));
 
-sst.linkable(azuread.ApplicationPassword, ({ value }) => ({
+sst.Linkable.wrap(azuread.ApplicationPassword, ({ value }) => ({
   properties: { value },
 }));
 
-sst.linkable(aws.ec2.Instance, ({ publicIp }) => ({
+sst.Linkable.wrap(aws.ec2.Instance, ({ publicIp }) => ({
   properties: { publicIp },
 }));
 
-sst.linkable(tls.PrivateKey, ({ privateKeyPem }) => ({
+sst.Linkable.wrap(tls.PrivateKey, ({ privateKeyPem }) => ({
   properties: { privateKeyPem },
 }));
 
-sst.linkable(aws.cloudfront.PublicKey, ({ id, encodedKey }) => ({
+sst.Linkable.wrap(aws.cloudfront.PublicKey, ({ id, encodedKey }) => ({
   properties: { id, encodedKey },
 }));
 
-sst.linkable(aws.cloudfront.Distribution, ({ domainName }) => ({
+sst.Linkable.wrap(aws.cloudfront.Distribution, ({ domainName }) => ({
   properties: { domainName },
 }));
 
