@@ -22,15 +22,20 @@ export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
 
 export function createPrefixedRecord<
   TKey extends string,
+  TDelimiter extends string,
   TPrefix extends string,
->(prefix: TPrefix, keys: Array<TKey>): PrefixedRecord<TPrefix, TKey> {
+>(
+  prefix: TPrefix,
+  delimiter: TDelimiter,
+  keys: Array<TKey>,
+): PrefixedRecord<TPrefix, TDelimiter, TKey> {
   return keys.reduce(
     (prefixedRecord, key) => {
-      prefixedRecord[key] = `${prefix}${key}`;
+      prefixedRecord[key] = `${prefix}${delimiter}${key}`;
 
       return prefixedRecord;
     },
-    {} as PrefixedRecord<TPrefix, TKey>,
+    {} as PrefixedRecord<TPrefix, TDelimiter, TKey>,
   );
 }
 
