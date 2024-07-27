@@ -1,9 +1,7 @@
-import { BadRequestError } from "@paperwait/core/errors";
+import { vValidator } from "@hono/valibot-validator";
 import { pull, push } from "@paperwait/core/replicache";
 import { PullRequest, PushRequest } from "@paperwait/core/schemas";
-import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
-import { validator as honoValidator } from "hono/validator";
 
 import { authorization } from "~/api/middleware";
 
@@ -11,39 +9,19 @@ import type { HonoEnv } from "~/api/types";
 
 export default new Hono<HonoEnv>()
   .use(authorization())
-  .post(
-    "/pull",
-    honoValidator(
-      "json",
-      validator(PullRequest, {
-        Error: BadRequestError,
-        message: "Invalid body",
-      }),
-    ),
-    async (c) => {
-      const pullResult = await pull(c.env.locals.user!, c.req.valid("json"));
+  .post("/pull", vValidator("json", PullRequest), async (c) => {
+    const pullResult = await pull(c.env.locals.user!, c.req.valid("json"));
 
-      if (pullResult.type !== "success")
-        return c.json(pullResult.response, { status: 400 });
+    if (pullResult.type !== "success")
+      return c.json(pullResult.response, { status: 400 });
 
-      return c.json(pullResult.response, { status: 200 });
-    },
-  )
-  .post(
-    "/push",
-    honoValidator(
-      "json",
-      validator(PushRequest, {
-        Error: BadRequestError,
-        message: "Invalid body",
-      }),
-    ),
-    async (c) => {
-      const pushResult = await push(c.env.locals.user!, c.req.valid("json"));
+    return c.json(pullResult.response, { status: 200 });
+  })
+  .post("/push", vValidator("json", PushRequest), async (c) => {
+    const pushResult = await push(c.env.locals.user!, c.req.valid("json"));
 
-      if (pushResult.type !== "success")
-        return c.json(pushResult.response, { status: 400 });
+    if (pushResult.type !== "success")
+      return c.json(pushResult.response, { status: 400 });
 
-      return c.json(null, { status: 200 });
-    },
-  );
+    return c.json(null, { status: 200 });
+  });

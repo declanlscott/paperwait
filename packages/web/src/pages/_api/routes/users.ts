@@ -1,15 +1,10 @@
+import { vValidator } from "@hono/valibot-validator";
 import { db } from "@paperwait/core/database";
-import {
-  BadRequestError,
-  NotFoundError,
-  NotImplementedError,
-} from "@paperwait/core/errors";
+import { NotFoundError, NotImplementedError } from "@paperwait/core/errors";
 import { NanoId } from "@paperwait/core/schemas";
 import { User } from "@paperwait/core/user";
-import { validator } from "@paperwait/core/valibot";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { validator as honoValidator } from "hono/validator";
 import ky from "ky";
 import * as v from "valibot";
 
@@ -23,13 +18,7 @@ export default new Hono<HonoEnv>()
   .use(provider)
   .get(
     "/:id/photo",
-    honoValidator(
-      "param",
-      validator(v.object({ id: NanoId }), {
-        Error: BadRequestError,
-        message: "Invalid parameter",
-      }),
-    ),
+    vValidator("param", v.object({ id: NanoId })),
     async (c) => {
       // TODO: Implement google provider
       if (c.get("provider")!.type !== "entra-id")

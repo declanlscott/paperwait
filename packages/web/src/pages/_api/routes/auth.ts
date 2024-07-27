@@ -1,3 +1,4 @@
+import { vValidator } from "@hono/valibot-validator";
 import {
   createSession,
   invalidateSession,
@@ -13,7 +14,6 @@ import {
 } from "@paperwait/core/auth-provider";
 import { db } from "@paperwait/core/database";
 import {
-  BadRequestError,
   handlePromiseResult,
   NotFoundError,
   NotImplementedError,
@@ -23,11 +23,9 @@ import { Organization } from "@paperwait/core/organization";
 import { isUserExists } from "@paperwait/core/papercut";
 import { NanoId, Registration } from "@paperwait/core/schemas";
 import { User } from "@paperwait/core/user";
-import { validator } from "@paperwait/core/valibot";
 import { and, eq, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
-import { validator as honoValidator } from "hono/validator";
 import * as v from "valibot";
 
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
@@ -40,15 +38,9 @@ export default new Hono<HonoEnv>()
   // Login
   .get(
     "/login",
-    honoValidator(
+    vValidator(
       "query",
-      validator(
-        v.object({ org: v.string(), redirect: v.optional(v.string()) }),
-        {
-          Error: BadRequestError,
-          message: "Invalid query parameters",
-        },
-      ),
+      v.object({ org: v.string(), redirect: v.optional(v.string()) }),
     ),
     async (c) => {
       const { org: orgParam, redirect } = c.req.valid("query");
@@ -154,28 +146,16 @@ export default new Hono<HonoEnv>()
   // Callback
   .get(
     "/callback",
-    honoValidator(
-      "query",
-      validator(v.object({ code: v.string(), state: v.string() }), {
-        Error: BadRequestError,
-        message: "Invalid query parameters",
-      }),
-    ),
-    honoValidator(
+    vValidator("query", v.object({ code: v.string(), state: v.string() })),
+    vValidator(
       "cookie",
-      validator(
-        v.object({
-          provider: Registration.entries.authProvider,
-          state: v.string(),
-          code_verifier: v.string(),
-          orgId: v.string(),
-          redirect: v.fallback(v.string(), "/dashboard"),
-        }),
-        {
-          Error: BadRequestError,
-          message: "Invalid cookies",
-        },
-      ),
+      v.object({
+        provider: Registration.entries.authProvider,
+        state: v.string(),
+        code_verifier: v.string(),
+        orgId: v.string(),
+        redirect: v.fallback(v.string(), "/dashboard"),
+      }),
     ),
     async (c) => {
       const { code } = c.req.valid("query");
@@ -259,13 +239,7 @@ export default new Hono<HonoEnv>()
   .post(
     "/logout/:userId",
     authorization(["administrator"]),
-    honoValidator(
-      "param",
-      validator(v.object({ userId: NanoId }), {
-        Error: BadRequestError,
-        message: "Invalid parameters",
-      }),
-    ),
+    vValidator("param", v.object({ userId: NanoId })),
     async (c) => {
       const { userId } = c.req.valid("param");
 

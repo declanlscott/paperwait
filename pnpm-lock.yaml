@@ -205,6 +205,9 @@ importers:
       '@astrojs/tailwind':
         specifier: ^5.1.0
         version: 5.1.0(astro@4.12.2(@types/node@20.14.12)(typescript@5.5.4))(tailwindcss@3.4.7)
+      '@hono/valibot-validator':
+        specifier: ^0.3.0
+        version: 0.3.0(hono@4.5.1)(valibot@0.36.0)
       '@modular-forms/react':
         specifier: ^0.8.1
         version: 0.8.1(@preact/signals-react@1.3.8(react@18.3.1))(react@18.3.1)
@@ -1365,6 +1368,12 @@ packages:
 
   '@foxglove/xmlrpc@1.3.0':
     resolution: {integrity: sha512-L9S4wrrUh83BycDmQAOTR2oY6PUXW9pCdT8rMIRLkxsdY4hwOpTc9lkeQDg3kO1OjHfiTHfUagvnzXIsMSmsYQ==}
+
+  '@hono/valibot-validator@0.3.0':
+    resolution: {integrity: sha512-EcGJKzLt11SK4K11yKHrhI93ECtKeSHAnnENHw5tCL0ZhyDIx96avc3Ua8/ri4fwVvRPuOzFQ2OBRsVvwZuqeQ==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      valibot: '>=0.31.0 <1'
 
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
@@ -7674,6 +7683,11 @@ snapshots:
       byte-base64: 1.1.0
       sax: 1.4.1
       xmlbuilder2: 3.1.1
+
+  '@hono/valibot-validator@0.3.0(hono@4.5.1)(valibot@0.36.0)':
+    dependencies:
+      hono: 4.5.1
+      valibot: 0.36.0
 
   '@humanwhocodes/config-array@0.11.14':
     dependencies:

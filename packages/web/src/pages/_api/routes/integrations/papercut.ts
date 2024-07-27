@@ -1,14 +1,12 @@
+import { vValidator } from "@hono/valibot-validator";
 import { buildSsmParameterPath, putSsmParameter } from "@paperwait/core/aws";
 import { PAPERCUT_PARAMETER_NAME } from "@paperwait/core/constants";
 import { serializable } from "@paperwait/core/database";
-import { BadRequestError } from "@paperwait/core/errors";
 import { syncPapercutAccounts, testPapercut } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
 import { mutatorRbac, PapercutParameter } from "@paperwait/core/schemas";
-import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
-import { validator as honoValidator } from "hono/validator";
 
 import { authorization } from "~/api/middleware";
 
@@ -31,13 +29,7 @@ export default new Hono<HonoEnv>()
   .put(
     "/credentials",
     authorization(["administrator"]),
-    honoValidator(
-      "json",
-      validator(PapercutParameter, {
-        Error: BadRequestError,
-        message: "Invalid body",
-      }),
-    ),
+    vValidator("json", PapercutParameter),
     async (c) => {
       await putSsmParameter({
         Name: buildSsmParameterPath(

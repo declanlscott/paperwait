@@ -1,4 +1,5 @@
 /* eslint-disable drizzle/enforce-delete-with-where */
+import { vValidator } from "@hono/valibot-validator";
 import {
   buildS3ObjectKey,
   buildSsmParameterPath,
@@ -12,9 +13,7 @@ import { requireAccessToOrder } from "@paperwait/core/data";
 import { serializable } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
 import { NanoId } from "@paperwait/core/schemas";
-import { validator } from "@paperwait/core/valibot";
 import { Hono } from "hono";
-import { validator as honoValidator } from "hono/validator";
 import { Resource } from "sst";
 import * as v from "valibot";
 
@@ -25,22 +24,16 @@ import type { HonoEnv } from "~/api/types";
 export default new Hono<HonoEnv>()
   .get(
     "/signed-put-url",
-    honoValidator(
+    vValidator(
       "query",
-      validator(
-        v.object({
-          name: v.string(),
-          orderId: NanoId,
-          metadata: v.object({
-            contentType: v.string(),
-            contentLength: v.pipe(v.number(), v.integer(), v.minValue(0)),
-          }),
+      v.object({
+        name: v.string(),
+        orderId: NanoId,
+        metadata: v.object({
+          contentType: v.string(),
+          contentLength: v.pipe(v.number(), v.integer(), v.minValue(0)),
         }),
-        {
-          Error: BadRequestError,
-          message: "Invalid query parameters",
-        },
-      ),
+      }),
     ),
     async (c, next) => {
       const orgId = c.env.locals.org!.id;
@@ -76,13 +69,7 @@ export default new Hono<HonoEnv>()
   )
   .get(
     "/signed-get-url",
-    honoValidator(
-      "query",
-      validator(v.object({ name: v.string(), orderId: NanoId }), {
-        Error: BadRequestError,
-        message: "Invalid query parameters",
-      }),
-    ),
+    vValidator("query", v.object({ name: v.string(), orderId: NanoId })),
     async (c, next) => {
       const { orderId } = c.req.valid("query");
 
@@ -106,10 +93,7 @@ export default new Hono<HonoEnv>()
   )
   .delete(
     "/",
-    honoValidator(
-      "query",
-      validator(v.object({ name: v.string(), orderId: NanoId })),
-    ),
+    vValidator("query", v.object({ name: v.string(), orderId: NanoId })),
     async (c, next) => {
       const { orderId } = c.req.valid("query");
 
