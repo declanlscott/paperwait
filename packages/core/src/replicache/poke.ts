@@ -23,8 +23,6 @@ export async function poke(channels: Array<Channel>) {
   );
 
   results
-    .filter(
-      (result): result is PromiseRejectedResult => result.status === "rejected",
-    )
-    .forEach((result) => console.error(result.reason));
+    .filter((result) => result.status === "rejected")
+    .forEach(({ reason }) => console.error(reason));
 }
