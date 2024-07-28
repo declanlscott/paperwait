@@ -24,7 +24,6 @@
     "@smithy/signature-v4": "^4.1.0",
     "arctic": "^1.9.2",
     "drizzle-orm": "^0.32.1",
-    "ky": "^1.5.0",
     "lucia": "^3.2.0",
     "nanoid": "^5.0.7",
     "oslo": "^1.2.1",

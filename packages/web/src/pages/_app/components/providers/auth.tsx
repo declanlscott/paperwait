@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { InvalidUserRoleError } from "@paperwait/core/errors";
+import { HttpError, InvalidUserRoleError } from "@paperwait/core/errors";
 import { enforceRbac } from "@paperwait/core/utils";
 import { redirect } from "@tanstack/react-router";
-import ky from "ky";
 import { Replicache } from "replicache";
 import { createStore, useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -45,10 +44,12 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
             org: null,
             replicache: null,
           })),
-        logout: async () =>
-          await ky.post("/api/auth/logout").then((res) => {
-            if (res.ok) get().actions.reset();
-          }),
+        logout: async () => {
+          const res = await fetch("/api/auth/logout", { method: "POST" });
+          if (!res.ok) throw new HttpError(res.statusText, res.status);
+
+          get().actions.reset();
+        },
         authenticateRoute: (from) => {
           const { user, session, org, replicache } = get();
 

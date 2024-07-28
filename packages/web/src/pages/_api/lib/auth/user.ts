@@ -1,7 +1,11 @@
 import { getSharedAccountPropertiesOutputIndex } from "@paperwait/core/constants";
 import { getUsersByRoles } from "@paperwait/core/data";
 import { db, serializable } from "@paperwait/core/database";
-import { NotImplementedError, UnauthorizedError } from "@paperwait/core/errors";
+import {
+  HttpError,
+  NotImplementedError,
+  UnauthorizedError,
+} from "@paperwait/core/errors";
 import { Organization } from "@paperwait/core/organization";
 import {
   getSharedAccountProperties,
@@ -12,55 +16,48 @@ import {
 } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
+import { EntraIdUserInfo, GoogleUserInfo } from "@paperwait/core/schemas";
 import { User } from "@paperwait/core/user";
+import { validate } from "@paperwait/core/valibot";
 import { and, eq } from "drizzle-orm";
-import ky from "ky";
 import { isDeepEqual } from "remeda";
 
 import type { IdToken } from "@paperwait/core/auth-provider";
 import type { Provider } from "@paperwait/core/organization";
+import type { UserInfo } from "@paperwait/core/schemas";
 import type { OmitTimestamps } from "@paperwait/core/types";
-
-export type EntraIdUserInfo = {
-  sub: string;
-  name: string;
-  family_name: string;
-  given_name: string;
-  picture: string;
-  email: string;
-};
-
-export type GoogleUserInfo = {
-  sub: string;
-  name: string;
-  given_name: string;
-  picture: string;
-  email: string;
-};
-
-export type UserInfo = EntraIdUserInfo | GoogleUserInfo;
 
 export async function getUserInfo(
   provider: Provider,
   accessToken: string,
 ): Promise<UserInfo> {
   switch (provider) {
-    case "entra-id":
-      return await ky
-        .get("https://graph.microsoft.com/oidc/userinfo", {
+    case "entra-id": {
+      const res = await fetch("https://graph.microsoft.com/oidc/userinfo", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!res.ok) throw new HttpError(res.statusText, res.status);
+
+      return validate(EntraIdUserInfo, await res.json());
+    }
+    case "google": {
+      const res = await fetch(
+        "https://openidconnect.googleapis.com/v1/userinfo",
+        {
           headers: {
             Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
           },
-        })
-        .json<EntraIdUserInfo>();
-    case "google":
-      return await ky
-        .get("https://openidconnect.googleapis.com/v1/userinfo", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-        .json<GoogleUserInfo>();
+        },
+      );
+      if (!res.ok) throw new HttpError(res.statusText, res.status);
+
+      return validate(GoogleUserInfo, await res.json());
+    }
     default:
       provider satisfies never;
 

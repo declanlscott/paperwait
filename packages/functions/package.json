@@ -5,8 +5,8 @@
   },
   "dependencies": {
     "@paperwait/core": "workspace:*",
-    "fast-xml-parser": "^4.4.0",
-    "hono": "^4.5.1",
+    "fast-xml-parser": "^4.4.1",
+    "hono": "^4.5.2",
     "valibot": "^0.36.0"
   },
   "devDependencies": {

@@ -1,4 +1,3 @@
-import ky, { HTTPError as kyHttpError } from "ky";
 import { Resource } from "sst";
 
 import { apiGatewaySigner } from "../aws/signature-v4";
@@ -7,16 +6,9 @@ import {
   PAPERCUT_API_TIMEOUT_MS,
 } from "../constants";
 import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
   HttpError,
   InternalServerError,
-  MethodNotAllowedError,
-  NotFoundError,
-  NotImplementedError,
   RequestTimeoutError,
-  UnauthorizedError,
 } from "../errors/http";
 import {
   GetSharedAccountPropertiesResult,
@@ -37,49 +29,41 @@ import type {
 } from "../schemas/xml-rpc";
 
 export async function isUserExists(event: IsUserExistsEvent) {
-  try {
-    const result = await invokeApi(
-      new URL(`${Resource.PapercutApiGateway.url}/is-user-exists`),
-      event,
-    );
+  const result = await invokeApi(
+    new URL(`${Resource.PapercutApiGateway.url}/is-user-exists`),
+    event,
+  );
 
-    const { output } = validate(IsUserExistsResult, result, {
-      Error: InternalServerError,
-      message: "Failed to parse xml-rpc output",
-    });
+  const { output } = validate(IsUserExistsResult, result, {
+    Error: InternalServerError,
+    message: "Failed to parse xml-rpc output",
+  });
 
-    return output;
-  } catch (e) {
-    throw await httpError(e);
-  }
+  return output;
 }
 
 export async function listSharedAccounts(event: ListSharedAccountsEvent) {
   const sharedAccounts: ListSharedAccountsOutput = [];
   let page: ListSharedAccountsOutput;
   do {
-    try {
-      const result = await invokeApi(
-        new URL(`${Resource.PapercutApiGateway.url}/list-shared-accounts`),
-        {
-          ...event,
-          input: {
-            ...event.input,
-            offset: sharedAccounts.length,
-            limit: PAPERCUT_API_PAGINATION_LIMIT,
-          },
-        } satisfies ListSharedAccountsEvent,
-      );
+    const result = await invokeApi(
+      new URL(`${Resource.PapercutApiGateway.url}/list-shared-accounts`),
+      {
+        ...event,
+        input: {
+          ...event.input,
+          offset: sharedAccounts.length,
+          limit: PAPERCUT_API_PAGINATION_LIMIT,
+        },
+      } satisfies ListSharedAccountsEvent,
+    );
 
-      page = validate(ListSharedAccountsResult, result, {
-        Error: InternalServerError,
-        message: "Failed to parse xml-rpc output",
-      }).output;
+    page = validate(ListSharedAccountsResult, result, {
+      Error: InternalServerError,
+      message: "Failed to parse xml-rpc output",
+    }).output;
 
-      sharedAccounts.push(...page);
-    } catch (e) {
-      throw await httpError(e);
-    }
+    sharedAccounts.push(...page);
   } while (page.length === PAPERCUT_API_PAGINATION_LIMIT);
 
   return sharedAccounts;
@@ -91,28 +75,24 @@ export async function listUserSharedAccounts(
   const userSharedAccounts: ListUserSharedAccountsOutput = [];
   let page: ListUserSharedAccountsOutput;
   do {
-    try {
-      const result = await invokeApi(
-        new URL(`${Resource.PapercutApiGateway.url}/list-user-shared-accounts`),
-        {
-          ...event,
-          input: {
-            ...event.input,
-            offset: userSharedAccounts.length,
-            limit: PAPERCUT_API_PAGINATION_LIMIT,
-          },
-        } satisfies ListUserSharedAccountsEvent,
-      );
+    const result = await invokeApi(
+      new URL(`${Resource.PapercutApiGateway.url}/list-user-shared-accounts`),
+      {
+        ...event,
+        input: {
+          ...event.input,
+          offset: userSharedAccounts.length,
+          limit: PAPERCUT_API_PAGINATION_LIMIT,
+        },
+      } satisfies ListUserSharedAccountsEvent,
+    );
 
-      page = validate(ListUserSharedAccountsResult, result, {
-        Error: InternalServerError,
-        message: "Failed to parse xml-rpc output",
-      }).output;
+    page = validate(ListUserSharedAccountsResult, result, {
+      Error: InternalServerError,
+      message: "Failed to parse xml-rpc output",
+    }).output;
 
-      userSharedAccounts.push(...page);
-    } catch (e) {
-      throw await httpError(e);
-    }
+    userSharedAccounts.push(...page);
   } while (page.length === PAPERCUT_API_PAGINATION_LIMIT);
 
   return userSharedAccounts;
@@ -121,34 +101,24 @@ export async function listUserSharedAccounts(
 export async function getSharedAccountProperties(
   event: GetSharedAccountPropertiesEvent,
 ) {
-  try {
-    const result = await invokeApi(
-      new URL(
-        `${Resource.PapercutApiGateway.url}/get-shared-account-properties`,
-      ),
-      event,
-    );
+  const result = await invokeApi(
+    new URL(`${Resource.PapercutApiGateway.url}/get-shared-account-properties`),
+    event,
+  );
 
-    const { output } = validate(GetSharedAccountPropertiesResult, result, {
-      Error: InternalServerError,
-      message: "Failed to parse xml-rpc output",
-    });
+  const { output } = validate(GetSharedAccountPropertiesResult, result, {
+    Error: InternalServerError,
+    message: "Failed to parse xml-rpc output",
+  });
 
-    return output;
-  } catch (e) {
-    throw await httpError(e);
-  }
+  return output;
 }
 
 export async function testPapercut(event: TestPapercutEvent) {
-  try {
-    await invokeApi(
-      new URL(`${Resource.PapercutApiGateway.url}/test-papercut`),
-      event,
-    );
-  } catch (e) {
-    throw await httpError(e);
-  }
+  await invokeApi(
+    new URL(`${Resource.PapercutApiGateway.url}/test-papercut`),
+    event,
+  );
 }
 
 async function invokeApi(url: URL, event: unknown) {
@@ -170,41 +140,23 @@ async function invokeApi(url: URL, event: unknown) {
     body,
   });
 
-  return await ky
-    .post(url, { body, headers, signal: controller.signal })
-    .json();
-}
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      body,
+      headers,
+      signal: controller.signal,
+    });
 
-async function httpError(e: unknown): Promise<HttpError> {
-  console.error(e);
+    if (!res.ok) throw new HttpError(res.statusText, res.status);
 
-  if (e instanceof HttpError) return e;
-  if (e instanceof kyHttpError) {
-    const message = await e.response.text();
+    return await res.json();
+  } catch (e) {
+    console.error(e);
 
-    switch (e.response.status) {
-      case 400:
-        return new BadRequestError(message);
-      case 401:
-        return new UnauthorizedError(message);
-      case 403:
-        return new ForbiddenError(message);
-      case 404:
-        return new NotFoundError(message);
-      case 405:
-        return new MethodNotAllowedError(message);
-      case 408:
-        return new RequestTimeoutError(message);
-      case 409:
-        return new ConflictError(message);
-      case 501:
-        return new NotImplementedError(message);
-      default:
-        return new InternalServerError(message);
-    }
+    if (e instanceof Error && e.name === "AbortError")
+      throw new RequestTimeoutError();
+
+    throw e;
   }
-  if (e instanceof Error && e.name === "AbortError")
-    return new RequestTimeoutError();
-
-  return new InternalServerError();
 }

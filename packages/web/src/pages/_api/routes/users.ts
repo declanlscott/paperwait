@@ -1,11 +1,14 @@
 import { vValidator } from "@hono/valibot-validator";
 import { db } from "@paperwait/core/database";
-import { NotFoundError, NotImplementedError } from "@paperwait/core/errors";
+import {
+  HttpError,
+  NotFoundError,
+  NotImplementedError,
+} from "@paperwait/core/errors";
 import { NanoId } from "@paperwait/core/schemas";
 import { User } from "@paperwait/core/user";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import ky from "ky";
 import * as v from "valibot";
 
 import { authorization, provider } from "~/api/middleware";
@@ -37,7 +40,7 @@ export default new Hono<HonoEnv>()
         );
       if (!user) throw new NotFoundError("User not found");
 
-      const res = await ky.get(
+      const res = await fetch(
         `https://graph.microsoft.com/v1.0/users/${user.providerId}/photo/$value`,
         {
           headers: {
@@ -45,6 +48,7 @@ export default new Hono<HonoEnv>()
           },
         },
       );
+      if (!res.ok) throw new HttpError(res.statusText, res.status);
 
       c.header("Content-Type", res.headers.get("Content-Type") ?? undefined);
       c.header("Cache-Control", "max-age=2592000");

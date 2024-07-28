@@ -1,3 +1,4 @@
+export * from "./auth";
 export * from "./id";
 export * from "./mutators";
 export * from "./papercut";
