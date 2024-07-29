@@ -1,5 +1,3 @@
-import { AUTH_CALLBACK_PATH } from "@paperwait/core/constants";
-
 import { domain } from "./secrets";
 
 const wellKnownOutput = azuread.getApplicationPublishedAppIdsOutput({});
@@ -20,8 +18,8 @@ export const entraIdApp = new azuread.Application("EntraIdApplication", {
   signInAudience: "AzureADMultipleOrgs",
   web: {
     redirectUris: [
-      `http://localhost:4321${AUTH_CALLBACK_PATH}`,
-      $interpolate`https://${domain.value}${AUTH_CALLBACK_PATH}`,
+      "http://localhost:4321/api/auth/callback",
+      $interpolate`https://${domain.value}/api/auth/callback`,
     ],
   },
   requiredResourceAccesses: [

@@ -1,17 +1,9 @@
-import { CLIENT_RESOURCE_PREFIX } from "@paperwait/core/constants";
+export const domain = new sst.Secret("ClientDomain", "paperwait.app");
 
-export const domain = new sst.Secret(
-  `${CLIENT_RESOURCE_PREFIX}Domain`,
-  "paperwait.app",
-);
-
-export const isDev = new sst.Secret(
-  `${CLIENT_RESOURCE_PREFIX}IsDev`,
-  String($dev),
-);
+export const isDev = new sst.Secret("ClientIsDev", String($dev));
 
 export const replicacheLicenseKey = new sst.Secret(
-  `${CLIENT_RESOURCE_PREFIX}ReplicacheLicenseKey`,
+  "ClientReplicacheLicenseKey",
 );
 
 export const dbCredentials = {
@@ -25,7 +17,7 @@ export const dbCredentials = {
 
 export const partyKitSecrets = {
   apiKey: new sst.Secret("PartyKitApiKey"),
-  url: new sst.Secret(`${CLIENT_RESOURCE_PREFIX}PartyKitUrl`),
+  url: new sst.Secret("ClientPartyKitUrl"),
 } as const;
 
 export const googleCredentials = {
