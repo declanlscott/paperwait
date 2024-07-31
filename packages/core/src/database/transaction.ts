@@ -35,6 +35,8 @@ export async function transact<
 
     return { status: "success", output };
   } catch (error) {
+    console.error(error);
+
     if (!options?.onRollback)
       return { status: "error", error, shouldRethrow: true };
 

@@ -149,6 +149,7 @@ async function invokeApi(url: URL, event: unknown) {
     });
 
     if (!res.ok) throw new HttpError(res.statusText, res.status);
+    if (res.status === 204) return;
 
     return await res.json();
   } catch (e) {

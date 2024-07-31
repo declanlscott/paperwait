@@ -185,7 +185,7 @@ export default new Hono<HonoEnv>()
         }
       }
 
-      const [org] = await db
+      const org = await db
         .select({ status: Organization.status })
         .from(Organization)
         .where(
@@ -193,7 +193,9 @@ export default new Hono<HonoEnv>()
             eq(Organization.providerId, idToken.orgProviderId),
             eq(Organization.id, orgId),
           ),
-        );
+        )
+        .execute()
+        .then((rows) => rows.at(0));
       if (!org)
         throw new NotFoundError(`
         Failed to find organization (${orgId}) with providerId: ${idToken.orgProviderId}

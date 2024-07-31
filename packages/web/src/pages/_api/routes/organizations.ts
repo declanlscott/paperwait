@@ -83,6 +83,8 @@ export default new Hono<HonoEnv>()
       {
         onRollback: async () => {
           if (org) {
+            console.log("Rolling back ssm parameters for org", org.id);
+
             // Rollback the parameters if the transaction fails
             await Promise.all([
               deleteSsmParameter({
