@@ -31,6 +31,21 @@ export default $config({
   async run() {
     const infra = await import("./infra");
 
+    new sst.x.DevCommand("Studio", {
+      link: Object.values(infra.dbCredentials),
+      dev: {
+        command: "pnpm db:studio",
+        directory: "packages/core",
+      },
+    });
+
+    new sst.x.DevCommand("Realtime", {
+      dev: {
+        command: $interpolate`npx partykit dev --var API_KEY=${infra.partyKitSecrets.apiKey.value} --var REPLICACHE_LICENSE_KEY=${infra.replicacheLicenseKey.value}`,
+        directory: "packages/realtime",
+      },
+    });
+
     return {
       url: infra.astro.url,
       whitelistIp: infra.natInstance.publicIp,
