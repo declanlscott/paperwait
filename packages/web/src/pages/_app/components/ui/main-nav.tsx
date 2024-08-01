@@ -1,22 +1,27 @@
 import { Link as AriaLink, composeRenderProps } from "react-aria-components";
 import { getRouteApi, useRouter, useRouterState } from "@tanstack/react-router";
 import { useAtom } from "jotai/react";
-import { CircleCheck, CircleDashed, Home, Search } from "lucide-react";
+import {
+  ChevronsUpDown,
+  CircleCheck,
+  CircleDashed,
+  Home,
+  Search,
+} from "lucide-react";
 
 import { CommandBar } from "~/app/components/ui/command-bar";
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
-  Combobox,
+  BaseCombobox,
   ComboboxCollection,
   ComboboxInput,
   ComboboxItem,
-  ComboboxLabel,
   ComboboxListBox,
   ComboboxPopover,
-  ComboboxSection,
 } from "~/app/components/ui/primitives/combobox";
 import { DialogTrigger } from "~/app/components/ui/primitives/dialog";
+import { FieldGroup } from "~/app/components/ui/primitives/field";
 import { KeyboardShortcut } from "~/app/components/ui/primitives/keyboard-shortcut";
 import { Separator } from "~/app/components/ui/primitives/separator";
 import {
@@ -83,48 +88,49 @@ function RoomSelector() {
 
   return (
     <div className="hidden md:flex">
-      <Combobox
+      <BaseCombobox
         aria-label="Select Room"
         onSelectionChange={setSelectedRoomId}
         selectedKey={selectedRoomId}
       >
-        <ComboboxInput
-          placeholder="Select a room..."
-          className="w-32"
-          icon={<Home className="size-4 opacity-50" />}
-          aria-controls="room-selector-listbox"
-        />
+        <FieldGroup className="p-0">
+          <div className="flex items-center pl-3">
+            <Home className="size-4 opacity-50" />
+          </div>
+
+          <ComboboxInput
+            placeholder="Select a room..."
+            className="w-32"
+            aria-controls="room-selector-listbox"
+          />
+
+          <Button variant="ghost" size="icon" className="mr-1 size-6 p-1">
+            <ChevronsUpDown aria-hidden="true" className="size-4 opacity-50" />
+          </Button>
+        </FieldGroup>
 
         <ComboboxPopover>
           <ComboboxListBox id="room-selector-listbox">
-            <ComboboxSection>
-              <ComboboxLabel separator>Rooms</ComboboxLabel>
+            <ComboboxCollection items={rooms}>
+              {(room) => (
+                <ComboboxItem textValue={room.name} id={room.id} key={room.id}>
+                  <div className="flex w-full items-center justify-between">
+                    {room.name}
 
-              <ComboboxCollection items={rooms}>
-                {(room) => (
-                  <ComboboxItem
-                    textValue={room.name}
-                    id={room.id}
-                    key={room.id}
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      {room.name}
-
-                      <EnforceRbac roles={["administrator", "operator"]}>
-                        {room.status === "draft" ? (
-                          <CircleDashed className="size-4 opacity-50" />
-                        ) : (
-                          <CircleCheck className="size-4 opacity-50" />
-                        )}
-                      </EnforceRbac>
-                    </div>
-                  </ComboboxItem>
-                )}
-              </ComboboxCollection>
-            </ComboboxSection>
+                    <EnforceRbac roles={["administrator", "operator"]}>
+                      {room.status === "draft" ? (
+                        <CircleDashed className="size-4 opacity-50" />
+                      ) : (
+                        <CircleCheck className="size-4 opacity-50" />
+                      )}
+                    </EnforceRbac>
+                  </div>
+                </ComboboxItem>
+              )}
+            </ComboboxCollection>
           </ComboboxListBox>
         </ComboboxPopover>
-      </Combobox>
+      </BaseCombobox>
     </div>
   );
 }

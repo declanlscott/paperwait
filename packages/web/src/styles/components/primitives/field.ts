@@ -20,7 +20,7 @@ export type LabelStyles = VariantProps<typeof labelStyles>;
 
 export const fieldGroupStyles = tv({
   extend: focusRing,
-  base: "group flex h-10 justify-between overflow-hidden rounded-md border border-input bg-background text-sm",
+  base: "relative flex h-10 w-full items-center overflow-hidden rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
   variants: {
     isDisabled: {
       true: "cursor-not-allowed opacity-50",

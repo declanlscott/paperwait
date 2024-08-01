@@ -1,146 +1,125 @@
 import {
-  Button as AriaButton,
   ComboBox as AriaCombobox,
-  Collection as AriaComboboxCollection,
-  Section as AriaComboboxSection,
-  Header as AriaHeader,
   Input as AriaInput,
   ListBox as AriaListBox,
-  ListBoxItem as AriaListBoxItem,
-  Popover as AriaPopover,
-  Separator as AriaSeparator,
+  Text as AriaText,
   composeRenderProps,
 } from "react-aria-components";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { twMerge } from "tailwind-merge";
+import { ChevronsUpDown } from "lucide-react";
 
-import { FieldGroup } from "~/app/components/ui/primitives/field";
+import { Button } from "~/app/components/ui/primitives/button";
+import {
+  FieldError,
+  FieldGroup,
+  Label,
+} from "~/app/components/ui/primitives/field";
+import {
+  ListBoxCollection,
+  ListBoxHeader,
+  ListBoxItem,
+  ListBoxSection,
+} from "~/app/components/ui/primitives/list-box";
+import { Popover } from "~/app/components/ui/primitives/popover";
 import {
   comboboxInputStyles,
-  comboboxItemStyles,
-  comboboxLabelStyles,
   comboboxListBoxStyles,
   comboboxPopoverStyles,
-  comboboxSeparatorStyles,
+  comboboxStyles,
 } from "~/styles/components/primitives/combobox";
 
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type {
+  ComboBoxProps as AriaComboboxProps,
   InputProps as AriaInputProps,
-  ListBoxItemProps as AriaListBoxItemProps,
   ListBoxProps as AriaListBoxProps,
   PopoverProps as AriaPopoverProps,
-  SeparatorProps as AriaSeparatorProps,
+  ValidationResult as AriaValidationResult,
 } from "react-aria-components";
 
-export const Combobox = AriaCombobox;
+export const BaseCombobox = AriaCombobox;
 
-export const ComboboxSection = AriaComboboxSection;
+export const ComboboxItem = ListBoxItem;
 
-export const ComboboxCollection = AriaComboboxCollection;
+export const ComboboxHeader = ListBoxHeader;
 
-export interface ComboboxInputProps extends AriaInputProps {
-  icon?: ReactNode;
-}
-export function ComboboxInput({ icon, ...props }: ComboboxInputProps) {
-  return (
-    <FieldGroup>
-      <div className="flex items-center pl-3">{icon}</div>
+export const ComboboxSection = ListBoxSection;
 
-      <AriaInput
-        {...props}
-        className={composeRenderProps(
-          props.className,
-          (className, renderProps) =>
-            comboboxInputStyles({ ...renderProps, className }),
-        )}
-      />
+export const ComboboxCollection = ListBoxCollection;
 
-      <AriaButton className="pr-3">
-        <ChevronsUpDown aria-hidden className="size-4 opacity-50" />
-      </AriaButton>
-    </FieldGroup>
-  );
-}
+export type ComboboxInputProps = AriaInputProps;
+export const ComboboxInput = ({ className, ...props }: ComboboxInputProps) => (
+  <AriaInput
+    className={composeRenderProps(className, (className, renderProps) =>
+      comboboxInputStyles({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export interface ComboboxLabelProps extends ComponentProps<typeof AriaHeader> {
-  separator?: boolean;
-  offset?: boolean;
-}
-export function ComboboxLabel({
+export type ComboboxPopoverProps = AriaPopoverProps;
+export const ComboboxPopover = ({ className, ...props }: AriaPopoverProps) => (
+  <Popover
+    className={composeRenderProps(className, (className, renderProps) =>
+      comboboxPopoverStyles({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
+
+export type ComboboxListBoxProps<T extends object> = AriaListBoxProps<T>;
+export const ComboboxListBox = <T extends object>({
   className,
-  separator = false,
-  offset = false,
   ...props
-}: ComboboxLabelProps) {
-  return (
-    <AriaHeader
-      {...props}
-      className={twMerge(comboboxLabelStyles({ separator, offset }), className)}
-    />
-  );
-}
+}: ComboboxListBoxProps<T>) => (
+  <AriaListBox
+    className={composeRenderProps(className, (className, renderProps) =>
+      comboboxListBoxStyles({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export type ComboboxItemProps = AriaListBoxItemProps;
-export function ComboboxItem({
+export interface ComboboxProps<T extends object>
+  extends Omit<AriaComboboxProps<T>, "children"> {
+  label?: string;
+  description?: string | null;
+  errorMessage?: string | ((validation: AriaValidationResult) => string);
+  children: ReactNode | ((item: T) => ReactNode);
+}
+export const Combobox = <T extends object>({
+  label,
+  description,
+  errorMessage,
   className,
   children,
   ...props
-}: ComboboxItemProps) {
-  return (
-    <AriaListBoxItem
-      {...props}
-      className={composeRenderProps(className, (className, renderProps) =>
-        comboboxItemStyles({ ...renderProps, className }),
-      )}
-    >
-      {(values) => (
-        <>
-          {values.isSelected && (
-            <span className="absolute left-2 size-4 items-center justify-center">
-              <Check className="size-4" />
-            </span>
-          )}
+}: ComboboxProps<T>) => (
+  <Combobox
+    className={composeRenderProps(className, (className, renderProps) =>
+      comboboxStyles({ className, ...renderProps }),
+    )}
+    {...props}
+  >
+    <Label>{label}</Label>
 
-          {typeof children === "function" ? children(values) : children}
-        </>
-      )}
-    </AriaListBoxItem>
-  );
-}
+    <FieldGroup className="p-0">
+      <ComboboxInput />
 
-export type ComboboxSeparatorProps = AriaSeparatorProps;
-export function ComboboxSeparator(props: ComboboxSeparatorProps) {
-  return (
-    <AriaSeparator
-      {...props}
-      className={twMerge(comboboxSeparatorStyles(), props.className)}
-    />
-  );
-}
+      <Button variant="ghost" size="icon" className="mr-1 size-6 p-1">
+        <ChevronsUpDown aria-hidden="true" className="size-4 opacity-50" />
+      </Button>
+    </FieldGroup>
 
-export type ComboboxPopoverProps = AriaPopoverProps;
-export function ComboboxPopover(props: ComboboxPopoverProps) {
-  return (
-    <AriaPopover
-      {...props}
-      className={composeRenderProps(props.className, (className, renderProps) =>
-        comboboxPopoverStyles({ ...renderProps, className }),
-      )}
-    />
-  );
-}
+    {description && (
+      <AriaText className="text-muted-foreground text-sm" slot="description">
+        {description}
+      </AriaText>
+    )}
 
-export type ComboboxListBoxProps<T extends object> = AriaListBoxProps<T>;
-export function ComboboxListBox<T extends object>(
-  props: ComboboxListBoxProps<T>,
-) {
-  return (
-    <AriaListBox
-      {...props}
-      className={composeRenderProps(props.className, (className, renderProps) =>
-        comboboxListBoxStyles({ ...renderProps, className }),
-      )}
-    />
-  );
-}
+    <FieldError>{errorMessage}</FieldError>
+
+    <ComboboxPopover>
+      <ComboboxListBox>{children}</ComboboxListBox>
+    </ComboboxPopover>
+  </Combobox>
+);
