@@ -28,6 +28,7 @@ import { linksFactory } from "~/app/lib/links";
 
 import type { Room } from "@paperwait/core/room";
 import type { ToOptions } from "@tanstack/react-router";
+import type { CommandBarPage } from "~/app/types";
 
 export function CommandBar() {
   const state = useContext(OverlayTriggerStateContext);
@@ -66,15 +67,21 @@ export function CommandBar() {
         }}
       >
         {activePage.type === "home" && <HomeCommand />}
+
         {activePage.type === "room" && (
           <RoomCommand roomId={activePage.roomId} />
+        )}
+
+        {activePage.type === "room-settings" && (
+          <RoomSettingsCommand to={activePage.to} />
         )}
       </CommandDialog>
     </DialogOverlay>
   );
 }
 
-function HomeCommand() {
+type HomeCommandProps = Omit<Extract<CommandBarPage, { type: "home" }>, "type">;
+function HomeCommand(_props: HomeCommandProps) {
   const { user, replicache } = useAuthenticated();
 
   const state = useContext(OverlayTriggerStateContext);
@@ -209,15 +216,30 @@ function HomeCommand() {
               </p>
             </CommandItem>
           ))}
+
+          {linksFactory.roomSettings("")[user.role].map((link) => (
+            <CommandItem
+              key={`room-settings-${link.name}`}
+              onSelect={() =>
+                pushPage({ type: "room-settings", to: link.props.href.to })
+              }
+              keywords={["scope", "room settings"]}
+            >
+              <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
+
+              <p>
+                Jump to <span className="font-medium">Room Settings</span>{" "}
+                {link.name}
+              </p>
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </>
   );
 }
 
-type RoomCommandProps = {
-  roomId: Room["id"];
-};
+type RoomCommandProps = Omit<Extract<CommandBarPage, { type: "room" }>, "type">;
 function RoomCommand(props: RoomCommandProps) {
   const state = useContext(OverlayTriggerStateContext);
 
@@ -257,7 +279,7 @@ function RoomCommand(props: RoomCommandProps) {
       />
 
       <CommandList>
-        <CommandEmpty>No rooms found.</CommandEmpty>
+        <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Room">
           {room && (
@@ -291,6 +313,53 @@ function RoomCommand(props: RoomCommandProps) {
               </EnforceRbac>
             </>
           )}
+        </CommandGroup>
+      </CommandList>
+    </>
+  );
+}
+
+type RoomSettingsCommandProps = Omit<
+  Extract<CommandBarPage, { type: "room-settings" }>,
+  "type"
+>;
+function RoomSettingsCommand(props: RoomSettingsCommandProps) {
+  const state = useContext(OverlayTriggerStateContext);
+
+  const { input } = useCommandBar();
+  const { setInput, popPage } = useCommandBarActions();
+
+  const rooms = useQuery(queryFactory.rooms());
+
+  const navigate = useNavigate();
+
+  const handleNavigation = async (to: ToOptions) =>
+    navigate(to).then(() => state.close());
+
+  return (
+    <>
+      <CommandInput
+        placeholder="Room Name"
+        autoFocus
+        value={input}
+        onValueChange={setInput}
+        back={{ buttonProps: { onPress: () => popPage() } }}
+      />
+
+      <CommandList>
+        <CommandEmpty>No rooms found.</CommandEmpty>
+
+        <CommandGroup heading="Rooms">
+          {rooms?.map((room) => (
+            <CommandItem
+              key={room.id}
+              onSelect={() =>
+                handleNavigation({ to: props.to, params: { roomId: room.id } })
+              }
+            >
+              {room.name}
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </>

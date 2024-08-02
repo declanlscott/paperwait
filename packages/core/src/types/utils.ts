@@ -5,3 +5,8 @@ export type PrefixedRecord<
 > = {
   [Key in TKey]: `${TPrefix}${TDelimiter}${Key}`;
 };
+
+export type StartsWith<
+  TPrefix extends string,
+  TValue extends string,
+> = TValue extends `${TPrefix}${string}` ? TValue : never;
