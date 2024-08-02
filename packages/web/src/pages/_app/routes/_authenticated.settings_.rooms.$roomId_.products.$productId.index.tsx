@@ -16,7 +16,8 @@ export const Route = createFileRoute(
       context.replicache.query(queryFactory.product(params.productId)),
     ]);
 
-    if (roomResult.status === "rejected" || productResult.status === "rejected")
+    if (roomResult.status === "rejected" || !roomResult.value) throw notFound();
+    if (productResult.status === "rejected" || !productResult.value)
       throw notFound();
 
     return {
