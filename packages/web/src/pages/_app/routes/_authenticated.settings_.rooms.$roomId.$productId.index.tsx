@@ -1,10 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_authenticated/settings/products")({
+export const Route = createFileRoute(
+  "/_authenticated/settings/rooms/$roomId/$productId/",
+)({
   beforeLoad: ({ context }) =>
     context.authStore.actions.authorizeRoute(context.user, [
       "administrator",
       "operator",
     ]),
-  component: () => <div>Hello /_authenticated/settings/products!</div>,
+  component: () => (
+    <div>Hello /_authenticated/settings/rooms/$roomId/$productId/!</div>
+  ),
 });

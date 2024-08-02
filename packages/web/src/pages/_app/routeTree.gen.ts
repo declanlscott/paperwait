@@ -18,16 +18,28 @@ import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as AuthenticatedDashboardImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedUsersIndexImport } from './routes/_authenticated.users.index'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated.settings.index'
+import { Route as AuthenticatedProductsIndexImport } from './routes/_authenticated.products.index'
 import { Route as AuthenticatedUsersUserIdImport } from './routes/_authenticated.users.$userId'
-import { Route as AuthenticatedSettingsProductsImport } from './routes/_authenticated.settings.products'
+import { Route as AuthenticatedSettingsRoomsImport } from './routes/_authenticated.settings.rooms'
 import { Route as AuthenticatedSettingsIntegrationsImport } from './routes/_authenticated.settings.integrations'
 import { Route as AuthenticatedSettingsImagesImport } from './routes/_authenticated.settings.images'
+import { Route as AuthenticatedSettingsRoomsRoomIdIndexImport } from './routes/_authenticated.settings_.rooms.$roomId.index'
+import { Route as AuthenticatedSettingsRoomsRoomIdProductIdIndexImport } from './routes/_authenticated.settings_.rooms.$roomId.$productId.index'
 
 // Create Virtual Routes
 
 const AuthenticatedUsersLazyImport = createFileRoute('/_authenticated/users')()
 const AuthenticatedSettingsLazyImport = createFileRoute(
   '/_authenticated/settings',
+)()
+const AuthenticatedProductsLazyImport = createFileRoute(
+  '/_authenticated/products',
+)()
+const AuthenticatedSettingsRoomsRoomIdLazyImport = createFileRoute(
+  '/_authenticated/settings/rooms/$roomId',
+)()
+const AuthenticatedSettingsRoomsRoomIdProductIdLazyImport = createFileRoute(
+  '/_authenticated/settings/rooms/$roomId/$productId',
 )()
 
 // Create/Update Routes
@@ -56,6 +68,13 @@ const AuthenticatedSettingsLazyRoute = AuthenticatedSettingsLazyImport.update({
   import('./routes/_authenticated.settings.lazy').then((d) => d.Route),
 )
 
+const AuthenticatedProductsLazyRoute = AuthenticatedProductsLazyImport.update({
+  path: '/products',
+  getParentRoute: () => AuthenticatedRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated.products.lazy').then((d) => d.Route),
+)
+
 const AuthenticatedDashboardRoute = AuthenticatedDashboardImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
@@ -73,16 +92,24 @@ const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
   } as any,
 )
 
+const AuthenticatedProductsIndexRoute = AuthenticatedProductsIndexImport.update(
+  {
+    path: '/',
+    getParentRoute: () => AuthenticatedProductsLazyRoute,
+  } as any,
+)
+
 const AuthenticatedUsersUserIdRoute = AuthenticatedUsersUserIdImport.update({
   path: '/$userId',
   getParentRoute: () => AuthenticatedUsersLazyRoute,
 } as any)
 
-const AuthenticatedSettingsProductsRoute =
-  AuthenticatedSettingsProductsImport.update({
-    path: '/products',
+const AuthenticatedSettingsRoomsRoute = AuthenticatedSettingsRoomsImport.update(
+  {
+    path: '/rooms',
     getParentRoute: () => AuthenticatedSettingsLazyRoute,
-  } as any)
+  } as any,
+)
 
 const AuthenticatedSettingsIntegrationsRoute =
   AuthenticatedSettingsIntegrationsImport.update({
@@ -94,6 +121,38 @@ const AuthenticatedSettingsImagesRoute =
   AuthenticatedSettingsImagesImport.update({
     path: '/images',
     getParentRoute: () => AuthenticatedSettingsLazyRoute,
+  } as any)
+
+const AuthenticatedSettingsRoomsRoomIdLazyRoute =
+  AuthenticatedSettingsRoomsRoomIdLazyImport.update({
+    path: '/settings/rooms/$roomId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated.settings_.rooms.$roomId.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedSettingsRoomsRoomIdIndexRoute =
+  AuthenticatedSettingsRoomsRoomIdIndexImport.update({
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRoomsRoomIdLazyRoute,
+  } as any)
+
+const AuthenticatedSettingsRoomsRoomIdProductIdLazyRoute =
+  AuthenticatedSettingsRoomsRoomIdProductIdLazyImport.update({
+    path: '/$productId',
+    getParentRoute: () => AuthenticatedSettingsRoomsRoomIdLazyRoute,
+  } as any).lazy(() =>
+    import(
+      './routes/_authenticated.settings_.rooms.$roomId.$productId.lazy'
+    ).then((d) => d.Route),
+  )
+
+const AuthenticatedSettingsRoomsRoomIdProductIdIndexRoute =
+  AuthenticatedSettingsRoomsRoomIdProductIdIndexImport.update({
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRoomsRoomIdProductIdLazyRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -119,6 +178,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/products': {
+      id: '/_authenticated/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedProductsLazyImport
       parentRoute: typeof AuthenticatedImport
     }
     '/_authenticated/settings': {
@@ -149,11 +215,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIntegrationsImport
       parentRoute: typeof AuthenticatedSettingsLazyImport
     }
-    '/_authenticated/settings/products': {
-      id: '/_authenticated/settings/products'
-      path: '/products'
-      fullPath: '/settings/products'
-      preLoaderRoute: typeof AuthenticatedSettingsProductsImport
+    '/_authenticated/settings/rooms': {
+      id: '/_authenticated/settings/rooms'
+      path: '/rooms'
+      fullPath: '/settings/rooms'
+      preLoaderRoute: typeof AuthenticatedSettingsRoomsImport
       parentRoute: typeof AuthenticatedSettingsLazyImport
     }
     '/_authenticated/users/$userId': {
@@ -162,6 +228,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/users/$userId'
       preLoaderRoute: typeof AuthenticatedUsersUserIdImport
       parentRoute: typeof AuthenticatedUsersLazyImport
+    }
+    '/_authenticated/products/': {
+      id: '/_authenticated/products/'
+      path: '/'
+      fullPath: '/products/'
+      preLoaderRoute: typeof AuthenticatedProductsIndexImport
+      parentRoute: typeof AuthenticatedProductsLazyImport
     }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
@@ -177,6 +250,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersIndexImport
       parentRoute: typeof AuthenticatedUsersLazyImport
     }
+    '/_authenticated/settings/rooms/$roomId': {
+      id: '/_authenticated/settings/rooms/$roomId'
+      path: '/settings/rooms/$roomId'
+      fullPath: '/settings/rooms/$roomId'
+      preLoaderRoute: typeof AuthenticatedSettingsRoomsRoomIdLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/settings/rooms/$roomId/$productId': {
+      id: '/_authenticated/settings/rooms/$roomId/$productId'
+      path: '/$productId'
+      fullPath: '/settings/rooms/$roomId/$productId'
+      preLoaderRoute: typeof AuthenticatedSettingsRoomsRoomIdProductIdLazyImport
+      parentRoute: typeof AuthenticatedSettingsRoomsRoomIdLazyImport
+    }
+    '/_authenticated/settings/rooms/$roomId/': {
+      id: '/_authenticated/settings/rooms/$roomId/'
+      path: '/'
+      fullPath: '/settings/rooms/$roomId/'
+      preLoaderRoute: typeof AuthenticatedSettingsRoomsRoomIdIndexImport
+      parentRoute: typeof AuthenticatedSettingsRoomsRoomIdLazyImport
+    }
+    '/_authenticated/settings/rooms/$roomId/$productId/': {
+      id: '/_authenticated/settings/rooms/$roomId/$productId/'
+      path: '/'
+      fullPath: '/settings/rooms/$roomId/$productId/'
+      preLoaderRoute: typeof AuthenticatedSettingsRoomsRoomIdProductIdIndexImport
+      parentRoute: typeof AuthenticatedSettingsRoomsRoomIdProductIdLazyImport
+    }
   }
 }
 
@@ -185,16 +286,27 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   AuthenticatedRoute: AuthenticatedRoute.addChildren({
     AuthenticatedDashboardRoute,
+    AuthenticatedProductsLazyRoute: AuthenticatedProductsLazyRoute.addChildren({
+      AuthenticatedProductsIndexRoute,
+    }),
     AuthenticatedSettingsLazyRoute: AuthenticatedSettingsLazyRoute.addChildren({
       AuthenticatedSettingsImagesRoute,
       AuthenticatedSettingsIntegrationsRoute,
-      AuthenticatedSettingsProductsRoute,
+      AuthenticatedSettingsRoomsRoute,
       AuthenticatedSettingsIndexRoute,
     }),
     AuthenticatedUsersLazyRoute: AuthenticatedUsersLazyRoute.addChildren({
       AuthenticatedUsersUserIdRoute,
       AuthenticatedUsersIndexRoute,
     }),
+    AuthenticatedSettingsRoomsRoomIdLazyRoute:
+      AuthenticatedSettingsRoomsRoomIdLazyRoute.addChildren({
+        AuthenticatedSettingsRoomsRoomIdProductIdLazyRoute:
+          AuthenticatedSettingsRoomsRoomIdProductIdLazyRoute.addChildren({
+            AuthenticatedSettingsRoomsRoomIdProductIdIndexRoute,
+          }),
+        AuthenticatedSettingsRoomsRoomIdIndexRoute,
+      }),
   }),
   LoginRoute,
 })
@@ -215,8 +327,10 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/dashboard",
+        "/_authenticated/products",
         "/_authenticated/settings",
-        "/_authenticated/users"
+        "/_authenticated/users",
+        "/_authenticated/settings/rooms/$roomId"
       ]
     },
     "/login": {
@@ -226,13 +340,20 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated.dashboard.tsx",
       "parent": "/_authenticated"
     },
+    "/_authenticated/products": {
+      "filePath": "_authenticated.products.lazy.tsx",
+      "parent": "/_authenticated",
+      "children": [
+        "/_authenticated/products/"
+      ]
+    },
     "/_authenticated/settings": {
       "filePath": "_authenticated.settings.lazy.tsx",
       "parent": "/_authenticated",
       "children": [
         "/_authenticated/settings/images",
         "/_authenticated/settings/integrations",
-        "/_authenticated/settings/products",
+        "/_authenticated/settings/rooms",
         "/_authenticated/settings/"
       ]
     },
@@ -252,13 +373,17 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_authenticated.settings.integrations.tsx",
       "parent": "/_authenticated/settings"
     },
-    "/_authenticated/settings/products": {
-      "filePath": "_authenticated.settings.products.tsx",
+    "/_authenticated/settings/rooms": {
+      "filePath": "_authenticated.settings.rooms.tsx",
       "parent": "/_authenticated/settings"
     },
     "/_authenticated/users/$userId": {
       "filePath": "_authenticated.users.$userId.tsx",
       "parent": "/_authenticated/users"
+    },
+    "/_authenticated/products/": {
+      "filePath": "_authenticated.products.index.tsx",
+      "parent": "/_authenticated/products"
     },
     "/_authenticated/settings/": {
       "filePath": "_authenticated.settings.index.tsx",
@@ -267,6 +392,29 @@ export const routeTree = rootRoute.addChildren({
     "/_authenticated/users/": {
       "filePath": "_authenticated.users.index.tsx",
       "parent": "/_authenticated/users"
+    },
+    "/_authenticated/settings/rooms/$roomId": {
+      "filePath": "_authenticated.settings_.rooms.$roomId.lazy.tsx",
+      "parent": "/_authenticated",
+      "children": [
+        "/_authenticated/settings/rooms/$roomId/$productId",
+        "/_authenticated/settings/rooms/$roomId/"
+      ]
+    },
+    "/_authenticated/settings/rooms/$roomId/$productId": {
+      "filePath": "_authenticated.settings_.rooms.$roomId.$productId.lazy.tsx",
+      "parent": "/_authenticated/settings/rooms/$roomId",
+      "children": [
+        "/_authenticated/settings/rooms/$roomId/$productId/"
+      ]
+    },
+    "/_authenticated/settings/rooms/$roomId/": {
+      "filePath": "_authenticated.settings_.rooms.$roomId.index.tsx",
+      "parent": "/_authenticated/settings/rooms/$roomId"
+    },
+    "/_authenticated/settings/rooms/$roomId/$productId/": {
+      "filePath": "_authenticated.settings_.rooms.$roomId.$productId.index.tsx",
+      "parent": "/_authenticated/settings/rooms/$roomId/$productId"
     }
   }
 }

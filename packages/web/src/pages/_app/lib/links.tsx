@@ -1,5 +1,6 @@
 import {
   Blocks,
+  Home,
   Image,
   LayoutDashboard,
   Package,
@@ -14,6 +15,12 @@ const dashboardLink = {
   name: "Dashboard",
   props: { href: { to: "/dashboard" } },
   icon: <LayoutDashboard />,
+} satisfies AppLink;
+
+const productsLinks = {
+  name: "Products",
+  props: { href: { to: "/products" } },
+  icon: <Package />,
 } satisfies AppLink;
 
 const usersLink = {
@@ -40,10 +47,10 @@ const integrationsSettingsLink = {
   icon: <Blocks />,
 } satisfies AppLink;
 
-const productsSettingsLink = {
-  name: "Products",
-  props: { href: { to: "/settings/products" } },
-  icon: <Package />,
+const roomsSettingsLink = {
+  name: "Rooms",
+  props: { href: { to: "/settings/rooms" } },
+  icon: <Home />,
 } satisfies AppLink;
 
 const imagesSettingsLink = {
@@ -54,19 +61,19 @@ const imagesSettingsLink = {
 
 export const links = {
   mainNav: {
-    administrator: [dashboardLink, usersLink, settingsLink],
-    operator: [dashboardLink, usersLink, settingsLink],
-    manager: [dashboardLink, usersLink, settingsLink],
-    customer: [dashboardLink, usersLink, settingsLink],
+    administrator: [dashboardLink, productsLinks, usersLink, settingsLink],
+    operator: [dashboardLink, productsLinks, usersLink, settingsLink],
+    manager: [dashboardLink, productsLinks, usersLink, settingsLink],
+    customer: [dashboardLink, productsLinks, usersLink, settingsLink],
   },
   settings: {
     administrator: [
       generalSettingsLink,
       integrationsSettingsLink,
-      productsSettingsLink,
+      roomsSettingsLink,
       imagesSettingsLink,
     ],
-    operator: [generalSettingsLink, productsSettingsLink, imagesSettingsLink],
+    operator: [generalSettingsLink, roomsSettingsLink, imagesSettingsLink],
     manager: [generalSettingsLink],
     customer: [generalSettingsLink],
   },

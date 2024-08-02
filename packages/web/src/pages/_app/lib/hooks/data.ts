@@ -10,6 +10,7 @@ import type {
   PapercutAccountCustomerAuthorization,
   PapercutAccountManagerAuthorization,
 } from "@paperwait/core/papercut";
+import type { Product } from "@paperwait/core/product";
 import type { Room } from "@paperwait/core/room";
 import type { PapercutParameter } from "@paperwait/core/schemas";
 import type { User } from "@paperwait/core/user";
@@ -78,6 +79,10 @@ export const queryFactory = {
   rooms: (tx: ReadTransaction) => tx.scan<Room>({ prefix: "room/" }).toArray(),
   room: (roomId: Room["id"]) => (tx: ReadTransaction) =>
     tx.get<Room>(`room/${roomId}`),
+  products: (tx: ReadTransaction) =>
+    tx.scan<Product>({ prefix: "product/" }).toArray(),
+  product: (productId: Product["id"]) => (tx: ReadTransaction) =>
+    tx.get<Product>(`product/${productId}`),
 };
 
 export function useMutator() {
