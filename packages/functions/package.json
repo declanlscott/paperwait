@@ -10,7 +10,7 @@
     "valibot": "^0.36.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240725.0",
+    "@cloudflare/workers-types": "^4.20240729.0",
     "@paperwait/eslint-config": "workspace:*",
     "@types/aws-lambda": "^8.10.142"
   }
