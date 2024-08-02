@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { RoomStatus } from "@paperwait/core/room";
 import { mutatorRbac } from "@paperwait/core/schemas";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import {
   flexRender,
   getCoreRowModel,
@@ -72,22 +72,24 @@ export const Route = createFileRoute("/_authenticated/settings/rooms")({
       "operator",
     ]),
   loader: async ({ context }) => {
-    const initialRooms = await context.replicache.query(queryFactory.rooms());
     const initialProducts = await context.replicache.query(
       queryFactory.products(),
     );
 
-    return { initialRooms, initialProducts };
+    return { initialProducts };
   },
   component: Component,
 });
+
+const authenticatedRouteApi = getRouteApi("/_authenticated");
 
 function Component() {
   return <RoomsCard />;
 }
 
 function RoomsCard() {
-  const { initialRooms, initialProducts } = Route.useLoaderData();
+  const { initialRooms } = authenticatedRouteApi.useLoaderData();
+  const { initialProducts } = Route.useLoaderData();
 
   const rooms = useQuery(queryFactory.rooms(), { defaultData: initialRooms });
   const products = useQuery(queryFactory.products(), {

@@ -7,9 +7,12 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) =>
     context.authStore.actions.authenticateRoute(location.href),
   loader: async ({ context }) => {
+    const initialOrg = await context.replicache.query(
+      queryFactory.organization(),
+    );
     const initialRooms = await context.replicache.query(queryFactory.rooms());
 
-    return { initialRooms };
+    return { initialOrg, initialRooms };
   },
   component: AuthenticatedLayout,
 });

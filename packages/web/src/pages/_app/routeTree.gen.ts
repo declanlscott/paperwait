@@ -25,7 +25,7 @@ import { Route as AuthenticatedSettingsIntegrationsImport } from './routes/_auth
 import { Route as AuthenticatedSettingsImagesImport } from './routes/_authenticated.settings.images'
 import { Route as AuthenticatedSettingsRoomsRoomIdIndexImport } from './routes/_authenticated.settings_.rooms.$roomId.index'
 import { Route as AuthenticatedSettingsRoomsRoomIdProductsImport } from './routes/_authenticated.settings_.rooms.$roomId.products'
-import { Route as AuthenticatedSettingsRoomsRoomIdProductsProductIdImport } from './routes/_authenticated.settings_.rooms.$roomId.products_.$productId'
+import { Route as AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexImport } from './routes/_authenticated.settings_.rooms.$roomId_.products.$productId.index'
 
 // Create Virtual Routes
 
@@ -39,6 +39,10 @@ const AuthenticatedProductsLazyImport = createFileRoute(
 const AuthenticatedSettingsRoomsRoomIdLazyImport = createFileRoute(
   '/_authenticated/settings/rooms/$roomId',
 )()
+const AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyImport =
+  createFileRoute(
+    '/_authenticated/settings/rooms/$roomId/products/$productId',
+  )()
 
 // Create/Update Routes
 
@@ -143,10 +147,21 @@ const AuthenticatedSettingsRoomsRoomIdProductsRoute =
     getParentRoute: () => AuthenticatedSettingsRoomsRoomIdLazyRoute,
   } as any)
 
-const AuthenticatedSettingsRoomsRoomIdProductsProductIdRoute =
-  AuthenticatedSettingsRoomsRoomIdProductsProductIdImport.update({
-    path: '/products/$productId',
-    getParentRoute: () => AuthenticatedSettingsRoomsRoomIdLazyRoute,
+const AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute =
+  AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyImport.update({
+    path: '/settings/rooms/$roomId/products/$productId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any).lazy(() =>
+    import(
+      './routes/_authenticated.settings_.rooms.$roomId_.products.$productId.lazy'
+    ).then((d) => d.Route),
+  )
+
+const AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute =
+  AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexImport.update({
+    path: '/',
+    getParentRoute: () =>
+      AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -267,10 +282,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/settings/rooms/$roomId/products/$productId': {
       id: '/_authenticated/settings/rooms/$roomId/products/$productId'
-      path: '/products/$productId'
+      path: '/settings/rooms/$roomId/products/$productId'
       fullPath: '/settings/rooms/$roomId/products/$productId'
-      preLoaderRoute: typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdImport
-      parentRoute: typeof AuthenticatedSettingsRoomsRoomIdLazyImport
+      preLoaderRoute: typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/settings/rooms/$roomId/products/$productId/': {
+      id: '/_authenticated/settings/rooms/$roomId/products/$productId/'
+      path: '/'
+      fullPath: '/settings/rooms/$roomId/products/$productId/'
+      preLoaderRoute: typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexImport
+      parentRoute: typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyImport
     }
   }
 }
@@ -297,7 +319,10 @@ export const routeTree = rootRoute.addChildren({
       AuthenticatedSettingsRoomsRoomIdLazyRoute.addChildren({
         AuthenticatedSettingsRoomsRoomIdProductsRoute,
         AuthenticatedSettingsRoomsRoomIdIndexRoute,
-        AuthenticatedSettingsRoomsRoomIdProductsProductIdRoute,
+      }),
+    AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute:
+      AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute.addChildren({
+        AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute,
       }),
   }),
   LoginRoute,
@@ -322,7 +347,8 @@ export const routeTree = rootRoute.addChildren({
         "/_authenticated/products",
         "/_authenticated/settings",
         "/_authenticated/users",
-        "/_authenticated/settings/rooms/$roomId"
+        "/_authenticated/settings/rooms/$roomId",
+        "/_authenticated/settings/rooms/$roomId/products/$productId"
       ]
     },
     "/login": {
@@ -390,8 +416,7 @@ export const routeTree = rootRoute.addChildren({
       "parent": "/_authenticated",
       "children": [
         "/_authenticated/settings/rooms/$roomId/products",
-        "/_authenticated/settings/rooms/$roomId/",
-        "/_authenticated/settings/rooms/$roomId/products/$productId"
+        "/_authenticated/settings/rooms/$roomId/"
       ]
     },
     "/_authenticated/settings/rooms/$roomId/products": {
@@ -403,8 +428,15 @@ export const routeTree = rootRoute.addChildren({
       "parent": "/_authenticated/settings/rooms/$roomId"
     },
     "/_authenticated/settings/rooms/$roomId/products/$productId": {
-      "filePath": "_authenticated.settings_.rooms.$roomId.products_.$productId.tsx",
-      "parent": "/_authenticated/settings/rooms/$roomId"
+      "filePath": "_authenticated.settings_.rooms.$roomId_.products.$productId.lazy.tsx",
+      "parent": "/_authenticated",
+      "children": [
+        "/_authenticated/settings/rooms/$roomId/products/$productId/"
+      ]
+    },
+    "/_authenticated/settings/rooms/$roomId/products/$productId/": {
+      "filePath": "_authenticated.settings_.rooms.$roomId_.products.$productId.index.tsx",
+      "parent": "/_authenticated/settings/rooms/$roomId/products/$productId"
     }
   }
 }

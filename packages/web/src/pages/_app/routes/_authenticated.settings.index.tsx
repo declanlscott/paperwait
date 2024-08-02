@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 import { OrgStatus } from "@paperwait/core/organization";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
@@ -38,15 +38,10 @@ import { labelStyles } from "~/styles/components/primitives/field";
 import type { Organization } from "@paperwait/core/organization";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
-  loader: async ({ context }) => {
-    const initialOrg = await context.replicache.query(
-      queryFactory.organization(),
-    );
-
-    return { initialOrg };
-  },
   component: Component,
 });
+
+const authenticatedRouteApi = getRouteApi("/_authenticated");
 
 function Component() {
   return (
@@ -61,7 +56,7 @@ function Component() {
 }
 
 function OrganizationCard() {
-  const { initialOrg } = Route.useLoaderData();
+  const { initialOrg } = authenticatedRouteApi.useLoaderData();
 
   const org = useQuery(queryFactory.organization(), {
     defaultData: initialOrg,
@@ -195,7 +190,7 @@ function DeleteAccount() {
 }
 
 function OrgStatusSelect() {
-  const { initialOrg } = Route.useLoaderData();
+  const { initialOrg } = authenticatedRouteApi.useLoaderData();
 
   const org = useQuery(queryFactory.organization(), {
     defaultData: initialOrg,
