@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 import { OrgStatus } from "@paperwait/core/organization";
-import { fn } from "@paperwait/core/valibot";
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
-import * as v from "valibot";
 
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
@@ -28,13 +26,13 @@ import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/input";
 import {
   Select,
-  SelectCollection,
-  SelectContent,
   SelectItem,
+  SelectListBox,
   SelectPopover,
 } from "~/app/components/ui/primitives/select";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
 
 import type { Organization } from "@paperwait/core/organization";
@@ -164,7 +162,7 @@ function DangerZoneCard() {
         <DeleteAccount />
 
         <EnforceRbac roles={["administrator"]}>
-          <OrganizationStatus />
+          <OrgStatusSelect />
         </EnforceRbac>
       </CardContent>
     </Card>
@@ -194,7 +192,7 @@ function DeleteAccount() {
   );
 }
 
-function OrganizationStatus() {
+function OrgStatusSelect() {
   const { initialOrg } = Route.useLoaderData();
 
   const org = useQuery(queryFactory.organization, { defaultData: initialOrg });
@@ -232,14 +230,11 @@ function OrganizationStatus() {
       <Select
         aria-label="status"
         selectedKey={org?.status}
-        onSelectionChange={fn(v.picklist(OrgStatus.enumValues), (status) => {
-          switch (status) {
-            case "active":
-              return mutate("active");
-            case "suspended":
-              if (org?.status !== "suspended" && status === "suspended")
-                setIsConfirmationDialogOpen(true);
-          }
+        onSelectionChange={onSelectionChange(OrgStatus.enumValues, (status) => {
+          if (status === "active") return mutate("active");
+
+          if (status === "suspended" && org?.status !== "suspended")
+            return setIsConfirmationDialogOpen(true);
         })}
       >
         <Button variant="destructive">
@@ -248,25 +243,21 @@ function OrganizationStatus() {
         </Button>
 
         <SelectPopover>
-          <SelectContent aria-label="status">
-            <SelectCollection
-              items={OrgStatus.enumValues
-                .filter((status) => status !== "initializing")
-                .map((status) => ({
-                  name: status,
-                }))}
-            >
-              {(item) => (
-                <SelectItem
-                  id={item.name}
-                  textValue={item.name}
-                  className="capitalize"
-                >
-                  {item.name}
-                </SelectItem>
-              )}
-            </SelectCollection>
-          </SelectContent>
+          <SelectListBox
+            items={OrgStatus.enumValues
+              .filter((status) => status !== "initializing")
+              .map(collectionItem)}
+          >
+            {(item) => (
+              <SelectItem
+                id={item.name}
+                textValue={item.name}
+                className="capitalize"
+              >
+                {item.name}
+              </SelectItem>
+            )}
+          </SelectListBox>
         </SelectPopover>
       </Select>
 

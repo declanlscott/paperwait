@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 import { mutatorRbac } from "@paperwait/core/schemas";
 import { UserRole } from "@paperwait/core/user";
 import { enforceRbac, getUserInitials } from "@paperwait/core/utils";
-import { fn } from "@paperwait/core/valibot";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   flexRender,
@@ -16,13 +15,10 @@ import {
   Activity,
   ArrowUpDown,
   ChevronDown,
-  ChevronRight,
   MoreHorizontal,
-  UserCog,
   UserRoundCheck,
   UserRoundX,
 } from "lucide-react";
-import * as v from "valibot";
 
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
@@ -47,12 +43,17 @@ import {
   MenuHeader,
   MenuItem,
   MenuPopover,
-  MenuRadioItem,
   MenuSection,
   MenuSeparator,
   MenuTrigger,
-  SubmenuTrigger,
 } from "~/app/components/ui/primitives/menu";
+import {
+  Select,
+  SelectItem,
+  SelectListBox,
+  SelectPopover,
+  SelectTrigger,
+} from "~/app/components/ui/primitives/select";
 import {
   Table,
   TableBody,
@@ -65,6 +66,7 @@ import { fuzzyFilter } from "~/app/lib/fuzzy";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { useManager } from "~/app/lib/hooks/manager";
+import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { User } from "@paperwait/core/user";
 import type {
@@ -148,11 +150,7 @@ const columns = [
         <ArrowUpDown className="ml-2 size-4" />
       </Button>
     ),
-    cell: ({ row }) => {
-      const role = row.getValue<User["role"]>("role");
-
-      return <Badge variant={role}>{role}</Badge>;
-    },
+    cell: ({ row }) => <UserRoleCell user={row.original} />,
   },
   {
     id: "actions",
@@ -169,7 +167,6 @@ function UsersCard() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
 
   const table = useReactTable({
     data,
@@ -183,7 +180,6 @@ function UsersCard() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     filterFns: {
       fuzzy: fuzzyFilter,
     },
@@ -191,7 +187,6 @@ function UsersCard() {
       sorting,
       globalFilter,
       columnVisibility,
-      rowSelection,
     },
   });
 
@@ -341,17 +336,66 @@ function UsersCard() {
   );
 }
 
+interface UserRoleCellProps {
+  user: User;
+}
+function UserRoleCell(props: UserRoleCellProps) {
+  const role = props.user.role;
+
+  const { updateUserRole } = useMutator();
+
+  const { user } = useAuthenticated();
+  const isSelf = user.id === props.user.id;
+
+  const mutate = async (role: User["role"]) =>
+    await updateUserRole({
+      id: props.user.id,
+      role,
+      updatedAt: new Date().toISOString(),
+    });
+
+  return (
+    <>
+      <EnforceRbac roles={["administrator"]}>
+        {isSelf ? (
+          <Badge variant={role}>{role}</Badge>
+        ) : (
+          <Select
+            aria-label="role"
+            selectedKey={role}
+            onSelectionChange={onSelectionChange(UserRole.enumValues, mutate)}
+          >
+            <SelectTrigger className="w-fit gap-2">
+              <Badge variant={role}>{role}</Badge>
+            </SelectTrigger>
+
+            <SelectPopover className="w-fit">
+              <SelectListBox items={UserRole.enumValues.map(collectionItem)}>
+                {(item) => (
+                  <SelectItem id={item.name} textValue={item.name}>
+                    <Badge variant={item.name as UserRole}>{item.name}</Badge>
+                  </SelectItem>
+                )}
+              </SelectListBox>
+            </SelectPopover>
+          </Select>
+        )}
+      </EnforceRbac>
+
+      <EnforceRbac roles={["operator", "manager", "customer"]}>
+        <Badge variant={role}>{role}</Badge>
+      </EnforceRbac>
+    </>
+  );
+}
+
 interface UserActionsMenuProps {
   user: User;
 }
 function UserActionsMenu(props: UserActionsMenuProps) {
-  const { user } = useAuthenticated();
-
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { updateUserRole, restoreUser } = useMutator();
-
-  const isSelf = user.id === props.user.id;
+  const { restoreUser } = useMutator();
 
   return (
     <MenuTrigger>
@@ -379,50 +423,6 @@ function UserActionsMenu(props: UserActionsMenuProps) {
             <EnforceRbac roles={["manager"]}>
               <ManagerUserActionItems user={props.user} />
             </EnforceRbac>
-
-            {!isSelf && (
-              <EnforceRbac roles={["administrator"]}>
-                <SubmenuTrigger>
-                  <MenuItem>
-                    <UserCog className="mr-2 size-4" />
-                    Role
-                    <ChevronRight className="ml-auto size-4" />
-                  </MenuItem>
-
-                  <MenuPopover>
-                    <Menu
-                      items={UserRole.enumValues.map((role) => ({ role }))}
-                      selectionMode="single"
-                      selectedKeys={new Set([props.user.role])}
-                      onSelectionChange={fn(
-                        v.set(v.picklist(UserRole.enumValues)),
-                        async (selection) => {
-                          const next = selection.values().next();
-
-                          if (!next.done)
-                            await updateUserRole({
-                              id: props.user.id,
-                              role: next.value,
-                              updatedAt: new Date().toISOString(),
-                            });
-                        },
-                      )}
-                      aria-label={`Select role for ${props.user.name}`}
-                    >
-                      {({ role }) => (
-                        <MenuRadioItem
-                          key={role}
-                          id={role}
-                          className="capitalize"
-                        >
-                          <Badge variant={role}>{role}</Badge>
-                        </MenuRadioItem>
-                      )}
-                    </Menu>
-                  </MenuPopover>
-                </SubmenuTrigger>
-              </EnforceRbac>
-            )}
           </MenuSection>
 
           {props.user.deletedAt ? (

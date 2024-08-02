@@ -1,43 +1,42 @@
 import {
   Button as AriaButton,
-  Collection as AriaCollection,
-  Header as AriaHeader,
   ListBox as AriaListBox,
-  Popover as AriaPopover,
-  Section as AriaSection,
   Select as AriaSelect,
-  ListBoxItem as AriaSelectBoxItem,
   SelectValue as AriaSelectValue,
-  Separator as AriaSeparator,
   composeRenderProps,
 } from "react-aria-components";
-import { Check, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import {
-  selectContentStyles,
-  selectHeaderStyles,
-  selectItemStyles,
+  ListBoxCollection,
+  ListBoxHeader,
+  ListBoxItem,
+  ListBoxSection,
+} from "~/app/components/ui/primitives/list-box";
+import { Popover } from "~/app/components/ui/primitives/popover";
+import {
+  selectListBoxStyles,
   selectPopoverStyles,
-  selectSeparatorStyles,
   selectTriggerStyles,
   selectValueStyles,
 } from "~/styles/components/primitives/select";
 
-import type { ComponentProps } from "react";
 import type {
   ButtonProps as AriaButtonProps,
-  ListBoxItemProps as AriaListBoxItemProps,
   ListBoxProps as AriaListBoxProps,
   PopoverProps as AriaPopoverProps,
   SelectValueProps as AriaSelectValueProps,
-  SeparatorProps as AriaSeparatorProps,
 } from "react-aria-components";
 
 export const Select = AriaSelect;
 
-export const SelectSection = AriaSection;
+export const SelectItem = ListBoxItem;
 
-export const SelectCollection = AriaCollection;
+export const SelectHeader = ListBoxHeader;
+
+export const SelectSection = ListBoxSection;
+
+export const SelectCollection = ListBoxCollection;
 
 export type SelectValueProps<T extends object> = AriaSelectValueProps<T>;
 export const SelectValue = <T extends object>({
@@ -46,7 +45,7 @@ export const SelectValue = <T extends object>({
 }: SelectValueProps<T>) => (
   <AriaSelectValue
     className={composeRenderProps(className, (className, renderProps) =>
-      selectValueStyles({ ...renderProps, className }),
+      selectValueStyles({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -60,80 +59,37 @@ export const SelectTrigger = ({
 }: SelectTriggerProps) => (
   <AriaButton
     className={composeRenderProps(className, (className, renderProps) =>
-      selectTriggerStyles({ ...renderProps, className }),
+      selectTriggerStyles({ className, ...renderProps }),
     )}
     {...props}
   >
-    {(values) => (
+    {composeRenderProps(children, (children) => (
       <>
-        {typeof children === "function" ? children(values) : children}
+        {children}
         <ChevronDown aria-hidden="true" className="size-4 opacity-50" />
       </>
-    )}
+    ))}
   </AriaButton>
 );
 
-export type SelectHeaderProps = ComponentProps<typeof AriaHeader>;
-export const SelectHeader = ({ className, ...props }: SelectHeaderProps) => (
-  <AriaHeader className={selectHeaderStyles({ className })} {...props} />
-);
-
-export type SelectItemProps = AriaListBoxItemProps;
-export const SelectItem = ({
-  className,
-  children,
-  ...props
-}: SelectItemProps) => (
-  <AriaSelectBoxItem
-    className={composeRenderProps(className, (className, renderProps) =>
-      selectItemStyles({ ...renderProps, className }),
-    )}
-    {...props}
-  >
-    {(values) => (
-      <>
-        {values.isSelected && (
-          <span className="absolute left-2 flex size-4 items-center justify-center">
-            <Check className="size-4" />
-          </span>
-        )}
-        {typeof children === "function" ? children(values) : children}
-      </>
-    )}
-  </AriaSelectBoxItem>
-);
-
-export type SelectSeparatorProps = AriaSeparatorProps;
-export const SelectSeparator = ({
-  className,
-  ...props
-}: SelectSeparatorProps) => (
-  <AriaSeparator className={selectSeparatorStyles({ className })} {...props} />
-);
-
 export type SelectPopoverProps = AriaPopoverProps;
-export const SelectPopover = ({
-  className,
-  offset = 0,
-  ...props
-}: SelectPopoverProps) => (
-  <AriaPopover
-    offset={offset}
+export const SelectPopover = ({ className, ...props }: SelectPopoverProps) => (
+  <Popover
     className={composeRenderProps(className, (className, renderProps) =>
-      selectPopoverStyles({ ...renderProps, className }),
+      selectPopoverStyles({ className, ...renderProps }),
     )}
     {...props}
   />
 );
 
-export type SelectContentProps<T extends object> = AriaListBoxProps<T>;
-export const SelectContent = <T extends object>({
+export type SelectListBoxProps<T extends object> = AriaListBoxProps<T>;
+export const SelectListBox = <T extends object>({
   className,
   ...props
-}: SelectContentProps<T>) => (
+}: AriaListBoxProps<T>) => (
   <AriaListBox
     className={composeRenderProps(className, (className, renderProps) =>
-      selectContentStyles({ ...renderProps, className }),
+      selectListBoxStyles({ className, ...renderProps }),
     )}
     {...props}
   />
