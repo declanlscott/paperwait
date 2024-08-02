@@ -61,8 +61,23 @@ export type CommandBarPage =
   | { type: "home" }
   | { type: "room"; roomId: Room["id"] }
   | {
-      type: "room-settings";
-      to: StartsWith<"/settings/rooms/", NonNullable<ToOptions["to"]>>;
+      type: "room-settings-select-room";
+      to: StartsWith<"/settings/rooms/$roomId", NonNullable<ToOptions["to"]>>;
+    }
+  | {
+      type: "product-settings-select-room";
+      to: StartsWith<
+        "/settings/rooms/$roomId/products/$productId",
+        NonNullable<ToOptions["to"]>
+      >;
+    }
+  | {
+      type: "product-settings-select-product";
+      roomId: Room["id"];
+      to: StartsWith<
+        "/settings/rooms/$roomId/products/$productId",
+        NonNullable<ToOptions["to"]>
+      >;
     };
 
 export type QueryFactory = Record<
