@@ -66,29 +66,34 @@ export function CommandBar() {
           },
         }}
       >
-        {activePage.type === "home" && <HomeCommand />}
+        {activePage.type === "home" && <HomeCommand {...activePage} />}
 
-        {activePage.type === "room" && (
-          <RoomCommand roomId={activePage.roomId} />
+        {activePage.type === "room" && <RoomCommand {...activePage} />}
+
+        {activePage.type === "room-settings-select-room" && (
+          <RoomSettingsSelectRoomCommand {...activePage} />
         )}
 
-        {activePage.type === "room-settings" && (
-          <RoomSettingsCommand to={activePage.to} />
+        {activePage.type === "product-settings-select-room" && (
+          <ProductSettingsSelectRoomCommand {...activePage} />
+        )}
+
+        {activePage.type === "product-settings-select-product" && (
+          <ProductSettingsSelectProductCommand {...activePage} />
         )}
       </CommandDialog>
     </DialogOverlay>
   );
 }
 
-type HomeCommandProps = Omit<Extract<CommandBarPage, { type: "home" }>, "type">;
+type HomeCommandProps = Extract<CommandBarPage, { type: "home" }>;
 function HomeCommand(_props: HomeCommandProps) {
   const { user, replicache } = useAuthenticated();
 
   const state = useContext(OverlayTriggerStateContext);
 
-  const { pushPage } = useCommandBarActions();
   const { input } = useCommandBar();
-  const { setInput } = useCommandBarActions();
+  const { setInput, pushPage } = useCommandBarActions();
 
   const navigate = useNavigate();
 
@@ -221,7 +226,10 @@ function HomeCommand(_props: HomeCommandProps) {
             <CommandItem
               key={`room-settings-${link.name}`}
               onSelect={() =>
-                pushPage({ type: "room-settings", to: link.props.href.to })
+                pushPage({
+                  type: "room-settings-select-room",
+                  to: link.props.href.to,
+                })
               }
               keywords={["scope", "room settings"]}
             >
@@ -233,13 +241,33 @@ function HomeCommand(_props: HomeCommandProps) {
               </p>
             </CommandItem>
           ))}
+
+          {linksFactory.productSettings("", "")[user.role].map((link) => (
+            <CommandItem
+              key={`product-settings-${link.name}`}
+              onSelect={() =>
+                pushPage({
+                  type: "product-settings-select-room",
+                  to: link.props.href.to,
+                })
+              }
+              keywords={["scope", "product settings"]}
+            >
+              <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
+
+              <p>
+                Jump to <span className="font-medium">Product Settings</span>{" "}
+                {link.name}
+              </p>
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </>
   );
 }
 
-type RoomCommandProps = Omit<Extract<CommandBarPage, { type: "room" }>, "type">;
+type RoomCommandProps = Extract<CommandBarPage, { type: "room" }>;
 function RoomCommand(props: RoomCommandProps) {
   const state = useContext(OverlayTriggerStateContext);
 
@@ -319,11 +347,13 @@ function RoomCommand(props: RoomCommandProps) {
   );
 }
 
-type RoomSettingsCommandProps = Omit<
-  Extract<CommandBarPage, { type: "room-settings" }>,
-  "type"
+type RoomSettingsSelectRoomCommandProps = Extract<
+  CommandBarPage,
+  { type: "room-settings-select-room" }
 >;
-function RoomSettingsCommand(props: RoomSettingsCommandProps) {
+function RoomSettingsSelectRoomCommand(
+  props: RoomSettingsSelectRoomCommandProps,
+) {
   const state = useContext(OverlayTriggerStateContext);
 
   const { input } = useCommandBar();
@@ -339,7 +369,7 @@ function RoomSettingsCommand(props: RoomSettingsCommandProps) {
   return (
     <>
       <CommandInput
-        placeholder="Room Name"
+        placeholder="Select room..."
         autoFocus
         value={input}
         onValueChange={setInput}
@@ -361,6 +391,109 @@ function RoomSettingsCommand(props: RoomSettingsCommandProps) {
             </CommandItem>
           ))}
         </CommandGroup>
+      </CommandList>
+    </>
+  );
+}
+
+type ProductSettingsSelectRoomCommandProps = Extract<
+  CommandBarPage,
+  { type: "product-settings-select-room" }
+>;
+function ProductSettingsSelectRoomCommand(
+  props: ProductSettingsSelectRoomCommandProps,
+) {
+  const { input } = useCommandBar();
+  const { setInput, popPage, pushPage } = useCommandBarActions();
+
+  const rooms = useQuery(queryFactory.rooms());
+
+  return (
+    <>
+      <CommandInput
+        placeholder="Select room..."
+        autoFocus
+        value={input}
+        onValueChange={setInput}
+        back={{ buttonProps: { onPress: () => popPage() } }}
+      />
+
+      <CommandList>
+        <CommandEmpty>No rooms found.</CommandEmpty>
+
+        <CommandGroup heading="Rooms">
+          {rooms?.map((room) => (
+            <CommandItem
+              key={room.id}
+              onSelect={() =>
+                pushPage({
+                  type: "product-settings-select-product",
+                  roomId: room.id,
+                  to: props.to,
+                })
+              }
+            >
+              {room.name}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </CommandList>
+    </>
+  );
+}
+
+type ProductSettingsSelectProductCommandProps = Extract<
+  CommandBarPage,
+  { type: "product-settings-select-product" }
+>;
+function ProductSettingsSelectProductCommand(
+  props: ProductSettingsSelectProductCommandProps,
+) {
+  const state = useContext(OverlayTriggerStateContext);
+
+  const { input } = useCommandBar();
+  const { setInput, popPage } = useCommandBarActions();
+
+  const products = useQuery(queryFactory.products(), {
+    onData: (products) =>
+      products.filter((product) => product.roomId === props.roomId),
+  });
+
+  const navigate = useNavigate();
+
+  const handleNavigation = async (to: ToOptions) =>
+    navigate(to).then(() => state.close());
+
+  return (
+    <>
+      <CommandInput
+        placeholder="Select product..."
+        autoFocus
+        value={input}
+        onValueChange={setInput}
+        back={{ buttonProps: { onPress: () => popPage() } }}
+      />
+
+      <CommandList>
+        <CommandEmpty>No products found.</CommandEmpty>
+
+        {products?.length ? (
+          <CommandGroup heading="Products">
+            {products?.map((product) => (
+              <CommandItem
+                key={product.id}
+                onSelect={() =>
+                  handleNavigation({
+                    to: props.to,
+                    params: { roomId: props.roomId, productId: product.id },
+                  })
+                }
+              >
+                {product.name}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ) : null}
       </CommandList>
     </>
   );

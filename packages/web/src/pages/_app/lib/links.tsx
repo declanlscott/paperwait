@@ -72,7 +72,7 @@ const productSettingsLink = ((
   roomId: Room["id"],
   productId: Product["id"],
 ) => ({
-  name: "Product",
+  name: "",
   props: {
     href: {
       to: "/settings/rooms/$roomId/products/$productId",
@@ -115,6 +115,12 @@ export const linksFactory = {
       generalRoomSettingsLink(roomId),
       productsRoomSettingsLink(roomId),
     ],
+    manager: [],
+    customer: [],
+  }),
+  productSettings: (roomId: Room["id"], productId: Product["id"]) => ({
+    administrator: [productSettingsLink(roomId, productId)],
+    operator: [productSettingsLink(roomId, productId)],
     manager: [],
     customer: [],
   }),
