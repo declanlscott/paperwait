@@ -1,6 +1,8 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
 import type { Room } from "@paperwait/core/room";
+import type { StartsWith } from "@paperwait/core/types";
+import type { UserRole } from "@paperwait/core/user";
 import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import type { MutationOptions } from "@tanstack/react-query";
 import type {
@@ -9,7 +11,7 @@ import type {
   ToOptions,
 } from "@tanstack/react-router";
 import type { FilterFn } from "@tanstack/react-table";
-import type { Replicache } from "replicache";
+import type { ReadTransaction, Replicache } from "replicache";
 import type { Mutators } from "~/app/lib/hooks/replicache";
 import type { routeTree } from "~/app/routeTree.gen";
 
@@ -27,7 +29,7 @@ declare module "react-aria-components" {
 }
 
 declare module "@tanstack/react-table" {
-  //add fuzzy filter to the filterFns
+  // add fuzzy filter to the filterFns
   interface FilterFns {
     fuzzy: FilterFn<unknown>;
   }
@@ -57,7 +59,17 @@ export type Slot = {
 
 export type CommandBarPage =
   | { type: "home" }
-  | { type: "room"; roomId: Room["id"] };
+  | { type: "room"; roomId: Room["id"] }
+  | {
+      type: "room-settings";
+      to: StartsWith<"/settings/rooms/", NonNullable<ToOptions["to"]>>;
+    };
+
+export type QueryFactory = Record<
+  string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (...args: Array<any>) => (tx: ReadTransaction) => Promise<any>
+>;
 
 export type MutationOptionsFactory = Record<
   string,
@@ -65,8 +77,19 @@ export type MutationOptionsFactory = Record<
   () => MutationOptions<any, any, any, any>
 >;
 
-export type AppLink = {
+export type ResolvedAppLink = {
   name: string;
   props: ComponentProps<typeof AriaLink>;
   icon: ReactNode;
 };
+
+export type AppLink =
+  | ResolvedAppLink
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | ((...args: Array<any>) => ResolvedAppLink);
+
+export type AppLinksFactory = Record<
+  string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (...args: Array<any>) => Record<UserRole, Array<AppLink>>
+>;

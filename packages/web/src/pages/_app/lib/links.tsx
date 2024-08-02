@@ -8,8 +8,9 @@ import {
   Users,
 } from "lucide-react";
 
-import type { UserRole } from "@paperwait/core/user";
-import type { AppLink } from "~/app/types";
+import type { Product } from "@paperwait/core/product";
+import type { Room } from "@paperwait/core/room";
+import type { AppLink, AppLinksFactory } from "~/app/types";
 
 const dashboardLink = {
   name: "Dashboard",
@@ -53,20 +54,48 @@ const roomsSettingsLink = {
   icon: <Home />,
 } satisfies AppLink;
 
+const generalRoomSettingsLink = ((roomId: Room["id"]) => ({
+  name: "General",
+  props: { href: { to: "/settings/rooms/$roomId", params: { roomId } } },
+  icon: <Settings />,
+})) satisfies AppLink;
+
+const productsRoomSettingsLink = ((roomId: Room["id"]) => ({
+  name: "Products",
+  props: {
+    href: { to: "/settings/rooms/$roomId/products", params: { roomId } },
+  },
+  icon: <Package />,
+})) satisfies AppLink;
+
+const productSettingsLink = ((
+  roomId: Room["id"],
+  productId: Product["id"],
+) => ({
+  name: "Product",
+  props: {
+    href: {
+      to: "/settings/rooms/$roomId/products/$productId",
+      params: { roomId, productId },
+    },
+  },
+  icon: <Settings />,
+})) satisfies AppLink;
+
 const imagesSettingsLink = {
   name: "Images",
   props: { href: { to: "/settings/images" } },
   icon: <Image />,
 } satisfies AppLink;
 
-export const links = {
-  mainNav: {
+export const linksFactory = {
+  mainNav: () => ({
     administrator: [dashboardLink, productsLinks, usersLink, settingsLink],
     operator: [dashboardLink, productsLinks, usersLink, settingsLink],
     manager: [dashboardLink, productsLinks, usersLink, settingsLink],
     customer: [dashboardLink, productsLinks, usersLink, settingsLink],
-  },
-  settings: {
+  }),
+  settings: () => ({
     administrator: [
       generalSettingsLink,
       integrationsSettingsLink,
@@ -76,5 +105,17 @@ export const links = {
     operator: [generalSettingsLink, roomsSettingsLink, imagesSettingsLink],
     manager: [generalSettingsLink],
     customer: [generalSettingsLink],
-  },
-} satisfies Record<string, Record<UserRole, Array<AppLink>>>;
+  }),
+  roomSettings: (roomId: Room["id"]) => ({
+    administrator: [
+      generalRoomSettingsLink(roomId),
+      productsRoomSettingsLink(roomId),
+    ],
+    operator: [
+      generalRoomSettingsLink(roomId),
+      productsRoomSettingsLink(roomId),
+    ],
+    manager: [],
+    customer: [],
+  }),
+} satisfies AppLinksFactory;

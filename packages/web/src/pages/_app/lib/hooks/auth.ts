@@ -57,7 +57,7 @@ export function useLogout() {
 
   const { invalidate, navigate } = useRouter();
 
-  const org = useQuery(queryFactory.organization);
+  const org = useQuery(queryFactory.organization());
 
   return useCallback(async () => {
     await logout();

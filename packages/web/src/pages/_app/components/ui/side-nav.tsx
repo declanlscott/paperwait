@@ -4,10 +4,10 @@ import { useRouter, useRouterState } from "@tanstack/react-router";
 import { linkStyles } from "~/styles/components/side-nav";
 
 import type { ComponentProps } from "react";
-import type { AppLink } from "~/app/types";
+import type { ResolvedAppLink } from "~/app/types";
 
 export type SideNavProps = {
-  links: Array<AppLink>;
+  links: Array<ResolvedAppLink>;
 };
 export function SideNav(props: SideNavProps) {
   return (

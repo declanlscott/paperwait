@@ -14,76 +14,82 @@ import type { Product } from "@paperwait/core/product";
 import type { Room } from "@paperwait/core/room";
 import type { PapercutParameter } from "@paperwait/core/schemas";
 import type { User } from "@paperwait/core/user";
-import type { ReadTransaction } from "replicache";
-import type { MutationOptionsFactory } from "~/app/types";
+import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
 
 export const useQuery = <TData, TDefaultData = undefined>(
   ...params: Parameters<typeof useSubscribe<TData, TDefaultData>>
 ) => useSubscribe(...params);
 
 export const queryFactory = {
-  organization: (tx: ReadTransaction) =>
-    tx
+  organization: () => async (tx) => {
+    const orgs = await tx
       .scan<Organization>({ prefix: "organization/" })
-      .toArray()
-      .then((values) => values.at(0)),
-  users: (tx: ReadTransaction) => tx.scan<User>({ prefix: "user/" }).toArray(),
-  user: (userId: User["id"]) => (tx: ReadTransaction) =>
-    tx.get<User>(`user/${userId}`),
-  papercutAccounts: (tx: ReadTransaction) =>
-    tx.scan<PapercutAccount>({ prefix: "papercutAccount/" }).toArray(),
-  papercutAccount:
-    (accountId: PapercutAccount["id"]) => (tx: ReadTransaction) =>
-      tx.get<PapercutAccount>(`papercutAccount/${accountId}`),
-  managedPapercutAccountIds:
-    (managerId: User["id"]) => async (tx: ReadTransaction) => {
-      const managerAuthorizations = await queryFactory
-        .papercutAccountManagerAuthorizations(tx)
-        .then((authorizations) =>
-          authorizations.filter((a) => a.managerId === managerId),
-        );
+      .toArray();
 
-      return managerAuthorizations.map(
-        ({ papercutAccountId }) => papercutAccountId,
-      );
-    },
-  papercutAccountCustomerAuthorizations: (tx: ReadTransaction) =>
+    const org = orgs.at(0);
+
+    return org;
+  },
+  users: () => (tx) => tx.scan<User>({ prefix: "user/" }).toArray(),
+  user: (userId: User["id"]) => (tx) => tx.get<User>(`user/${userId}`),
+  papercutAccounts: () => (tx) =>
+    tx.scan<PapercutAccount>({ prefix: "papercutAccount/" }).toArray(),
+  papercutAccount: (accountId: PapercutAccount["id"]) => (tx) =>
+    tx.get<PapercutAccount>(`papercutAccount/${accountId}`),
+  managedPapercutAccountIds: (managerId: User["id"]) => async (tx) => {
+    const managerAuthorizations = await tx
+      .scan<PapercutAccountManagerAuthorization>({
+        prefix: "papercutAccountManagerAuthorization/",
+      })
+      .toArray();
+
+    const managedPapercutAccountIds = managerAuthorizations
+      .filter((a) => a.managerId === managerId)
+      .map(({ papercutAccountId }) => papercutAccountId);
+
+    return managedPapercutAccountIds;
+  },
+  papercutAccountCustomerAuthorizations: () => (tx) =>
     tx
       .scan<PapercutAccountCustomerAuthorization>({
         prefix: "papercutAccountCustomerAuthorization/",
       })
       .toArray(),
-  papercutAccountManagerAuthorizations: (tx: ReadTransaction) =>
+  papercutAccountManagerAuthorizations: () => (tx) =>
     tx
       .scan<PapercutAccountManagerAuthorization>({
         prefix: "papercutAccountManagerAuthorization/",
       })
       .toArray(),
-  managedCustomerIds:
-    (managerId: User["id"]) => async (tx: ReadTransaction) => {
-      const getManagedPapercutAccountIds =
-        queryFactory.managedPapercutAccountIds(managerId);
+  managedCustomerIds: (managerId: User["id"]) => async (tx) => {
+    const managerAuthorizations = await tx
+      .scan<PapercutAccountManagerAuthorization>({
+        prefix: "papercutAccountManagerAuthorization/",
+      })
+      .toArray();
 
-      const managedPapercutAccountIds = await getManagedPapercutAccountIds(tx);
+    const managedPapercutAccountIds = managerAuthorizations
+      .filter((a) => a.managerId === managerId)
+      .map(({ papercutAccountId }) => papercutAccountId);
 
-      const managedCustomers = await queryFactory
-        .papercutAccountCustomerAuthorizations(tx)
-        .then((authorizations) =>
-          authorizations.filter((a) =>
-            managedPapercutAccountIds.includes(a.papercutAccountId),
-          ),
-        );
+    const customerAuthorizations = await tx
+      .scan<PapercutAccountCustomerAuthorization>({
+        prefix: "papercutAccountCustomerAuthorization/",
+      })
+      .toArray();
 
-      return managedCustomers.map(({ customerId }) => customerId);
-    },
-  rooms: (tx: ReadTransaction) => tx.scan<Room>({ prefix: "room/" }).toArray(),
-  room: (roomId: Room["id"]) => (tx: ReadTransaction) =>
-    tx.get<Room>(`room/${roomId}`),
-  products: (tx: ReadTransaction) =>
-    tx.scan<Product>({ prefix: "product/" }).toArray(),
-  product: (productId: Product["id"]) => (tx: ReadTransaction) =>
+    const managedCustomerIds = customerAuthorizations
+      .filter((a) => managedPapercutAccountIds.includes(a.papercutAccountId))
+      .map(({ customerId }) => customerId);
+
+    return managedCustomerIds;
+  },
+  rooms: () => (tx) => tx.scan<Room>({ prefix: "room/" }).toArray(),
+  room: (roomId: Room["id"]) => (tx) => tx.get<Room>(`room/${roomId}`),
+  products: () => (tx) => tx.scan<Product>({ prefix: "product/" }).toArray(),
+  product: (productId: Product["id"]) => (tx) =>
     tx.get<Product>(`product/${productId}`),
-};
+} satisfies QueryFactory;
 
 export function useMutator() {
   const { replicache } = useAuthenticated();
@@ -100,32 +106,26 @@ export function useMutationOptionsFactory() {
         papercutCredentials: () => ({
           mutationKey: ["papercut", "credentials"] as const,
           mutationFn: async (json: PapercutParameter) => {
-            const response =
-              await client.api.integrations.papercut.credentials.$put({
-                json,
-              });
-
-            if (!response.ok) throw new Error(response.statusText);
+            const res = await client.api.integrations.papercut.credentials.$put(
+              { json },
+            );
+            if (!res.ok) throw new Error(res.statusText);
           },
         }),
         testPapercutConnection: () => ({
           mutationKey: ["papercut", "test"] as const,
           mutationFn: async () => {
-            const response =
-              await client.api.integrations.papercut.test.$post();
-
-            if (!response.ok) throw new Error(response.statusText);
+            const res = await client.api.integrations.papercut.test.$post();
+            if (!res.ok) throw new Error(res.statusText);
           },
         }),
         syncPapercutAccounts: () => ({
           mutationKey: ["papercut", "accounts", "sync"] as const,
           mutationFn: async () => {
-            const response =
-              await client.api.integrations.papercut.accounts.$put({
-                json: undefined,
-              });
-
-            if (!response.ok) throw new Error(response.statusText);
+            const res = await client.api.integrations.papercut.accounts.$put({
+              json: undefined,
+            });
+            if (!res.ok) throw new Error(res.statusText);
           },
         }),
       }) satisfies MutationOptionsFactory,

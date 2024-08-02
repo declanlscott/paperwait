@@ -24,7 +24,7 @@ import {
   useCommandBarActions,
 } from "~/app/lib/hooks/command-bar";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
-import { links } from "~/app/lib/links";
+import { linksFactory } from "~/app/lib/links";
 
 import type { Room } from "@paperwait/core/room";
 import type { ToOptions } from "@tanstack/react-router";
@@ -87,8 +87,8 @@ function HomeCommand() {
 
   const logout = useLogout();
 
-  const rooms = useQuery(queryFactory.rooms);
-  const users = useQuery(queryFactory.users);
+  const rooms = useQuery(queryFactory.rooms());
+  const users = useQuery(queryFactory.users());
 
   const handleNavigation = async (to: ToOptions) =>
     navigate(to).then(() => state.close());
@@ -108,7 +108,7 @@ function HomeCommand() {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Navigation">
-          {links.mainNav[user.role].map((link) => (
+          {linksFactory.mainNav()[user.role].map((link) => (
             <CommandItem
               key={link.name}
               onSelect={() => handleNavigation(link.props.href)}
@@ -195,9 +195,9 @@ function HomeCommand() {
         <CommandSeparator />
 
         <CommandGroup heading="Scope">
-          {links.settings[user.role].map((link) => (
+          {linksFactory.settings()[user.role].map((link) => (
             <CommandItem
-              key={link.name}
+              key={`settings-${link.name}`}
               onSelect={() => handleNavigation(link.props.href)}
               keywords={["scope", "settings"]}
             >

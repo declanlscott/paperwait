@@ -27,7 +27,7 @@ import { userMenuTriggerButtonStyles } from "~/styles/components/user-menu";
 export function UserMenu() {
   const { user } = useAuthenticated();
 
-  const org = useQuery(queryFactory.organization);
+  const org = useQuery(queryFactory.organization());
 
   const logout = useLogout();
 

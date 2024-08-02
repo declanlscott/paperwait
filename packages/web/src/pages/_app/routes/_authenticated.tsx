@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) =>
     context.authStore.actions.authenticateRoute(location.href),
   loader: async ({ context }) => {
-    const initialRooms = await context.replicache.query(queryFactory.rooms);
+    const initialRooms = await context.replicache.query(queryFactory.rooms());
 
     return { initialRooms };
   },

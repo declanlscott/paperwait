@@ -72,9 +72,9 @@ export const Route = createFileRoute("/_authenticated/settings/rooms")({
       "operator",
     ]),
   loader: async ({ context }) => {
-    const initialRooms = await context.replicache.query(queryFactory.rooms);
+    const initialRooms = await context.replicache.query(queryFactory.rooms());
     const initialProducts = await context.replicache.query(
-      queryFactory.products,
+      queryFactory.products(),
     );
 
     return { initialRooms, initialProducts };
@@ -89,8 +89,8 @@ function Component() {
 function RoomsCard() {
   const { initialRooms, initialProducts } = Route.useLoaderData();
 
-  const rooms = useQuery(queryFactory.rooms, { defaultData: initialRooms });
-  const products = useQuery(queryFactory.products, {
+  const rooms = useQuery(queryFactory.rooms(), { defaultData: initialRooms });
+  const products = useQuery(queryFactory.products(), {
     defaultData: initialProducts,
   });
 

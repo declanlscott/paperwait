@@ -77,7 +77,7 @@ import type {
 
 export const Route = createFileRoute("/_authenticated/users/")({
   loader: async ({ context }) => {
-    const initialUsers = await context.replicache.query(queryFactory.users);
+    const initialUsers = await context.replicache.query(queryFactory.users());
 
     return { initialUsers };
   },
@@ -162,7 +162,7 @@ const columns = [
 function UsersCard() {
   const { initialUsers } = Route.useLoaderData();
 
-  const data = useQuery(queryFactory.users, { defaultData: initialUsers });
+  const data = useQuery(queryFactory.users(), { defaultData: initialUsers });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");

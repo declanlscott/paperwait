@@ -87,7 +87,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
     async (replicache: Replicache<Mutators>) => {
       reset();
 
-      const org = await replicache.query(queryFactory.organization);
+      const org = await replicache.query(queryFactory.organization());
 
       await invalidate().finally(
         () =>

@@ -35,7 +35,7 @@ import { useCommandBarActions } from "~/app/lib/hooks/command-bar";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { useIsSyncing } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
-import { links } from "~/app/lib/links";
+import { linksFactory } from "~/app/lib/links";
 import { linkStyles, logoStyles } from "~/styles/components/main-nav";
 
 import type { ComponentProps } from "react";
@@ -75,7 +75,7 @@ function RoomSelector() {
 
   const { initialRooms } = authenticatedRouteApi.useLoaderData();
 
-  const rooms = useQuery(queryFactory.rooms, {
+  const rooms = useQuery(queryFactory.rooms(), {
     defaultData: initialRooms,
     onData: (rooms) => {
       if (
@@ -140,7 +140,7 @@ function NavList() {
 
   return (
     <ul className="flex items-center">
-      {links.mainNav[user.role].map((link) => (
+      {linksFactory.mainNav()[user.role].map((link) => (
         <li key={link.name}>
           <TooltipTrigger>
             <Link href={link.props.href} className="flex items-center gap-2">
