@@ -24,8 +24,8 @@ function Component() {
   const room = useQuery(queryFactory.room(roomId));
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
-      <header className="mx-auto grid w-full max-w-6xl gap-2">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
+      <header className="grid gap-2">
         <div className="flex items-center gap-2">
           <AriaLink
             href={{
