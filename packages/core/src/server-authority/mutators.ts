@@ -36,6 +36,7 @@ import {
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
   mutatorRbac,
+  RestoreRoomMutationArgs,
   RestoreUserMutationArgs,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
@@ -323,6 +324,21 @@ const deleteRoom = (user: LuciaUser) =>
       },
   );
 
+const restoreRoom = (user: LuciaUser) =>
+  buildMutator(
+    RestoreRoomMutationArgs,
+    () => authorizeRole("restoreRoom", user),
+    () =>
+      async (tx, { id: roomId }) => {
+        await tx
+          .update(Room)
+          .set({ deletedAt: null })
+          .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
+
+        return [formatChannel("org", user.orgId)];
+      },
+  );
+
 const createAnnouncement = (user: LuciaUser) =>
   buildMutator(
     CreateAnnouncementMutationArgs,
@@ -553,6 +569,7 @@ export const mutators = {
   createRoom,
   updateRoom,
   deleteRoom,
+  restoreRoom,
 
   // Announcement
   createAnnouncement,

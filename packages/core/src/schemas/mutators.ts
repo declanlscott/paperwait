@@ -34,6 +34,7 @@ export const Mutation = v.object({
       v.literal("createRoom"),
       v.literal("updateRoom"),
       v.literal("deleteRoom"),
+      v.literal("restoreRoom"),
       v.literal("createAnnouncement"),
       v.literal("updateAnnouncement"),
       v.literal("deleteAnnouncement"),
@@ -86,6 +87,7 @@ export const mutatorRbac = {
   createRoom: ["administrator"],
   updateRoom: ["administrator", "operator"],
   deleteRoom: ["administrator"],
+  restoreRoom: ["administrator"],
   createAnnouncement: ["administrator", "operator"],
   updateAnnouncement: ["administrator", "operator"],
   deleteAnnouncement: ["administrator", "operator"],
@@ -189,6 +191,13 @@ export const DeleteRoomMutationArgs = v.object({
 });
 export type DeleteRoomMutationArgs = v.InferOutput<
   typeof DeleteRoomMutationArgs
+>;
+
+export const RestoreRoomMutationArgs = v.object({
+  id: NanoId,
+});
+export type RestoreRoomMutationArgs = v.InferOutput<
+  typeof RestoreRoomMutationArgs
 >;
 
 export const CreateAnnouncementMutationArgs = AnnouncementSchema;

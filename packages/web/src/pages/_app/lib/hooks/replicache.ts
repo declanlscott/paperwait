@@ -126,6 +126,11 @@ export function useMutators(user: App.Locals["user"]) {
     [withUser, user],
   );
 
+  const restoreRoom = useMemo(
+    () => withUser(user, mutators.restoreRoom),
+    [withUser, user],
+  );
+
   const createAnnouncement = useMemo(
     () => withUser(user, mutators.createAnnouncement),
     [withUser, user],
@@ -207,6 +212,7 @@ export function useMutators(user: App.Locals["user"]) {
       createRoom,
       updateRoom,
       deleteRoom,
+      restoreRoom,
 
       // Announcement
       createAnnouncement,
@@ -239,6 +245,7 @@ export function useMutators(user: App.Locals["user"]) {
       createRoom,
       updateRoom,
       deleteRoom,
+      restoreRoom,
       createAnnouncement,
       updateAnnouncement,
       deleteAnnouncement,

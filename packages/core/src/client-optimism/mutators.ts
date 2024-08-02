@@ -22,6 +22,7 @@ import {
   DeleteRoomMutationArgs,
   DeleteUserMutationArgs,
   mutatorRbac,
+  RestoreRoomMutationArgs,
   RestoreUserMutationArgs,
   UpdateAnnouncementMutationArgs,
   UpdateCommentMutationArgs,
@@ -251,6 +252,24 @@ const deleteRoom = (user: LuciaUser) =>
       },
   );
 
+const restoreRoom = (user: LuciaUser) =>
+  buildMutator(
+    RestoreRoomMutationArgs,
+    () => authorizeRole("restoreRoom", user),
+    () =>
+      async (tx, { id: roomId }) => {
+        const prev = await tx.get<Room>(`room/${roomId}`);
+        if (!prev) throw new EntityNotFoundError("room", roomId);
+
+        const next = {
+          ...prev,
+          deletedAt: null,
+        } satisfies DeepReadonlyObject<Room>;
+
+        return await tx.set(`room/${roomId}`, next);
+      },
+  );
+
 const createAnnouncement = (user: LuciaUser) =>
   buildMutator(
     CreateAnnouncementMutationArgs,
@@ -459,6 +478,7 @@ export const mutators = {
   createRoom,
   updateRoom,
   deleteRoom,
+  restoreRoom,
 
   // Announcement
   createAnnouncement,
