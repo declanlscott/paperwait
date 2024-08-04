@@ -205,7 +205,7 @@ function OrgStatusSelect() {
 
   const isConfirmed = confirmationText === org?.name;
 
-  async function mutate(status: Organization["status"]) {
+  async function mutate(status: OrgStatus) {
     if (org) {
       if (status === "initializing") return;
       if (status === org.status) return;

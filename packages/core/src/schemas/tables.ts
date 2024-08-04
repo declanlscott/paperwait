@@ -79,7 +79,7 @@ export const PapercutAccountManagerAuthorizationSchema = v.object({
 
 export const ProductSchema = v.object({
   ...OrgTableSchema.entries,
-  name: v.string(),
+  name: v.pipe(v.string(), v.maxLength(40)),
   status: v.picklist(ProductStatus.enumValues),
   roomId: NanoId,
   config: ProductConfiguration,
@@ -87,7 +87,7 @@ export const ProductSchema = v.object({
 
 export const RoomSchema = v.object({
   ...OrgTableSchema.entries,
-  name: v.string(),
+  name: v.pipe(v.string(), v.maxLength(40)),
   status: v.picklist(RoomStatus.enumValues),
 });
 
