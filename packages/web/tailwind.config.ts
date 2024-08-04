@@ -74,6 +74,5 @@ export default {
       },
     },
   },
-  // @ts-expect-error - RAC plugin options type is incorrect
   plugins: [rac({ prefix: "rac" }), animate],
 } satisfies Config;
