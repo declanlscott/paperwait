@@ -139,7 +139,7 @@ function ConfigureCredentials() {
       toast.success("Successfully configured PaperCut server credentials."),
   });
 
-  const [showAuthToken, setShowAuthToken] = useState(false);
+  const [showAuthToken, setShowAuthToken] = useState(() => false);
 
   const handleSubmit: SubmitHandler<
     v.InferOutput<typeof PapercutParameter>

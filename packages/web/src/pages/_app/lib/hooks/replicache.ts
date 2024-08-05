@@ -49,7 +49,7 @@ export function useSubscribe<TData, TDefaultData = undefined>(
 }
 
 export function useIsSyncing() {
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(() => false);
 
   const { replicache } = useAuthenticated();
 

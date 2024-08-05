@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "~/app/components/ui/primitives/dialog";
 import { Label } from "~/app/components/ui/primitives/field";
-import { Input } from "~/app/components/ui/primitives/input";
+import { Input } from "~/app/components/ui/primitives/text-field";
 import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 
@@ -33,7 +33,7 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
   const { deleteUser } = useMutator();
 
   const targetConfirmationText = "delete";
-  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationText, setConfirmationText] = useState(() => "");
 
   const isConfirmed = confirmationText === targetConfirmationText;
 

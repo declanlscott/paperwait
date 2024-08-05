@@ -2,10 +2,10 @@ import { forwardRef } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 
 import { FieldError, Label } from "~/app/components/ui/primitives/field";
-import { Input } from "~/app/components/ui/primitives/input";
+import { Input } from "~/app/components/ui/primitives/text-field";
 
 import type { ReadonlySignal } from "@preact/signals-react";
-import type { InputProps } from "~/app/components/ui/primitives/input";
+import type { InputProps } from "~/app/components/ui/primitives/text-field";
 
 export interface TextInputProps extends Omit<InputProps, "type" | "value"> {
   type: "text" | "email" | "tel" | "password" | "url" | "date";

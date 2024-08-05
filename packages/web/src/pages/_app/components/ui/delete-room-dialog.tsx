@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "~/app/components/ui/primitives/dialog";
 import { Label } from "~/app/components/ui/primitives/field";
-import { Input } from "~/app/components/ui/primitives/input";
+import { Input } from "~/app/components/ui/primitives/text-field";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 
 import type { Room } from "@paperwait/core/room";
@@ -27,7 +27,7 @@ export function DeleteRoomDialog(props: DeleteRoomDialogProps) {
   const { deleteRoom } = useMutator();
 
   const targetConfirmationText = "delete";
-  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationText, setConfirmationText] = useState(() => "");
 
   const isConfirmed = confirmationText === targetConfirmationText;
 

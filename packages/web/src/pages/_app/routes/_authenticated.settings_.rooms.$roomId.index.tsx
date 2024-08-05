@@ -10,18 +10,17 @@ import {
   CardDescription,
   CardHeader,
 } from "~/app/components/ui/primitives/card";
-import { Input } from "~/app/components/ui/primitives/input";
 import {
   Select,
   SelectItem,
   SelectListBox,
   SelectPopover,
 } from "~/app/components/ui/primitives/select";
+import { Input, TextArea } from "~/app/components/ui/primitives/text-field";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { cardStyles } from "~/styles/components/primitives/card";
 import { labelStyles } from "~/styles/components/primitives/field";
-import { inputStyles } from "~/styles/components/primitives/input";
 
 export const Route = createFileRoute("/_authenticated/settings/rooms/$roomId/")(
   {
@@ -58,7 +57,7 @@ function RoomCard() {
     defaultData: initialRoom,
   });
 
-  const [isLocked, setIsLocked] = useState(true);
+  const [isLocked, setIsLocked] = useState(() => true);
   const [name, setName] = useState(() => room?.name);
 
   const { updateRoom } = useMutator();

@@ -36,7 +36,6 @@ import {
   CardHeader,
   CardTitle,
 } from "~/app/components/ui/primitives/card";
-import { Input } from "~/app/components/ui/primitives/input";
 import {
   Menu,
   MenuCheckboxItem,
@@ -62,6 +61,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/app/components/ui/primitives/table";
+import { Input } from "~/app/components/ui/primitives/text-field";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
@@ -165,7 +165,7 @@ function UsersCard() {
   const data = useQuery(queryFactory.users(), { defaultData: initialUsers });
 
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [globalFilter, setGlobalFilter] = useState(() => "");
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const table = useReactTable({
@@ -279,7 +279,9 @@ function UsersCard() {
                   table.getRowModel().rows.map((row) => (
                     <TableRow
                       key={row.id}
-                      className={row.original.deletedAt ? "opacity-50" : ""}
+                      className={
+                        row.original.deletedAt ? "opacity-50" : "opacity-100"
+                      }
                     >
                       {row
                         .getVisibleCells()
@@ -393,7 +395,7 @@ interface UserActionsMenuProps {
   user: User;
 }
 function UserActionsMenu(props: UserActionsMenuProps) {
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(() => false);
 
   const { restoreUser } = useMutator();
 

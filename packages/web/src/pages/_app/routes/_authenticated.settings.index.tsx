@@ -23,19 +23,18 @@ import {
   DialogTrigger,
 } from "~/app/components/ui/primitives/dialog";
 import { Label } from "~/app/components/ui/primitives/field";
-import { Input } from "~/app/components/ui/primitives/input";
 import {
   Select,
   SelectItem,
   SelectListBox,
   SelectPopover,
 } from "~/app/components/ui/primitives/select";
+import { Input } from "~/app/components/ui/primitives/text-field";
+import { Toggle } from "~/app/components/ui/primitives/toggle";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
-
-import type { Organization } from "@paperwait/core/organization";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   component: Component,
@@ -62,10 +61,10 @@ function OrganizationCard() {
     defaultData: initialOrg,
   });
 
-  const [isLocked, setIsLocked] = useState(true);
+  const [isLocked, setIsLocked] = useState(() => true);
 
-  const [fullName, setFullName] = useState<Organization["name"]>();
-  const [shortName, setShortName] = useState<Organization["slug"]>();
+  const [fullName, setFullName] = useState(() => org?.name);
+  const [shortName, setShortName] = useState(() => org?.slug);
 
   const { updateOrganization } = useMutator();
 
@@ -107,18 +106,21 @@ function OrganizationCard() {
           </CardDescription>
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0"
-          onPress={() => setIsLocked((isLocked) => !isLocked)}
-        >
-          {isLocked ? (
-            <Lock className="size-5" />
-          ) : (
-            <LockOpen className="size-5" />
-          )}
-        </Button>
+        <Toggle onPress={() => setIsLocked((isLocked) => !isLocked)}>
+          {({ isHovered }) =>
+            isLocked ? (
+              isHovered ? (
+                <LockOpen className="size-5" />
+              ) : (
+                <Lock className="size-5" />
+              )
+            ) : isHovered ? (
+              <Lock className="size-5" />
+            ) : (
+              <LockOpen className="size-5" />
+            )
+          }
+        </Toggle>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -127,7 +129,7 @@ function OrganizationCard() {
 
           <Input
             disabled={isLocked}
-            value={fullName ?? org?.name ?? ""}
+            value={fullName ?? ""}
             onChange={(e) => setFullName(e.target.value)}
             onBlur={mutateName}
           />
@@ -138,7 +140,7 @@ function OrganizationCard() {
 
           <Input
             disabled={isLocked}
-            value={shortName ?? org?.slug ?? ""}
+            value={shortName ?? ""}
             onChange={(e) => setShortName(e.target.value)}
             onBlur={mutateSlug}
           />
@@ -198,10 +200,11 @@ function OrgStatusSelect() {
 
   const { updateOrganization } = useMutator();
 
-  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] =
-    useState(false);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(
+    () => false,
+  );
 
-  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationText, setConfirmationText] = useState(() => "");
 
   const isConfirmed = confirmationText === org?.name;
 

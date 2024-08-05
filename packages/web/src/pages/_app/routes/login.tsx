@@ -5,7 +5,7 @@ import * as v from "valibot";
 
 import { Button } from "~/app/components/ui/primitives/button";
 import { Label } from "~/app/components/ui/primitives/field";
-import { Input } from "~/app/components/ui/primitives/input";
+import { Input } from "~/app/components/ui/primitives/text-field";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams, LoginSearchParams } from "~/app/lib/schemas";
 import { buttonStyles } from "~/styles/components/primitives/button";
