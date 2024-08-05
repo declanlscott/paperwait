@@ -20,9 +20,9 @@ function Component() {
         <Tab id="custom">Custom</Tab>
       </TabList>
 
-      <TabPanel id="stock">Stock</TabPanel>
+      <TabPanel id="stock">TODO</TabPanel>
 
-      <TabPanel id="custom">Custom</TabPanel>
+      <TabPanel id="custom">TODO</TabPanel>
     </Tabs>
   );
 }

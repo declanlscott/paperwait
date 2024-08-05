@@ -5,5 +5,5 @@ export const Route = createFileRoute("/_authenticated/users/$userId")({
 });
 
 function Component() {
-  return <div>Hello /_authenticated/users/$userId!</div>;
+  return "TODO";
 }

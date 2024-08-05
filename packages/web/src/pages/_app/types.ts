@@ -86,6 +86,9 @@ export type QueryFactory = Record<
   (...args: Array<any>) => (tx: ReadTransaction) => Promise<any>
 >;
 
+export type QueryData<TQueryFn extends QueryFactory[keyof QueryFactory]> =
+  Awaited<ReturnType<ReturnType<TQueryFn>>>;
+
 export type MutationOptionsFactory = Record<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

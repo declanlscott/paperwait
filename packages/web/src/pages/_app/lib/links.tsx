@@ -1,11 +1,13 @@
 import {
   Blocks,
+  DollarSign,
   Home,
   Image,
   LayoutDashboard,
   Package,
   Settings,
   Users,
+  Wrench,
 } from "lucide-react";
 
 import type { Product } from "@paperwait/core/product";
@@ -36,13 +38,13 @@ const settingsLink = {
   icon: <Settings />,
 } satisfies AppLink;
 
-const generalSettingsLink = {
+const settingsGeneralLink = {
   name: "General",
   props: { href: { to: "/settings" } },
   icon: <Settings />,
 } satisfies AppLink;
 
-const integrationsSettingsLink = {
+const settingsIntegrationsLink = {
   name: "Integrations",
   props: { href: { to: "/settings/integrations" } },
   icon: <Blocks />,
@@ -54,18 +56,34 @@ const roomsSettingsLink = {
   icon: <Home />,
 } satisfies AppLink;
 
-const generalRoomSettingsLink = ((roomId: Room["id"]) => ({
+const roomSettingsGeneralLink = ((roomId: Room["id"]) => ({
   name: "General",
   props: { href: { to: "/settings/rooms/$roomId", params: { roomId } } },
   icon: <Settings />,
 })) satisfies AppLink;
 
-const productsRoomSettingsLink = ((roomId: Room["id"]) => ({
+const roomSettingsConfigurationLink = ((roomId: Room["id"]) => ({
+  name: "Configuration",
+  props: {
+    href: { to: "/settings/rooms/$roomId/configuration", params: { roomId } },
+  },
+  icon: <Wrench />,
+})) satisfies AppLink;
+
+const roomSettingsProductsLink = ((roomId: Room["id"]) => ({
   name: "Products",
   props: {
     href: { to: "/settings/rooms/$roomId/products", params: { roomId } },
   },
   icon: <Package />,
+})) satisfies AppLink;
+
+const roomSettingsCostScriptsLink = ((roomId: Room["id"]) => ({
+  name: "Cost Scripts",
+  props: {
+    href: { to: "/settings/rooms/$roomId/cost-scripts", params: { roomId } },
+  },
+  icon: <DollarSign />,
 })) satisfies AppLink;
 
 const productSettingsLink = ((
@@ -97,23 +115,27 @@ export const linksFactory = {
   }),
   settings: () => ({
     administrator: [
-      generalSettingsLink,
-      integrationsSettingsLink,
+      settingsGeneralLink,
+      settingsIntegrationsLink,
       roomsSettingsLink,
       imagesSettingsLink,
     ],
-    operator: [generalSettingsLink, roomsSettingsLink, imagesSettingsLink],
-    manager: [generalSettingsLink],
-    customer: [generalSettingsLink],
+    operator: [settingsGeneralLink, roomsSettingsLink, imagesSettingsLink],
+    manager: [settingsGeneralLink],
+    customer: [settingsGeneralLink],
   }),
   roomSettings: (roomId: Room["id"]) => ({
     administrator: [
-      generalRoomSettingsLink(roomId),
-      productsRoomSettingsLink(roomId),
+      roomSettingsGeneralLink(roomId),
+      roomSettingsConfigurationLink(roomId),
+      roomSettingsProductsLink(roomId),
+      roomSettingsCostScriptsLink(roomId),
     ],
     operator: [
-      generalRoomSettingsLink(roomId),
-      productsRoomSettingsLink(roomId),
+      roomSettingsGeneralLink(roomId),
+      roomSettingsConfigurationLink(roomId),
+      roomSettingsProductsLink(roomId),
+      roomSettingsCostScriptsLink(roomId),
     ],
     manager: [],
     customer: [],

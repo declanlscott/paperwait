@@ -1,15 +1,30 @@
 import { useState } from "react";
+import { TextField as AriaTextField } from "react-aria-components";
 import { RoomStatus } from "@paperwait/core/room";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Lock, LockOpen, Pencil } from "lucide-react";
+import {
+  Delete,
+  Eye,
+  HousePlus,
+  Lock,
+  LockOpen,
+  Pencil,
+  Save,
+} from "lucide-react";
 
+import { DeleteRoomDialog } from "~/app/components/ui/delete-room-dialog";
+import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
+import { Markdown } from "~/app/components/ui/markdown";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
+  CardTitle,
 } from "~/app/components/ui/primitives/card";
+import { DialogTrigger } from "~/app/components/ui/primitives/dialog";
+import { Label } from "~/app/components/ui/primitives/field";
 import {
   Select,
   SelectItem,
@@ -17,9 +32,9 @@ import {
   SelectPopover,
 } from "~/app/components/ui/primitives/select";
 import { Input, TextArea } from "~/app/components/ui/primitives/text-field";
+import { Toggle } from "~/app/components/ui/primitives/toggle";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
-import { cardStyles } from "~/styles/components/primitives/card";
 import { labelStyles } from "~/styles/components/primitives/field";
 
 export const Route = createFileRoute("/_authenticated/settings/rooms/$roomId/")(
@@ -45,6 +60,10 @@ function Component() {
   return (
     <div className="grid gap-6">
       <RoomCard />
+
+      <EnforceRbac roles={["administrator"]}>
+        <DangerZoneCard />
+      </EnforceRbac>
     </div>
   );
 }
@@ -75,42 +94,41 @@ function RoomCard() {
     <Card>
       <CardHeader className="flex-row justify-between gap-4 space-y-0">
         <div className="flex flex-col space-y-1.5">
-          {isLocked ? (
-            <h3
-              className={inputStyles({
-                className: cardStyles().title({
-                  className: "border-transparent",
-                }),
-              })}
-            >
-              {room?.name}
-            </h3>
-          ) : (
-            <Input
-              value={name ?? ""}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={mutateName}
-              className={cardStyles().title()}
-            />
-          )}
+          <CardTitle>Room</CardTitle>
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="shrink-0"
-          onPress={() => setIsLocked((isLocked) => !isLocked)}
-        >
-          {isLocked ? (
-            <Lock className="size-5" />
-          ) : (
-            <LockOpen className="size-5" />
-          )}
-        </Button>
+        <Toggle onPress={() => setIsLocked((isLocked) => !isLocked)}>
+          {({ isHovered }) =>
+            isLocked ? (
+              isHovered ? (
+                <LockOpen className="size-5" />
+              ) : (
+                <Lock className="size-5" />
+              )
+            ) : isHovered ? (
+              <Lock className="size-5" />
+            ) : (
+              <LockOpen className="size-5" />
+            )
+          }
+        </Toggle>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-4">
+        <AriaTextField>
+          <Label>Name</Label>
+
+          <Input
+            disabled={isLocked}
+            value={name ?? ""}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={mutateName}
+          />
+        </AriaTextField>
+
         <RoomStatusSelect />
+
+        <RoomDetails isLocked={isLocked} />
       </CardContent>
     </Card>
   );
@@ -167,6 +185,142 @@ function RoomStatusSelect() {
           </SelectListBox>
         </SelectPopover>
       </Select>
+    </div>
+  );
+}
+
+type RoomDetailsProps = {
+  isLocked: boolean;
+};
+function RoomDetails(props: RoomDetailsProps) {
+  const { roomId } = Route.useParams();
+  const { initialRoom } = Route.useLoaderData();
+
+  const room = useQuery(queryFactory.room(roomId), {
+    defaultData: initialRoom,
+  });
+
+  const [details, setDetails] = useState(() => room?.details);
+  const [isEditing, setIsEditing] = useState(() => false);
+
+  const markdown = props.isLocked ? room?.details : details;
+
+  const { updateRoom } = useMutator();
+
+  const saveDetails = async () => {
+    if (room && details !== room.details)
+      await updateRoom({
+        id: room.id,
+        details,
+        updatedAt: new Date().toISOString(),
+      });
+  };
+
+  return (
+    <>
+      <div className="flex justify-between gap-4">
+        <div>
+          <span className={labelStyles()}>Details</span>
+
+          <CardDescription>
+            Write any additional details about this room, for example, contact
+            information or room rules. Markdown is supported.
+          </CardDescription>
+        </div>
+
+        <div className="flex gap-2">
+          <Toggle onPress={() => setIsEditing((toggle) => !toggle)}>
+            <Pencil className="size-5" />
+          </Toggle>
+
+          <Button
+            isDisabled={props.isLocked || room?.details === details}
+            onPress={saveDetails}
+          >
+            <Save className="mr-2 size-5" />
+            Save
+          </Button>
+        </div>
+      </div>
+
+      {isEditing ? (
+        <TextArea
+          disabled={props.isLocked}
+          value={details ?? ""}
+          onChange={(e) => setDetails(e.target.value)}
+        />
+      ) : (
+        <Card className="bg-muted/20 p-4">
+          <Markdown>{markdown}</Markdown>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function DangerZoneCard() {
+  const { roomId } = Route.useParams();
+  const { initialRoom } = Route.useLoaderData();
+
+  const room = useQuery(queryFactory.room(roomId), {
+    defaultData: initialRoom,
+  });
+
+  return (
+    <Card className="border-destructive">
+      <CardHeader>
+        <CardTitle>Danger Zone</CardTitle>
+      </CardHeader>
+
+      <CardContent className="grid gap-6">
+        {room?.deletedAt ? <RestoreRoom /> : <DeleteRoom />}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DeleteRoom() {
+  const { roomId } = Route.useParams();
+
+  return (
+    <div className="flex justify-between gap-4">
+      <div>
+        <span className={labelStyles()}>Delete Room</span>
+
+        <CardDescription>Delete this room.</CardDescription>
+      </div>
+
+      <DialogTrigger>
+        <Button variant="destructive">
+          <Delete className="mr-2 size-5" />
+          Delete Room
+        </Button>
+
+        <DeleteRoomDialog roomId={roomId} />
+      </DialogTrigger>
+    </div>
+  );
+}
+
+function RestoreRoom() {
+  const { roomId } = Route.useParams();
+
+  const { restoreRoom } = useMutator();
+
+  return (
+    <div className="flex justify-between gap-4">
+      <div>
+        <span className={labelStyles()}>Restore Room</span>
+
+        <CardDescription>
+          This room has been deleted. You can restore it here.
+        </CardDescription>
+      </div>
+
+      <Button variant="secondary" onPress={() => restoreRoom({ id: roomId })}>
+        <HousePlus className="mr-2 size-5" />
+        Restore Room
+      </Button>
     </div>
   );
 }

@@ -7,5 +7,5 @@ export const Route = createFileRoute(
 });
 
 function Component() {
-  return <div>Hello /_authenticated/settings/rooms/$roomId/products!</div>;
+  return "TODO";
 }

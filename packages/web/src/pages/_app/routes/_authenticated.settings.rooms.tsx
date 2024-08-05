@@ -11,9 +11,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
-  Archive,
-  ArchiveRestore,
   ArrowUpDown,
+  Delete,
+  HousePlus,
   MoreHorizontal,
   Pencil,
 } from "lucide-react";
@@ -64,6 +64,7 @@ import type {
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
+import type { DeepReadonlyObject } from "replicache";
 
 export const Route = createFileRoute("/_authenticated/settings/rooms")({
   beforeLoad: ({ context }) =>
@@ -96,9 +97,11 @@ function RoomsCard() {
     defaultData: initialProducts,
   });
 
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [sorting, setSorting] = useState<SortingState>(() => []);
+  const [globalFilter, setGlobalFilter] = useState(() => "");
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    () => ({}),
+  );
 
   const columns = useMemo(
     () =>
@@ -174,7 +177,7 @@ function RoomsCard() {
           id: "actions",
           cell: ({ row }) => <RoomActionsMenu room={row.original} />,
         },
-      ] satisfies Array<ColumnDef<Room>>,
+      ] satisfies Array<ColumnDef<DeepReadonlyObject<Room>>>,
     [products],
   );
 
@@ -230,7 +233,12 @@ function RoomsCard() {
               <TableBody>
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow
+                      key={row.id}
+                      className={
+                        row.original.deletedAt ? "opacity-50" : "opacity-100"
+                      }
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
                           {flexRender(
@@ -283,7 +291,7 @@ function RoomsCard() {
 }
 
 interface RoomStatusSelectProps {
-  room: Room;
+  room: DeepReadonlyObject<Room>;
 }
 function RoomStatusSelect(props: RoomStatusSelectProps) {
   const status = props.room.status;
@@ -327,10 +335,10 @@ function RoomStatusSelect(props: RoomStatusSelectProps) {
 }
 
 interface RoomActionsMenuProps {
-  room: Room;
+  room: DeepReadonlyObject<Room>;
 }
 function RoomActionsMenu(props: RoomActionsMenuProps) {
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(() => false);
 
   const { restoreRoom } = useMutator();
 
@@ -360,8 +368,11 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
                 <MenuSeparator />
 
                 <MenuSection>
-                  <MenuItem onAction={() => restoreRoom({ id: props.room.id })}>
-                    <ArchiveRestore className="mr-2 size-4" />
+                  <MenuItem
+                    onAction={() => restoreRoom({ id: props.room.id })}
+                    className="text-green-600"
+                  >
+                    <HousePlus className="mr-2 size-4" />
                     Restore
                   </MenuItem>
                 </MenuSection>
@@ -375,7 +386,7 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
                     onAction={() => setIsDeleteDialogOpen(true)}
                     className="text-destructive"
                   >
-                    <Archive className="mr-2 size-4" />
+                    <Delete className="mr-2 size-4" />
                     Delete
                   </MenuItem>
                 </MenuSection>
