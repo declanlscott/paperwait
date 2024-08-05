@@ -25,6 +25,7 @@ export const Product = orgTable(
       name: "room_fk",
     }),
     statusIndex: index("status_idx").on(table.status),
+    roomIdIndex: index("room_id_idx").on(table.roomId),
   }),
 );
 

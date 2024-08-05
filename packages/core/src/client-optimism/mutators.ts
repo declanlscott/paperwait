@@ -246,9 +246,33 @@ const deleteRoom = (user: LuciaUser) =>
       async (tx, { id: roomId, ...values }) => {
         const prev = await tx.get<Room>(`room/${roomId}`);
         if (!prev) throw new EntityNotFoundError("room", roomId);
-        const next = { ...prev, ...values } satisfies DeepReadonlyObject<Room>;
+        const next = {
+          ...prev,
+          ...values,
+          status: "draft",
+        } satisfies DeepReadonlyObject<Room>;
 
-        return await tx.set(`room/${roomId}`, next);
+        await tx.set(`room/${roomId}`, next);
+
+        // Set all products in the room to draft
+        const products = await tx
+          .scan<Product>({ prefix: "product/" })
+          .toArray()
+          .then((products) =>
+            products.filter((product) => product.roomId === roomId),
+          );
+        await Promise.all(
+          products.map(async (product) => {
+            const prev = await tx.get<Product>(`product/${product.id}`);
+            if (!prev) throw new EntityNotFoundError("product", product.id);
+            const next = {
+              ...prev,
+              status: "draft",
+            } satisfies DeepReadonlyObject<Product>;
+
+            await tx.set(`product/${product.id}`, next);
+          }),
+        );
       },
   );
 

@@ -2,15 +2,7 @@ import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 import { RoomStatus } from "@paperwait/core/room";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import {
-  Delete,
-  Eye,
-  HousePlus,
-  Lock,
-  LockOpen,
-  Pencil,
-  Save,
-} from "lucide-react";
+import { Delete, HousePlus, Lock, LockOpen, Pencil, Save } from "lucide-react";
 
 import { DeleteRoomDialog } from "~/app/components/ui/delete-room-dialog";
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
@@ -97,21 +89,23 @@ function RoomCard() {
           <CardTitle>Room</CardTitle>
         </div>
 
-        <Toggle onPress={() => setIsLocked((isLocked) => !isLocked)}>
-          {({ isHovered }) =>
-            isLocked ? (
-              isHovered ? (
-                <LockOpen className="size-5" />
-              ) : (
+        {room?.deletedAt ? null : (
+          <Toggle onPress={() => setIsLocked((isLocked) => !isLocked)}>
+            {({ isHovered }) =>
+              isLocked ? (
+                isHovered ? (
+                  <LockOpen className="size-5" />
+                ) : (
+                  <Lock className="size-5" />
+                )
+              ) : isHovered ? (
                 <Lock className="size-5" />
+              ) : (
+                <LockOpen className="size-5" />
               )
-            ) : isHovered ? (
-              <Lock className="size-5" />
-            ) : (
-              <LockOpen className="size-5" />
-            )
-          }
-        </Toggle>
+            }
+          </Toggle>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -158,13 +152,14 @@ function RoomStatusSelect() {
       <div>
         <span className={labelStyles()}>Status</span>
 
-        <CardDescription>{`This room is currently "${room?.status ?? ""}".`}</CardDescription>
+        <CardDescription>{`The room status is currently "${room?.status ?? ""}".`}</CardDescription>
       </div>
 
       <Select
         aria-label="status"
         selectedKey={room?.status}
         onSelectionChange={onSelectionChange(RoomStatus.enumValues, mutate)}
+        isDisabled={!!room?.deletedAt}
       >
         <Button>
           <Pencil className="mr-2 size-5" />
@@ -234,7 +229,9 @@ function RoomDetails(props: RoomDetailsProps) {
           </Toggle>
 
           <Button
-            isDisabled={props.isLocked || room?.details === details}
+            isDisabled={
+              props.isLocked || room?.details === details || !!room?.deletedAt
+            }
             onPress={saveDetails}
           >
             <Save className="mr-2 size-5" />
@@ -251,7 +248,13 @@ function RoomDetails(props: RoomDetailsProps) {
         />
       ) : (
         <Card className="bg-muted/20 p-4">
-          <Markdown>{markdown}</Markdown>
+          {markdown ? (
+            <Markdown>{markdown}</Markdown>
+          ) : (
+            <CardDescription>
+              There are no details for this room.
+            </CardDescription>
+          )}
         </Card>
       )}
     </>

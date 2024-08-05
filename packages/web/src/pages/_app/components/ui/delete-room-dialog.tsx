@@ -48,7 +48,8 @@ export function DeleteRoomDialog(props: DeleteRoomDialogProps) {
               <DialogTitle>Delete "{roomToDelete?.name}"?</DialogTitle>
 
               <p className="text-muted-foreground text-sm">
-                Are you sure you want to continue?
+                Are you sure you want to continue? This action may be disruptive
+                for users of this room.
               </p>
 
               <p className="text-muted-foreground text-sm">
@@ -83,6 +84,7 @@ export function DeleteRoomDialog(props: DeleteRoomDialogProps) {
 
               <Button
                 variant="destructive"
+                isDisabled={!isConfirmed}
                 onPress={() =>
                   mutate().then(() => {
                     close();

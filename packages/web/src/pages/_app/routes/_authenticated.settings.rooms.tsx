@@ -16,6 +16,7 @@ import {
   HousePlus,
   MoreHorizontal,
   Pencil,
+  View,
 } from "lucide-react";
 
 import { DeleteRoomDialog } from "~/app/components/ui/delete-room-dialog";
@@ -311,7 +312,10 @@ function RoomStatusSelect(props: RoomStatusSelectProps) {
       selectedKey={status}
       onSelectionChange={onSelectionChange(RoomStatus.enumValues, mutate)}
     >
-      <SelectTrigger className="w-fit gap-2">
+      <SelectTrigger
+        className="w-fit gap-2"
+        isDisabled={!!props.room.deletedAt}
+      >
         <Badge variant={status === "published" ? "default" : "outline"}>
           {status}
         </Badge>
@@ -359,8 +363,17 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
                 params: { roomId: props.room.id },
               }}
             >
-              <Pencil className="mr-2 size-4" />
-              Edit
+              {props.room.deletedAt ? (
+                <>
+                  <View className="mr-2 size-4" />
+                  View
+                </>
+              ) : (
+                <>
+                  <Pencil className="mr-2 size-4" />
+                  Edit
+                </>
+              )}
             </MenuItem>
 
             {props.room.deletedAt ? (

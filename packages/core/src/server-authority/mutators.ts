@@ -315,10 +315,19 @@ const deleteRoom = (user: LuciaUser) =>
     () => authorizeRole("deleteRoom", user),
     () =>
       async (tx, { id: roomId, ...values }) => {
-        await tx
-          .update(Room)
-          .set(values)
-          .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId)));
+        await Promise.all([
+          tx
+            .update(Room)
+            .set({ ...values, status: "draft" })
+            .where(and(eq(Room.id, roomId), eq(Room.orgId, user.orgId))),
+          // Set all products in the room to draft
+          tx
+            .update(Product)
+            .set({ status: "draft" })
+            .where(
+              and(eq(Product.roomId, roomId), eq(Product.orgId, user.orgId)),
+            ),
+        ]);
 
         return [formatChannel("org", user.orgId)];
       },
