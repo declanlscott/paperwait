@@ -1,5 +1,6 @@
-import { index, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
+import { index, pgEnum, pgTable, text, varchar } from "drizzle-orm/pg-core";
 
+import { VARCHAR_LENGTH } from "../constants";
 import { idPrimaryKey, timestamps } from "../drizzle/columns";
 
 export const Provider = pgEnum("provider", ["entra-id", "google"]);
@@ -16,8 +17,8 @@ export const Organization = pgTable(
   "organization",
   {
     ...idPrimaryKey,
-    slug: text("slug").notNull().unique(),
-    name: text("name").notNull(),
+    slug: varchar("slug", { length: VARCHAR_LENGTH }).notNull().unique(),
+    name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
     provider: Provider("provider").notNull(),
     providerId: text("provider_id").notNull(),
     status: OrgStatus("status").notNull().default("initializing"),

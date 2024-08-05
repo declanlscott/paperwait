@@ -1,5 +1,6 @@
-import { foreignKey, index, json, pgEnum, text } from "drizzle-orm/pg-core";
+import { foreignKey, index, json, pgEnum, varchar } from "drizzle-orm/pg-core";
 
+import { VARCHAR_LENGTH } from "../constants";
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
 import { Room } from "../room/room.sql";
@@ -12,7 +13,7 @@ export type ProductStatus = (typeof ProductStatus.enumValues)[number];
 export const Product = orgTable(
   "product",
   {
-    name: text("name").notNull(),
+    name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
     status: ProductStatus("status").notNull(),
     roomId: id("room_id").notNull(),
     config: json("config").$type<ProductConfiguration>().notNull(),

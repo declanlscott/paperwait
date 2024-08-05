@@ -1,3 +1,5 @@
+import * as R from "remeda";
+
 import type { User } from "lucia";
 import type { ApplicationError } from "../errors/application";
 import type { HttpError } from "../errors/http";
@@ -51,3 +53,13 @@ export function getUserInitials(name: string) {
 
   return `${firstInitial}${lastInitial}`;
 }
+
+export const isUniqueByName = <TInput extends Array<{ name: string }>>(
+  input: TInput,
+) =>
+  R.pipe(
+    input,
+    R.uniqueBy(({ name }) => name),
+    R.length(),
+    (length) => length === input.length,
+  );
