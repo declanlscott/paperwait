@@ -73,9 +73,15 @@ export default new Hono<HonoEnv>()
             Overwrite: false,
           }),
           // Create a default room for the organization
-          tx
-            .insert(Room)
-            .values({ name: "Default", status: "draft", orgId: org.id }),
+          tx.insert(Room).values({
+            name: "Default",
+            status: "draft",
+            orgId: org.id,
+            config: {
+              workflow: [],
+              deliveryOptions: [],
+            },
+          }),
         ]);
 
         return { org };

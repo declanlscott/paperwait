@@ -85,9 +85,7 @@ function RoomCard() {
   return (
     <Card>
       <CardHeader className="flex-row justify-between gap-4 space-y-0">
-        <div className="flex flex-col space-y-1.5">
-          <CardTitle>Room</CardTitle>
-        </div>
+        <CardTitle>Room</CardTitle>
 
         {room?.deletedAt ? null : (
           <Toggle onPress={() => setIsLocked((isLocked) => !isLocked)}>

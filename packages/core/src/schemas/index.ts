@@ -4,6 +4,7 @@ export * from "./mutators";
 export * from "./papercut";
 export * from "./product-configuration";
 export * from "./replicache";
+export * from "./room-configuration";
 export * from "./shared";
 export * from "./tables";
 export * from "./xml-rpc";

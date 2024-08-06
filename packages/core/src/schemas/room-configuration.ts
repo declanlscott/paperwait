@@ -26,16 +26,22 @@ export type WorkflowStatusAttributes = v.InferOutput<
   typeof WorkflowStatusAttributes
 >;
 
+export const WorkflowConfiguration = v.pipe(
+  v.array(WorkflowStatusAttributes),
+  v.check(isUniqueByName, "Workflow status names must be unique"),
+);
+export type WorkflowConfiguration = v.InferOutput<typeof WorkflowConfiguration>;
+
+export const DeliveryOptionsConfiguration = v.pipe(
+  v.array(DeliveryOptionAttributes),
+  v.check(isUniqueByName, "Delivery option names must be unique"),
+);
+export type DeliveryOptionsConfiguration = v.InferOutput<
+  typeof DeliveryOptionsConfiguration
+>;
+
 export const RoomConfiguration = v.object({
-  deliveryOptions: v.pipe(
-    v.array(DeliveryOptionAttributes),
-    v.minLength(1),
-    v.check(isUniqueByName, "Delivery option names must be unique"),
-  ),
-  workflow: v.pipe(
-    v.array(WorkflowStatusAttributes),
-    v.minLength(1),
-    v.check(isUniqueByName, "Workflow status names must be unique"),
-  ),
+  workflow: WorkflowConfiguration,
+  deliveryOptions: DeliveryOptionsConfiguration,
 });
 export type RoomConfiguration = v.InferOutput<typeof RoomConfiguration>;

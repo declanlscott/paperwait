@@ -21,7 +21,7 @@ export const Room = orgTable(
     name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
     status: RoomStatus("status").notNull(),
     details: text("details"),
-    config: json("config").$type<RoomConfiguration>(),
+    config: json("config").$type<RoomConfiguration>().notNull(),
   },
   (table) => ({
     uniqueName: unique("unique_name").on(table.name, table.orgId),

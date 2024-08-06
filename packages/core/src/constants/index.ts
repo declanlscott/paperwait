@@ -18,8 +18,6 @@ export const VARCHAR_LENGTH = 40;
 
 export const CLIENT_RESOURCE_PREFIX = "Client";
 
-export const COMPOSITE_KEY_DELIMITER = ":";
-
 export const xmlRpcMethod = createPrefixedRecord("api", ".", [
   "adjustSharedAccountAccountBalance",
   "getSharedAccountProperties",
