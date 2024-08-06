@@ -15,10 +15,9 @@ import {
 } from "~/app/components/ui/primitives/list-box";
 import { Popover } from "~/app/components/ui/primitives/popover";
 import {
-  selectListBoxStyles,
   selectPopoverStyles,
+  selectStyles,
   selectTriggerStyles,
-  selectValueStyles,
 } from "~/styles/components/primitives/select";
 
 import type {
@@ -45,7 +44,7 @@ export const SelectValue = <T extends object>({
 }: SelectValueProps<T>) => (
   <AriaSelectValue
     className={composeRenderProps(className, (className, renderProps) =>
-      selectValueStyles({ className, ...renderProps }),
+      selectStyles().value({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -89,7 +88,7 @@ export const SelectListBox = <T extends object>({
 }: AriaListBoxProps<T>) => (
   <AriaListBox
     className={composeRenderProps(className, (className, renderProps) =>
-      selectListBoxStyles({ className, ...renderProps }),
+      selectStyles().listBox({ className, ...renderProps }),
     )}
     {...props}
   />

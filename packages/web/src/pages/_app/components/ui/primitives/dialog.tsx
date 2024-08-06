@@ -11,13 +11,7 @@ import { X } from "lucide-react";
 
 import {
   closeButtonStyles,
-  dialogContentStyles,
-  dialogFooterStyles,
-  dialogHeaderStyles,
-  dialogOverlayStyles,
   dialogStyles,
-  dialogTitleStyles,
-  sheetStyles,
 } from "~/styles/components/primitives/dialog";
 
 import type { ComponentProps, HTMLAttributes } from "react";
@@ -26,7 +20,7 @@ import type {
   HeadingProps as AriaHeadingProps,
   ModalOverlayProps as AriaModalOverlayProps,
 } from "react-aria-components";
-import type { SheetStyles } from "~/styles/components/primitives/dialog";
+import type { DialogStyles } from "~/styles/components/primitives/dialog";
 
 export const DialogTrigger = AriaDialogTrigger;
 
@@ -41,7 +35,7 @@ export const DialogOverlay = ({
   <AriaModalOverlay
     isDismissable={isDismissable}
     className={composeRenderProps(className, (className, renderProps) =>
-      dialogOverlayStyles({ ...renderProps, className }),
+      dialogStyles().overlay({ ...renderProps, className }),
     )}
     {...props}
   />
@@ -49,11 +43,10 @@ export const DialogOverlay = ({
 
 export interface DialogContentProps
   extends Omit<ComponentProps<typeof AriaModal>, "children">,
-    SheetStyles {
+    DialogStyles {
   children?: AriaDialogProps["children"];
   role?: AriaDialogProps["role"];
   closeButton?: boolean;
-  position?: "top" | "center";
 }
 export const DialogContent = ({
   className,
@@ -67,12 +60,12 @@ export const DialogContent = ({
   <AriaModal
     className={composeRenderProps(className, (className, renderProps) =>
       side
-        ? sheetStyles({ ...renderProps, side, className })
-        : dialogContentStyles({ ...renderProps, position, className }),
+        ? dialogStyles().sheet({ ...renderProps, side, className })
+        : dialogStyles().content({ ...renderProps, position, className }),
     )}
     {...props}
   >
-    <Dialog role={role} className={dialogStyles({ side: !!side })}>
+    <Dialog role={role} className={dialogStyles().root({ side })}>
       {(values) => (
         <>
           {typeof children === "function" ? children(values) : children}
@@ -97,19 +90,19 @@ export const DialogContent = ({
 
 export type DialogHeaderProps = HTMLAttributes<HTMLDivElement>;
 export const DialogHeader = ({ className, ...props }: DialogHeaderProps) => (
-  <div className={dialogHeaderStyles({ className })} {...props} />
+  <div className={dialogStyles().header({ className })} {...props} />
 );
 
 export type DialogFooterProps = HTMLAttributes<HTMLDivElement>;
 export const DialogFooter = ({ className, ...props }: DialogFooterProps) => (
-  <div className={dialogFooterStyles({ className })} {...props} />
+  <div className={dialogStyles().footer({ className })} {...props} />
 );
 
 export type DialogTitleProps = AriaHeadingProps;
 export const DialogTitle = ({ className, ...props }: DialogTitleProps) => (
   <AriaHeading
     slot="title"
-    className={dialogTitleStyles({ className })}
+    className={dialogStyles().title({ className })}
     {...props}
   />
 );

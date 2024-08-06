@@ -9,13 +9,6 @@ import { ArrowLeft, Search } from "lucide-react";
 import { Dialog, DialogContent } from "~/app/components/ui/primitives/dialog";
 import {
   commandBackButtonStyles,
-  commandDialogContentStyles,
-  commandGroupStyles,
-  commandInputStyles,
-  commandItemStyles,
-  commandListStyles,
-  commandSeparatorStyles,
-  commandShortcutStyles,
   commandStyles,
 } from "~/styles/components/primitives/command";
 
@@ -35,7 +28,7 @@ export const Command = forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive
     ref={ref}
-    className={commandStyles({ className })}
+    className={commandStyles().root({ className })}
     {...props}
   />
 ));
@@ -52,7 +45,10 @@ export const CommandDialog = ({
     <Dialog {...props}>
       <DialogContent className="overflow-hidden p-0 shadow-lg" position="top">
         {(values) => (
-          <Command {...commandProps} className={commandDialogContentStyles()}>
+          <Command
+            {...commandProps}
+            className={commandStyles().dialogContent()}
+          >
             {typeof children === "function" ? children(values) : children}
           </Command>
         )}
@@ -87,7 +83,7 @@ export const CommandInput = forwardRef<
 
     <CommandPrimitive.Input
       ref={ref}
-      className={commandInputStyles({ className })}
+      className={commandStyles().input({ className })}
       {...props}
     />
   </div>
@@ -99,7 +95,7 @@ export const CommandList = forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={commandListStyles({ className })}
+    className={commandStyles().list({ className })}
     {...props}
   />
 ));
@@ -121,7 +117,7 @@ export const CommandGroup = forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Group
     ref={ref}
-    className={commandGroupStyles({ className })}
+    className={commandStyles().group({ className })}
     {...props}
   />
 ));
@@ -132,7 +128,7 @@ export const CommandSeparator = forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Separator
     ref={ref}
-    className={commandSeparatorStyles({ className })}
+    className={commandStyles().separator({ className })}
     {...props}
   />
 ));
@@ -143,7 +139,7 @@ export const CommandItem = forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Item
     ref={ref}
-    className={commandItemStyles({ className })}
+    className={commandStyles().item({ className })}
     {...props}
   />
 ));
@@ -153,5 +149,7 @@ export const CommandShortcut = ({
   className,
   ...props
 }: CommandShortcutProps) => {
-  return <span className={commandShortcutStyles({ className })} {...props} />;
+  return (
+    <span className={commandStyles().shortcut({ className })} {...props} />
+  );
 };

@@ -20,11 +20,11 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
 
     return (
       <AriaTextField className="grow">
-        {label && (
+        {label ? (
           <Label htmlFor={name}>
             {label} {required && <span className="text-red-500">*</span>}
           </Label>
-        )}
+        ) : null}
 
         <Input
           {...props}

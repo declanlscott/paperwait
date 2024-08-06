@@ -8,11 +8,7 @@ import {
 } from "react-aria-components";
 import { Check } from "lucide-react";
 
-import {
-  listBoxHeaderStyles,
-  listBoxItemStyles,
-  listBoxStyles,
-} from "~/styles/components/primitives/list-box";
+import { listBoxStyles } from "~/styles/components/primitives/list-box";
 
 import type { ComponentProps } from "react";
 import type {
@@ -31,7 +27,7 @@ export const ListBox = <T extends object>({
 }: ListBoxProps<T>) => (
   <AriaListBox
     className={composeRenderProps(className, (className, renderProps) =>
-      listBoxStyles({ className, ...renderProps }),
+      listBoxStyles().root({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -48,7 +44,7 @@ export const ListBoxItem = <T extends object>({
       props.textValue ?? (typeof children === "string" ? children : undefined)
     }
     className={composeRenderProps(className, (className, renderProps) =>
-      listBoxItemStyles({ className, ...renderProps }),
+      listBoxStyles().item({ className, ...renderProps }),
     )}
     {...props}
   >
@@ -67,5 +63,5 @@ export const ListBoxItem = <T extends object>({
 
 export type ListBoxHeaderProps = ComponentProps<typeof AriaHeader>;
 export const ListBoxHeader = ({ className, ...props }: ListBoxHeaderProps) => (
-  <AriaHeader className={listBoxHeaderStyles({ className })} {...props} />
+  <AriaHeader className={listBoxStyles().header({ className })} {...props} />
 );

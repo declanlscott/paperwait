@@ -1,11 +1,7 @@
 import { forwardRef } from "react";
 import * as RadixAvatar from "@radix-ui/react-avatar";
 
-import {
-  avatarFallbackStyles,
-  avatarImageStyles,
-  avatarStyles,
-} from "~/styles/components/primitives/avatar";
+import { avatarStyles } from "~/styles/components/primitives/avatar";
 
 import type { ComponentPropsWithoutRef, ElementRef } from "react";
 
@@ -15,7 +11,7 @@ export const Avatar = forwardRef<
 >(({ className, ...props }, ref) => (
   <RadixAvatar.Root
     ref={ref}
-    className={avatarStyles({ className })}
+    className={avatarStyles().root({ className })}
     {...props}
   />
 ));
@@ -26,7 +22,7 @@ export const AvatarImage = forwardRef<
 >(({ className, ...props }, ref) => (
   <RadixAvatar.Image
     ref={ref}
-    className={avatarImageStyles({ className })}
+    className={avatarStyles().image({ className })}
     {...props}
   />
 ));
@@ -37,7 +33,7 @@ export const AvatarFallback = forwardRef<
 >(({ className, ...props }, ref) => (
   <RadixAvatar.Fallback
     ref={ref}
-    className={avatarFallbackStyles({ className })}
+    className={avatarStyles().fallback({ className })}
     {...props}
   />
 ));

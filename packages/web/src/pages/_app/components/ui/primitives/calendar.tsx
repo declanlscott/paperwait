@@ -19,8 +19,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import {
   calendarCellStyles,
-  calendarGridStyles,
-  calendarHeaderCellStyles,
   calendarHeadingButtonStyles,
   calendarStyles,
 } from "~/styles/components/primitives/calendar";
@@ -80,7 +78,10 @@ export const CalendarHeading = (props: CalendarHeadingProps) => {
 
 export type CalendarGridProps = AriaCalendarGridProps;
 export const CalendarGrid = ({ className, ...props }: CalendarGridProps) => (
-  <AriaCalendarGrid className={calendarGridStyles({ className })} {...props} />
+  <AriaCalendarGrid
+    className={calendarStyles().grid({ className })}
+    {...props}
+  />
 );
 
 export type CalendarGridHeaderProps = AriaCalendarGridHeaderProps;
@@ -94,7 +95,7 @@ export const CalendarHeaderCell = ({
   ...props
 }: CalendarHeaderCellProps) => (
   <AriaCalendarHeaderCell
-    className={calendarHeaderCellStyles({ className })}
+    className={calendarStyles().headerCell({ className })}
     {...props}
   />
 );
@@ -105,7 +106,7 @@ export const CalendarGridBody = ({
   ...props
 }: CalendarGridBodyProps) => (
   <AriaCalendarGridBody
-    className={calendarGridStyles({ className })}
+    className={calendarStyles().grid({ className })}
     {...props}
   />
 );
@@ -148,7 +149,7 @@ export function Calendar<T extends AriaDateValue>({
   return (
     <BaseCalendar
       className={composeRenderProps(className, (className) =>
-        calendarStyles({ className }),
+        calendarStyles().root({ className }),
       )}
       {...props}
     >
@@ -184,7 +185,7 @@ export const RangeCalendar = <T extends AriaDateValue>({
 }: RangeCalendarProps<T>) => (
   <BaseRangeCalendar
     className={composeRenderProps(className, (className) =>
-      calendarStyles({ className }),
+      calendarStyles().root({ className }),
     )}
     {...props}
   >

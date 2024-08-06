@@ -6,12 +6,7 @@ import {
   composeRenderProps,
 } from "react-aria-components";
 
-import {
-  tabListStyles,
-  tabPanelStyles,
-  tabsStyles,
-  tabStyles,
-} from "~/styles/components/primitives/tabs";
+import { tabsStyles } from "~/styles/components/primitives/tabs";
 
 import type {
   TabListProps as AriaTabListProps,
@@ -24,7 +19,7 @@ export function Tabs({ className, ...props }: AriaTabsProps) {
   return (
     <AriaTabs
       className={composeRenderProps(className, (className, renderProps) =>
-        tabsStyles({ className, ...renderProps }),
+        tabsStyles().root({ className, ...renderProps }),
       )}
       {...props}
     />
@@ -37,7 +32,7 @@ export const TabList = <T extends object>({
 }: AriaTabListProps<T>) => (
   <AriaTabList
     className={composeRenderProps(className, (className, renderProps) =>
-      tabListStyles({ className, ...renderProps }),
+      tabsStyles().list({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -46,7 +41,7 @@ export const TabList = <T extends object>({
 export const Tab = ({ className, ...props }: AriaTabProps) => (
   <AriaTab
     className={composeRenderProps(className, (className, renderProps) =>
-      tabStyles({ className, ...renderProps }),
+      tabsStyles().tab({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -55,7 +50,7 @@ export const Tab = ({ className, ...props }: AriaTabProps) => (
 export const TabPanel = ({ className, ...props }: AriaTabPanelProps) => (
   <AriaTabPanel
     className={composeRenderProps(className, (className, renderProps) =>
-      tabPanelStyles({ className, ...renderProps }),
+      tabsStyles().panel({ className, ...renderProps }),
     )}
     {...props}
   />

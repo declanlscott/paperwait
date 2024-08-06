@@ -21,8 +21,6 @@ import {
 } from "~/app/components/ui/primitives/list-box";
 import { Popover } from "~/app/components/ui/primitives/popover";
 import {
-  comboboxInputStyles,
-  comboboxListBoxStyles,
   comboboxPopoverStyles,
   comboboxStyles,
 } from "~/styles/components/primitives/combobox";
@@ -50,7 +48,7 @@ export type ComboboxInputProps = AriaInputProps;
 export const ComboboxInput = ({ className, ...props }: ComboboxInputProps) => (
   <AriaInput
     className={composeRenderProps(className, (className, renderProps) =>
-      comboboxInputStyles({ className, ...renderProps }),
+      comboboxStyles().input({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -73,7 +71,7 @@ export const ComboboxListBox = <T extends object>({
 }: ComboboxListBoxProps<T>) => (
   <AriaListBox
     className={composeRenderProps(className, (className, renderProps) =>
-      comboboxListBoxStyles({ className, ...renderProps }),
+      comboboxStyles().listBox({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -96,7 +94,7 @@ export const Combobox = <T extends object>({
 }: ComboboxProps<T>) => (
   <Combobox
     className={composeRenderProps(className, (className, renderProps) =>
-      comboboxStyles({ className, ...renderProps }),
+      comboboxStyles().root({ className, ...renderProps }),
     )}
     {...props}
   >

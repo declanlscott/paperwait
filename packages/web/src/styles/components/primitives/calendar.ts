@@ -4,6 +4,16 @@ import { buttonStyles } from "~/styles/components/primitives/button";
 
 import type { VariantProps } from "tailwind-variants";
 
+export const calendarStyles = tv({
+  slots: {
+    root: "w-fit",
+    grid: "border-separate border-spacing-x-0 border-spacing-y-1",
+    headerCell:
+      "text-muted-foreground w-9 rounded-md text-[0.8rem] font-normal",
+    gridBody: "[&>tr>td]:p-0",
+  },
+});
+
 export const calendarHeadingButtonStyles = tv({
   extend: buttonStyles,
   base: "size-7 bg-transparent p-0 opacity-50",
@@ -15,25 +25,6 @@ export const calendarHeadingButtonStyles = tv({
 });
 export type CalendarHeadingButtonStyles = VariantProps<
   typeof calendarHeadingButtonStyles
->;
-
-export const calendarGridStyles = tv({
-  base: "border-separate border-spacing-x-0 border-spacing-y-1",
-});
-export type CalendarGridStyles = VariantProps<typeof calendarGridStyles>;
-
-export const calendarHeaderCellStyles = tv({
-  base: "text-muted-foreground w-9 rounded-md text-[0.8rem] font-normal",
-});
-export type CalendarHeaderCellStyles = VariantProps<
-  typeof calendarHeaderCellStyles
->;
-
-export const calendarGridBodyStyles = tv({
-  base: "[&>tr>td]:p-0",
-});
-export type CalendarGridBodyStyles = VariantProps<
-  typeof calendarGridBodyStyles
 >;
 
 export const calendarCellStyles = tv({
@@ -96,8 +87,3 @@ export const calendarCellStyles = tv({
   ],
 });
 export type CalendarCellStyles = VariantProps<typeof calendarCellStyles>;
-
-export const calendarStyles = tv({
-  base: "w-fit",
-});
-export type CalendarStyles = VariantProps<typeof calendarStyles>;

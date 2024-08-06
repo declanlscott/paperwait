@@ -7,11 +7,7 @@ import {
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 
 import {
-  breadcrumbEllipsisStyles,
-  breadcrumbItemStyles,
   breadcrumbLinkStyles,
-  breadcrumbPageStyles,
-  breadcrumbSeparatorStyles,
   breadcrumbsStyles,
 } from "~/styles/components/primitives/breadcrumbs";
 
@@ -27,7 +23,10 @@ export const Breadcrumbs = <T extends object>({
   className,
   ...props
 }: BreadcrumbsProps<T>) => (
-  <AriaBreadcrumbs className={breadcrumbsStyles({ className })} {...props} />
+  <AriaBreadcrumbs
+    className={breadcrumbsStyles().root({ className })}
+    {...props}
+  />
 );
 
 export type BreadcrumbItemProps = AriaBreadcrumbProps;
@@ -37,7 +36,7 @@ export const BreadcrumbItem = ({
 }: BreadcrumbItemProps) => (
   <AriaBreadcrumb
     className={composeRenderProps(className, (className, renderProps) =>
-      breadcrumbItemStyles({ className, ...renderProps }),
+      breadcrumbsStyles().item({ className, ...renderProps }),
     )}
     {...props}
   />
@@ -62,7 +61,7 @@ export const BreadcrumbSeparator = ({
   <span
     role="presentation"
     aria-hidden="true"
-    className={breadcrumbSeparatorStyles({ className })}
+    className={breadcrumbsStyles().separator({ className })}
     {...props}
   >
     {children ?? <ChevronRight />}
@@ -77,7 +76,7 @@ export const BreadcrumbEllipsis = ({
   <span
     role="presentation"
     aria-hidden="true"
-    className={breadcrumbEllipsisStyles({ className })}
+    className={breadcrumbsStyles().ellipsis({ className })}
     {...props}
   >
     <MoreHorizontal className="size-4" />
@@ -93,7 +92,7 @@ export const BreadcrumbPage = ({
 }: BreadcrumbPageProps) => (
   <AriaLink
     className={composeRenderProps(className, (className, renderProps) =>
-      breadcrumbPageStyles({ className, ...renderProps }),
+      breadcrumbsStyles().page({ className, ...renderProps }),
     )}
     {...props}
   />
