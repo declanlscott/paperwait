@@ -11,20 +11,17 @@ export async function poke(channels: Array<Channel>) {
 
   const results = await Promise.allSettled(
     uniqueChannels.map(async (channel) => {
-      try {
-        const res = await fetch(
-          `${Resource.ClientPartyKitUrl.value}/party/${channel}`,
-          {
-            method: "POST",
-            headers: { "x-api-key": Resource.PartyKitApiKey.value },
-          },
-        );
+      const res = await fetch(
+        `${Resource.ClientPartyKitUrl.value}/party/${channel}`,
+        {
+          method: "POST",
+          headers: { "x-api-key": Resource.PartyKitApiKey.value },
+        },
+      );
 
-        if (!res.ok) throw new HttpError(res.statusText, res.status);
-      } catch (e) {
-        console.error(`Failed to poke ${channel}`);
-
-        return Promise.reject(e);
+      if (!res.ok) {
+        console.log(`Failed to poke channel "${channel}"`);
+        throw new HttpError(res.statusText, res.status);
       }
     }),
   );

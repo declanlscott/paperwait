@@ -32,5 +32,7 @@ module.exports = {
     ],
     // Removes eslint errors in `sst-env.d.ts`
     "@typescript-eslint/ban-tslint-comment": "off",
+
+    "@typescript-eslint/only-throw-error": "off",
   },
 };

@@ -45,6 +45,11 @@ export async function push(
 
       await poke(channels);
     } catch (e) {
+      console.error(e);
+      console.log(
+        `Encountered error during push on mutation "${mutation.id}" - retrying in error mode`,
+      );
+
       // retry in error mode
       await processMutation(user, pushRequest.clientGroupID, mutation, true);
     }
@@ -134,14 +139,16 @@ async function processMutation(
 
     // 8: Rollback and skip if mutation already processed
     if (mutation.id < nextMutationId) {
-      console.log(`Mutation ${mutation.id} already processed - skipping`);
+      console.log(`Mutation "${mutation.id}" already processed - skipping`);
 
       return channels;
     }
 
     // 9: Rollback and throw if mutation is from the future
     if (mutation.id > nextMutationId)
-      throw new Error(`Mutation ${mutation.id} is from the future - aborting`);
+      throw new Error(
+        `Mutation "${mutation.id}" is from the future - aborting`,
+      );
 
     const start = Date.now();
 
@@ -155,7 +162,7 @@ async function processMutation(
         channels = await mutate(mutation);
       } catch (e) {
         // 10(ii)(a-c): Log, abort, and retry
-        console.error(`Error processing mutation ${mutation.id}:`, e);
+        console.log(`Error processing mutation "${mutation.id}"`);
 
         throw e;
       }
@@ -189,7 +196,7 @@ async function processMutation(
     ]);
 
     const end = Date.now();
-    console.log(`Processed mutation ${mutation.id} in ${end - start}ms`);
+    console.log(`Processed mutation "${mutation.id}" in ${end - start}ms`);
 
     return channels;
   });
