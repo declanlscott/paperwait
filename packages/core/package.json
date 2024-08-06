@@ -13,28 +13,28 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "@aws-sdk/client-s3": "^3.623.0",
-    "@aws-sdk/client-ssm": "^3.623.0",
+    "@aws-sdk/client-s3": "^3.624.0",
+    "@aws-sdk/client-ssm": "^3.624.0",
     "@aws-sdk/cloudfront-signer": "^3.621.0",
-    "@aws-sdk/credential-providers": "^3.623.0",
-    "@aws-sdk/s3-request-presigner": "^3.623.0",
+    "@aws-sdk/credential-providers": "^3.624.0",
+    "@aws-sdk/s3-request-presigner": "^3.624.0",
     "@foxglove/xmlrpc": "^1.3.0",
-    "@lucia-auth/adapter-drizzle": "^1.0.7",
+    "@lucia-auth/adapter-drizzle": "^1.1.0",
     "@neondatabase/serverless": "^0.9.4",
     "@smithy/signature-v4": "^4.1.0",
     "arctic": "^1.9.2",
-    "drizzle-orm": "^0.32.1",
+    "drizzle-orm": "^0.32.2",
     "lucia": "^3.2.0",
     "nanoid": "^5.0.7",
     "oslo": "^1.2.1",
-    "remeda": "^2.7.0",
+    "remeda": "^2.7.1",
     "replicache": "^15.0.1",
-    "valibot": "^0.36.0",
+    "valibot": "^0.37.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.12",
-    "drizzle-kit": "^0.23.1"
+    "drizzle-kit": "^0.23.2"
   }
 }
