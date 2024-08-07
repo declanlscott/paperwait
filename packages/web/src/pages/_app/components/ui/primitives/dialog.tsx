@@ -50,7 +50,7 @@ export const DialogContent = ({
   side,
   role,
   closeButton = true,
-  position,
+  position = "center",
   ...props
 }: DialogContentProps) => (
   <AriaModal

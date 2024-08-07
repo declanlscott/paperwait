@@ -144,8 +144,5 @@ export const dialogStyles = tv({
       },
     },
   ],
-  defaultVariants: {
-    position: "center",
-  },
 });
 export type DialogStyles = VariantProps<typeof dialogStyles>;
