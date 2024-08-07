@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useForm, valiForm } from "@modular-forms/react";
+import { TextField as AriaTextField } from "react-aria-components";
 import { ApplicationError } from "@paperwait/core/errors";
 import { PapercutParameter } from "@paperwait/core/schemas";
+import { useForm } from "@tanstack/react-form";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { valibotValidator } from "@tanstack/valibot-form-adapter";
 import {
   Eye,
   EyeOff,
@@ -14,7 +16,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { TextInput } from "~/app/components/ui/form";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   Card,
@@ -31,13 +32,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/app/components/ui/primitives/dialog";
+import { Label } from "~/app/components/ui/primitives/field";
+import { Input } from "~/app/components/ui/primitives/text-field";
+import { Toggle } from "~/app/components/ui/primitives/toggle";
 import { useMutationOptionsFactory } from "~/app/lib/hooks/data";
 import { labelStyles } from "~/styles/components/primitives/field";
 
 import type { ComponentProps } from "react";
-import type { SubmitHandler } from "@modular-forms/react";
 import type { ErrorRouteComponent } from "@tanstack/react-router";
-import type * as v from "valibot";
 
 export const Route = createFileRoute("/_authenticated/settings/integrations")({
   beforeLoad: ({ context }) =>
@@ -125,12 +127,6 @@ function PapercutCard() {
 }
 
 function ConfigureCredentials() {
-  const [form, { Form, Field }] = useForm<
-    v.InferInput<typeof PapercutParameter>
-  >({
-    validate: valiForm(PapercutParameter),
-  });
-
   const { papercutCredentials } = useMutationOptionsFactory();
 
   const { mutate } = useMutation({
@@ -139,20 +135,26 @@ function ConfigureCredentials() {
       toast.success("Successfully configured PaperCut server credentials."),
   });
 
-  const [showAuthToken, setShowAuthToken] = useState(() => false);
+  const form = useForm({
+    defaultValues: {
+      serverUrl: "",
+      authToken: "",
+    } satisfies PapercutParameter,
+    validatorAdapter: valibotValidator(),
+    onSubmit: ({ value }) => mutate(value),
+  });
 
-  const handleSubmit: SubmitHandler<
-    v.InferOutput<typeof PapercutParameter>
-  > = async (credentials) => {
-    mutate(credentials);
-  };
+  const [showAuthToken, setShowAuthToken] = useState(() => false);
 
   return (
     <DialogContent>
       {({ close }) => (
-        <Form
-          onSubmit={(values, event) => {
-            handleSubmit(values, event);
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            await form.handleSubmit();
 
             close();
           }}
@@ -168,49 +170,59 @@ function ConfigureCredentials() {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <Field name="serverUrl">
-              {(field, props) => (
-                <TextInput
-                  {...props}
-                  type="url"
-                  label="XML Web Services API URL"
-                  placeholder="https://[server_name]:9192/rpc/api/xmlrpc"
-                  value={field.value}
-                  error={field.error}
-                  required
-                />
+            <form.Field
+              name="serverUrl"
+              validators={{
+                onChange: PapercutParameter.entries.serverUrl,
+              }}
+            >
+              {(field) => (
+                <AriaTextField>
+                  <Label htmlFor="serverUrl">XML Web Services API URL</Label>
+
+                  <Input
+                    id="serverUrl"
+                    type="url"
+                    placeholder="https://[server_name]:9192/rpc/api/xmlrpc"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                  />
+                </AriaTextField>
               )}
-            </Field>
+            </form.Field>
 
             <div className="flex gap-2">
-              <Field name="authToken">
-                {(field, props) => (
-                  <TextInput
-                    {...props}
-                    type={showAuthToken ? "text" : "password"}
-                    label="Auth Token"
-                    value={field.value}
-                    error={field.error}
-                    required
-                    autoComplete="off"
-                  />
-                )}
-              </Field>
+              <form.Field
+                name="authToken"
+                validators={{ onChange: PapercutParameter.entries.authToken }}
+              >
+                {(field) => (
+                  <AriaTextField className="grow">
+                    <Label htmlFor="authToken">Auth Token</Label>
 
-              <Button
-                variant="ghost"
-                size="icon"
+                    <Input
+                      id="authToken"
+                      type={showAuthToken ? "text" : "password"}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </AriaTextField>
+                )}
+              </form.Field>
+
+              <Toggle
                 onPress={() =>
                   setShowAuthToken((showAuthToken) => !showAuthToken)
                 }
                 className="self-end"
               >
                 {showAuthToken ? (
-                  <EyeOff className="size-5" />
-                ) : (
                   <Eye className="size-5" />
+                ) : (
+                  <EyeOff className="size-5" />
                 )}
-              </Button>
+              </Toggle>
             </div>
           </div>
 
@@ -219,11 +231,15 @@ function ConfigureCredentials() {
               Cancel
             </Button>
 
-            <Button type="submit" isDisabled={form.invalid.value}>
-              Save
-            </Button>
+            <form.Subscribe selector={({ canSubmit }) => canSubmit}>
+              {(canSubmit) => (
+                <Button type="submit" isDisabled={!canSubmit}>
+                  Save
+                </Button>
+              )}
+            </form.Subscribe>
           </DialogFooter>
-        </Form>
+        </form>
       )}
     </DialogContent>
   );
