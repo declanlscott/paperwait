@@ -1,5 +1,4 @@
 import {
-  Button as AriaButton,
   Dialog as AriaDialog,
   DialogTrigger as AriaDialogTrigger,
   Heading as AriaHeading,
@@ -7,12 +6,9 @@ import {
   ModalOverlay as AriaModalOverlay,
   composeRenderProps,
 } from "react-aria-components";
-import { X } from "lucide-react";
 
-import {
-  closeButtonStyles,
-  dialogStyles,
-} from "~/styles/components/primitives/dialog";
+import { XButton } from "~/app/components/ui/primitives/x-button";
+import { dialogStyles } from "~/styles/components/primitives/dialog";
 
 import type { ComponentProps, HTMLAttributes } from "react";
 import type {
@@ -71,16 +67,11 @@ export const DialogContent = ({
           {typeof children === "function" ? children(values) : children}
 
           {closeButton && (
-            <AriaButton
+            <XButton
               onPress={values.close}
-              className={composeRenderProps("", (className, renderProps) =>
-                closeButtonStyles({ ...renderProps, className }),
-              )}
-            >
-              <X className="size-4" />
-
-              <span className="sr-only">Close</span>
-            </AriaButton>
+              screenReaderLabel="Close"
+              className="absolute right-4 top-4"
+            />
           )}
         </>
       )}

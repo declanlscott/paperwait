@@ -1,7 +1,5 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
-
 import type { VariantProps } from "tailwind-variants";
 
 export const dialogStyles = tv({
@@ -151,17 +149,3 @@ export const dialogStyles = tv({
   },
 });
 export type DialogStyles = VariantProps<typeof dialogStyles>;
-
-export const closeButtonStyles = tv({
-  extend: focusRing,
-  base: "ring-offset-background absolute right-4 top-4 rounded-sm text-primary/50 transition-colors",
-  variants: {
-    isHovered: {
-      true: "text-primary/100",
-    },
-    isDisabled: {
-      true: "pointer-events-none",
-    },
-  },
-});
-export type CloseButtonStyles = VariantProps<typeof closeButtonStyles>;
