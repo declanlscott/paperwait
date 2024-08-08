@@ -17,10 +17,13 @@ export type DeliveryOptionAttributes = v.InferOutput<
   typeof DeliveryOptionAttributes
 >;
 
+export const workflowStatusTypes = ["New", "InProgress", "Completed"] as const;
+
 export const WorkflowStatusAttributes = v.object({
   name: v.pipe(v.string(), v.trim()),
-  type: v.picklist(["New", "InProgress", "Completed"]),
+  type: v.picklist(workflowStatusTypes),
   charging: v.boolean(),
+  color: v.optional(v.pipe(v.string(), v.hexColor())),
 });
 export type WorkflowStatusAttributes = v.InferOutput<
   typeof WorkflowStatusAttributes

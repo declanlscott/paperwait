@@ -63,3 +63,6 @@ export const isUniqueByName = <TInput extends Array<{ name: string }>>(
     R.length(),
     (length) => length === input.length,
   );
+
+export const formatPascalCase = (value: string) =>
+  value.replace(/([a-z])([A-Z])/g, "$1 $2");
