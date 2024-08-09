@@ -1,4 +1,4 @@
-import { unique } from "remeda";
+import * as R from "remeda";
 import * as v from "valibot";
 
 import {
@@ -566,7 +566,7 @@ async function getUsersWithAccessToOrder(
       ),
   ]);
 
-  return unique([
+  return R.unique([
     ...adminsOps.map(({ id }) => id),
     ...papercutAccountManagerAuthorizations.map(({ managerId }) => managerId),
     order.customerId,

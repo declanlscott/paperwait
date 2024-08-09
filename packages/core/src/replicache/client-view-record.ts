@@ -1,4 +1,4 @@
-import { unique } from "remeda";
+import * as R from "remeda";
 import * as v from "valibot";
 
 import { InternalServerError } from "../errors/http";
@@ -75,7 +75,7 @@ export function buildCvr(
 }
 
 export const diffCvr = (prev: ClientViewRecord, next: ClientViewRecord) =>
-  unique([
+  R.unique([
     ...validate(v.array(Domain), Object.keys(prev)),
     ...validate(v.array(Domain), Object.keys(next)),
   ]).reduce((diff, domain) => {

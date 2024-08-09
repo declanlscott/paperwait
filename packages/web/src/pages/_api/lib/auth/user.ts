@@ -20,7 +20,7 @@ import { EntraIdUserInfo, GoogleUserInfo } from "@paperwait/core/schemas";
 import { User } from "@paperwait/core/user";
 import { validate } from "@paperwait/core/valibot";
 import { and, eq } from "drizzle-orm";
-import { isDeepEqual } from "remeda";
+import * as R from "remeda";
 
 import type { IdToken } from "@paperwait/core/auth-provider";
 import type { Provider } from "@paperwait/core/organization";
@@ -186,7 +186,7 @@ export async function processUser(
     username: user.idToken.username,
   };
 
-  if (!isDeepEqual(existingUserInfo, freshUserInfo)) {
+  if (!R.isDeepEqual(existingUserInfo, freshUserInfo)) {
     const channels = await serializable(async (tx) => {
       const [adminsOps, managers] = await Promise.all([
         getUsersByRoles(tx, org.id, ["administrator", "operator"]),

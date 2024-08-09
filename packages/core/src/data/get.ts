@@ -1,5 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm";
-import { uniqueBy } from "remeda";
+import * as R from "remeda";
 
 import { ForbiddenError } from "../errors/http";
 import { Order } from "../order/order.sql";
@@ -132,5 +132,5 @@ export async function getUsersWithAccessToOrder(
       .where(and(eq(Order.id, orderId), eq(Order.orgId, orgId))),
   ]);
 
-  return uniqueBy([...adminsOps, ...managers, customer], ({ id }) => id);
+  return R.uniqueBy([...adminsOps, ...managers, customer], ({ id }) => id);
 }

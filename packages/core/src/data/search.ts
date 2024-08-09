@@ -1,5 +1,5 @@
 import { and, arrayOverlaps, eq, isNull, sql } from "drizzle-orm";
-import { uniqueBy } from "remeda";
+import * as R from "remeda";
 
 import { Announcement } from "../announcement/announcement.sql";
 import { Comment } from "../comment/comment.sql";
@@ -291,7 +291,7 @@ export async function searchOrders(tx: Transaction, user: LuciaUser) {
           .where(and(eq(Order.orgId, user.orgId), isNull(Order.deletedAt))),
       ]);
 
-      return uniqueBy([...customerOrders, ...managerOrders], ({ id }) => id);
+      return R.uniqueBy([...customerOrders, ...managerOrders], ({ id }) => id);
     },
     searchAsCustomer: selectCustomerOrders,
   });
