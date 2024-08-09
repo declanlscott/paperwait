@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { TextField as AriaTextField } from "react-aria-components";
 import { ApplicationError } from "@paperwait/core/errors";
 import { PapercutParameter } from "@paperwait/core/schemas";
 import { useForm } from "@tanstack/react-form";
@@ -172,57 +171,67 @@ function ConfigureCredentials() {
           <div className="grid gap-4 py-4">
             <form.Field
               name="serverUrl"
-              validators={{
-                onChange: PapercutParameter.entries.serverUrl,
-              }}
+              validators={{ onBlur: PapercutParameter.entries.serverUrl }}
             >
-              {(field) => (
-                <AriaTextField>
-                  <Label htmlFor="serverUrl">XML Web Services API URL</Label>
+              {({ name, state, handleChange, handleBlur }) => (
+                <div>
+                  <Label htmlFor={name}>XML Web Services API URL</Label>
 
                   <Input
-                    id="serverUrl"
+                    id={name}
                     type="url"
                     placeholder="https://[server_name]:9192/rpc/api/xmlrpc"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    value={state.value}
+                    onChange={(e) => handleChange(e.target.value)}
+                    onBlur={handleBlur}
                   />
-                </AriaTextField>
+
+                  <span className="text-sm text-red-500">
+                    {state.meta.errors.join(", ")}
+                  </span>
+                </div>
               )}
             </form.Field>
 
             <div className="flex gap-2">
               <form.Field
                 name="authToken"
-                validators={{ onChange: PapercutParameter.entries.authToken }}
+                validators={{ onBlur: PapercutParameter.entries.authToken }}
               >
-                {(field) => (
-                  <AriaTextField className="grow">
-                    <Label htmlFor="authToken">Auth Token</Label>
+                {({ name, state, handleChange, handleBlur }) => (
+                  <div className="grow">
+                    <Label htmlFor={name}>Auth Token</Label>
 
-                    <Input
-                      id="authToken"
-                      type={showAuthToken ? "text" : "password"}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      autoComplete="off"
-                    />
-                  </AriaTextField>
+                    <div className="flex gap-2">
+                      <Input
+                        id={name}
+                        type={showAuthToken ? "text" : "password"}
+                        autoComplete="off"
+                        value={state.value}
+                        onChange={(e) => handleChange(e.target.value)}
+                        onBlur={handleBlur}
+                      />
+
+                      <Toggle
+                        onPress={() =>
+                          setShowAuthToken((showAuthToken) => !showAuthToken)
+                        }
+                        className="self-end"
+                      >
+                        {showAuthToken ? (
+                          <Eye className="size-5" />
+                        ) : (
+                          <EyeOff className="size-5" />
+                        )}
+                      </Toggle>
+                    </div>
+
+                    <span className="text-sm text-red-500">
+                      {state.meta.errors.join(", ")}
+                    </span>
+                  </div>
                 )}
               </form.Field>
-
-              <Toggle
-                onPress={() =>
-                  setShowAuthToken((showAuthToken) => !showAuthToken)
-                }
-                className="self-end"
-              >
-                {showAuthToken ? (
-                  <Eye className="size-5" />
-                ) : (
-                  <EyeOff className="size-5" />
-                )}
-              </Toggle>
             </div>
           </div>
 
