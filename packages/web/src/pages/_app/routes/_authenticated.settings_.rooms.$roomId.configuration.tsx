@@ -10,6 +10,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { valibotValidator } from "@tanstack/valibot-form-adapter";
 import { ChevronDown, ChevronUp, Import, Plus, Save, X } from "lucide-react";
 import * as R from "remeda";
+import { toast } from "sonner";
 import * as v from "valibot";
 
 import { Button } from "~/app/components/ui/primitives/button";
@@ -177,7 +178,14 @@ function WorkflowCard() {
       </CardHeader>
 
       <form.Field name="workflow" mode="array">
-        {({ state, removeValue, moveValue, pushValue, validate }) => (
+        {({
+          state,
+          removeValue,
+          moveValue,
+          pushValue,
+          validateSync,
+          setValue,
+        }) => (
           <>
             <CardContent>
               <ol className="space-y-4">
@@ -191,7 +199,10 @@ function WorkflowCard() {
                   >
                     <div className="absolute right-2.5 top-2.5 flex gap-2">
                       <IconButton
-                        onPress={() => moveValue(i, i + 1)}
+                        onPress={() => {
+                          moveValue(i, i + 1);
+                          validateSync("blur");
+                        }}
                         isDisabled={i === state.value.length - 1}
                         aria-label={`Move ${status.name} down`}
                       >
@@ -199,7 +210,10 @@ function WorkflowCard() {
                       </IconButton>
 
                       <IconButton
-                        onPress={() => moveValue(i, i - 1)}
+                        onPress={() => {
+                          moveValue(i, i - 1);
+                          validateSync("blur");
+                        }}
                         isDisabled={i === 0}
                         aria-label={`Move ${status.name} up`}
                       >
@@ -208,7 +222,7 @@ function WorkflowCard() {
 
                       <IconButton
                         onPress={() =>
-                          removeValue(i).then(() => validate("blur"))
+                          removeValue(i).then(() => validateSync("blur"))
                         }
                         aria-label={`Remove ${status.name}`}
                       >
@@ -363,7 +377,45 @@ function WorkflowCard() {
             </CardContent>
 
             <CardFooter className="justify-between">
-              <FileTrigger>
+              <FileTrigger
+                acceptedFileTypes={["application/json"]}
+                onSelect={(fileList) => {
+                  if (fileList) {
+                    const file = Array.from(fileList).at(0);
+
+                    if (file) {
+                      const reader = new FileReader();
+
+                      reader.onload = async (e) => {
+                        const text = e.target?.result;
+                        if (typeof text !== "string") return;
+
+                        let data: unknown;
+                        try {
+                          data = JSON.parse(text);
+                        } catch (e) {
+                          console.error(e);
+                          return toast.error("Invalid JSON syntax.");
+                        }
+
+                        const result = v.safeParse(WorkflowConfiguration, data);
+
+                        if (!result.success) {
+                          console.error(result.issues);
+                          return toast.error("Invalid JSON schema.");
+                        }
+
+                        setValue(result.output);
+                        return toast.success("Workflow successfully imported.");
+                      };
+
+                      reader.onerror = console.error;
+
+                      reader.readAsText(file);
+                    }
+                  }
+                }}
+              >
                 <Button variant="outline">
                   <Import className="mr-2 size-5" />
                   Import
@@ -428,7 +480,6 @@ function DeliveryOptionsCard() {
       }
     },
   });
-
   return (
     <form
       className={cardStyles().base()}
@@ -488,7 +539,14 @@ function DeliveryOptionsCard() {
       </CardHeader>
 
       <form.Field name="deliveryOptions" mode="array">
-        {({ state, removeValue, moveValue, pushValue, validate }) => (
+        {({
+          state,
+          removeValue,
+          moveValue,
+          pushValue,
+          validateSync,
+          setValue,
+        }) => (
           <>
             <CardContent>
               <ol className="space-y-4">
@@ -502,7 +560,10 @@ function DeliveryOptionsCard() {
                   >
                     <div className="absolute right-2.5 top-2.5 flex gap-2">
                       <IconButton
-                        onPress={() => moveValue(i, i + 1)}
+                        onPress={() => {
+                          moveValue(i, i + 1);
+                          validateSync("blur");
+                        }}
                         isDisabled={i === state.value.length - 1}
                         aria-label={`Move ${option.name} down`}
                       >
@@ -510,7 +571,10 @@ function DeliveryOptionsCard() {
                       </IconButton>
 
                       <IconButton
-                        onPress={() => moveValue(i, i - 1)}
+                        onPress={() => {
+                          moveValue(i, i - 1);
+                          validateSync("blur");
+                        }}
                         isDisabled={i === 0}
                         aria-label={`Move ${option.name} up`}
                       >
@@ -519,7 +583,7 @@ function DeliveryOptionsCard() {
 
                       <IconButton
                         onPress={() =>
-                          removeValue(i).then(() => validate("blur"))
+                          removeValue(i).then(() => validateSync("blur"))
                         }
                         aria-label={`Remove ${option.name}`}
                       >
@@ -590,7 +654,7 @@ function DeliveryOptionsCard() {
                           <Label htmlFor={name}>Cost</Label>
 
                           <FieldGroup>
-                            <NumberFieldInput />
+                            <NumberFieldInput id={name} />
 
                             <NumberFieldSteppers />
                           </FieldGroup>
@@ -603,7 +667,50 @@ function DeliveryOptionsCard() {
             </CardContent>
 
             <CardFooter className="justify-between">
-              <FileTrigger>
+              <FileTrigger
+                acceptedFileTypes={["application/json"]}
+                onSelect={(fileList) => {
+                  if (fileList) {
+                    const file = Array.from(fileList).at(0);
+
+                    if (file) {
+                      const reader = new FileReader();
+
+                      reader.onload = async (e) => {
+                        const text = e.target?.result;
+                        if (typeof text !== "string") return;
+
+                        let data: unknown;
+                        try {
+                          data = JSON.parse(text);
+                        } catch (e) {
+                          console.error(e);
+                          return toast.error("Invalid JSON syntax.");
+                        }
+
+                        const result = v.safeParse(
+                          DeliveryOptionsConfiguration,
+                          data,
+                        );
+
+                        if (!result.success) {
+                          console.error(result.issues);
+                          return toast.error("Invalid JSON schema.");
+                        }
+
+                        setValue(result.output);
+                        return toast.success(
+                          "Delivery options successfully imported.",
+                        );
+                      };
+
+                      reader.onerror = console.error;
+
+                      reader.readAsText(file);
+                    }
+                  }
+                }}
+              >
                 <Button variant="outline">
                   <Import className="mr-2 size-5" />
                   Import
