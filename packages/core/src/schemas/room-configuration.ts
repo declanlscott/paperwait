@@ -5,11 +5,21 @@ import { isUniqueByName } from "../utils/index";
 export const DeliveryOptionAttributes = v.object({
   name: v.pipe(v.string(), v.trim()),
   description: v.string(),
-  detailsLabel: v.nullable(v.string()),
+  detailsLabel: v.pipe(
+    v.nullable(v.string()),
+    v.transform((input) => {
+      if (!input) return null;
+
+      return input.trim();
+    }),
+  ),
   cost: v.optional(
-    v.pipe(
-      v.union([v.number(), v.pipe(v.string(), v.decimal())]),
-      v.transform(Number),
+    v.fallback(
+      v.pipe(
+        v.union([v.number(), v.pipe(v.string(), v.decimal())]),
+        v.transform(Number),
+      ),
+      0,
     ),
   ),
 });
@@ -18,6 +28,7 @@ export type DeliveryOptionAttributes = v.InferOutput<
 >;
 
 export const workflowStatusTypes = ["New", "InProgress", "Completed"] as const;
+export type WorkflowStatusType = (typeof workflowStatusTypes)[number];
 
 export const WorkflowStatusAttributes = v.object({
   name: v.pipe(v.string(), v.trim()),

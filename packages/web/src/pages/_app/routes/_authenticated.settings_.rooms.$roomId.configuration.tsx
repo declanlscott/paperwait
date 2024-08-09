@@ -1,5 +1,6 @@
-import { TextField as AriaTextField, FileTrigger } from "react-aria-components";
+import { FileTrigger } from "react-aria-components";
 import {
+  DeliveryOptionsConfiguration,
   WorkflowConfiguration,
   workflowStatusTypes,
 } from "@paperwait/core/schemas";
@@ -7,12 +8,12 @@ import { formatPascalCase } from "@paperwait/core/utils";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { valibotValidator } from "@tanstack/valibot-form-adapter";
-import { ChevronDown, ChevronUp, Import, Plus, Save } from "lucide-react";
+import { ChevronDown, ChevronUp, Import, Plus, Save, X } from "lucide-react";
+import * as R from "remeda";
 import * as v from "valibot";
 
 import { Button } from "~/app/components/ui/primitives/button";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardFooter,
@@ -32,7 +33,13 @@ import {
   SliderTrack,
 } from "~/app/components/ui/primitives/color";
 import { Dialog, DialogTrigger } from "~/app/components/ui/primitives/dialog";
-import { Label } from "~/app/components/ui/primitives/field";
+import { FieldGroup, Label } from "~/app/components/ui/primitives/field";
+import { IconButton } from "~/app/components/ui/primitives/icon-button";
+import {
+  NumberField,
+  NumberFieldInput,
+  NumberFieldSteppers,
+} from "~/app/components/ui/primitives/number-field";
 import { Popover } from "~/app/components/ui/primitives/popover";
 import {
   Select,
@@ -42,14 +49,14 @@ import {
   SelectTrigger,
 } from "~/app/components/ui/primitives/select";
 import { Input } from "~/app/components/ui/primitives/text-field";
-import {
-  Tooltip,
-  TooltipTrigger,
-} from "~/app/components/ui/primitives/tooltip";
-import { XButton } from "~/app/components/ui/primitives/x-button";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
-import { collectionItem, onSelectionChange } from "~/app/lib/ui";
+import { collectionItem } from "~/app/lib/ui";
 import { cardStyles } from "~/styles/components/primitives/card";
+
+import type {
+  RoomConfiguration,
+  WorkflowStatusType,
+} from "@paperwait/core/schemas";
 
 export const Route = createFileRoute(
   "/_authenticated/settings/rooms/$roomId/configuration",
@@ -92,17 +99,32 @@ function WorkflowCard() {
 
   const form = useForm({
     defaultValues: {
-      config: v.parse(WorkflowConfiguration, room?.config.workflow),
+      workflow: v.parse(WorkflowConfiguration, room?.config.workflow),
     },
     validatorAdapter: valibotValidator(),
-    onSubmit: ({ value }) => {
-      console.log({ value });
+    validators: {
+      onBlur: v.object({ workflow: WorkflowConfiguration }),
+    },
+    onSubmit: async ({ value: { workflow } }) => {
+      if (room) {
+        const config = room.config as RoomConfiguration;
+
+        if (!R.isDeepEqual(workflow, config.workflow))
+          await updateRoom({
+            id: room.id,
+            config: {
+              ...config,
+              workflow,
+            },
+            updatedAt: new Date().toISOString(),
+          });
+      }
     },
   });
 
   return (
     <form
-      className={cardStyles().base({ className: "min-w-0" })}
+      className={cardStyles().base()}
       onSubmit={async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -111,12 +133,23 @@ function WorkflowCard() {
       }}
     >
       <CardHeader>
-        <div className="flex justify-between gap-4 space-y-0">
+        <div className="flex justify-between gap-4">
           <CardTitle>Workflow</CardTitle>
 
-          <form.Subscribe selector={({ canSubmit }) => canSubmit}>
-            {(canSubmit) => (
-              <Button type="submit" isDisabled={!canSubmit}>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.values.workflow]}
+          >
+            {([canSubmit, workflow]) => (
+              <Button
+                type="submit"
+                isDisabled={
+                  !canSubmit ||
+                  R.isDeepEqual(
+                    workflow,
+                    room?.config.workflow as WorkflowConfiguration,
+                  )
+                }
+              >
                 <Save className="mr-2 size-5" />
                 Save
               </Button>
@@ -125,62 +158,95 @@ function WorkflowCard() {
         </div>
 
         <CardDescription>
-          Paperwait allows you to define your own order workflow. The workflow
-          determines the stages (or status) through which orders will progress.
-          The workflow is displayed in the dashboard interface for operators.
+          The workflow determines the stages (or status) through which orders
+          will progress. The workflow is displayed in the dashboard interface
+          for operators.
         </CardDescription>
+
+        <form.Subscribe selector={(state) => state.errors}>
+          {(errors) => (
+            <ul className="list-disc pl-6 pt-2">
+              {errors.map((e, i) => (
+                <li key={i} className="text-destructive">
+                  {e}
+                </li>
+              ))}
+            </ul>
+          )}
+        </form.Subscribe>
       </CardHeader>
 
-      <form.Field name="config" mode="array">
-        {(field) => (
+      <form.Field name="workflow" mode="array">
+        {({ state, removeValue, moveValue, pushValue, validate }) => (
           <>
             <CardContent>
               <ol className="space-y-4">
-                {field.state.value.map((_, i) => (
+                {state.value.map((status, i) => (
                   <li
                     key={i}
                     className={cardStyles().base({
                       className:
-                        "bg-muted/20 relative grid grid-cols-6 gap-2 p-4",
+                        "bg-muted/20 relative grid grid-cols-2 gap-2 p-4",
                     })}
                   >
-                    <XButton
-                      onPress={() => field.removeValue(i)}
-                      className="absolute right-3 top-3"
-                    />
+                    <div className="absolute right-2.5 top-2.5 flex gap-2">
+                      <IconButton
+                        onPress={() => moveValue(i, i + 1)}
+                        isDisabled={i === state.value.length - 1}
+                        aria-label={`Move ${status.name} down`}
+                      >
+                        <ChevronDown />
+                      </IconButton>
 
-                    <form.Field name={`config[${i}].name`}>
-                      {(subField) => (
-                        <AriaTextField className="col-span-3">
-                          <Label htmlFor={`config[${i}].name`}>Name</Label>
+                      <IconButton
+                        onPress={() => moveValue(i, i - 1)}
+                        isDisabled={i === 0}
+                        aria-label={`Move ${status.name} up`}
+                      >
+                        <ChevronUp />
+                      </IconButton>
+
+                      <IconButton
+                        onPress={() =>
+                          removeValue(i).then(() => validate("blur"))
+                        }
+                        aria-label={`Remove ${status.name}`}
+                      >
+                        <X />
+                      </IconButton>
+                    </div>
+
+                    <form.Field name={`workflow[${i}].name`}>
+                      {({ name, state, handleChange, handleBlur }) => (
+                        <div>
+                          <Label htmlFor={name}>Name</Label>
 
                           <Input
-                            id={`config[${i}].name`}
-                            value={subField.state.value}
-                            onChange={(e) =>
-                              subField.handleChange(e.target.value)
-                            }
+                            id={name}
+                            value={state.value}
+                            onChange={(e) => handleChange(e.target.value)}
+                            onBlur={handleBlur}
                           />
-                        </AriaTextField>
+                        </div>
                       )}
                     </form.Field>
 
-                    <form.Field name={`config[${i}].type`}>
-                      {(subField) => (
-                        <AriaTextField className="col-span-3">
-                          <Label htmlFor={`config[${i}].type`}>Type</Label>
+                    <form.Field name={`workflow[${i}].type`}>
+                      {({ name, state, handleChange, handleBlur }) => (
+                        <div>
+                          <Label htmlFor={name}>Type</Label>
 
                           <Select
-                            id={`config[${i}].type`}
-                            selectedKey={subField.state.value}
-                            onSelectionChange={onSelectionChange(
-                              workflowStatusTypes,
-                              subField.handleChange,
-                            )}
+                            id={name}
                             aria-label="type"
+                            selectedKey={state.value}
+                            onSelectionChange={(value) =>
+                              handleChange(value as WorkflowStatusType)
+                            }
+                            onBlur={handleBlur}
                           >
                             <SelectTrigger>
-                              {formatPascalCase(subField.state.value ?? "")}
+                              {formatPascalCase(state.value ?? "")}
                             </SelectTrigger>
 
                             <SelectPopover>
@@ -198,125 +264,95 @@ function WorkflowCard() {
                               </SelectListBox>
                             </SelectPopover>
                           </Select>
-                        </AriaTextField>
+                        </div>
                       )}
                     </form.Field>
 
-                    <form.Field name={`config[${i}].charging`}>
-                      {(subField) => (
+                    <form.Field name={`workflow[${i}].charging`}>
+                      {({ state, handleChange, handleBlur }) => (
                         <Checkbox
-                          isSelected={subField.state.value}
-                          onChange={subField.handleChange}
-                          className="col-span-2"
+                          isSelected={state.value}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
                         >
-                          <span className="text-muted-foreground text-sm">
-                            Charging
-                          </span>
+                          <span className="text-sm">Charging</span>
                         </Checkbox>
                       )}
                     </form.Field>
 
-                    <div className="col-span-2 flex justify-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        isDisabled={i === 0}
-                        onPress={() => field.moveValue(i, i - 1)}
-                      >
-                        <ChevronUp className="size-5" />
-                      </Button>
-
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        isDisabled={i === field.state.value.length - 1}
-                        onPress={() => field.moveValue(i, i + 1)}
-                      >
-                        <ChevronDown className="size-5" />
-                      </Button>
-                    </div>
-
-                    <form.Field name={`config[${i}].color`}>
-                      {(subField) => (
-                        <div className="col-span-2 flex items-center justify-end">
+                    <form.Field name={`workflow[${i}].color`}>
+                      {({ state, handleChange }) => (
+                        <div className="flex items-center justify-end">
                           <ColorPicker
-                            value={subField.state.value ?? "#000"}
+                            value={state.value ?? "#000"}
                             onChange={(color) =>
-                              subField.handleChange(color.toString("hex"))
+                              handleChange(color.toString("hex"))
                             }
                           >
-                            <TooltipTrigger>
-                              <DialogTrigger>
-                                <Button
-                                  variant="ghost"
-                                  className="flex h-fit items-center gap-2 p-1"
-                                >
-                                  <ColorSwatch className="size-8 rounded-md border-2" />
-                                </Button>
+                            <DialogTrigger>
+                              <Button
+                                variant="ghost"
+                                className="flex h-fit items-center gap-2 p-1"
+                              >
+                                Hex Color
+                                <ColorSwatch className="size-8 rounded-md border-2" />
+                              </Button>
 
-                                <Popover
-                                  placement="bottom start"
-                                  className="w-fit"
-                                >
-                                  <Dialog className="flex flex-col gap-4 p-3 outline-none">
-                                    <div>
-                                      <ColorArea
-                                        colorSpace="hsb"
-                                        xChannel="saturation"
-                                        yChannel="brightness"
-                                        className="h-[164px] rounded-b-none border-b-0"
-                                      >
-                                        <ColorThumb className="z-50" />
-                                      </ColorArea>
-
-                                      <ColorSlider
-                                        colorSpace="hsb"
-                                        channel="hue"
-                                      >
-                                        <SliderTrack className="rounded-t-none border-t-0">
-                                          <ColorThumb className="top-1/2" />
-                                        </SliderTrack>
-                                      </ColorSlider>
-                                    </div>
-
-                                    <ColorField
+                              <Popover
+                                placement="bottom start"
+                                className="w-fit"
+                              >
+                                <Dialog className="flex flex-col gap-4 p-3 outline-none">
+                                  <div>
+                                    <ColorArea
                                       colorSpace="hsb"
-                                      className="w-[192px]"
+                                      xChannel="saturation"
+                                      yChannel="brightness"
+                                      className="h-[164px] rounded-b-none border-b-0"
                                     >
-                                      <Label>Hex</Label>
+                                      <ColorThumb className="z-50" />
+                                    </ColorArea>
 
-                                      <Input className="" />
-                                    </ColorField>
+                                    <ColorSlider colorSpace="hsb" channel="hue">
+                                      <SliderTrack className="rounded-t-none border-t-0">
+                                        <ColorThumb className="top-1/2" />
+                                      </SliderTrack>
+                                    </ColorSlider>
+                                  </div>
 
-                                    <ColorSwatchPicker className="w-[192px]">
-                                      <ColorSwatchPickerItem color="#F00">
-                                        <ColorSwatch />
-                                      </ColorSwatchPickerItem>
+                                  <ColorField
+                                    colorSpace="hsb"
+                                    className="w-[192px]"
+                                  >
+                                    <Label>Hex</Label>
 
-                                      <ColorSwatchPickerItem color="#f90">
-                                        <ColorSwatch />
-                                      </ColorSwatchPickerItem>
+                                    <Input className="" />
+                                  </ColorField>
 
-                                      <ColorSwatchPickerItem color="#0F0">
-                                        <ColorSwatch />
-                                      </ColorSwatchPickerItem>
+                                  <ColorSwatchPicker className="w-[192px]">
+                                    <ColorSwatchPickerItem color="#F00">
+                                      <ColorSwatch />
+                                    </ColorSwatchPickerItem>
 
-                                      <ColorSwatchPickerItem color="#08f">
-                                        <ColorSwatch />
-                                      </ColorSwatchPickerItem>
+                                    <ColorSwatchPickerItem color="#f90">
+                                      <ColorSwatch />
+                                    </ColorSwatchPickerItem>
 
-                                      <ColorSwatchPickerItem color="#00f">
-                                        <ColorSwatch />
-                                      </ColorSwatchPickerItem>
-                                    </ColorSwatchPicker>
-                                  </Dialog>
-                                </Popover>
-                              </DialogTrigger>
+                                    <ColorSwatchPickerItem color="#0F0">
+                                      <ColorSwatch />
+                                    </ColorSwatchPickerItem>
 
-                              <Tooltip placement="left">
-                                <p>Hex Color</p>
-                              </Tooltip>
-                            </TooltipTrigger>
+                                    <ColorSwatchPickerItem color="#08f">
+                                      <ColorSwatch />
+                                    </ColorSwatchPickerItem>
+
+                                    <ColorSwatchPickerItem color="#00f">
+                                      <ColorSwatch />
+                                    </ColorSwatchPickerItem>
+                                  </ColorSwatchPicker>
+                                </Dialog>
+                              </Popover>
+                            </DialogTrigger>
                           </ColorPicker>
                         </div>
                       )}
@@ -337,7 +373,7 @@ function WorkflowCard() {
               <Button
                 variant="secondary"
                 onPress={() =>
-                  field.pushValue({
+                  pushValue({
                     name: "",
                     type: "New",
                     charging: false,
@@ -363,59 +399,235 @@ function DeliveryOptionsCard() {
     defaultData: initialRoom,
   });
 
-  // const [editorText, setEditorText] = useState(() =>
-  //   JSON.stringify(room?.config?.deliveryOptions, undefined, 4),
-  // );
+  const { updateRoom } = useMutator();
 
-  // const isSaveable = useMemo(() => {
-  //   try {
-  //     return !R.isDeepEqual(
-  //       JSON.parse(editorText),
-  //       room?.config?.deliveryOptions,
-  //     );
-  //   } catch (e) {
-  //     console.error(e);
+  const form = useForm({
+    defaultValues: {
+      deliveryOptions: v.parse(
+        DeliveryOptionsConfiguration,
+        room?.config.deliveryOptions,
+      ),
+    },
+    validatorAdapter: valibotValidator(),
+    validators: {
+      onBlur: v.object({ deliveryOptions: DeliveryOptionsConfiguration }),
+    },
+    onSubmit: async ({ value: { deliveryOptions } }) => {
+      if (room) {
+        const config = room.config as RoomConfiguration;
 
-  //     return false;
-  //   }
-  // }, [editorText, room?.config?.deliveryOptions]);
-
-  // const { updateRoom } = useMutator();
-
-  // async function saveConfig() {
-  //   if (room) {
-  //     const result = v.safeParse(
-  //       DeliveryOptionsConfiguration,
-  //       JSON.parse(editorText),
-  //     );
-  //     if (!result.success)
-  //       return toast.error("Invalid delivery options configuration");
-
-  //     await updateRoom({
-  //       id: roomId,
-  //       config: v.parse(RoomConfiguration, {
-  //         ...room.config,
-  //         deliveryOptions: result.output,
-  //       }),
-  //       updatedAt: new Date().toISOString(),
-  //     });
-  //   }
-  // }
+        if (!R.isDeepEqual(deliveryOptions, config.deliveryOptions))
+          await updateRoom({
+            id: room.id,
+            config: {
+              ...config,
+              deliveryOptions,
+            },
+            updatedAt: new Date().toISOString(),
+          });
+      }
+    },
+  });
 
   return (
-    <Card className="min-w-0">
-      <CardHeader className="flex-row justify-between gap-4 space-y-0">
-        <div>
+    <form
+      className={cardStyles().base()}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        await form.handleSubmit();
+      }}
+    >
+      <CardHeader>
+        <div className="flex justify-between gap-4">
           <CardTitle>Delivery Options</CardTitle>
+
+          <form.Subscribe
+            selector={(state) => [
+              state.canSubmit,
+              state.values.deliveryOptions,
+            ]}
+          >
+            {([canSubmit, deliveryOptions]) => (
+              <Button
+                type="submit"
+                isDisabled={
+                  !canSubmit ||
+                  R.isDeepEqual(
+                    deliveryOptions,
+                    room?.config
+                      .deliveryOptions as DeliveryOptionsConfiguration,
+                  )
+                }
+              >
+                <Save className="mr-2 size-5" />
+                Save
+              </Button>
+            )}
+          </form.Subscribe>
         </div>
 
-        {/* <Button isDisabled={!isSaveable} onPress={saveConfig}>
-          <Save className="mr-2 size-5" />
-          Save
-        </Button> */}
+        <CardDescription>
+          Delivery options are the methods by which orders can be delivered to
+          customers. Delivery options are displayed in the New Order form for
+          customers.
+        </CardDescription>
+
+        <form.Subscribe selector={(state) => state.errors}>
+          {(errors) => (
+            <ul className="list-disc pl-6 pt-2">
+              {errors.map((e, i) => (
+                <li key={i} className="text-destructive">
+                  {e}
+                </li>
+              ))}
+            </ul>
+          )}
+        </form.Subscribe>
       </CardHeader>
 
-      <CardContent></CardContent>
-    </Card>
+      <form.Field name="deliveryOptions" mode="array">
+        {({ state, removeValue, moveValue, pushValue, validate }) => (
+          <>
+            <CardContent>
+              <ol className="space-y-4">
+                {state.value.map((option, i) => (
+                  <li
+                    key={i}
+                    className={cardStyles().base({
+                      className:
+                        "bg-muted/20 relative grid grid-cols-2 gap-2 p-4",
+                    })}
+                  >
+                    <div className="absolute right-2.5 top-2.5 flex gap-2">
+                      <IconButton
+                        onPress={() => moveValue(i, i + 1)}
+                        isDisabled={i === state.value.length - 1}
+                        aria-label={`Move ${option.name} down`}
+                      >
+                        <ChevronDown />
+                      </IconButton>
+
+                      <IconButton
+                        onPress={() => moveValue(i, i - 1)}
+                        isDisabled={i === 0}
+                        aria-label={`Move ${option.name} up`}
+                      >
+                        <ChevronUp />
+                      </IconButton>
+
+                      <IconButton
+                        onPress={() =>
+                          removeValue(i).then(() => validate("blur"))
+                        }
+                        aria-label={`Remove ${option.name}`}
+                      >
+                        <X />
+                      </IconButton>
+                    </div>
+
+                    <form.Field name={`deliveryOptions[${i}].name`}>
+                      {({ name, state, handleChange, handleBlur }) => (
+                        <div>
+                          <Label htmlFor={name}>Name</Label>
+
+                          <Input
+                            id={name}
+                            value={state.value}
+                            onChange={(e) => handleChange(e.target.value)}
+                            onBlur={handleBlur}
+                          />
+                        </div>
+                      )}
+                    </form.Field>
+
+                    <form.Field name={`deliveryOptions[${i}].description`}>
+                      {({ name, state, handleChange, handleBlur }) => (
+                        <div>
+                          <Label htmlFor={name}>Description</Label>
+
+                          <Input
+                            id={name}
+                            value={state.value}
+                            onChange={(e) => handleChange(e.target.value)}
+                            onBlur={handleBlur}
+                          />
+                        </div>
+                      )}
+                    </form.Field>
+
+                    <form.Field name={`deliveryOptions[${i}].detailsLabel`}>
+                      {({ name, state, handleChange, handleBlur }) => (
+                        <div>
+                          <Label htmlFor={name}>Details Label</Label>
+
+                          <Input
+                            id={name}
+                            value={state.value ?? ""}
+                            onChange={(e) => handleChange(e.target.value)}
+                            onBlur={handleBlur}
+                          />
+                        </div>
+                      )}
+                    </form.Field>
+
+                    <form.Field name={`deliveryOptions[${i}].cost`}>
+                      {({ name, state, handleChange, handleBlur }) => (
+                        <NumberField
+                          value={state.value ?? 0}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          formatOptions={{
+                            style: "currency",
+                            currency: "USD",
+                            currencyDisplay: "symbol",
+                            currencySign: "standard",
+                          }}
+                          step={0.01}
+                          minValue={0}
+                        >
+                          <Label htmlFor={name}>Cost</Label>
+
+                          <FieldGroup>
+                            <NumberFieldInput />
+
+                            <NumberFieldSteppers />
+                          </FieldGroup>
+                        </NumberField>
+                      )}
+                    </form.Field>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+
+            <CardFooter className="justify-between">
+              <FileTrigger>
+                <Button variant="outline">
+                  <Import className="mr-2 size-5" />
+                  Import
+                </Button>
+              </FileTrigger>
+
+              <Button
+                variant="secondary"
+                onPress={() =>
+                  pushValue({
+                    name: "",
+                    description: "",
+                    detailsLabel: "",
+                    cost: 0,
+                  })
+                }
+              >
+                <Plus className="mr-2 size-5" />
+                Add
+              </Button>
+            </CardFooter>
+          </>
+        )}
+      </form.Field>
+    </form>
   );
 }
