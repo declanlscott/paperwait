@@ -6,8 +6,9 @@ import {
   ModalOverlay as AriaModalOverlay,
   composeRenderProps,
 } from "react-aria-components";
+import { X } from "lucide-react";
 
-import { XButton } from "~/app/components/ui/primitives/x-button";
+import { IconButton } from "~/app/components/ui/primitives/icon-button";
 import { dialogStyles } from "~/styles/components/primitives/dialog";
 
 import type { ComponentProps, HTMLAttributes } from "react";
@@ -67,11 +68,13 @@ export const DialogContent = ({
           {typeof children === "function" ? children(values) : children}
 
           {closeButton && (
-            <XButton
+            <IconButton
               onPress={values.close}
-              screenReaderLabel="Close"
-              className="absolute right-4 top-4"
-            />
+              aria-label="Close"
+              className="absolute right-3.5 top-3.5"
+            >
+              <X />
+            </IconButton>
           )}
         </>
       )}
