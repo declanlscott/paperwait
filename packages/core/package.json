@@ -14,7 +14,7 @@
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/client-s3": "^3.627.0",
-    "@aws-sdk/client-ssm": "^3.624.0",
+    "@aws-sdk/client-ssm": "^3.628.0",
     "@aws-sdk/cloudfront-signer": "^3.621.0",
     "@aws-sdk/credential-providers": "^3.624.0",
     "@aws-sdk/s3-request-presigner": "^3.627.0",
@@ -23,7 +23,7 @@
     "@neondatabase/serverless": "^0.9.4",
     "@smithy/signature-v4": "^4.1.0",
     "arctic": "^1.9.2",
-    "drizzle-orm": "^0.32.2",
+    "drizzle-orm": "^0.33.0",
     "lucia": "^3.2.0",
     "nanoid": "^5.0.7",
     "oslo": "^1.2.1",
@@ -35,6 +35,6 @@
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.12",
-    "drizzle-kit": "^0.23.2"
+    "drizzle-kit": "^0.24.0"
   }
 }
