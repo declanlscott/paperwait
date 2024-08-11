@@ -191,14 +191,14 @@ importers:
   packages/web:
     dependencies:
       '@astrojs/react':
-        specifier: ^3.6.1
-        version: 3.6.1(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.4.0(@types/node@22.2.0))
+        specifier: ^3.6.2
+        version: 3.6.2(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.4.0(@types/node@22.2.0))
       '@astrojs/starlight':
         specifier: ^0.25.4
-        version: 0.25.4(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4))
+        version: 0.25.4(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4))
       '@astrojs/tailwind':
         specifier: ^5.1.0
-        version: 5.1.0(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4))(tailwindcss@3.4.9)
+        version: 5.1.0(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4))(tailwindcss@3.4.9)
       '@hono/valibot-validator':
         specifier: ^0.3.0
         version: 0.3.0(hono@4.5.4)(valibot@0.37.0(typescript@5.5.4))
@@ -242,8 +242,8 @@ importers:
         specifier: ^0.28.0
         version: 0.28.0(valibot@0.37.0(typescript@5.5.4))
       astro:
-        specifier: ^4.13.2
-        version: 4.13.2(@types/node@22.2.0)(typescript@5.5.4)
+        specifier: ^4.13.3
+        version: 4.13.3(@types/node@22.2.0)(typescript@5.5.4)
       astro-sst:
         specifier: ^2.43.4
         version: 2.43.4
@@ -289,6 +289,9 @@ importers:
       replicache:
         specifier: ^15.0.1
         version: 15.0.1
+      sharp:
+        specifier: ^0.33.4
+        version: 0.33.4
       sonner:
         specifier: ^1.5.0
         version: 1.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -377,8 +380,8 @@ packages:
     resolution: {integrity: sha512-Z9IYjuXSArkAUx3N6xj6+Bnvx8OdUSHA8YoOgyepp3+zJmtVYJIl/I18GozdJVW1p5u/CNpl3Km7/gwTJK85cw==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
 
-  '@astrojs/react@3.6.1':
-    resolution: {integrity: sha512-Mpgu+GYTba1TEzLMshojeLxi7y/FqrTNtpGTCvI366bRbnCkqtvznRj/xPQOTybwXnYXSgxsELyUvqD51iFeiw==}
+  '@astrojs/react@3.6.2':
+    resolution: {integrity: sha512-fK29lYI7zK/KG4ZBy956x4dmauZcZ18osFkuyGa8r3gmmCQa2NZ9XNu9WaVYEUm0j89f4Gii4tbxLoyM8nk2MA==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
     peerDependencies:
       '@types/react': ^17.0.50 || ^18.0.21
@@ -3640,8 +3643,8 @@ packages:
   astro-sst@2.43.4:
     resolution: {integrity: sha512-tcKTxdie6z7KBF+hxiwyRjZIYQSDO75AWvlyjE6i6VCfRBajZ3usTo6fCkBBIHUkuEejtDML6oPkxGt9ibcz7A==}
 
-  astro@4.13.2:
-    resolution: {integrity: sha512-bdfUV6zfOWOV/IbROqVx+1cuAFXY0PZpVxr4JO9YxCKa5AfQRR8RKXJ2k8QUjalA6dmxQ9FgAQw3FRrzHVOGEQ==}
+  astro@4.13.3:
+    resolution: {integrity: sha512-MyhmM0v5sphiVwxAm5jjKxWeuPZijWPJ8Ajdign9QzEmLWSH8vUYIJWx/dWRQ6vF1I0jXrksoj3wtw5nzXt9nw==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
 
@@ -4054,8 +4057,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  electron-to-chromium@1.5.5:
-    resolution: {integrity: sha512-QR7/A7ZkMS8tZuoftC/jfqNkZLQO779SSW3YuZHP4eXpj3EffGLFcB/Xu9AAZQzLccTiCV+EmUo3ha4mQ9wnlA==}
+  electron-to-chromium@1.5.6:
+    resolution: {integrity: sha512-jwXWsM5RPf6j9dPYzaorcBSUg6AiqocPEyMpkchkvntaH9HGfOOMZwxMJjDY/XEs3T5dM7uyH1VhRMkqUU9qVw==}
 
   emmet@2.4.7:
     resolution: {integrity: sha512-O5O5QNqtdlnQM2bmKHtJgyChcrFMgQuulI+WdiOw2NArzprUqqxUW6bgYtKvzKgrsYpuLWalOkdhNP+1jluhCA==}
@@ -6415,12 +6418,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@3.1.3(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4))':
+  '@astrojs/mdx@3.1.3(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4))':
     dependencies:
       '@astrojs/markdown-remark': 5.2.0
       '@mdx-js/mdx': 3.0.1
       acorn: 8.12.1
-      astro: 4.13.2(@types/node@22.2.0)(typescript@5.5.4)
+      astro: 4.13.3(@types/node@22.2.0)(typescript@5.5.4)
       es-module-lexer: 1.5.4
       estree-util-visit: 2.0.0
       github-slugger: 2.0.0
@@ -6440,7 +6443,7 @@ snapshots:
     dependencies:
       prismjs: 1.29.0
 
-  '@astrojs/react@3.6.1(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.4.0(@types/node@22.2.0))':
+  '@astrojs/react@3.6.2(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.4.0(@types/node@22.2.0))':
     dependencies:
       '@types/react': 18.3.3
       '@types/react-dom': 18.3.0
@@ -6458,15 +6461,15 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 3.23.8
 
-  '@astrojs/starlight@0.25.4(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4))':
+  '@astrojs/starlight@0.25.4(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4))':
     dependencies:
-      '@astrojs/mdx': 3.1.3(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4))
+      '@astrojs/mdx': 3.1.3(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4))
       '@astrojs/sitemap': 3.1.6
       '@pagefind/default-ui': 1.1.0
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
-      astro: 4.13.2(@types/node@22.2.0)(typescript@5.5.4)
-      astro-expressive-code: 0.35.6(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4))
+      astro: 4.13.3(@types/node@22.2.0)(typescript@5.5.4)
+      astro-expressive-code: 0.35.6(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.1
       hast-util-select: 6.0.2
@@ -6485,9 +6488,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/tailwind@5.1.0(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4))(tailwindcss@3.4.9)':
+  '@astrojs/tailwind@5.1.0(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4))(tailwindcss@3.4.9)':
     dependencies:
-      astro: 4.13.2(@types/node@22.2.0)(typescript@5.5.4)
+      astro: 4.13.3(@types/node@22.2.0)(typescript@5.5.4)
       autoprefixer: 10.4.20(postcss@8.4.41)
       postcss: 8.4.41
       postcss-load-config: 4.0.2(postcss@8.4.41)
@@ -10888,9 +10891,9 @@ snapshots:
       - supports-color
       - typescript
 
-  astro-expressive-code@0.35.6(astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4)):
+  astro-expressive-code@0.35.6(astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4)):
     dependencies:
-      astro: 4.13.2(@types/node@22.2.0)(typescript@5.5.4)
+      astro: 4.13.3(@types/node@22.2.0)(typescript@5.5.4)
       rehype-expressive-code: 0.35.6
 
   astro-sst@2.43.4:
@@ -10898,7 +10901,7 @@ snapshots:
       '@astrojs/webapi': 3.0.0
       set-cookie-parser: 2.7.0
 
-  astro@4.13.2(@types/node@22.2.0)(typescript@5.5.4):
+  astro@4.13.3(@types/node@22.2.0)(typescript@5.5.4):
     dependencies:
       '@astrojs/compiler': 2.10.2
       '@astrojs/internal-helpers': 0.4.1
@@ -11054,7 +11057,7 @@ snapshots:
   browserslist@4.23.3:
     dependencies:
       caniuse-lite: 1.0.30001651
-      electron-to-chromium: 1.5.5
+      electron-to-chromium: 1.5.6
       node-releases: 2.0.18
       update-browserslist-db: 1.1.0(browserslist@4.23.3)
 
@@ -11174,13 +11177,11 @@ snapshots:
     dependencies:
       color-name: 1.1.4
       simple-swizzle: 0.2.2
-    optional: true
 
   color@4.2.3:
     dependencies:
       color-convert: 2.0.1
       color-string: 1.9.1
-    optional: true
 
   comma-separated-tokens@2.0.3: {}
 
@@ -11236,8 +11237,7 @@ snapshots:
 
   dequal@2.0.3: {}
 
-  detect-libc@2.0.3:
-    optional: true
+  detect-libc@2.0.3: {}
 
   detect-node-es@1.1.0: {}
 
@@ -11288,7 +11288,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  electron-to-chromium@1.5.5: {}
+  electron-to-chromium@1.5.6: {}
 
   emmet@2.4.7:
     dependencies:
@@ -12054,8 +12054,7 @@ snapshots:
       call-bind: 1.0.7
       has-tostringtag: 1.0.2
 
-  is-arrayish@0.3.2:
-    optional: true
+  is-arrayish@0.3.2: {}
 
   is-binary-path@2.1.0:
     dependencies:
@@ -13518,7 +13517,6 @@ snapshots:
       '@img/sharp-wasm32': 0.33.4
       '@img/sharp-win32-ia32': 0.33.4
       '@img/sharp-win32-x64': 0.33.4
-    optional: true
 
   shebang-command@2.0.0:
     dependencies:
@@ -13538,7 +13536,6 @@ snapshots:
   simple-swizzle@0.2.2:
     dependencies:
       is-arrayish: 0.3.2
-    optional: true
 
   sisteransi@1.0.5: {}
 
