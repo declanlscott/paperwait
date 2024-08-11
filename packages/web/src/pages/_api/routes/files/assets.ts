@@ -9,6 +9,7 @@ import {
 } from "@paperwait/core/aws";
 import { ASSETS_MIME_TYPES } from "@paperwait/core/constants";
 import { Hono } from "hono";
+import sharp from "sharp";
 import { Resource } from "sst";
 import * as v from "valibot";
 
@@ -17,6 +18,30 @@ import { authorization, maxContentLength } from "~/api/middleware";
 import type { HonoEnv } from "~/api/types";
 
 export default new Hono<HonoEnv>()
+  .post(
+    "/thumbnail",
+    authorization(["administrator", "operator"]),
+    vValidator(
+      "form",
+      v.object({ image: v.pipe(v.file(), v.mimeType(ASSETS_MIME_TYPES)) }),
+    ),
+    async (c, next) =>
+      maxContentLength("assets", c.req.valid("form").image.size)(c, next),
+    async (c) => {
+      const image = c.req.valid("form").image;
+      const buffer = await image.arrayBuffer();
+
+      const thumbnail = await sharp(Buffer.from(buffer))
+        .blur(1)
+        .resize(10)
+        .toBuffer();
+
+      c.header("Content-Type", image.type);
+      c.header("Content-Length", thumbnail.byteLength.toString());
+
+      return c.body(thumbnail, 200);
+    },
+  )
   .get(
     "/signed-put-url",
     authorization(["administrator", "operator"]),
