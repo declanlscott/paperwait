@@ -75,7 +75,7 @@ export async function processUser(
     info: UserInfo;
   },
 ): Promise<User["id"]> {
-  const [existingUser] = await db
+  const existingUser = await db
     .select({
       id: User.id,
       name: User.name,
@@ -90,7 +90,8 @@ export async function processUser(
         eq(User.providerId, user.idToken.userProviderId),
         eq(User.orgId, org.id),
       ),
-    );
+    )
+    .then((rows) => rows.at(0));
 
   // Create user if it doesn't exist
   if (!existingUser) {

@@ -12,7 +12,7 @@ import { labelStyles } from "~/styles/components/primitives/field";
 
 const { slug } = Astro.params;
 
-const [org] = slug
+const org = slug
   ? await db
       .select({
         id: Organization.id,
@@ -24,7 +24,8 @@ const [org] = slug
       })
       .from(Organization)
       .where(eq(Organization.slug, slug))
-  : [undefined];
+      .then((rows) => rows.at(0))
+  : undefined;
 
 if (!org) return new Response("Organization not found", { status: 404 });
 

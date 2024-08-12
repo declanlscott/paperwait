@@ -45,7 +45,7 @@ export default new Hono<HonoEnv>()
     async (c) => {
       const { org: orgParam, redirect } = c.req.valid("query");
 
-      const [org] = await db
+      const org = await db
         .select({
           id: Organization.id,
           provider: Organization.provider,
@@ -63,7 +63,8 @@ export default new Hono<HonoEnv>()
               sql`TRIM(LOWER(${orgParam}))`,
             ),
           ),
-        );
+        )
+        .then((rows) => rows.at(0));
       if (!org) throw new NotFoundError("Organization not found");
 
       let state: string;

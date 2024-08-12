@@ -29,7 +29,7 @@ export default new Hono<HonoEnv>()
           `Provider "${c.get("provider")!.type}" not implemented`,
         );
 
-      const [user] = await db
+      const user = await db
         .select({ providerId: User.providerId })
         .from(User)
         .where(
@@ -37,7 +37,8 @@ export default new Hono<HonoEnv>()
             eq(User.id, c.req.valid("param").id),
             eq(User.orgId, c.env.locals.org!.id),
           ),
-        );
+        )
+        .then((rows) => rows.at(0));
       if (!user) throw new NotFoundError("User not found");
 
       const res = await fetch(

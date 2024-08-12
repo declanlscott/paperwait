@@ -243,12 +243,12 @@ const createPapercutAccountManagerAuthorization = (user: LuciaUser) =>
     CreatePapercutAccountManagerAuthorizationMutationArgs,
     () => authorizeRole("createPapercutAccountManagerAuthorization", user),
     () => async (tx, values) => {
-      const [managerAuthorization] = await tx
+      const managerAuthorization = await tx
         .insert(PapercutAccountManagerAuthorization)
         .values(values)
         .onConflictDoNothing()
-        .returning({ id: PapercutAccountManagerAuthorization.id });
-
+        .returning({ id: PapercutAccountManagerAuthorization.id })
+        .then((rows) => rows.at(0));
       if (!managerAuthorization) return [];
 
       return [formatChannel("org", user.orgId)];
@@ -283,11 +283,12 @@ const createRoom = (user: LuciaUser) =>
     CreateRoomMutationArgs,
     () => authorizeRole("createRoom", user),
     () => async (tx, values) => {
-      const [room] = await tx
+      const room = await tx
         .insert(Room)
         .values(values)
         .onConflictDoNothing()
-        .returning({ id: Room.id });
+        .returning({ id: Room.id })
+        .then((rows) => rows.at(0));
       if (!room) return [];
 
       return [formatChannel("org", user.orgId)];
@@ -445,10 +446,12 @@ const createOrder = (user: LuciaUser) =>
     CreateOrderMutationArgs,
     () => authorizeRole("createOrder", user),
     () => async (tx, values) => {
-      const [order] = await tx
+      const order = await tx
         .insert(Order)
         .values(values)
-        .returning({ id: Order.id });
+        .returning({ id: Order.id })
+        .then((rows) => rows.at(0));
+      if (!order) throw new Error("Failed to create order");
 
       const users = await getUsersWithAccessToOrder(tx, order.id, user.orgId);
 
