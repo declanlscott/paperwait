@@ -1,3 +1,4 @@
+import * as R from "remeda";
 import * as v from "valibot";
 
 import { isUniqueByName } from "../utils/index";
@@ -27,7 +28,12 @@ export type DeliveryOptionAttributes = v.InferOutput<
   typeof DeliveryOptionAttributes
 >;
 
-export const workflowStatusTypes = ["New", "InProgress", "Completed"] as const;
+export const workflowStatusTypes = [
+  "Pending",
+  "New",
+  "InProgress",
+  "Completed",
+] as const;
 export type WorkflowStatusType = (typeof workflowStatusTypes)[number];
 
 export const WorkflowStatusAttributes = v.object({
@@ -43,6 +49,24 @@ export type WorkflowStatusAttributes = v.InferOutput<
 export const WorkflowConfiguration = v.pipe(
   v.array(WorkflowStatusAttributes),
   v.check(isUniqueByName, "Workflow status names must be unique"),
+  v.check(
+    (workflow) =>
+      R.pipe(
+        workflow,
+        R.conditional(
+          [R.isEmpty, () => true],
+          R.conditional.defaultCase(() =>
+            R.pipe(
+              workflow,
+              R.filter((status) => status.type === "New"),
+              R.length(),
+              (length) => length === 1,
+            ),
+          ),
+        ),
+      ),
+    "Workflow must have exactly one status of type 'New'",
+  ),
 );
 export type WorkflowConfiguration = v.InferOutput<typeof WorkflowConfiguration>;
 
