@@ -4,8 +4,10 @@ import { Organization } from "@paperwait/core/organization";
 import { defineMiddleware } from "astro:middleware";
 import { eq } from "drizzle-orm";
 
-export const onRequest = defineMiddleware(async (context, next) => {
-  if (context.url.pathname.startsWith("/partials")) return next();
+import { isPrerenderedPage } from "~/middleware/utils";
+
+export const auth = defineMiddleware(async (context, next) => {
+  if (isPrerenderedPage(context.url.pathname)) return await next();
 
   const sessionId = context.cookies.get(lucia.sessionCookieName)?.value ?? null;
 
@@ -14,12 +16,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.locals.session = null;
     context.locals.org = null;
 
-    return next();
+    return await next();
   }
 
   const { session, user } = await lucia.validateSession(sessionId);
 
-  const [org] = user
+  const org = user
     ? await db
         .select({
           id: Organization.id,
@@ -27,7 +29,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
         })
         .from(Organization)
         .where(eq(Organization.id, user.orgId))
-    : [null];
+        .then((rows) => rows.at(0) ?? null)
+    : null;
 
   if (session?.fresh) {
     const sessionCookie = lucia.createSessionCookie(session.id);
@@ -53,5 +56,5 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.user = user;
   context.locals.org = org;
 
-  return next();
+  return await next();
 });

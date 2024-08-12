@@ -9,6 +9,7 @@
       "~/app/*": ["src/pages/_app/*"],
       "~/components/*": ["src/components/*"],
       "~/layouts/*": ["src/layouts/*"],
+      "~/middleware/*": ["src/middleware/*"],
       "~/pages/*": ["src/pages/*"],
       "~/styles/*": ["src/styles/*"],
       "~/types/*": ["src/types/*"]

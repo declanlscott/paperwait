@@ -22,6 +22,10 @@ sst.Linkable.wrap(aws.cloudfront.Distribution, ({ domainName }) => ({
   properties: { domainName },
 }));
 
+sst.Linkable.wrap(upstash.RedisDatabase, ({ endpoint, restToken }) => ({
+  properties: { endpoint, restToken },
+}));
+
 export * from "./buckets";
 export * from "./astro";
 export * from "./cron";
@@ -29,3 +33,4 @@ export * from "./secrets";
 export * from "./entra-id";
 export * from "./vpc";
 export * from "./papercut";
+export * from "./redis";

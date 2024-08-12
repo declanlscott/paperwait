@@ -112,6 +112,11 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Redis": {
+      "endpoint": string
+      "restToken": string
+      "type": "upstash.index/redisDatabase.RedisDatabase"
+    }
   }
 }
 export {}
