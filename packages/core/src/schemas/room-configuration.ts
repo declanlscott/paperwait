@@ -60,7 +60,7 @@ export const WorkflowConfiguration = v.pipe(
               workflow,
               R.filter((status) => status.type === "New"),
               R.length(),
-              (length) => length === 1,
+              R.isDeepEqual(1),
             ),
           ),
         ),

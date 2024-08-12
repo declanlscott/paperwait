@@ -61,7 +61,7 @@ export const isUniqueByName = <TInput extends Array<{ name: string }>>(
     input,
     R.uniqueBy(({ name }) => name),
     R.length(),
-    (length) => length === input.length,
+    R.isDeepEqual(input.length),
   );
 
 export const formatPascalCase = (value: string) =>
