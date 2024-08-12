@@ -6,7 +6,7 @@ sst.Linkable.wrap(azuread.ApplicationPassword, ({ value }) => ({
   properties: { value },
 }));
 
-sst.Linkable.wrap(aws.ec2.Instance, ({ publicIp }) => ({
+sst.Linkable.wrap(aws.ec2.Eip, ({ publicIp }) => ({
   properties: { publicIp },
 }));
 

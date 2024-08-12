@@ -128,3 +128,13 @@ export const natRoute = new aws.ec2.Route("NatRoute", {
   destinationCidrBlock: "0.0.0.0/0",
   networkInterfaceId: natInstance.primaryNetworkInterfaceId,
 });
+
+export const natElasticIp = new aws.ec2.Eip("NatElasticIp");
+
+export const natElasticIpAssociation = new aws.ec2.EipAssociation(
+  "NatElasticIpAssociation",
+  {
+    instanceId: natInstance.id,
+    allocationId: natElasticIp.id,
+  },
+);

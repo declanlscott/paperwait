@@ -124,7 +124,7 @@ const api = new Hono<{
     await next();
   })
   .use("*", async (c, next) => {
-    const natIp = Resource.NatInstance.publicIp;
+    const natIp = Resource.NatElasticIp.publicIp;
 
     const whitelistIp = except(
       () => Resource.ClientIsDev.value === "true",

@@ -50,7 +50,7 @@ export default $config({
 
     return {
       url: infra.astro.url,
-      whitelistIp: infra.natInstance.publicIp,
+      whitelistIp: infra.natElasticIp.publicIp,
       mockPapercutApi: infra.mockPapercutApi.url,
     };
   },

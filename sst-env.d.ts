@@ -68,9 +68,9 @@ declare module "sst" {
       "type": "sst.cloudflare.Worker"
       "url": string
     }
-    "NatInstance": {
+    "NatElasticIp": {
       "publicIp": string
-      "type": "aws.ec2/instance.Instance"
+      "type": "aws.ec2/eip.Eip"
     }
     "NatSshKey": {
       "privateKeyPem": string
