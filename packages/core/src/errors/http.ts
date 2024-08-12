@@ -57,6 +57,13 @@ export class ConflictError extends HttpError {
   }
 }
 
+export class TooManyRequestsError extends HttpError {
+  constructor(message = "Too many requests", statusCode = 429) {
+    super(message, statusCode);
+    this.name = "TooManyRequestsError";
+  }
+}
+
 export class InternalServerError extends HttpError {
   constructor(message = "Internal server error", statusCode = 500) {
     super(message, statusCode);

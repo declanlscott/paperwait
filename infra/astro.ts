@@ -6,6 +6,7 @@ import {
 } from "./buckets";
 import { entraIdApp, entraIdClientSecret } from "./entra-id";
 import { papercutApiGateway } from "./papercut";
+import { redis } from "./redis";
 import {
   dbCredentials,
   domain,
@@ -32,6 +33,7 @@ export const astro = new sst.aws.Astro("Paperwait", {
     ...Object.values(assetsDistributionKeyPair),
     assetsDistribution,
     documentsBucket,
+    redis,
   ],
   permissions: [
     {

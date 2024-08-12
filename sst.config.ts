@@ -22,6 +22,7 @@ export default $config({
         },
         cloudflare: true,
         azuread: true,
+        "@upstash/pulumi": true,
         "@pulumiverse/time": true,
         tls: true,
       },
