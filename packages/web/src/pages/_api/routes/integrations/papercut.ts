@@ -23,7 +23,7 @@ export default new Hono<HonoEnv>()
 
       await poke([formatChannel("org", orgId)]);
 
-      return c.body(null, { status: 204 });
+      return c.body(null, 204);
     },
   )
   .put(
@@ -41,7 +41,7 @@ export default new Hono<HonoEnv>()
         Overwrite: true,
       });
 
-      return c.body(null, { status: 204 });
+      return c.body(null, 204);
     },
   )
   .post("/test", authorization(["administrator"]), async (c) => {
@@ -50,5 +50,5 @@ export default new Hono<HonoEnv>()
       input: { authorized: true },
     });
 
-    return c.body(null, { status: 204 });
+    return c.body(null, 204);
   });

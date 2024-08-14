@@ -36,10 +36,10 @@ export default new Hono<HonoEnv>()
         .resize(10)
         .toBuffer();
 
-      c.header("Content-Type", image.type);
-      c.header("Content-Length", thumbnail.byteLength.toString());
-
-      return c.body(thumbnail, 200);
+      return c.body(thumbnail, 200, {
+        "Content-Type": image.type,
+        "Content-Length": thumbnail.byteLength.toString(),
+      });
     },
   )
   .get(

@@ -13,7 +13,6 @@ import * as v from "valibot";
 
 import { authorization, provider } from "~/api/middleware";
 
-import type { StatusCode } from "hono/utils/http-status";
 import type { HonoEnv } from "~/api/types";
 
 export default new Hono<HonoEnv>()
@@ -51,10 +50,14 @@ export default new Hono<HonoEnv>()
       );
       if (!res.ok) throw new HttpError(res.statusText, res.status);
 
-      c.header("Content-Type", res.headers.get("Content-Type") ?? undefined);
-      c.header("Cache-Control", "max-age=2592000");
-      c.status(res.status as StatusCode);
+      const contentType = res.headers.get("Content-Type");
 
-      return c.body(res.body);
+      return c.body(res.body, {
+        status: res.status,
+        headers: {
+          ...(contentType ? { "Content-type": contentType } : undefined),
+          "Cache-Control": "max-age=2592000",
+        },
+      });
     },
   );

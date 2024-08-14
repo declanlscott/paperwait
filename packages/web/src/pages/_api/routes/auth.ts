@@ -236,7 +236,7 @@ export default new Hono<HonoEnv>()
 
     setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
-    return c.body(null, { status: 204 });
+    return c.body(null, 204);
   })
   // Logout user
   .post(
@@ -256,6 +256,6 @@ export default new Hono<HonoEnv>()
 
       await invalidateUserSessions(userId);
 
-      return c.body(null, { status: 204 });
+      return c.body(null, 204);
     },
   );
