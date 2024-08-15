@@ -1,11 +1,11 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
 export const buttonStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors",
   variants: {
     variant: {

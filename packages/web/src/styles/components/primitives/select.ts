@@ -1,7 +1,7 @@
 import { tv } from "tailwind-variants";
 
 import { popoverStyles } from "~/styles/components/primitives/popover";
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
@@ -22,7 +22,7 @@ export const selectStyles = tv({
 export type SelectStyles = VariantProps<typeof selectStyles>;
 
 export const selectTriggerStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "border-input bg-background ring-offset-background flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm",
   variants: {
     isDisabled: {

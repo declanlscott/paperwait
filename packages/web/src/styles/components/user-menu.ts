@@ -1,11 +1,11 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
 export const userMenuTriggerButtonStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "h-10 rounded-full transition-opacity",
   variants: {
     isHovered: {

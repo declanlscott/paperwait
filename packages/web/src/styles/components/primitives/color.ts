@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
@@ -24,7 +24,7 @@ export const colorStyles = tv({
 export type ColorStyles = VariantProps<typeof colorStyles>;
 
 export const colorSwatchPickerItemStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "size-8 overflow-hidden rounded-md border-2 transition-colors",
   variants: {
     isSelected: {

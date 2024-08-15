@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
@@ -15,7 +15,7 @@ export const breadcrumbsStyles = tv({
 });
 
 export const breadcrumbLinkStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "transition-colors",
   variants: {
     isHovered: {

@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
@@ -22,7 +22,7 @@ export const commandStyles = tv({
 export type CommandStyles = VariantProps<typeof commandStyles>;
 
 export const commandBackButtonStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "ring-offset-background mr-2 shrink-0 text-primary/50 transition-colors rounded-sm",
   variants: {
     isHovered: {

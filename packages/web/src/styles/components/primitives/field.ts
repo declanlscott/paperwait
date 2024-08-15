@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
@@ -19,7 +19,7 @@ export const labelStyles = tv({
 export type LabelStyles = VariantProps<typeof labelStyles>;
 
 export const fieldGroupStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "relative flex h-10 w-full items-center overflow-hidden rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
   variants: {
     isDisabled: {

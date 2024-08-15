@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
@@ -16,7 +16,7 @@ export const checkboxStyles = tv({
 export type CheckboxStyles = VariantProps<typeof checkboxStyles>;
 
 export const boxStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "size-4 shrink-0 rounded-sm flex items-center justify-center border border-primary disabled:border-primary/50 disabled:pointer-events-none",
   variants: {
     isSelected: {

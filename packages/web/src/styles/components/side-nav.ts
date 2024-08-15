@@ -1,11 +1,11 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
 export const linkStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "rounded-md transition-colors py-2.5 text-muted-foreground font-medium flex items-center gap-3 [&>svg]:size-5",
   variants: {
     isActive: {

@@ -5,7 +5,7 @@ import { tv } from "tailwind-variants";
 
 import type { ClassValue } from "clsx/lite";
 
-export const focusRing = tv({
+export const focusRingStyles = tv({
   base: "outline-none",
   variants: {
     isFocusVisible: {

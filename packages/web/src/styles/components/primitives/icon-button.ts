@@ -1,11 +1,11 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
 export const iconButtonStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "ring-offset-background rounded-sm text-primary/50 transition-colors [&>svg]:size-5",
   variants: {
     isHovered: {

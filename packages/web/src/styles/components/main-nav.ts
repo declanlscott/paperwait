@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import { focusRing } from "~/styles/utils";
+import { focusRingStyles } from "~/styles/utils";
 
 import type { VariantProps } from "tailwind-variants";
 
@@ -15,7 +15,7 @@ export const logoStyles = tv({
 export type LogoStyles = VariantProps<typeof logoStyles>;
 
 export const linkStyles = tv({
-  extend: focusRing,
+  extend: focusRingStyles,
   base: "text-muted-foreground text-sm font-medium transition-colors p-3 cursor-pointer outline-none rounded-md",
   variants: {
     isActive: {
