@@ -10,7 +10,7 @@ importers:
     dependencies:
       sst:
         specifier: ion
-        version: 0.1.100(hono@4.5.5)
+        version: 0.1.102(hono@4.5.5)
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.3.1
@@ -84,9 +84,6 @@ importers:
       oslo:
         specifier: ^1.2.1
         version: 1.2.1
-      postgres:
-        specifier: ^3.4.4
-        version: 3.4.4
       remeda:
         specifier: ^2.11.0
         version: 2.11.0
@@ -5798,33 +5795,33 @@ packages:
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  sst-darwin-arm64@0.1.100:
-    resolution: {integrity: sha512-/EjDTpbPMOCi8b/ZAxi0zifxKjbVyugdgrkiCbcTzaL5LPeVJyhei8GXPPeQkGtdo72S9zcHanUS/jHBe9JwGA==}
+  sst-darwin-arm64@0.1.102:
+    resolution: {integrity: sha512-J3V4Ub7CC93WmCvlqz/HY04sYLWLHkkpwcYE5buo1O4HGIOeEECN73TIvQ7yn6PQtA7S0rlxMuLBVLqx1YzQUQ==}
     cpu: [arm64]
     os: [darwin]
 
-  sst-darwin-x64@0.1.100:
-    resolution: {integrity: sha512-cF+Y7u7ufeZjFV0ui+eZPEG/v5u8IXJIelykHYy6NVLa5d+rB/SNyDkUSOQAgleRYpuWDTajtg6EOSx5jhIc2w==}
+  sst-darwin-x64@0.1.102:
+    resolution: {integrity: sha512-za6aR40n3u0DhYZ5xC9v3MbNGLBN07hFq8/q9FrN34PYmkafzr95owvKrmVGDdJkh9FL9bGoUz/c/9jmKA/C2A==}
     cpu: [x64]
     os: [darwin]
 
-  sst-linux-arm64@0.1.100:
-    resolution: {integrity: sha512-cEYH3XLvsH0Z5R6DNDezR0RNOImCUUIzbqrF0XTTYhkc7M7tbCWGSDXGAowMoPYh9CCbHLIcaM6HuRQUm4glIQ==}
+  sst-linux-arm64@0.1.102:
+    resolution: {integrity: sha512-TXBzAG/YAqUrlNscsa9O/ZRmXE6q+uNvAtjRkJireMQS4B2KyWZKs7sTMSxvCtFJ2A4QVRoFuroAj1wwN09RwA==}
     cpu: [arm64]
     os: [linux]
 
-  sst-linux-x64@0.1.100:
-    resolution: {integrity: sha512-e01TDLX6DFBjdSaRowZt9eHcuXmE3x1wnuMdMzmgf/5n6gB0yaPYxUxDxAuWr7Y6BKD1r8kBgfwXxhF4m15brw==}
+  sst-linux-x64@0.1.102:
+    resolution: {integrity: sha512-8Is6hOj6P1X1YnP1C68laFIxp7NSpBK52KJBi7+xesUEC49H7HnuqiBWM8/l+blhHwThEmxs85Bd6QRH59hE2w==}
     cpu: [x64]
     os: [linux]
 
-  sst-linux-x86@0.1.100:
-    resolution: {integrity: sha512-hLJvX9WaB2Npwp48JPGcHhrZAfS0sWgmPB3Rx3wDTlgyG98UEm8T/+xzyTRUuzu00irIri7BCu3/EG8W++Ze4g==}
+  sst-linux-x86@0.1.102:
+    resolution: {integrity: sha512-6HBBrzbEdeefPgQrSqtZYmtSI9FtcTZNrU+K4jIO15Ad6OviGrNqO2GUCKEiO9C7drXw10duI4AA8eF91KGKEg==}
     cpu: [x86]
     os: [linux]
 
-  sst@0.1.100:
-    resolution: {integrity: sha512-ZK4z4n/fXIevgPG60xxtPlv8C9af+i1H6sMGCyPJEashqBQE5ZEsGoiJ71RJWmNUQx2exU9+xiI6UJLJ7a21lw==}
+  sst@0.1.102:
+    resolution: {integrity: sha512-jxuSFvT7AX55hRk83fJn1ZnUcCU7kAmPQXWpQQOM60zGMZYlRZ9GrkhpQoz98NgDFEpL1W0vIOKhDov4TPZFSA==}
     hasBin: true
     peerDependencies:
       hono: 4.x
@@ -13208,7 +13205,8 @@ snapshots:
 
   postgres-range@1.1.4: {}
 
-  postgres@3.4.4: {}
+  postgres@3.4.4:
+    optional: true
 
   preferred-pm@4.0.0:
     dependencies:
@@ -13722,22 +13720,22 @@ snapshots:
 
   sprintf-js@1.0.3: {}
 
-  sst-darwin-arm64@0.1.100:
+  sst-darwin-arm64@0.1.102:
     optional: true
 
-  sst-darwin-x64@0.1.100:
+  sst-darwin-x64@0.1.102:
     optional: true
 
-  sst-linux-arm64@0.1.100:
+  sst-linux-arm64@0.1.102:
     optional: true
 
-  sst-linux-x64@0.1.100:
+  sst-linux-x64@0.1.102:
     optional: true
 
-  sst-linux-x86@0.1.100:
+  sst-linux-x86@0.1.102:
     optional: true
 
-  sst@0.1.100(hono@4.5.5):
+  sst@0.1.102(hono@4.5.5):
     dependencies:
       '@aws-sdk/client-lambda': 3.478.0
       aws4fetch: 1.0.19
@@ -13745,11 +13743,11 @@ snapshots:
       openid-client: 5.6.4
     optionalDependencies:
       hono: 4.5.5
-      sst-darwin-arm64: 0.1.100
-      sst-darwin-x64: 0.1.100
-      sst-linux-arm64: 0.1.100
-      sst-linux-x64: 0.1.100
-      sst-linux-x86: 0.1.100
+      sst-darwin-arm64: 0.1.102
+      sst-darwin-x64: 0.1.102
+      sst-linux-arm64: 0.1.102
+      sst-linux-x64: 0.1.102
+      sst-linux-x86: 0.1.102
     transitivePeerDependencies:
       - aws-crt
 

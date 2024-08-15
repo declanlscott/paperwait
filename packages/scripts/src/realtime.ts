@@ -54,9 +54,9 @@ function main() {
   try {
     const { command, args } = buildCommand([
       "--var",
-      `API_KEY=${resource.PartyKitApiKey.value}`,
+      `API_KEY=${resource.Realtime.apiKey}`,
       "--var",
-      `REPLICACHE_LICENSE_KEY=${resource.ClientReplicacheLicenseKey.value}`,
+      `REPLICACHE_LICENSE_KEY=${resource.ReplicacheLicenseKey.value}`,
     ]);
 
     const process = spawn(command, args, {

@@ -10,11 +10,11 @@ import { fn } from "../valibot";
 import type { IdToken, ProviderTokens } from "./types";
 
 export const google = new Google(
-  Resource.GoogleClientId.value,
-  Resource.GoogleClientSecret.value,
-  Resource.ClientIsDev.value === "true"
+  Resource.Auth.google.clientId,
+  Resource.Auth.google.clientSecret,
+  Resource.IsDev.value === "true"
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
-    : `${Resource.ClientDomain.value}${AUTH_CALLBACK_PATH}`,
+    : `${Resource.Domain.value}${AUTH_CALLBACK_PATH}`,
 );
 
 export async function createGoogleAuthorizationUrl(hostedDomain: string) {

@@ -11,11 +11,11 @@ import type { IdToken, ProviderTokens } from "./types";
 
 export const entraId = new MicrosoftEntraId(
   "organizations",
-  Resource.EntraIdApplication.clientId,
-  Resource.EntraIdClientSecret.value,
-  Resource.ClientIsDev.value === "true"
+  Resource.Auth.entraId.clientId,
+  Resource.Auth.entraId.clientSecret,
+  Resource.IsDev.value === "true"
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
-    : `${Resource.ClientDomain.value}${AUTH_CALLBACK_PATH}`,
+    : `${Resource.Domain.value}${AUTH_CALLBACK_PATH}`,
 );
 
 export async function createEntraIdAuthorizationUrl() {

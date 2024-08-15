@@ -77,7 +77,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
     })),
   );
 
-  const { ReplicacheLicenseKey, IsDev } = useResource();
+  const { replicacheLicenseKey, isDev } = useResource();
 
   const mutators = useMutators(user);
 
@@ -108,11 +108,11 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
     if (user?.id) {
       const replicache = new Replicache({
         name: user.id,
-        licenseKey: ReplicacheLicenseKey.value,
+        licenseKey: replicacheLicenseKey,
         mutators,
         pushURL: "/api/replicache/push",
         pullURL: "/api/replicache/pull",
-        logLevel: IsDev.value === "true" ? "info" : "error",
+        logLevel: isDev === "true" ? "info" : "error",
       });
 
       replicache.getAuth = () => getAuth(replicache);
@@ -123,8 +123,8 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
     }
   }, [
     user?.id,
-    ReplicacheLicenseKey.value,
-    IsDev.value,
+    replicacheLicenseKey,
+    isDev,
     mutators,
     getAuth,
     initializeReplicache,

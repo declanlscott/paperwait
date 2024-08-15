@@ -1,39 +1,24 @@
-import {
-  assetsBucket,
-  assetsDistribution,
-  assetsDistributionKeyPair,
-  documentsBucket,
-} from "./buckets";
-import { entraIdApp, entraIdClientSecret } from "./entra-id";
+import { auth } from "./auth";
+import { dbCredentials } from "./db";
+import { client, domain, isDev } from "./misc";
 import { papercutApiGateway } from "./papercut";
+import { realtime } from "./realtime";
 import { redis } from "./redis";
-import {
-  dbCredentials,
-  domain,
-  googleCredentials,
-  isDev,
-  partyKitSecrets,
-  replicacheLicenseKey,
-} from "./secrets";
+import { storage } from "./storage";
 
-export const astro = new sst.aws.Astro("Paperwait", {
+export const web = new sst.aws.Astro("Paperwait", {
   path: "packages/web",
   buildCommand: "pnpm build",
   link: [
-    isDev,
-    replicacheLicenseKey,
+    auth,
+    client,
     ...Object.values(dbCredentials),
-    ...Object.values(partyKitSecrets),
-    entraIdApp,
-    entraIdClientSecret,
-    ...Object.values(googleCredentials),
-    papercutApiGateway,
     domain,
-    assetsBucket,
-    ...Object.values(assetsDistributionKeyPair),
-    assetsDistribution,
-    documentsBucket,
+    isDev,
+    papercutApiGateway,
+    realtime,
     redis,
+    storage,
   ],
   permissions: [
     {

@@ -9,18 +9,16 @@ type RealtimeProps = {
 };
 
 export function useRealtime(props: RealtimeProps) {
-  const { PartyKitUrl, ReplicacheLicenseKey } = useResource();
+  const { realtimeUrl, replicacheLicenseKey } = useResource();
 
   const { replicache } = useAuthenticated();
 
   return usePartySocket({
-    host: PartyKitUrl.value,
+    host: realtimeUrl,
     room: props.channel,
     onMessage: (message) => {
       if (message.data === POKE) void replicache.pull();
     },
-    query: {
-      replicacheLicenseKey: ReplicacheLicenseKey.value,
-    },
+    query: { replicacheLicenseKey },
   });
 }

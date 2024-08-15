@@ -66,3 +66,21 @@ export const assetsDistribution = new aws.cloudfront.Distribution(
 );
 
 export const documentsBucket = new sst.aws.Bucket("DocumentsBucket");
+
+export const storage = new sst.Linkable("Storage", {
+  properties: {
+    assets: {
+      bucket: assetsBucket.name,
+      distribution: {
+        domain: assetsDistribution.domainName,
+        publicKey: {
+          id: assetsDistributionPublicKey.id,
+        },
+        privateKey: assetsDistributionPrivateKey.privateKeyPem,
+      },
+    },
+    documents: {
+      bucket: documentsBucket.name,
+    },
+  },
+});

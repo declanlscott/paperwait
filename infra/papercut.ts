@@ -1,5 +1,5 @@
-import { isDev } from "./secrets";
-import { natElasticIp, natSecurityGroup, privateSubnetsOutput } from "./vpc";
+import { isDev } from "./misc";
+import { natSecurityGroup, privateSubnetsOutput, whitelist } from "./vpc";
 
 export const papercutApiGateway = new sst.aws.ApiGatewayV2(
   "PapercutApiGateway",
@@ -177,5 +177,5 @@ export const mockPapercutApi = new sst.cloudflare.Worker("MockPapercutApi", {
   environment: {
     AUTH_TOKEN: "auth-token",
   },
-  link: [natElasticIp, isDev],
+  link: [whitelist, isDev],
 });

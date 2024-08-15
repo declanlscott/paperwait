@@ -58,7 +58,7 @@ export default new Hono<HonoEnv>()
       const { name, orderId, metadata } = c.req.valid("query");
 
       const signedUrl = await getS3SignedPutUrl({
-        Bucket: Resource.DocumentsBucket.name,
+        Bucket: Resource.Storage.documents.bucket,
         Key: buildS3ObjectKey(orgId, orderId, name),
         ContentType: metadata.contentType,
         ContentLength: metadata.contentLength,
@@ -84,7 +84,7 @@ export default new Hono<HonoEnv>()
       const { name, orderId } = c.req.valid("query");
 
       const signedUrl = await getS3SignedGetUrl({
-        Bucket: Resource.DocumentsBucket.name,
+        Bucket: Resource.Storage.documents.bucket,
         Key: buildS3ObjectKey(orgId, orderId, name),
       });
 
@@ -108,7 +108,7 @@ export default new Hono<HonoEnv>()
       const { name, orderId } = c.req.valid("query");
 
       await deleteS3Object({
-        Bucket: Resource.DocumentsBucket.name,
+        Bucket: Resource.Storage.documents.bucket,
         Key: buildS3ObjectKey(orgId, orderId, name),
       });
 

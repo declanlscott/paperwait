@@ -1,8 +1,8 @@
 import { createContext } from "react";
 
-import type { ClientResource } from "@paperwait/core/types";
 import type { UserRole } from "@paperwait/core/user";
 import type { Replicache } from "replicache";
+import type { Resource } from "sst";
 import type { StoreApi } from "zustand";
 import type { Mutators } from "~/app/lib/hooks/replicache";
 import type { Auth, Authenticated, CommandBarPage, Slot } from "~/app/types";
@@ -27,9 +27,9 @@ export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
 export const AuthenticatedContext = createContext<Authenticated | null>(null);
 
-export type ResourceContext = ClientResource;
+export type ResourceContext = Resource["Client"];
 
-export const ResourceContext = createContext<ClientResource | null>(null);
+export const ResourceContext = createContext<Resource["Client"] | null>(null);
 
 export type SlotContext = Slot;
 

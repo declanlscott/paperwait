@@ -1,4 +1,4 @@
-import { dbCredentials } from "./secrets";
+import { dbCredentials } from "./db";
 
 export const deleteExpiredSessions = new sst.aws.Cron("DeleteExpiredSessions", {
   job: {

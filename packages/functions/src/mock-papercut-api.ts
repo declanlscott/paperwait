@@ -124,11 +124,11 @@ const api = new Hono<{
     await next();
   })
   .use("*", async (c, next) => {
-    const natIp = Resource.NatElasticIp.publicIp;
+    const ip = Resource.Whitelist.ip;
 
     const whitelistIp = except(
-      () => Resource.ClientIsDev.value === "true",
-      ipRestriction(getConnInfo, { denyList: [], allowList: [natIp] }),
+      () => Resource.IsDev.value === "true",
+      ipRestriction(getConnInfo, { denyList: [], allowList: [ip] }),
     );
 
     await whitelistIp(c, next);

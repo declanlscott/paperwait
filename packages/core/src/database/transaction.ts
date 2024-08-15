@@ -1,17 +1,18 @@
-import { db } from ".";
 import {
   DB_TRANSACTION_MAX_RETRIES,
   POSTGRES_DEADLOCK_DETECTED_ERROR_CODE,
   POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE,
 } from "../constants";
 import { InternalServerError } from "../errors/http";
+import { db } from "./orm";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { NeonQueryResultHKT } from "drizzle-orm/neon-serverless";
 import type { PgTransaction, PgTransactionConfig } from "drizzle-orm/pg-core";
+import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
 export type Transaction = PgTransaction<
-  NeonQueryResultHKT,
+  NeonQueryResultHKT | PostgresJsQueryResultHKT,
   Record<string, never>,
   ExtractTablesWithRelations<Record<string, never>>
 >;

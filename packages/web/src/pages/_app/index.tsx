@@ -10,13 +10,13 @@ import { useAuthStore } from "~/app/lib/hooks/auth";
 import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
-import type { ClientResource } from "@paperwait/core/types";
+import type { Resource } from "sst";
 import type { AppRouter, Auth, Slot } from "~/app/types";
 
 const queryClient = new QueryClient();
 
 export interface AppProps extends Partial<Slot> {
-  clientResource: ClientResource;
+  clientResource: Resource["Client"];
   auth: Auth;
 }
 

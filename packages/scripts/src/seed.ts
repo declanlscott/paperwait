@@ -15,6 +15,7 @@ async function main() {
   try {
     await seed();
     console.log("✅ Seeding completed!");
+    process.exit(0);
   } catch (e) {
     console.error("❌ Error during seeding:", e);
     process.exit(1);

@@ -22,9 +22,11 @@ export default $config({
         },
         cloudflare: true,
         azuread: true,
+        docker: true,
         "@upstash/pulumi": true,
         "@pulumiverse/time": true,
         tls: true,
+        random: true,
       },
       version: ">= 0.1.100",
     };
@@ -41,16 +43,16 @@ export default $config({
       },
     });
 
-    new sst.x.DevCommand("Realtime", {
+    new sst.x.DevCommand("PartyKit", {
       dev: {
-        command: $interpolate`npx partykit dev --var API_KEY=${infra.partyKitSecrets.apiKey.value} --var REPLICACHE_LICENSE_KEY=${infra.replicacheLicenseKey.value}`,
+        command: $interpolate`npx partykit dev --var API_KEY=${infra.partyKitApiKey.result} --var REPLICACHE_LICENSE_KEY=${infra.replicacheLicenseKey.value}`,
         directory: "packages/realtime",
         autostart: true,
       },
     });
 
     return {
-      url: infra.astro.url,
+      url: infra.web.url,
       whitelistIp: infra.natElasticIp.publicIp,
       mockPapercutApi: infra.mockPapercutApi.url,
     };

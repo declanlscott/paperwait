@@ -4,7 +4,7 @@ import { Resource } from "sst";
 import { isPrerenderedPage, rateLimit } from "~/middleware/utils";
 
 export const rateLimitIp = defineMiddleware(async (context, next) => {
-  if (Resource.ClientIsDev.value === "true") return await next();
+  if (Resource.IsDev.value === "true") return await next();
 
   const path = context.url.pathname;
   if (isPrerenderedPage(path)) return await next();
@@ -18,7 +18,7 @@ export const rateLimitIp = defineMiddleware(async (context, next) => {
 });
 
 export const rateLimitUser = defineMiddleware(async (context, next) => {
-  if (Resource.ClientIsDev.value === "true") return await next();
+  if (Resource.IsDev.value === "true") return await next();
 
   const { org, user } = context.locals;
   if (!org || !user) return await next();

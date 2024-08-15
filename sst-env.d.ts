@@ -15,45 +15,30 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "AssetsDistribution": {
-      "domainName": string
-      "type": "aws.cloudfront/distribution.Distribution"
+    "Auth": {
+      "entraId": {
+        "clientId": string
+        "clientSecret": string
+      }
+      "google": {
+        "clientId": string
+        "clientSecret": string
+      }
+      "type": "sst.sst.Linkable"
     }
-    "AssetsDistributionPrivateKey": {
-      "privateKeyPem": string
-      "type": "tls.index/privateKey.PrivateKey"
-    }
-    "AssetsDistributionPublicKey": {
-      "encodedKey": string
-      "id": string
-      "type": "aws.cloudfront/publicKey.PublicKey"
-    }
-    "ClientDomain": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "ClientIsDev": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "ClientPartyKitUrl": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "ClientReplicacheLicenseKey": {
-      "type": "sst.sst.Secret"
-      "value": string
+    "Client": {
+      "domain": string
+      "isDev": string
+      "realtimeUrl": string
+      "replicacheLicenseKey": string
+      "type": "sst.sst.Linkable"
     }
     "DocumentsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "EntraIdApplication": {
-      "clientId": string
-      "type": "azuread.index/application.Application"
-    }
-    "EntraIdClientSecret": {
-      "type": "azuread.index/applicationPassword.ApplicationPassword"
+    "Domain": {
+      "type": "sst.sst.Secret"
       "value": string
     }
     "GoogleClientId": {
@@ -64,17 +49,13 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "IsDev": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "MockPapercutApi": {
       "type": "sst.cloudflare.Worker"
       "url": string
-    }
-    "NatElasticIp": {
-      "publicIp": string
-      "type": "aws.ec2/eip.Eip"
-    }
-    "NatSshKey": {
-      "privateKeyPem": string
-      "type": "tls.index/privateKey.PrivateKey"
     }
     "PapercutApiGateway": {
       "type": "sst.aws.ApiGatewayV2"
@@ -84,7 +65,7 @@ declare module "sst" {
       "type": "sst.aws.Astro"
       "url": string
     }
-    "PartyKitApiKey": {
+    "PartyKitUrl": {
       "type": "sst.sst.Secret"
       "value": string
     }
@@ -112,10 +93,39 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Realtime": {
+      "apiKey": string
+      "type": "sst.sst.Linkable"
+      "url": string
+    }
     "Redis": {
       "endpoint": string
       "restToken": string
       "type": "upstash.index/redisDatabase.RedisDatabase"
+    }
+    "ReplicacheLicenseKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "Storage": {
+      "assets": {
+        "bucket": string
+        "distribution": {
+          "domain": string
+          "privateKey": string
+          "publicKey": {
+            "id": string
+          }
+        }
+      }
+      "documents": {
+        "bucket": string
+      }
+      "type": "sst.sst.Linkable"
+    }
+    "Whitelist": {
+      "ip": string
+      "type": "sst.sst.Linkable"
     }
   }
 }

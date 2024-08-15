@@ -13,8 +13,8 @@ import type { AuthStore, ResourceContext } from "~/app/lib/contexts";
 const TanStackRouterDevtools = import.meta.env.DEV
   ? lazy(() =>
       // Lazy load in development
-      import("@tanstack/router-devtools").then((res) => ({
-        default: res.TanStackRouterDevtools,
+      import("@tanstack/router-devtools").then((module) => ({
+        default: module.TanStackRouterDevtools,
       })),
     )
   : () => null;

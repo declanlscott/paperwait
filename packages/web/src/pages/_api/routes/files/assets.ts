@@ -65,7 +65,7 @@ export default new Hono<HonoEnv>()
       const { name, metadata } = c.req.valid("query");
 
       const signedUrl = await getS3SignedPutUrl({
-        Bucket: Resource.AssetsBucket.name,
+        Bucket: Resource.Storage.assets.bucket,
         Key: buildS3ObjectKey(orgId, name),
         ContentType: metadata.contentType,
         ContentLength: metadata.contentLength,
@@ -83,11 +83,11 @@ export default new Hono<HonoEnv>()
 
       const signedUrl = getCloudfrontSignedUrl({
         url: buildCloudfrontUrl(
-          Resource.AssetsDistribution.domainName,
+          Resource.Storage.assets.distribution.domain,
           buildS3ObjectKey(orgId, name),
         ),
-        keyPairId: Resource.AssetsDistributionPublicKey.id,
-        privateKey: Resource.AssetsDistributionPrivateKey.privateKeyPem,
+        keyPairId: Resource.Storage.assets.distribution.publicKey.id,
+        privateKey: Resource.Storage.assets.distribution.privateKey,
         dateLessThan: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
       });
 

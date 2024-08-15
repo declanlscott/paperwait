@@ -138,3 +138,9 @@ export const natElasticIpAssociation = new aws.ec2.EipAssociation(
     allocationId: natElasticIp.id,
   },
 );
+
+export const whitelist = new sst.Linkable("Whitelist", {
+  properties: {
+    ip: natElasticIp.publicIp,
+  },
+});
