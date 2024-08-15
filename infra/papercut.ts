@@ -27,7 +27,7 @@ papercutApiGateway.route("POST /get-shared-account-properties", {
   permissions: [getPapercutParameterPermission],
   vpc: {
     securityGroups: [natSecurityGroup.id],
-    subnets: privateSubnetsOutput.apply((subnets) =>
+    privateSubnets: privateSubnetsOutput.apply((subnets) =>
       subnets.map((subnet) => subnet.id),
     ),
   },
@@ -39,7 +39,7 @@ papercutApiGateway.route("POST /is-user-exists", {
   permissions: [getPapercutParameterPermission],
   vpc: {
     securityGroups: [natSecurityGroup.id],
-    subnets: privateSubnetsOutput.apply((subnets) =>
+    privateSubnets: privateSubnetsOutput.apply((subnets) =>
       subnets.map((subnet) => subnet.id),
     ),
   },
@@ -51,7 +51,7 @@ papercutApiGateway.route("POST /list-shared-accounts", {
   permissions: [getPapercutParameterPermission],
   vpc: {
     securityGroups: [natSecurityGroup.id],
-    subnets: privateSubnetsOutput.apply((subnets) =>
+    privateSubnets: privateSubnetsOutput.apply((subnets) =>
       subnets.map((subnet) => subnet.id),
     ),
   },
@@ -63,7 +63,7 @@ papercutApiGateway.route("POST /list-user-shared-accounts", {
   permissions: [getPapercutParameterPermission],
   vpc: {
     securityGroups: [natSecurityGroup.id],
-    subnets: privateSubnetsOutput.apply((subnets) =>
+    privateSubnets: privateSubnetsOutput.apply((subnets) =>
       subnets.map((subnet) => subnet.id),
     ),
   },
@@ -75,7 +75,7 @@ papercutApiGateway.route("POST /test-papercut", {
   permissions: [getPapercutParameterPermission],
   vpc: {
     securityGroups: [natSecurityGroup.id],
-    subnets: privateSubnetsOutput.apply((subnets) =>
+    privateSubnets: privateSubnetsOutput.apply((subnets) =>
       subnets.map((subnet) => subnet.id),
     ),
   },
@@ -164,7 +164,7 @@ adjustSharedAccountAccountBalanceQueue.subscribe({
   permissions: [getPapercutParameterPermission],
   vpc: {
     securityGroups: [natSecurityGroup.id],
-    subnets: privateSubnetsOutput.apply((subnets) =>
+    privateSubnets: privateSubnetsOutput.apply((subnets) =>
       subnets.map((subnet) => subnet.id),
     ),
   },

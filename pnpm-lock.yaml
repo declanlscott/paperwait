@@ -10,7 +10,7 @@ importers:
     dependencies:
       sst:
         specifier: ion
-        version: 0.1.95(hono@4.5.5)
+        version: 0.1.100(hono@4.5.5)
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.3.1
@@ -62,7 +62,7 @@ importers:
         version: 1.3.0
       '@lucia-auth/adapter-drizzle':
         specifier: ^1.1.0
-        version: 1.1.0(drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(react@18.3.1))(lucia@3.2.0)
+        version: 1.1.0(drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(pg@8.12.0)(postgres@3.4.4)(react@18.3.1))(lucia@3.2.0)
       '@neondatabase/serverless':
         specifier: ^0.9.4
         version: 0.9.4
@@ -74,7 +74,7 @@ importers:
         version: 1.9.2
       drizzle-orm:
         specifier: ^0.33.0
-        version: 0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(react@18.3.1)
+        version: 0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(pg@8.12.0)(postgres@3.4.4)(react@18.3.1)
       lucia:
         specifier: ^3.2.0
         version: 3.2.0
@@ -84,6 +84,9 @@ importers:
       oslo:
         specifier: ^1.2.1
         version: 1.2.1
+      postgres:
+        specifier: ^3.4.4
+        version: 3.4.4
       remeda:
         specifier: ^2.11.0
         version: 2.11.0
@@ -261,7 +264,7 @@ importers:
         version: 1.0.0(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       drizzle-orm:
         specifier: ^0.33.0
-        version: 0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(react@18.3.1)
+        version: 0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(pg@8.12.0)(postgres@3.4.4)(react@18.3.1)
       hono:
         specifier: ^4.5.5
         version: 4.5.5
@@ -357,6 +360,9 @@ packages:
 
   '@astrojs/compiler@2.10.2':
     resolution: {integrity: sha512-bvH+v8AirwpRWCkYJEyWYdc5Cs/BjG2ZTxIJzttHilXgfKJAdW2496KsUQKzf5j2tOHtaHXKKn9hb9WZiBGpEg==}
+
+  '@astrojs/compiler@2.10.3':
+    resolution: {integrity: sha512-bL/O7YBxsFt55YHU021oL+xz+B/9HvGNId3F9xURN16aeqDK9juHGktdkCSXz+U4nqFACq6ZFvWomOzhV+zfPw==}
 
   '@astrojs/internal-helpers@0.4.1':
     resolution: {integrity: sha512-bMf9jFihO8YP940uD70SI/RDzIhUHJAolWVcO1v5PUivxGKvfLZTLTVVxEYzGYyPsA3ivdLNqMnL5VgmQySa+g==}
@@ -5265,6 +5271,12 @@ packages:
   periscopic@3.1.0:
     resolution: {integrity: sha512-vKiQ8RRtkl9P+r/+oefh25C3fhybptkHKCZSPlcXiJux2tJF55GnEj3BVn4A5gKfq9NWWXXrxkHBwVPUfH0opw==}
 
+  pg-cloudflare@1.1.1:
+    resolution: {integrity: sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==}
+
+  pg-connection-string@2.6.4:
+    resolution: {integrity: sha512-v+Z7W/0EO707aNMaAEfiGnGL9sxxumwLl2fJvCQtMn9Fxsg+lPpPkdcyBSv/KFgpGdYkMfn+EI1Or2EHjpgLCA==}
+
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
     engines: {node: '>=4.0.0'}
@@ -5273,12 +5285,33 @@ packages:
     resolution: {integrity: sha512-BM/Thnrw5jm2kKLE5uJkXqqExRUY/toLHda65XgFTBTFYZyopbKjBe29Ii3RbkvlsMoFwD+tHeGaCjjv0gHlyw==}
     engines: {node: '>=4'}
 
+  pg-pool@3.6.2:
+    resolution: {integrity: sha512-Htjbg8BlwXqSBQ9V8Vjtc+vzf/6fVUuak/3/XXKA9oxZprwW3IMDQTGHP+KDmVL7rtd+R1QjbnCFPuTHm3G4hg==}
+    peerDependencies:
+      pg: '>=8.0'
+
   pg-protocol@1.6.1:
     resolution: {integrity: sha512-jPIlvgoD63hrEuihvIg+tJhoGjUsLPn6poJY9N5CnlPd91c2T18T/9zBtLxZSb1EhYxBRoZJtzScCaWlYLtktg==}
+
+  pg-types@2.2.0:
+    resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
+    engines: {node: '>=4'}
 
   pg-types@4.0.2:
     resolution: {integrity: sha512-cRL3JpS3lKMGsKaWndugWQoLOCoP+Cic8oseVcbr0qhPzYD5DWXK+RZ9LY9wxRf7RQia4SCwQlXk0q6FCPrVng==}
     engines: {node: '>=10'}
+
+  pg@8.12.0:
+    resolution: {integrity: sha512-A+LHUSnwnxrnL/tZ+OLfqR1SxLN3c/pgDztZ47Rpbsd4jUytsTtwQo/TLPRzPJMp/1pbhYVhH9cuSZLAajNfjQ==}
+    engines: {node: '>= 8.0.0'}
+    peerDependencies:
+      pg-native: '>=3.0.1'
+    peerDependenciesMeta:
+      pg-native:
+        optional: true
+
+  pgpass@1.0.5:
+    resolution: {integrity: sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==}
 
   picocolors@1.0.1:
     resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
@@ -5352,17 +5385,33 @@ packages:
     resolution: {integrity: sha512-TesUflQ0WKZqAvg52PWL6kHgLKP6xB6heTOdoYM0Wt2UHyxNa4K25EZZMgKns3BH1RLVbZCREPpLY0rhnNoHVQ==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postgres-array@2.0.0:
+    resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
+    engines: {node: '>=4'}
+
   postgres-array@3.0.2:
     resolution: {integrity: sha512-6faShkdFugNQCLwucjPcY5ARoW1SlbnrZjmGl0IrrqewpvxvhSLHimCVzqeuULCbG0fQv7Dtk1yDbG3xv7Veog==}
     engines: {node: '>=12'}
+
+  postgres-bytea@1.0.0:
+    resolution: {integrity: sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w==}
+    engines: {node: '>=0.10.0'}
 
   postgres-bytea@3.0.0:
     resolution: {integrity: sha512-CNd4jim9RFPkObHSjVHlVrxoVQXz7quwNFpz7RY1okNNme49+sVyiTvTRobiLV548Hx/hb1BG+iE7h9493WzFw==}
     engines: {node: '>= 6'}
 
+  postgres-date@1.0.7:
+    resolution: {integrity: sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==}
+    engines: {node: '>=0.10.0'}
+
   postgres-date@2.1.0:
     resolution: {integrity: sha512-K7Juri8gtgXVcDfZttFKVmhglp7epKb1K4pgrkLxehjqkrgPhfG6OO8LHLkfaqkbpjNRnra018XwAr1yQFWGcA==}
     engines: {node: '>=12'}
+
+  postgres-interval@1.2.0:
+    resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
+    engines: {node: '>=0.10.0'}
 
   postgres-interval@3.0.0:
     resolution: {integrity: sha512-BSNDnbyZCXSxgA+1f5UU2GmwhoI0aU5yMxRGO8CdFEcY2BQF9xm/7MqKnYoM1nJDk8nONNWDk9WeSmePFhQdlw==}
@@ -5370,6 +5419,10 @@ packages:
 
   postgres-range@1.1.4:
     resolution: {integrity: sha512-i/hbxIE9803Alj/6ytL7UHQxRvZkI9O4Sy+J3HGc4F4oo/2eQAjTSNJ0bfxyse3bH0nuVesCk+3IRLaMtG3H6w==}
+
+  postgres@3.4.4:
+    resolution: {integrity: sha512-IbyN+9KslkqcXa8AO9fxpk97PA4pzewvpi2B3Dwy9u4zpV32QicaEdgmF3eSQUzdRk7ttDHQejNgAEr4XoeH4A==}
+    engines: {node: '>=12'}
 
   preferred-pm@4.0.0:
     resolution: {integrity: sha512-gYBeFTZLu055D8Vv3cSPox/0iTPtkzxpLroSYYA7WXgRi31WCJ51Uyl8ZiPeUUjyvs2MBzK+S8v9JVUgHU/Sqw==}
@@ -5738,36 +5791,40 @@ packages:
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
+  split2@4.2.0:
+    resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
+    engines: {node: '>= 10.x'}
+
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  sst-darwin-arm64@0.1.95:
-    resolution: {integrity: sha512-oI6r3mX/mdfFQuEEv6a5rNTD22qg7XxoxnA/ijYnajkP56+Oomxk1JMvOIVshuHbjwGmJlzsOHWG0qUrnXJ9qQ==}
+  sst-darwin-arm64@0.1.100:
+    resolution: {integrity: sha512-/EjDTpbPMOCi8b/ZAxi0zifxKjbVyugdgrkiCbcTzaL5LPeVJyhei8GXPPeQkGtdo72S9zcHanUS/jHBe9JwGA==}
     cpu: [arm64]
     os: [darwin]
 
-  sst-darwin-x64@0.1.95:
-    resolution: {integrity: sha512-sg8kOED4D3UejFjHoguPnUjnv7nIMVstFX4cLoQEPK0OB1vYifXHK4ENUd1FAXRh+Jw+g75pBU1nbjkmrslwtw==}
+  sst-darwin-x64@0.1.100:
+    resolution: {integrity: sha512-cF+Y7u7ufeZjFV0ui+eZPEG/v5u8IXJIelykHYy6NVLa5d+rB/SNyDkUSOQAgleRYpuWDTajtg6EOSx5jhIc2w==}
     cpu: [x64]
     os: [darwin]
 
-  sst-linux-arm64@0.1.95:
-    resolution: {integrity: sha512-RIPatluSmNBIBzvUkwgDStxM3pX6+uroufQOGi7dt8rqAr+H85WMLfQWqsYLPBJ51RfCOBcabzrS5rDcC1JrQw==}
+  sst-linux-arm64@0.1.100:
+    resolution: {integrity: sha512-cEYH3XLvsH0Z5R6DNDezR0RNOImCUUIzbqrF0XTTYhkc7M7tbCWGSDXGAowMoPYh9CCbHLIcaM6HuRQUm4glIQ==}
     cpu: [arm64]
     os: [linux]
 
-  sst-linux-x64@0.1.95:
-    resolution: {integrity: sha512-yiY76GHPiNRZaGKmUhzHYH0pdfIjb7zNYb4A1Akn4Wlh/n9KEylxOrXM8tTajxhr9fNmDH/cxFjoQQPB3KHU1Q==}
+  sst-linux-x64@0.1.100:
+    resolution: {integrity: sha512-e01TDLX6DFBjdSaRowZt9eHcuXmE3x1wnuMdMzmgf/5n6gB0yaPYxUxDxAuWr7Y6BKD1r8kBgfwXxhF4m15brw==}
     cpu: [x64]
     os: [linux]
 
-  sst-linux-x86@0.1.95:
-    resolution: {integrity: sha512-b8HRGO8SjN3Gt0uqlkfEFj07tNCK91r10o2fAqdItihUeTRiEh5FbHXjdLjcb/61Rz+atjR/awbYrGSwsau+xQ==}
+  sst-linux-x86@0.1.100:
+    resolution: {integrity: sha512-hLJvX9WaB2Npwp48JPGcHhrZAfS0sWgmPB3Rx3wDTlgyG98UEm8T/+xzyTRUuzu00irIri7BCu3/EG8W++Ze4g==}
     cpu: [x86]
     os: [linux]
 
-  sst@0.1.95:
-    resolution: {integrity: sha512-GWXNaLlD06LgDKvTO7qJE6WVA7J0HnMZKNqRVy47hCk6wwp7F1B9iHS6++pk9+89VkeZgYVEbVnBbN2eBWC3pQ==}
+  sst@0.1.100:
+    resolution: {integrity: sha512-ZK4z4n/fXIevgPG60xxtPlv8C9af+i1H6sMGCyPJEashqBQE5ZEsGoiJ71RJWmNUQx2exU9+xiI6UJLJ7a21lw==}
     hasBin: true
     peerDependencies:
       hono: 4.x
@@ -6301,6 +6358,10 @@ packages:
     resolution: {integrity: sha512-WCSfbfZnQDdLQLiMdGUQpMxxckeQ4oZNMNhLVkcekTu7xhD4tuUDyAPoY8CwXvBYE6LwBHd6QW2WZXlOWr1vCw==}
     engines: {node: '>=12.0'}
 
+  xtend@4.0.2:
+    resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
+    engines: {node: '>=0.4'}
+
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
@@ -6387,11 +6448,13 @@ snapshots:
 
   '@astrojs/compiler@2.10.2': {}
 
+  '@astrojs/compiler@2.10.3': {}
+
   '@astrojs/internal-helpers@0.4.1': {}
 
   '@astrojs/language-server@2.13.2(prettier-plugin-astro@0.14.1)(prettier@3.3.3)(typescript@5.5.4)':
     dependencies:
-      '@astrojs/compiler': 2.10.2
+      '@astrojs/compiler': 2.10.3
       '@jridgewell/sourcemap-codec': 1.5.0
       '@volar/kit': 2.4.0-alpha.18(typescript@5.5.4)
       '@volar/language-core': 2.4.0-alpha.18
@@ -8282,9 +8345,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@lucia-auth/adapter-drizzle@1.1.0(drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(react@18.3.1))(lucia@3.2.0)':
+  '@lucia-auth/adapter-drizzle@1.1.0(drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(pg@8.12.0)(postgres@3.4.4)(react@18.3.1))(lucia@3.2.0)':
     dependencies:
-      drizzle-orm: 0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(react@18.3.1)
+      drizzle-orm: 0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(pg@8.12.0)(postgres@3.4.4)(react@18.3.1)
       lucia: 3.2.0
 
   '@mdx-js/mdx@3.0.1':
@@ -10586,7 +10649,7 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 22.2.0
 
   '@types/unist@2.0.10': {}
 
@@ -11310,12 +11373,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(react@18.3.1):
+  drizzle-orm@0.33.0(@cloudflare/workers-types@4.20240806.0)(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@types/react@18.3.3)(pg@8.12.0)(postgres@3.4.4)(react@18.3.1):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20240806.0
       '@neondatabase/serverless': 0.9.4
       '@types/pg': 8.11.6
       '@types/react': 18.3.3
+      pg: 8.12.0
+      postgres: 3.4.4
       react: 18.3.1
 
   dset@3.1.3: {}
@@ -13007,11 +13072,31 @@ snapshots:
       estree-walker: 3.0.3
       is-reference: 3.0.2
 
+  pg-cloudflare@1.1.1:
+    optional: true
+
+  pg-connection-string@2.6.4:
+    optional: true
+
   pg-int8@1.0.1: {}
 
   pg-numeric@1.0.2: {}
 
+  pg-pool@3.6.2(pg@8.12.0):
+    dependencies:
+      pg: 8.12.0
+    optional: true
+
   pg-protocol@1.6.1: {}
+
+  pg-types@2.2.0:
+    dependencies:
+      pg-int8: 1.0.1
+      postgres-array: 2.0.0
+      postgres-bytea: 1.0.0
+      postgres-date: 1.0.7
+      postgres-interval: 1.2.0
+    optional: true
 
   pg-types@4.0.2:
     dependencies:
@@ -13022,6 +13107,22 @@ snapshots:
       postgres-date: 2.1.0
       postgres-interval: 3.0.0
       postgres-range: 1.1.4
+
+  pg@8.12.0:
+    dependencies:
+      pg-connection-string: 2.6.4
+      pg-pool: 3.6.2(pg@8.12.0)
+      pg-protocol: 1.6.1
+      pg-types: 2.2.0
+      pgpass: 1.0.5
+    optionalDependencies:
+      pg-cloudflare: 1.1.1
+    optional: true
+
+  pgpass@1.0.5:
+    dependencies:
+      split2: 4.2.0
+    optional: true
 
   picocolors@1.0.1: {}
 
@@ -13081,17 +13182,33 @@ snapshots:
       picocolors: 1.0.1
       source-map-js: 1.2.0
 
+  postgres-array@2.0.0:
+    optional: true
+
   postgres-array@3.0.2: {}
+
+  postgres-bytea@1.0.0:
+    optional: true
 
   postgres-bytea@3.0.0:
     dependencies:
       obuf: 1.1.2
 
+  postgres-date@1.0.7:
+    optional: true
+
   postgres-date@2.1.0: {}
+
+  postgres-interval@1.2.0:
+    dependencies:
+      xtend: 4.0.2
+    optional: true
 
   postgres-interval@3.0.0: {}
 
   postgres-range@1.1.4: {}
+
+  postgres@3.4.4: {}
 
   preferred-pm@4.0.0:
     dependencies:
@@ -13103,7 +13220,7 @@ snapshots:
 
   prettier-plugin-astro@0.14.1:
     dependencies:
-      '@astrojs/compiler': 2.10.2
+      '@astrojs/compiler': 2.10.3
       prettier: 3.3.3
       sass-formatter: 0.7.9
 
@@ -13600,24 +13717,27 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
+  split2@4.2.0:
+    optional: true
+
   sprintf-js@1.0.3: {}
 
-  sst-darwin-arm64@0.1.95:
+  sst-darwin-arm64@0.1.100:
     optional: true
 
-  sst-darwin-x64@0.1.95:
+  sst-darwin-x64@0.1.100:
     optional: true
 
-  sst-linux-arm64@0.1.95:
+  sst-linux-arm64@0.1.100:
     optional: true
 
-  sst-linux-x64@0.1.95:
+  sst-linux-x64@0.1.100:
     optional: true
 
-  sst-linux-x86@0.1.95:
+  sst-linux-x86@0.1.100:
     optional: true
 
-  sst@0.1.95(hono@4.5.5):
+  sst@0.1.100(hono@4.5.5):
     dependencies:
       '@aws-sdk/client-lambda': 3.478.0
       aws4fetch: 1.0.19
@@ -13625,11 +13745,11 @@ snapshots:
       openid-client: 5.6.4
     optionalDependencies:
       hono: 4.5.5
-      sst-darwin-arm64: 0.1.95
-      sst-darwin-x64: 0.1.95
-      sst-linux-arm64: 0.1.95
-      sst-linux-x64: 0.1.95
-      sst-linux-x86: 0.1.95
+      sst-darwin-arm64: 0.1.100
+      sst-darwin-x64: 0.1.100
+      sst-linux-arm64: 0.1.100
+      sst-linux-x64: 0.1.100
+      sst-linux-x86: 0.1.100
     transitivePeerDependencies:
       - aws-crt
 
@@ -14138,6 +14258,9 @@ snapshots:
       '@oozcitak/infra': 1.0.8
       '@oozcitak/util': 8.3.8
       js-yaml: 3.14.1
+
+  xtend@4.0.2:
+    optional: true
 
   y18n@5.0.8: {}
 
