@@ -178,8 +178,8 @@ export type ListUserSharedAccountsResult = v.InferOutput<
   typeof ListUserSharedAccountsResult
 >;
 
-// Test PaperCut
-export const TestPapercutInput = v.variant("authorized", [
+// Health Check PaperCut
+export const HealthCheckInput = v.variant("authorized", [
   v.object({
     authorized: v.literal(false),
     authToken: v.string(),
@@ -188,11 +188,11 @@ export const TestPapercutInput = v.variant("authorized", [
     authorized: v.literal(true),
   }),
 ]);
-export type TestPapercutInput = v.InferOutput<typeof TestPapercutInput>;
-export const TestPapercutEvent = v.object({
+export type HealthCheckInput = v.InferOutput<typeof HealthCheckInput>;
+export const HealthCheckEvent = v.object({
   ...BaseEvent.entries,
   ...v.object({
-    input: TestPapercutInput,
+    input: HealthCheckInput,
   }).entries,
 });
-export type TestPapercutEvent = v.InferOutput<typeof TestPapercutEvent>;
+export type HealthCheckEvent = v.InferOutput<typeof HealthCheckEvent>;

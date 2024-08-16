@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 import Logo from "~/components/logo.astro";
 import PapercutAuthToken from "~/components/papercut/auth-token.astro";
-import TestPapercut from "~/components/papercut/test.astro";
+import PapercutHealthCheck from "~/components/papercut/health-check.astro";
 import Layout from "~/layouts/layout.astro";
 import { buttonStyles } from "~/styles/components/primitives/button";
 import { labelStyles } from "~/styles/components/primitives/field";
@@ -30,9 +30,7 @@ const org = slug
 if (!org) return new Response("Organization not found", { status: 404 });
 
 const title =
-  org.status === "initializing"
-    ? "Registration successful!"
-    : "Test Connection";
+  org.status === "initializing" ? "Registration Successful!" : "Health Check";
 ---
 
 <Layout {title} htmx>
@@ -41,8 +39,8 @@ const title =
 
     <form
       class="flex items-center justify-center py-12"
-      hx-post="/partials/papercut/test"
-      hx-target="#test-papercut"
+      hx-post="/partials/papercut/health-check"
+      hx-target="#health-check"
       hx-indicator="#status-indicator"
       hx-disabled-elt="input, button[type=submit]"
     >
@@ -59,8 +57,8 @@ const title =
           <h1 class="text-2xl font-bold text-center">
             {
               org.status === "initializing"
-                ? "Registration successful!"
-                : "Test Connection"
+                ? "Registration Successful!"
+                : "Health Check"
             }
           </h1>
 
@@ -80,7 +78,7 @@ const title =
           </p>
 
           <p class="text-sm text-muted-foreground">
-            Before continuing with the application, test the connection to your
+            Before continuing with the application, check the connection to your
             PaperCut server.
           </p>
         </div>
@@ -118,7 +116,7 @@ const title =
 
         <PapercutAuthToken />
 
-        <TestPapercut status="initial" />
+        <PapercutHealthCheck status="initial" />
 
         <a
           href={`/login?org=${org.slug}`}

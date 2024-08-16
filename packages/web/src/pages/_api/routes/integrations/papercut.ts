@@ -2,7 +2,7 @@ import { vValidator } from "@hono/valibot-validator";
 import { buildSsmParameterPath, putSsmParameter } from "@paperwait/core/aws";
 import { PAPERCUT_PARAMETER_NAME } from "@paperwait/core/constants";
 import { serializable } from "@paperwait/core/database";
-import { syncPapercutAccounts, testPapercut } from "@paperwait/core/papercut";
+import { healthCheck, syncPapercutAccounts } from "@paperwait/core/papercut";
 import { formatChannel } from "@paperwait/core/realtime";
 import { poke } from "@paperwait/core/replicache";
 import { mutatorRbac, PapercutParameter } from "@paperwait/core/schemas";
@@ -44,8 +44,8 @@ export default new Hono<HonoEnv>()
       return c.body(null, 204);
     },
   )
-  .post("/test", authorization(["administrator"]), async (c) => {
-    await testPapercut({
+  .post("/health-check", authorization(["administrator"]), async (c) => {
+    await healthCheck({
       orgId: c.env.locals.org!.id,
       input: { authorized: true },
     });

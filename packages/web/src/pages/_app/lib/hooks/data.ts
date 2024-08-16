@@ -112,10 +112,11 @@ export function useMutationOptionsFactory() {
             if (!res.ok) throw new Error(res.statusText);
           },
         }),
-        testPapercutConnection: () => ({
-          mutationKey: ["papercut", "test"] as const,
+        healthCheckPapercut: () => ({
+          mutationKey: ["papercut", "health-check"] as const,
           mutationFn: async () => {
-            const res = await client.api.integrations.papercut.test.$post();
+            const res =
+              await client.api.integrations.papercut["health-check"].$post();
             if (!res.ok) throw new Error(res.statusText);
           },
         }),

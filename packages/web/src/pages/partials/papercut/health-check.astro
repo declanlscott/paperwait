@@ -1,13 +1,13 @@
 ---
 import { HttpError } from "@paperwait/core/errors";
-import { testPapercut } from "@paperwait/core/papercut";
+import { healthCheck } from "@paperwait/core/papercut";
 import { NanoId } from "@paperwait/core/schemas";
 import { validate } from "@paperwait/core/valibot";
 import * as v from "valibot";
 
-import TestPapercut from "~/components/papercut/test.astro";
+import PapercutHealthCheck from "~/components/papercut/health-check.astro";
 
-import type { PapercutTestProps } from "~/components/props";
+import type { PapercutHealthCheckProps } from "~/components/props";
 
 export const partial = true;
 
@@ -18,9 +18,9 @@ const { orgId, authToken } = validate(
   Object.fromEntries(formData.entries()),
 );
 
-let props: PapercutTestProps;
+let props: PapercutHealthCheckProps;
 try {
-  await testPapercut({ orgId, input: { authorized: false, authToken } });
+  await healthCheck({ orgId, input: { authorized: false, authToken } });
   props = { status: "success" };
 } catch (e) {
   props = {
@@ -30,4 +30,4 @@ try {
 }
 ---
 
-<TestPapercut {...props} />
+<PapercutHealthCheck {...props} />

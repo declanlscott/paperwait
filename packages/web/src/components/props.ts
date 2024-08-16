@@ -14,7 +14,7 @@ export type PapercutAuthTokenProps = {
   show?: boolean;
 };
 
-export type PapercutTestProps =
+export type PapercutHealthCheckProps =
   | { status: "initial" }
   | { status: "success" }
   | { status: "error"; reason: string };

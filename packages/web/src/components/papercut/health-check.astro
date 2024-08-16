@@ -2,14 +2,14 @@
 import LoadingIndicator from "~/components/loading-indicator.astro";
 import { buttonStyles } from "~/styles/components/primitives/button";
 
-import type { PapercutTestProps } from "~/components/props";
+import type { PapercutHealthCheckProps } from "~/components/props";
 
-type Props = PapercutTestProps;
+type Props = PapercutHealthCheckProps;
 
 const props = Astro.props;
 ---
 
-<div id="test-papercut" class="grid gap-2">
+<div id="health-check" class="grid gap-2">
   <button class={buttonStyles({ class: "gap-2", isHtml: true })} type="submit">
     <div id="status-indicator" class="loading-indicator">
       <div class="size-5 flex items-center">
@@ -30,7 +30,7 @@ const props = Astro.props;
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="test-indicator text-green-400 size-5"
+          class="health-check-indicator text-green-400 size-5"
         >
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
           <path d="m9 11 3 3L22 4" />
@@ -51,7 +51,7 @@ const props = Astro.props;
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="test-indicator text-red-500 size-5"
+          class="heatlh-check-indicator text-red-500 size-5"
         >
           <path d="M18 6 6 18" />
           <path d="m6 6 12 12" />
@@ -59,12 +59,12 @@ const props = Astro.props;
       )
     }
 
-    Test Connection
+    Health Check
   </button>
 
   {
     props.status === "success" && (
-      <p class="text-green-700 text-sm">Connection successful!</p>
+      <p class="text-green-700 text-sm">Health check successful!</p>
     )
   }
 
@@ -88,7 +88,7 @@ const props = Astro.props;
     display: inline;
   }
 
-  .htmx-request.test-indicator {
+  .htmx-request.health-check-indicator {
     display: none;
   }
 </style>

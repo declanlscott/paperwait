@@ -8,7 +8,7 @@ import { valibotValidator } from "@tanstack/valibot-form-adapter";
 import {
   Eye,
   EyeOff,
-  FlaskConical,
+  HeartPulse,
   RefreshCw,
   RotateCw,
   Settings2,
@@ -99,14 +99,14 @@ function PapercutCard() {
 
         <div className="flex justify-between gap-4">
           <div>
-            <span className={labelStyles()}>Test Connection</span>
+            <span className={labelStyles()}>Health Check</span>
 
             <CardDescription>
-              Test the connection to your PaperCut server.
+              Check the connection to your PaperCut server.
             </CardDescription>
           </div>
 
-          <TestPapercutConnection />
+          <HealthCheckPapercut />
         </div>
 
         <div className="flex justify-between gap-4">
@@ -254,24 +254,24 @@ function ConfigureCredentials() {
   );
 }
 
-function TestPapercutConnection() {
-  const { testPapercutConnection } = useMutationOptionsFactory();
+function HealthCheckPapercut() {
+  const { healthCheckPapercut } = useMutationOptionsFactory();
 
   const { mutate, isPending } = useMutation({
-    ...testPapercutConnection(),
+    ...healthCheckPapercut(),
     onSuccess: () =>
-      toast.success("Successfully connected to PaperCut server."),
-    onError: () => toast.error("Failed to connect to PaperCut server."),
+      toast.success("Health check successful. Your PaperCut server is online."),
+    onError: () => toast.error("PaperCut server health check failed."),
   });
 
   return (
     <Button onPress={() => mutate()} isLoading={isPending}>
       {isPending ? (
-        "Testing"
+        "Checking"
       ) : (
         <>
-          <FlaskConical className="mr-2 size-5" />
-          Test
+          <HeartPulse className="mr-2 size-5" />
+          Check
         </>
       )}
     </Button>

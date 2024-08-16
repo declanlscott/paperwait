@@ -20,12 +20,12 @@ import { validate } from "../valibot";
 
 import type {
   GetSharedAccountPropertiesEvent,
+  HealthCheckEvent,
   IsUserExistsEvent,
   ListSharedAccountsEvent,
   ListSharedAccountsOutput,
   ListUserSharedAccountsEvent,
   ListUserSharedAccountsOutput,
-  TestPapercutEvent,
 } from "../schemas/xml-rpc";
 
 export async function isUserExists(event: IsUserExistsEvent) {
@@ -114,9 +114,9 @@ export async function getSharedAccountProperties(
   return output;
 }
 
-export async function testPapercut(event: TestPapercutEvent) {
+export async function healthCheck(event: HealthCheckEvent) {
   await invokeApi(
-    new URL(`${Resource.PapercutApiGateway.url}/test-papercut`),
+    new URL(`${Resource.PapercutApiGateway.url}/health-check`),
     event,
   );
 }
