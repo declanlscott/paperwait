@@ -9,7 +9,7 @@ import type { DropZoneProps as AriaDropzoneProps } from "react-aria-components";
 
 export type DropzoneProps = AriaDropzoneProps;
 
-export const DropZone = ({ className, ...props }: DropzoneProps) => (
+export const Dropzone = ({ className, ...props }: DropzoneProps) => (
   <AriaDropzone
     className={composeRenderProps(className, (className, renderProps) =>
       dropzoneStyles({ className, ...renderProps }),
