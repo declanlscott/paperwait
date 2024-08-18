@@ -1,28 +1,37 @@
+import { useState } from "react";
+import { ASSETS_MIME_TYPES } from "@paperwait/core/constants";
 import { createFileRoute } from "@tanstack/react-router";
 
-import {
-  Tab,
-  TabList,
-  TabPanel,
-  Tabs,
-} from "~/app/components/ui/primitives/tabs";
+import { Dropzone } from "~/app/components/ui/primitives/dropzone";
 
 export const Route = createFileRoute("/_authenticated/settings/images")({
   component: Component,
 });
 
 function Component() {
+  const [files, setFiles] = useState<Array<string>>([]);
+
   return (
-    <Tabs className="w-fit">
-      <TabList>
-        <Tab id="stock">Stock</Tab>
+    <Dropzone
+      onDrop={async (e) => {
+        const items = await Promise.all(
+          e.items
+            .filter((item) => item.kind === "file")
+            .filter((item) => {
+              const isImage = ASSETS_MIME_TYPES.includes(item.type);
+              if (!isImage) {
+                //
+              }
 
-        <Tab id="custom">Custom</Tab>
-      </TabList>
+              return isImage;
+            })
+            .map(async (item) => {
+              const file = await item.getFile();
 
-      <TabPanel id="stock">TODO</TabPanel>
-
-      <TabPanel id="custom">TODO</TabPanel>
-    </Tabs>
+              setFiles((files) => [...files, URL.createObjectURL(file)]);
+            }),
+        );
+      }}
+    ></Dropzone>
   );
 }
