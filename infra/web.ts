@@ -1,9 +1,8 @@
 import { auth } from "./auth";
-import { dbCredentials } from "./db";
+import { db } from "./db";
 import { client, domain, isDev } from "./misc";
 import { papercutApiGateway } from "./papercut";
 import { realtime } from "./realtime";
-import { redis } from "./redis";
 import { storage } from "./storage";
 
 export const web = new sst.aws.Astro("Paperwait", {
@@ -12,12 +11,11 @@ export const web = new sst.aws.Astro("Paperwait", {
   link: [
     auth,
     client,
-    ...Object.values(dbCredentials),
+    db,
     domain,
     isDev,
     papercutApiGateway,
     realtime,
-    redis,
     storage,
   ],
   permissions: [

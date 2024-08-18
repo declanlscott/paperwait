@@ -33,6 +33,24 @@ declare module "sst" {
       "replicacheLicenseKey": string
       "type": "sst.sst.Linkable"
     }
+    "Db": {
+      "dynamo": string
+      "postgres": {
+        "credentials": {
+          "database": string
+          "host": string
+          "password": string
+          "port": string
+          "ssl": string
+          "user": string
+        }
+      }
+      "redis": {
+        "endpoint": string
+        "restToken": string
+      }
+      "type": "sst.sst.Linkable"
+    }
     "DocumentsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
@@ -40,6 +58,10 @@ declare module "sst" {
     "Domain": {
       "type": "sst.sst.Secret"
       "value": string
+    }
+    "Dynamo": {
+      "name": string
+      "type": "sst.aws.Dynamo"
     }
     "GoogleClientId": {
       "type": "sst.sst.Secret"
@@ -97,11 +119,6 @@ declare module "sst" {
       "apiKey": string
       "type": "sst.sst.Linkable"
       "url": string
-    }
-    "Redis": {
-      "endpoint": string
-      "restToken": string
-      "type": "upstash.index/redisDatabase.RedisDatabase"
     }
     "ReplicacheLicenseKey": {
       "type": "sst.sst.Secret"

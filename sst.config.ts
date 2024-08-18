@@ -34,7 +34,7 @@ export default $config({
     const infra = await import("./infra");
 
     new sst.x.DevCommand("Studio", {
-      link: Object.values(infra.dbCredentials),
+      link: [infra.db],
       dev: {
         command: "pnpm db:studio",
         directory: "packages/core",
