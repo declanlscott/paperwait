@@ -27,7 +27,7 @@ export default $config({
         tls: true,
         random: true,
       },
-      version: ">= 0.1.100",
+      version: ">= 3.0.1",
     };
   },
   async run() {
