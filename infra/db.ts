@@ -14,17 +14,6 @@ export const redis = new upstash.RedisDatabase("Redis", {
   region: "us-east-1",
 });
 
-export const dynamo = new sst.aws.Dynamo("Dynamo", {
-  fields: {
-    pk: "string",
-    sk: "string",
-    gsi1pk: "string",
-    gsi1sk: "string",
-  },
-  primaryIndex: { hashKey: "pk", rangeKey: "sk" },
-  globalIndexes: { gsi1: { hashKey: "gsi1pk", rangeKey: "gsi1sk" } },
-});
-
 export const db = new sst.Linkable("Db", {
   properties: {
     postgres: {
@@ -41,12 +30,5 @@ export const db = new sst.Linkable("Db", {
       endpoint: redis.endpoint,
       restToken: redis.restToken,
     },
-    dynamo: dynamo.name,
   },
-  include: [
-    sst.aws.permission({
-      actions: ["dynamodb:*"],
-      resources: [dynamo.arn, $interpolate`${dynamo.arn}/*`],
-    }),
-  ],
 });

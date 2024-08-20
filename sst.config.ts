@@ -52,8 +52,6 @@ export default $config({
 
     return {
       url: infra.web.url,
-      whitelistIp: infra.natElasticIp.publicIp,
-      mockPapercutApi: infra.mockPapercutApi.url,
     };
   },
 });

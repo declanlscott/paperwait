@@ -67,6 +67,17 @@ export const assetsDistribution = new aws.cloudfront.Distribution(
 
 export const documentsBucket = new sst.aws.Bucket("DocumentsBucket");
 
+export const infraBucket = new sst.aws.Bucket("InfraBucket");
+
+export const secureXmlRpcForwarderPackage = new aws.s3.BucketObjectv2(
+  "SecureXmlRpcForwarderPackage",
+  {
+    bucket: infraBucket.name,
+    key: "secure-xml-rpc-forwarder.zip",
+    source: "packages/functions/src/secure-xml-rpc-forwarder/dist/index.js",
+  },
+);
+
 export const storage = new sst.Linkable("Storage", {
   properties: {
     assets: {
@@ -79,8 +90,13 @@ export const storage = new sst.Linkable("Storage", {
         privateKey: assetsDistributionPrivateKey.privateKeyPem,
       },
     },
-    documents: {
-      bucket: documentsBucket.name,
-    },
+    documents: { bucket: documentsBucket.name },
+    infra: { bucket: infraBucket.name },
   },
+  include: [
+    sst.aws.permission({
+      actions: ["s3:*"],
+      resources: [assetsBucket.arn, documentsBucket.arn, infraBucket.arn],
+    }),
+  ],
 });

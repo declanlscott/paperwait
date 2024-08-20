@@ -3,14 +3,6 @@
 import "sst"
 declare module "sst" {
   export interface Resource {
-    "AdjustSharedAccountAccountBalanceDeadLetterQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "AdjustSharedAccountAccountBalanceQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
     "AssetsBucket": {
       "name": string
       "type": "sst.aws.Bucket"
@@ -34,7 +26,6 @@ declare module "sst" {
       "type": "sst.sst.Linkable"
     }
     "Db": {
-      "dynamo": string
       "postgres": {
         "credentials": {
           "database": string
@@ -59,10 +50,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Dynamo": {
-      "name": string
-      "type": "sst.aws.Dynamo"
-    }
     "GoogleClientId": {
       "type": "sst.sst.Secret"
       "value": string
@@ -71,17 +58,13 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "InfraBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "IsDev": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "MockPapercutApi": {
-      "type": "sst.cloudflare.Worker"
-      "url": string
-    }
-    "PapercutApiGateway": {
-      "type": "sst.aws.ApiGatewayV2"
-      "url": string
     }
     "Paperwait": {
       "type": "sst.aws.Astro"
@@ -138,10 +121,9 @@ declare module "sst" {
       "documents": {
         "bucket": string
       }
-      "type": "sst.sst.Linkable"
-    }
-    "Whitelist": {
-      "ip": string
+      "infra": {
+        "bucket": string
+      }
       "type": "sst.sst.Linkable"
     }
   }

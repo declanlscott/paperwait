@@ -2,8 +2,6 @@ export * from "./auth";
 export * from "./cron";
 export * from "./db";
 export * from "./misc";
-export * from "./papercut";
 export * from "./realtime";
 export * from "./storage";
-export * from "./vpc";
 export * from "./web";
