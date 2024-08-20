@@ -18,23 +18,17 @@ export const entraId = new MicrosoftEntraId(
     : `${Resource.Domain.value}${AUTH_CALLBACK_PATH}`,
 );
 
-export async function createEntraIdAuthorizationUrl() {
+export function createEntraIdAuthorizationUrl() {
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
 
-  const authorizationUrl = await entraId.createAuthorizationURL(
-    state,
-    codeVerifier,
-    {
-      scopes: [
-        "profile",
-        "email",
-        "offline_access",
-        "User.Read",
-        "User.ReadBasic.All",
-      ],
-    },
-  );
+  const authorizationUrl = entraId.createAuthorizationURL(state, codeVerifier, [
+    "profile",
+    "email",
+    "offline_access",
+    "User.Read",
+    "User.ReadBasic.All",
+  ]);
 
   return { authorizationUrl, state, codeVerifier };
 }
@@ -63,5 +57,3 @@ export function parseEntraIdIdToken(
     },
   )(jwt.payload);
 }
-
-export type { MicrosoftEntraIdTokens } from "arctic";

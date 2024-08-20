@@ -22,7 +22,7 @@ import { validate } from "@paperwait/core/valibot";
 import { and, eq } from "drizzle-orm";
 import * as R from "remeda";
 
-import type { IdToken } from "@paperwait/core/auth-provider";
+import type { IdToken } from "@paperwait/core/oauth2";
 import type { Provider } from "@paperwait/core/organization";
 import type { UserInfo } from "@paperwait/core/schemas";
 import type { OmitTimestamps } from "@paperwait/core/types";

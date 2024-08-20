@@ -17,17 +17,14 @@ export const google = new Google(
     : `${Resource.Domain.value}${AUTH_CALLBACK_PATH}`,
 );
 
-export async function createGoogleAuthorizationUrl(hostedDomain: string) {
+export function createGoogleAuthorizationUrl(hostedDomain: string) {
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
 
-  const authorizationUrl = await google.createAuthorizationURL(
-    state,
-    codeVerifier,
-    {
-      scopes: ["profile", "email"],
-    },
-  );
+  const authorizationUrl = google.createAuthorizationURL(state, codeVerifier, [
+    "profile",
+    "email",
+  ]);
 
   authorizationUrl.searchParams.set("hd", hostedDomain);
 
@@ -54,5 +51,3 @@ export function parseGoogleIdToken(
     },
   )(jwt.payload);
 }
-
-export type { GoogleTokens, GoogleRefreshedTokens } from "arctic";

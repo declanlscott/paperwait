@@ -1,5 +1,4 @@
 import { SessionTokens } from "@paperwait/core/auth";
-import { entraId, google } from "@paperwait/core/auth-provider";
 import { buildSsmParameterPath, getSsmParameter } from "@paperwait/core/aws";
 import { MAX_FILE_SIZES_PARAMETER_NAME } from "@paperwait/core/constants";
 import { db } from "@paperwait/core/database";
@@ -10,6 +9,7 @@ import {
   NotImplementedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
+import { entraId, google } from "@paperwait/core/oauth2";
 import { Organization } from "@paperwait/core/organization";
 import { MaxFileSizes } from "@paperwait/core/schemas";
 import { enforceRbac } from "@paperwait/core/utils";
@@ -24,7 +24,7 @@ import type {
   MicrosoftEntraIdTokens,
   ProviderData,
   ProviderTokens,
-} from "@paperwait/core/auth-provider";
+} from "@paperwait/core/oauth2";
 import type { Provider } from "@paperwait/core/organization";
 import type { UserRole } from "@paperwait/core/user";
 import type { HonoEnv } from "~/api/types";

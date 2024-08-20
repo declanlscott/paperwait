@@ -17,3 +17,5 @@ export type ProviderData = {
   id: Organization["providerId"];
   accessToken: ProviderTokens["accessToken"];
 };
+
+export type { OAuth2Tokens } from "arctic";

@@ -4,14 +4,6 @@ import {
   invalidateSession,
   invalidateUserSessions,
 } from "@paperwait/core/auth";
-import {
-  createEntraIdAuthorizationUrl,
-  createGoogleAuthorizationUrl,
-  entraId,
-  google,
-  parseEntraIdIdToken,
-  parseGoogleIdToken,
-} from "@paperwait/core/auth-provider";
 import { db } from "@paperwait/core/database";
 import {
   handlePromiseResult,
@@ -19,6 +11,14 @@ import {
   NotImplementedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
+import {
+  createEntraIdAuthorizationUrl,
+  createGoogleAuthorizationUrl,
+  entraId,
+  google,
+  parseEntraIdIdToken,
+  parseGoogleIdToken,
+} from "@paperwait/core/oauth2";
 import { Organization } from "@paperwait/core/organization";
 import { isUserExists } from "@paperwait/core/papercut";
 import { NanoId, Registration } from "@paperwait/core/schemas";
@@ -31,7 +31,7 @@ import * as v from "valibot";
 import { getUserInfo, processUser } from "~/api/lib/auth/user";
 import { authorization } from "~/api/middleware";
 
-import type { IdToken, ProviderTokens } from "@paperwait/core/auth-provider";
+import type { IdToken, OAuth2Tokens } from "@paperwait/core/oauth2";
 import type { HonoEnv } from "~/api/types";
 
 export default new Hono<HonoEnv>()
@@ -72,14 +72,14 @@ export default new Hono<HonoEnv>()
       let authorizationUrl: URL;
       switch (org.provider) {
         case "entra-id": {
-          const entraId = await createEntraIdAuthorizationUrl();
+          const entraId = createEntraIdAuthorizationUrl();
           state = entraId.state;
           codeVerifier = entraId.codeVerifier;
           authorizationUrl = entraId.authorizationUrl;
           break;
         }
         case "google": {
-          const google = await createGoogleAuthorizationUrl(org.providerId);
+          const google = createGoogleAuthorizationUrl(org.providerId);
           state = google.state;
           codeVerifier = google.codeVerifier;
           authorizationUrl = google.authorizationUrl;
@@ -163,17 +163,17 @@ export default new Hono<HonoEnv>()
       const { provider, code_verifier, orgId, redirect } =
         c.req.valid("cookie");
 
-      let tokens: ProviderTokens;
+      let tokens: OAuth2Tokens;
       let idToken: IdToken;
       switch (provider) {
         case "entra-id": {
           tokens = await entraId.validateAuthorizationCode(code, code_verifier);
-          idToken = parseEntraIdIdToken(tokens.idToken);
+          idToken = parseEntraIdIdToken(tokens.idToken());
           break;
         }
         case "google": {
           tokens = await google.validateAuthorizationCode(code, code_verifier);
-          idToken = parseGoogleIdToken(tokens.idToken);
+          idToken = parseGoogleIdToken(tokens.idToken());
           break;
         }
         default: {
@@ -212,7 +212,7 @@ export default new Hono<HonoEnv>()
 
           return exists;
         }),
-        getUserInfo(provider, tokens.accessToken),
+        getUserInfo(provider, tokens.accessToken()),
       ]);
 
       handlePromiseResult(results[0]);

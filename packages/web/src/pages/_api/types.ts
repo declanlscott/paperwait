@@ -1,4 +1,4 @@
-import type { ProviderData } from "@paperwait/core/auth-provider";
+import type { ProviderData } from "@paperwait/core/oauth2";
 import type { Env } from "hono";
 
 declare module "hono" {

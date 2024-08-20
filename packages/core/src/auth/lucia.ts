@@ -7,7 +7,7 @@ import { User } from "../user/user.sql";
 import { Session, SessionTokens } from "./session.sql";
 
 import type { Session as LuciaSession, User as LuciaUser } from "lucia";
-import type { ProviderTokens } from "../auth-provider/types";
+import type { OAuth2Tokens } from "../oauth2/types";
 
 export const adapter = new DrizzlePostgreSQLAdapter(db, Session, User);
 
@@ -41,7 +41,7 @@ export type { User as LuciaUser, Session as LuciaSession } from "lucia";
 export async function createSession(
   userId: LuciaUser["id"],
   orgId: LuciaUser["orgId"],
-  tokens: ProviderTokens,
+  tokens: OAuth2Tokens,
 ) {
   const session = await db.transaction(async (tx) => {
     const session = await lucia.createSession(
@@ -50,12 +50,27 @@ export async function createSession(
       { sessionId: generateId() },
     );
 
+    const sessionTokens = {
+      idToken: tokens.idToken(),
+      accessToken: tokens.accessToken(),
+      accessTokenExpiresAt: tokens.accessTokenExpiresAt(),
+      refreshToken: tokens.refreshToken(),
+    } satisfies Pick<
+      SessionTokens,
+      "idToken" | "accessToken" | "accessTokenExpiresAt" | "refreshToken"
+    >;
+
     await tx
       .insert(SessionTokens)
-      .values({ sessionId: session.id, userId, orgId, ...tokens })
+      .values({
+        sessionId: session.id,
+        userId,
+        orgId,
+        ...sessionTokens,
+      })
       .onConflictDoUpdate({
         target: [SessionTokens.sessionId],
-        set: tokens,
+        set: sessionTokens,
       });
 
     return session;
