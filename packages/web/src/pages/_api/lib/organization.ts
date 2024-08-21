@@ -2,7 +2,9 @@ import { db } from "@paperwait/core/database";
 import { Organization } from "@paperwait/core/organization";
 import { eq } from "drizzle-orm";
 
-export async function isOrgSlugValid(slug: string) {
+import type { OrgSlug } from "@paperwait/core/schemas";
+
+export async function isOrgSlugValid(slug: OrgSlug) {
   return await db
     .select({})
     .from(Organization)

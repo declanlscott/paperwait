@@ -1,3 +1,4 @@
+import { withActor } from "@paperwait/core/actor";
 import { SessionTokens } from "@paperwait/core/auth";
 import { buildSsmParameterPath, getSsmParameter } from "@paperwait/core/aws";
 import { MAX_FILE_SIZES_PARAMETER_NAME } from "@paperwait/core/constants";
@@ -9,8 +10,7 @@ import {
   NotImplementedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
-import { entraId, google } from "@paperwait/core/oauth2";
-import { Organization } from "@paperwait/core/organization";
+import { entraId, google, OAuth2Provider } from "@paperwait/core/oauth2";
 import { MaxFileSizes } from "@paperwait/core/schemas";
 import { enforceRbac } from "@paperwait/core/utils";
 import { validate } from "@paperwait/core/valibot";
@@ -20,12 +20,10 @@ import * as v from "valibot";
 
 import type { LuciaSession } from "@paperwait/core/auth";
 import type {
-  GoogleRefreshedTokens,
-  MicrosoftEntraIdTokens,
-  ProviderData,
+  OAuth2ProviderData,
+  OAuth2Tokens,
   ProviderTokens,
 } from "@paperwait/core/oauth2";
-import type { Provider } from "@paperwait/core/organization";
 import type { UserRole } from "@paperwait/core/user";
 import type { HonoEnv } from "~/api/types";
 
@@ -38,32 +36,32 @@ export const authorization = (
 
     enforceRbac(user, roles, ForbiddenError);
 
-    await next();
+    await withActor({ role: "user", properties: user }, next);
   });
 
 export const provider = createMiddleware<HonoEnv>(async (c, next) => {
   const session = c.env.locals.session;
   if (!session) throw new UnauthorizedError("Session not found");
 
-  c.set("provider", await validateProvider(session.id));
+  c.set("oAuth2Provider", await validateOAuth2Provider(session.id));
 
   await next();
 });
 
-async function validateProvider(
+async function validateOAuth2Provider(
   sessionId: LuciaSession["id"],
-): Promise<ProviderData> {
-  const { type, id, ...tokens } = await db
+): Promise<OAuth2ProviderData> {
+  const { variant, id, ...tokens } = await db
     .select({
-      type: Organization.provider,
-      id: Organization.providerId,
+      variant: OAuth2Provider.variant,
+      id: OAuth2Provider.id,
       idToken: SessionTokens.idToken,
       accessToken: SessionTokens.accessToken,
       accessTokenExpiresAt: SessionTokens.accessTokenExpiresAt,
       refreshToken: SessionTokens.refreshToken,
     })
     .from(SessionTokens)
-    .innerJoin(Organization, eq(SessionTokens.orgId, Organization.id))
+    .innerJoin(OAuth2Provider, eq(SessionTokens.orgId, OAuth2Provider.orgId))
     .where(eq(SessionTokens.sessionId, sessionId))
     .execute()
     .then((rows) => {
@@ -78,7 +76,7 @@ async function validateProvider(
   const expired = Date.now() > tokens.accessTokenExpiresAt.getTime() - 10_000;
 
   // Return the access token if it isn't expired
-  if (!expired) return { type, id, accessToken: tokens.accessToken };
+  if (!expired) return { variant, id, accessToken: tokens.accessToken };
 
   // Check if there is a refresh token
   if (!tokens.refreshToken)
@@ -86,36 +84,46 @@ async function validateProvider(
 
   // Refresh the access token
   const refreshed = await refreshAccessToken({
-    type,
+    variant,
     id,
     refreshToken: tokens.refreshToken,
   });
 
+  const sessionTokens = {
+    idToken: refreshed.idToken(),
+    accessToken: refreshed.accessToken(),
+    accessTokenExpiresAt: refreshed.accessTokenExpiresAt(),
+    refreshToken: refreshed.refreshToken(),
+  } satisfies Pick<
+    SessionTokens,
+    "idToken" | "accessToken" | "accessTokenExpiresAt" | "refreshToken"
+  >;
+
   // Update the session with the refreshed access token
   await db
     .update(SessionTokens)
-    .set(refreshed)
+    .set(sessionTokens)
     .where(eq(SessionTokens.sessionId, sessionId));
 
-  return { type, id, accessToken: refreshed.accessToken };
+  return { variant, id, accessToken: sessionTokens.accessToken };
 }
 
 async function refreshAccessToken(provider: {
-  type: Provider;
-  id: Organization["providerId"];
+  variant: OAuth2Provider["variant"];
+  id: OAuth2Provider["id"];
   refreshToken: NonNullable<ProviderTokens["refreshToken"]>;
-}): Promise<MicrosoftEntraIdTokens | GoogleRefreshedTokens> {
-  switch (provider.type) {
+}): Promise<OAuth2Tokens> {
+  switch (provider.variant) {
     case "entra-id":
       return await entraId.refreshAccessToken(provider.refreshToken);
     case "google":
       return await google.refreshAccessToken(provider.refreshToken);
     default:
-      provider.type satisfies never;
+      provider.variant satisfies never;
 
       throw new NotImplementedError(
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        `Provider "${provider.type}" not implemented`,
+        `Provider "${provider.variant}" not implemented`,
       );
   }
 }

@@ -1,9 +1,9 @@
-import type { ProviderData } from "@paperwait/core/oauth2";
+import type { OAuth2ProviderData } from "@paperwait/core/oauth2";
 import type { Env } from "hono";
 
 declare module "hono" {
   interface ContextVariableMap {
-    provider?: ProviderData;
+    oAuth2Provider?: OAuth2ProviderData;
   }
 }
 

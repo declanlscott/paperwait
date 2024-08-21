@@ -23,9 +23,9 @@ export default new Hono<HonoEnv>()
     vValidator("param", v.object({ id: NanoId })),
     async (c) => {
       // TODO: Implement google provider
-      if (c.get("provider")!.type !== "entra-id")
+      if (c.get("oAuth2Provider")!.variant !== "entra-id")
         throw new NotImplementedError(
-          `Provider "${c.get("provider")!.type}" not implemented`,
+          `Provider "${c.get("oAuth2Provider")!.variant}" not implemented`,
         );
 
       const user = await db
@@ -44,7 +44,7 @@ export default new Hono<HonoEnv>()
         `https://graph.microsoft.com/v1.0/users/${user.providerId}/photo/$value`,
         {
           headers: {
-            Authorization: `Bearer ${c.get("provider")!.accessToken}`,
+            Authorization: `Bearer ${c.get("oAuth2Provider")!.accessToken}`,
           },
         },
       );

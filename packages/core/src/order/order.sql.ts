@@ -1,18 +1,10 @@
-import { bigint, foreignKey, index, pgEnum } from "drizzle-orm/pg-core";
+import { bigint, foreignKey, index } from "drizzle-orm/pg-core";
 
-import { id } from "../drizzle/columns";
-import { orgTable } from "../drizzle/tables";
+import { id } from "../orm/columns";
+import { orgTable } from "../orm/tables";
 import { PapercutAccount } from "../papercut/account.sql";
 import { Product } from "../product/product.sql";
 import { User } from "../user/user.sql";
-
-export const OrderStatus = pgEnum("order_status", [
-  "pending_approval",
-  "new",
-  "in_progress",
-  "completed",
-]);
-export type OrderStatus = (typeof OrderStatus.enumValues)[number];
 
 export const Order = orgTable(
   "order",
@@ -24,7 +16,6 @@ export const Order = orgTable(
     papercutAccountId: bigint("papercut_account_id", {
       mode: "number",
     }).notNull(),
-    status: OrderStatus("status").notNull(),
   },
   (table) => ({
     customerReference: foreignKey({

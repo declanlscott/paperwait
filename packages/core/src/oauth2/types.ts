@@ -1,5 +1,5 @@
 import type { SessionTokens } from "../auth/session.sql";
-import type { Organization, Provider } from "../organization/organization.sql";
+import type { OAuth2Provider } from "./provider.sql";
 
 export type ProviderTokens = Pick<
   SessionTokens,
@@ -12,9 +12,9 @@ export type IdToken = {
   username: string;
 };
 
-export type ProviderData = {
-  type: Provider;
-  id: Organization["providerId"];
+export type OAuth2ProviderData = {
+  variant: OAuth2Provider["variant"];
+  id: OAuth2Provider["id"];
   accessToken: ProviderTokens["accessToken"];
 };
 

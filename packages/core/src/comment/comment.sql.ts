@@ -1,8 +1,8 @@
 import { foreignKey, index, text } from "drizzle-orm/pg-core";
 
-import { id } from "../drizzle/columns";
-import { orgTable } from "../drizzle/tables";
 import { Order } from "../order/order.sql";
+import { id } from "../orm/columns";
+import { orgTable } from "../orm/tables";
 import { UserRole } from "../user";
 
 export const Comment = orgTable(

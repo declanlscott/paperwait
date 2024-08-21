@@ -34,5 +34,8 @@ module.exports = {
     "@typescript-eslint/ban-tslint-comment": "off",
 
     "@typescript-eslint/only-throw-error": "off",
+
+    "@typescript-eslint/prefer-namespace-keyword": "off",
+    "@typescript-eslint/no-namespace": "off",
   },
 };

@@ -1,6 +1,6 @@
 import { pgEnum, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
 
-import { id, timestamps } from "../drizzle";
+import { id, timestamps } from "../orm";
 
 export const OAuth2ProviderVariant = pgEnum("oauth2_provider_variant", [
   "entra-id",

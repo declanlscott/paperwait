@@ -8,8 +8,8 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-import { id, timestamps } from "../drizzle/columns";
-import { orgIdColumns, orgTable } from "../drizzle/tables";
+import { id, timestamps } from "../orm/columns";
+import { orgIdColumns, orgTable } from "../orm/tables";
 import { User } from "../user/user.sql";
 
 export const PapercutAccount = pgTable(

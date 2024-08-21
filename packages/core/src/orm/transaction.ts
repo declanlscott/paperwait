@@ -3,23 +3,77 @@ import {
   POSTGRES_DEADLOCK_DETECTED_ERROR_CODE,
   POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE,
 } from "../constants";
-import { InternalServerError } from "../errors/http";
-import { db } from "./orm";
+import { createContext } from "../context";
+import { db } from "../database";
+import { InternalServerError } from "../errors";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { NeonQueryResultHKT } from "drizzle-orm/neon-serverless";
 import type { PgTransaction, PgTransactionConfig } from "drizzle-orm/pg-core";
-import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
 export type Transaction = PgTransaction<
-  NeonQueryResultHKT | PostgresJsQueryResultHKT,
+  NeonQueryResultHKT,
   Record<string, never>,
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
+type TxOrDb = Transaction | typeof db;
+
+type TransactionContext<
+  TEffect extends () => ReturnType<TEffect> = () => unknown,
+> = {
+  tx: Transaction;
+  effects: Array<TEffect>;
+};
+const TransactionContext = createContext<TransactionContext>();
+
+export async function useTransaction<
+  TCallback extends (tx: TxOrDb) => ReturnType<TCallback>,
+>(callback: TCallback) {
+  try {
+    const { tx } = TransactionContext.use();
+
+    return callback(tx);
+  } catch {
+    return callback(db);
+  }
+}
+
+export async function afterTransaction<
+  TEffect extends () => ReturnType<TEffect>,
+>(effect: TEffect) {
+  try {
+    const { effects } = TransactionContext.use();
+
+    effects.push(effect);
+  } catch {
+    await Promise.resolve(effect);
+  }
+}
+
 export type TransactionResult<TOutput> =
   | { status: "success"; output: TOutput }
   | { status: "error"; error: unknown; shouldRethrow: boolean };
+
+export async function withTransaction<TOutput>(
+  callback: (tx: Transaction) => Promise<TOutput>,
+): Promise<TOutput> {
+  try {
+    const { tx } = TransactionContext.use();
+
+    return callback(tx);
+  } catch {
+    const effects: TransactionContext["effects"] = [];
+
+    const output = await db.transaction(async (tx) =>
+      TransactionContext.with({ tx, effects }, () => callback(tx)),
+    );
+
+    await Promise.all(effects.map((effect) => effect()));
+
+    return output;
+  }
+}
 
 export async function transact<
   TOutput,
@@ -32,7 +86,7 @@ export async function transact<
   },
 ): Promise<TransactionResult<TOutput>> {
   try {
-    const output = await db.transaction(callback, options?.transaction);
+    const output = await withTransaction(callback);
 
     return { status: "success", output };
   } catch (error) {
@@ -77,7 +131,7 @@ export async function serializable<TOutput>(
   }
 
   throw new InternalServerError(
-    "Tried to execute transaction too many times, giving up.",
+    "Failed to execute transaction after maximum number of retries, giving up.",
   );
 }
 

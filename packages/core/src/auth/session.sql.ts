@@ -1,7 +1,7 @@
 import { foreignKey, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-import { orgIdColumns } from "../drizzle";
-import { id } from "../drizzle/columns";
+import { orgIdColumns } from "../orm";
+import { id } from "../orm/columns";
 import { User } from "../user/user.sql";
 
 export const Session = pgTable(

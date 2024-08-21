@@ -10,8 +10,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { id, timestamps } from "../drizzle/columns";
-import { orgIdColumns } from "../drizzle/tables";
+import { id, timestamps } from "../orm/columns";
+import { orgIdColumns } from "../orm/tables";
 import { User } from "../user/user.sql";
 
 import type { ClientViewRecord } from "./client-view-record";

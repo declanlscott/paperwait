@@ -1,13 +1,13 @@
 import { auth } from "./auth";
 import { db } from "./db";
-import { client, domain, isDev } from "./misc";
+import { client, meta } from "./misc";
 import { realtime } from "./realtime";
 import { storage } from "./storage";
 
 export const web = new sst.aws.Astro("Paperwait", {
   path: "packages/web",
   buildCommand: "pnpm build",
-  link: [auth, client, db, domain, isDev, realtime, storage],
+  link: [auth, client, db, meta, realtime, storage],
   permissions: [
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],

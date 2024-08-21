@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { VARCHAR_LENGTH } from "../constants";
-import { orgTable } from "../drizzle/tables";
+import { orgTable } from "../orm/tables";
 
 import type { RoomConfiguration } from "../schemas/room-configuration";
 

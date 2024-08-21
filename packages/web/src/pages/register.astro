@@ -1,12 +1,9 @@
 ---
 import Logo from "~/components/logo.astro";
-import OrgProviderId from "~/components/org/provider-id.astro";
 import OrgSlug from "~/components/org/slug.astro";
-import PapercutAuthToken from "~/components/papercut/auth-token.astro";
 import Layout from "~/layouts/layout.astro";
 import { buttonStyles } from "~/styles/components/primitives/button";
 import { labelStyles } from "~/styles/components/primitives/field";
-import { selectTriggerStyles } from "~/styles/components/primitives/select";
 import { inputStyles } from "~/styles/components/primitives/text-field";
 
 export const prerender = true;
@@ -50,44 +47,15 @@ export const prerender = true;
           <OrgSlug />
 
           <div class="grid gap-2">
-            <label class={labelStyles()} for="auth-provider"
-              >Auth Provider</label
-            >
-            <select
-              id="auth-provider"
-              name="authProvider"
-              class={selectTriggerStyles({
-                isHtml: true,
-                class:
-                  "border-0 border-r-8 border-transparent outline-input outline-1 outline",
-              })}
-              required
-              hx-get="/partials/org/provider-id"
-              hx-target="#provider-id"
-              hx-swap-oob="outerHTML"
-            >
-              <option value="entra-id">Microsoft Entra ID</option>
-              <option value="google">Google</option>
-            </select>
-          </div>
-
-          <OrgProviderId />
-
-          <div class="grid gap-2">
-            <label class={labelStyles()} for="server-url"
-              >PaperCut XML Web Services API URL</label
-            >
+            <label class={labelStyles()} for="license-key">License Key</label>
             <input
-              id="server-url"
-              name="serverUrl"
-              type="url"
+              id="license-key"
+              name="licenseKey"
               class={inputStyles({ isHtml: true })}
-              placeholder="https://[server_name]:9192/rpc/api/xmlrpc"
+              placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
               required
             />
           </div>
-
-          <PapercutAuthToken />
 
           <button
             type="submit"

@@ -13,8 +13,8 @@ import { User } from "../user/user.sql";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { ClientGroupID } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
-import type { Transaction } from "../database/transaction";
 import type { Organization } from "../organization";
+import type { Transaction } from "../orm/transaction";
 import type { OmitTimestamps } from "../types/drizzle";
 import type { UserRole } from "../user/user.sql";
 

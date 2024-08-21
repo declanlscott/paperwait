@@ -69,14 +69,14 @@ export const documentsBucket = new sst.aws.Bucket("DocumentsBucket");
 
 export const infraBucket = new sst.aws.Bucket("InfraBucket");
 
-export const secureXmlRpcForwarderPackage = new aws.s3.BucketObjectv2(
-  "SecureXmlRpcForwarderPackage",
-  {
-    bucket: infraBucket.name,
-    key: "secure-xml-rpc-forwarder.zip",
-    source: "packages/functions/src/secure-xml-rpc-forwarder/dist/index.js",
-  },
-);
+// export const secureXmlRpcForwarderPackage = new aws.s3.BucketObjectv2(
+//   "SecureXmlRpcForwarderPackage",
+//   {
+//     bucket: infraBucket.name,
+//     key: "secure-xml-rpc-forwarder.zip",
+//     source: "packages/functions/src/secure-xml-rpc-forwarder/dist/index.js",
+//   },
+// );
 
 export const storage = new sst.Linkable("Storage", {
   properties: {

@@ -12,6 +12,7 @@ import {
 import { ForbiddenError, NotImplementedError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import { Organization } from "../organization";
+import { Transaction } from "../orm/transaction";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -50,7 +51,6 @@ import { User } from "../user/user.sql";
 import { enforceRbac } from "../utils";
 
 import type { LuciaUser } from "../auth/lucia";
-import type { Transaction } from "../database/transaction";
 import type { AuthoritativeMutators } from "../schemas/mutators";
 
 const authorizeRole = (

@@ -62,9 +62,14 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "IsDev": {
-      "type": "sst.sst.Secret"
-      "value": string
+    "Meta": {
+      "app": {
+        "name": string
+        "stage": string
+      }
+      "domain": string
+      "isDev": string
+      "type": "sst.sst.Linkable"
     }
     "Paperwait": {
       "type": "sst.aws.Astro"

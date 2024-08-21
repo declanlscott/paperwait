@@ -1,7 +1,7 @@
 import { foreignKey, text } from "drizzle-orm/pg-core";
 
-import { id } from "../drizzle/columns";
-import { orgTable } from "../drizzle/tables";
+import { id } from "../orm/columns";
+import { orgTable } from "../orm/tables";
 import { Room } from "../room/room.sql";
 
 export const Announcement = orgTable(

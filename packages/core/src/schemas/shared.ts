@@ -1,25 +1,20 @@
 import * as v from "valibot";
 
-import { Provider } from "../organization/organization.sql";
-import { PapercutParameter } from "./papercut";
+import { ORG_SLUG_PATTERN } from "../constants";
 
-export const Registration = v.pipe(
-  v.object({
-    ...v.object({
-      name: v.pipe(v.string(), v.trim(), v.minLength(1)),
-      slug: v.pipe(v.string(), v.trim(), v.minLength(1)),
-      authProvider: v.picklist(Provider.enumValues),
-      providerId: v.string(),
-    }).entries,
-    ...PapercutParameter.entries,
-  }),
-  v.check(({ authProvider, providerId }) => {
-    if (authProvider === "entra-id")
-      return v.safeParse(v.pipe(v.string(), v.uuid()), providerId).success;
-
-    return true;
-  }),
+export const OrgSlug = v.pipe(
+  v.string(),
+  v.trim(),
+  v.minLength(1),
+  v.regex(ORG_SLUG_PATTERN),
 );
+export type OrgSlug = v.InferOutput<typeof OrgSlug>;
+
+export const Registration = v.object({
+  name: v.pipe(v.string(), v.trim(), v.minLength(1)),
+  slug: OrgSlug,
+  licenseKey: v.pipe(v.string(), v.uuid()),
+});
 export type Registration = v.InferOutput<typeof Registration>;
 
 export const IsOrgSlugValid = v.object({

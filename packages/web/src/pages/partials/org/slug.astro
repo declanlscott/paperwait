@@ -14,12 +14,12 @@ const formData = await Astro.request.formData();
 
 const getProps = fn(
   v.fallback(v.object({ slug: Registration.entries.slug }), { slug: "" }),
-  async ({ slug }): Promise<OrgSlugProps> => {
+  async ({ slug }) => {
     if (!slug) return { value: "" };
 
     const isValid = await isOrgSlugValid(slug);
 
-    return { value: slug, isValid };
+    return { value: slug, isValid } satisfies OrgSlugProps;
   },
 );
 

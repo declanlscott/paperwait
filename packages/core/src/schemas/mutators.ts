@@ -108,8 +108,8 @@ export const UpdateOrganizationMutationArgs = v.object({
   ...v.partial(
     v.omit(OrganizationSchema, [
       "id",
-      "provider",
-      "providerId",
+      "licenseKey",
+      "oAuth2ProviderId",
       "createdAt",
       "updatedAt",
       "deletedAt",

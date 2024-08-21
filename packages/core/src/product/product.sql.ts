@@ -1,8 +1,8 @@
 import { foreignKey, index, json, pgEnum, varchar } from "drizzle-orm/pg-core";
 
 import { VARCHAR_LENGTH } from "../constants";
-import { id } from "../drizzle/columns";
-import { orgTable } from "../drizzle/tables";
+import { id } from "../orm/columns";
+import { orgTable } from "../orm/tables";
 import { Room } from "../room/room.sql";
 
 import type { ProductConfiguration } from "../schemas/product-configuration";

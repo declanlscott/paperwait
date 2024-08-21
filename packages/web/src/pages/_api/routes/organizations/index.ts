@@ -9,22 +9,23 @@ import {
   defaultMaxFileSizes,
   DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
   MAX_FILE_SIZES_PARAMETER_NAME,
-  PAPERCUT_PARAMETER_NAME,
 } from "@paperwait/core/constants";
 import { transact } from "@paperwait/core/database";
-import { Organization } from "@paperwait/core/organization";
+import { License, Organization } from "@paperwait/core/organization";
 import { Room } from "@paperwait/core/room";
-import { Registration } from "@paperwait/core/schemas";
+import { OrgSlug, Registration } from "@paperwait/core/schemas";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import * as v from "valibot";
 
 import { isOrgSlugValid } from "~/api/lib/organization";
+import infra from "~/api/routes/organizations/infra";
 
 import type { HonoEnv } from "~/api/types";
 
 export default new Hono<HonoEnv>()
   .post("/", vValidator("form", Registration), async (c) => {
-    const registration = c.req.valid("form");
+    const values = c.req.valid("form");
 
     let org: Pick<Organization, "id" | "slug"> | undefined;
 
@@ -32,28 +33,27 @@ export default new Hono<HonoEnv>()
       async (tx) => {
         org = await tx
           .insert(Organization)
-          .values({
-            name: registration.name,
-            slug: registration.slug,
-            provider: registration.authProvider,
-            providerId: registration.providerId,
-          })
+          .values(values)
           .returning({ id: Organization.id, slug: Organization.slug })
           .execute()
           .then((rows) => rows.at(0));
-
         if (!org) return tx.rollback();
 
         await Promise.all([
-          // Store the PaperCut server details in SSM
-          putSsmParameter({
-            Name: buildSsmParameterPath(org.id, PAPERCUT_PARAMETER_NAME),
-            Type: "SecureString",
-            Value: JSON.stringify({
-              serverUrl: registration.serverUrl,
-              authToken: registration.authToken,
-            }),
-            Overwrite: false,
+          // Update the license with the org id
+          tx
+            .update(License)
+            .set({ orgId: org.id })
+            .where(eq(License.key, values.licenseKey)),
+          // Create a default room for the organization
+          tx.insert(Room).values({
+            name: "Default",
+            status: "draft",
+            orgId: org.id,
+            config: {
+              workflow: [],
+              deliveryOptions: [],
+            },
           }),
           // Store the documents mime types in SSM
           putSsmParameter({
@@ -72,16 +72,6 @@ export default new Hono<HonoEnv>()
             Value: JSON.stringify(defaultMaxFileSizes),
             Overwrite: false,
           }),
-          // Create a default room for the organization
-          tx.insert(Room).values({
-            name: "Default",
-            status: "draft",
-            orgId: org.id,
-            config: {
-              workflow: [],
-              deliveryOptions: [],
-            },
-          }),
         ]);
 
         return { org };
@@ -93,9 +83,6 @@ export default new Hono<HonoEnv>()
 
             // Rollback the parameters if the transaction fails
             await Promise.all([
-              deleteSsmParameter({
-                Name: buildSsmParameterPath(org.id, PAPERCUT_PARAMETER_NAME),
-              }),
               deleteSsmParameter({
                 Name: buildSsmParameterPath(
                   org.id,
@@ -122,10 +109,11 @@ export default new Hono<HonoEnv>()
   })
   .post(
     "/:slug",
-    vValidator("param", v.object({ slug: v.string() })),
+    vValidator("param", v.object({ slug: OrgSlug })),
     async (c) => {
       const isValid = await isOrgSlugValid(c.req.valid("param").slug);
 
       return c.json({ isValid });
     },
-  );
+  )
+  .route("/setup", infra);

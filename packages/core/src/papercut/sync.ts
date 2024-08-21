@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { getSharedAccountPropertiesOutputIndex } from "../constants";
-import { buildConflictUpdateColumns } from "../drizzle/columns";
+import { buildConflictUpdateColumns } from "../orm/columns";
 import { User } from "../user/user.sql";
 import {
   PapercutAccount,

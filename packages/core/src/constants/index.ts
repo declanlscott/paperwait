@@ -8,6 +8,11 @@ export const AUTH_CALLBACK_PATH = "/api/auth/callback";
 
 export const NANOID_CUSTOM_ALPHABET = "2346789abcdefghijkmnpqrtwxyz";
 export const NANOID_LENGTH = 20;
+export const NANOID_PATTERN = new RegExp(
+  `^[${NANOID_CUSTOM_ALPHABET}]{${NANOID_LENGTH}}$`,
+);
+
+export const ORG_SLUG_PATTERN = new RegExp(/^[a-zA-Z0-9-]+$/);
 
 export const DB_SCHEMA_VERSION = 1;
 export const DB_TRANSACTION_MAX_RETRIES = 10;

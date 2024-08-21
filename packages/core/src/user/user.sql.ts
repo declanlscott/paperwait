@@ -1,6 +1,6 @@
 import { index, pgEnum, text } from "drizzle-orm/pg-core";
 
-import { orgTable } from "../drizzle/tables";
+import { orgTable } from "../orm/tables";
 
 export const UserRole = pgEnum("user_role", [
   "administrator",
