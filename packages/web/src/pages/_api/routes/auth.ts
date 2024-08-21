@@ -3,6 +3,7 @@ import {
   createSession,
   invalidateSession,
   invalidateUserSessions,
+  useAuthenticated,
 } from "@paperwait/core/auth";
 import { db } from "@paperwait/core/database";
 import {
@@ -32,9 +33,8 @@ import { getUserInfo, processUser } from "~/api/lib/auth/user";
 import { authorization } from "~/api/middleware";
 
 import type { IdToken, OAuth2Tokens } from "@paperwait/core/oauth2";
-import type { HonoEnv } from "~/api/types";
 
-export default new Hono<HonoEnv>()
+export default new Hono()
   // Login
   .get(
     "/login",
@@ -232,7 +232,9 @@ export default new Hono<HonoEnv>()
   )
   // Logout
   .post("/logout", authorization(), async (c) => {
-    const { cookie } = await invalidateSession(c.env.locals.session!.id);
+    const { session } = useAuthenticated();
+
+    const { cookie } = await invalidateSession(session.id);
 
     setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
@@ -244,12 +246,13 @@ export default new Hono<HonoEnv>()
     authorization(["administrator"]),
     vValidator("param", v.object({ userId: NanoId })),
     async (c) => {
+      const { org } = useAuthenticated();
       const { userId } = c.req.valid("param");
 
       const exists = await db
         .select({})
         .from(User)
-        .where(and(eq(User.id, userId), eq(User.orgId, c.env.locals.org!.id)))
+        .where(and(eq(User.id, userId), eq(User.orgId, org.id)))
         .execute()
         .then((rows) => rows.length > 0);
       if (!exists) throw new NotFoundError(`User "${userId}" not found`);

@@ -1,21 +1,20 @@
 import { eq, sql } from "drizzle-orm";
 
-import { serializable } from "../database/transaction";
+import { useAuthenticated } from "../auth";
 import { BadRequestError } from "../errors/http";
+import { serializable } from "../orm/transaction";
 import { Mutation } from "../schemas/mutators";
 import { mutators } from "../server-authority/mutators";
 import { fn } from "../valibot";
 import { poke } from "./poke";
 import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
 
-import type { User as LuciaUser } from "lucia";
 import type {
   ClientStateNotFoundResponse,
   MutationV1,
   PushRequest,
   VersionNotSupportedResponse,
 } from "replicache";
-import type { Transaction } from "../database/transaction";
 import type { OmitTimestamps } from "../types/drizzle";
 
 type PushResult =
@@ -25,10 +24,7 @@ type PushResult =
       response: ClientStateNotFoundResponse | VersionNotSupportedResponse;
     };
 
-export async function push(
-  user: LuciaUser,
-  pushRequest: PushRequest,
-): Promise<PushResult> {
+export async function push(pushRequest: PushRequest): Promise<PushResult> {
   if (pushRequest.pushVersion !== 1)
     return {
       type: "error",
@@ -38,7 +34,6 @@ export async function push(
   for (const mutation of pushRequest.mutations) {
     try {
       const channels = await processMutation(
-        user,
         pushRequest.clientGroupID,
         mutation,
       );
@@ -51,7 +46,7 @@ export async function push(
       );
 
       // retry in error mode
-      await processMutation(user, pushRequest.clientGroupID, mutation, true);
+      await processMutation(pushRequest.clientGroupID, mutation, true);
     }
   }
 
@@ -61,7 +56,6 @@ export async function push(
 // Implements push algorithm from Replicache docs
 // https://doc.replicache.dev/strategies/row-version#push
 async function processMutation(
-  user: LuciaUser,
   clientGroupId: string,
   mutation: MutationV1,
   // 1: `let errorMode = false`. In JS, we implement this step naturally
@@ -70,6 +64,8 @@ async function processMutation(
 ) {
   // 2: Begin transaction
   return await serializable(async (tx) => {
+    const { user } = useAuthenticated();
+
     let channels: Array<string> = [];
 
     // 3: Get client group
@@ -157,7 +153,7 @@ async function processMutation(
       try {
         // 10(i): Business logic
         // 10(i)(a): xmin column is automatically updated by Postgres on any affected rows
-        const mutate = getMutator(tx, user);
+        const mutate = getMutator();
 
         channels = await mutate(mutation);
       } catch (e) {
@@ -202,13 +198,13 @@ async function processMutation(
   });
 }
 
-const getMutator = (tx: Transaction, user: LuciaUser) =>
+const getMutator = () =>
   fn(
     Mutation,
     (mutation) => {
-      const mutator = mutators[mutation.name](user);
+      const mutator = mutators[mutation.name]();
 
-      return mutator(tx, mutation.args);
+      return mutator(mutation.args);
     },
     { Error: BadRequestError, message: "Failed to parse mutation" },
   );

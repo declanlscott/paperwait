@@ -1,4 +1,5 @@
 ---
+import { useAuth } from "@paperwait/core/auth";
 import { Resource } from "sst";
 
 import { App } from "~/app/index";
@@ -10,11 +11,9 @@ import type { AppProps } from "~/app/index";
 
 const appProps = {
   clientResource: Resource.Client,
-  auth: {
-    user: Astro.locals.user,
-    session: Astro.locals.session,
-    org: Astro.locals.org,
-  },
+  // This is NOT a react hook, even though it looks like one.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  auth: useAuth(),
 } satisfies AppProps;
 ---
 

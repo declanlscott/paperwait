@@ -5,12 +5,10 @@ import { Hono } from "hono";
 
 import { authorization } from "~/api/middleware";
 
-import type { HonoEnv } from "~/api/types";
-
-export default new Hono<HonoEnv>()
+export default new Hono()
   .use(authorization())
   .post("/pull", vValidator("json", PullRequest), async (c) => {
-    const pullResult = await pull(c.env.locals.user!, c.req.valid("json"));
+    const pullResult = await pull(c.req.valid("json"));
 
     if (pullResult.type !== "success")
       return c.json(pullResult.response, { status: 400 });
@@ -18,7 +16,7 @@ export default new Hono<HonoEnv>()
     return c.json(pullResult.response, { status: 200 });
   })
   .post("/push", vValidator("json", PushRequest), async (c) => {
-    const pushResult = await push(c.env.locals.user!, c.req.valid("json"));
+    const pushResult = await push(c.req.valid("json"));
 
     if (pushResult.type !== "success")
       return c.json(pushResult.response, { status: 400 });

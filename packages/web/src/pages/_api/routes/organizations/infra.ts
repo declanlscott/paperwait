@@ -2,9 +2,7 @@
 // import * as automation from "@pulumi/pulumi/automation";
 // import { Hono } from "hono";
 
-// import type { HonoEnv } from "~/api/types";
-
-// export default new Hono<HonoEnv>().put("/", async (c) => {
+// export default new Hono().put("/", async (c) => {
 //   const provisionTenantInfra = async () => {
 //     const lambdaAssumeRole = await aws.iam.getPolicyDocument({
 //       statements: [

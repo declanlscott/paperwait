@@ -1,5 +1,6 @@
 /* eslint-disable drizzle/enforce-delete-with-where */
 import { vValidator } from "@hono/valibot-validator";
+import { useAuthenticated } from "@paperwait/core/auth";
 import {
   buildCloudfrontUrl,
   buildS3ObjectKey,
@@ -15,9 +16,7 @@ import * as v from "valibot";
 
 import { authorization, maxContentLength } from "~/api/middleware";
 
-import type { HonoEnv } from "~/api/types";
-
-export default new Hono<HonoEnv>()
+export default new Hono()
   .post(
     "/thumbnail",
     authorization(["administrator", "operator"]),
@@ -61,12 +60,12 @@ export default new Hono<HonoEnv>()
         next,
       ),
     async (c) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
       const { name, metadata } = c.req.valid("query");
 
       const signedUrl = await getS3SignedPutUrl({
         Bucket: Resource.Storage.assets.bucket,
-        Key: buildS3ObjectKey(orgId, name),
+        Key: buildS3ObjectKey(org.id, name),
         ContentType: metadata.contentType,
         ContentLength: metadata.contentLength,
       });
@@ -78,13 +77,13 @@ export default new Hono<HonoEnv>()
     "/signed-get-url",
     vValidator("query", v.object({ name: v.string() })),
     async (c) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
       const { name } = c.req.valid("query");
 
       const signedUrl = getCloudfrontSignedUrl({
         url: buildCloudfrontUrl(
           Resource.Storage.assets.distribution.domain,
-          buildS3ObjectKey(orgId, name),
+          buildS3ObjectKey(org.id, name),
         ),
         keyPairId: Resource.Storage.assets.distribution.publicKey.id,
         privateKey: Resource.Storage.assets.distribution.privateKey,
@@ -98,12 +97,12 @@ export default new Hono<HonoEnv>()
     "/",
     vValidator("query", v.object({ name: v.string() })),
     async (c) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
       const { name } = c.req.valid("query");
 
       await deleteS3Object({
         Bucket: Resource.AssetsBucket.name,
-        Key: buildS3ObjectKey(orgId, name),
+        Key: buildS3ObjectKey(org.id, name),
       });
 
       return c.body(null, 204);

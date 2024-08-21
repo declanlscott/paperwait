@@ -1,3 +1,4 @@
+import { useAuthenticated } from "@paperwait/core/auth";
 import { defineMiddleware } from "astro:middleware";
 import { Resource } from "sst";
 
@@ -17,11 +18,10 @@ export const rateLimitIp = defineMiddleware(async (context, next) => {
   return await next();
 });
 
-export const rateLimitUser = defineMiddleware(async (context, next) => {
+export const rateLimitUser = defineMiddleware(async (_, next) => {
   if (Resource.Meta.isDev === "true") return await next();
 
-  const { org, user } = context.locals;
-  if (!org || !user) return await next();
+  const { org, user } = useAuthenticated();
 
   const { success } = await rateLimit.limit(`${org.id}:${user.id}`);
   if (!success) return new Response("Rate limit exceeded", { status: 429 });

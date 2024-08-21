@@ -1,5 +1,4 @@
-import { withActor } from "@paperwait/core/actor";
-import { SessionTokens } from "@paperwait/core/auth";
+import { SessionTokens, useAuth } from "@paperwait/core/auth";
 import { buildSsmParameterPath, getSsmParameter } from "@paperwait/core/aws";
 import { MAX_FILE_SIZES_PARAMETER_NAME } from "@paperwait/core/constants";
 import { db } from "@paperwait/core/database";
@@ -10,13 +9,20 @@ import {
   NotImplementedError,
   UnauthorizedError,
 } from "@paperwait/core/errors";
-import { entraId, google, OAuth2Provider } from "@paperwait/core/oauth2";
+import {
+  entraId,
+  google,
+  OAuth2Provider,
+  withOAuth2,
+} from "@paperwait/core/oauth2";
 import { MaxFileSizes } from "@paperwait/core/schemas";
 import { enforceRbac } from "@paperwait/core/utils";
 import { validate } from "@paperwait/core/valibot";
 import { eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
 import * as v from "valibot";
+
+import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 import type { LuciaSession } from "@paperwait/core/auth";
 import type {
@@ -25,27 +31,27 @@ import type {
   ProviderTokens,
 } from "@paperwait/core/oauth2";
 import type { UserRole } from "@paperwait/core/user";
-import type { HonoEnv } from "~/api/types";
 
 export const authorization = (
   roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],
 ) =>
-  createMiddleware<HonoEnv>(async (c, next) => {
-    const { session, user } = c.env.locals;
+  createMiddleware(async (_, next) => {
+    const { session, user } = useAuth();
     if (!session || !user) throw new UnauthorizedError();
 
     enforceRbac(user, roles, ForbiddenError);
 
-    await withActor({ role: "user", properties: user }, next);
+    await next();
   });
 
-export const provider = createMiddleware<HonoEnv>(async (c, next) => {
-  const session = c.env.locals.session;
+export const provider = createMiddleware(async (c, next) => {
+  const { session } = useAuth();
   if (!session) throw new UnauthorizedError("Session not found");
 
-  c.set("oAuth2Provider", await validateOAuth2Provider(session.id));
-
-  await next();
+  await withOAuth2(
+    { provider: await validateOAuth2Provider(session.id) },
+    next,
+  );
 });
 
 async function validateOAuth2Provider(
@@ -132,13 +138,13 @@ export const maxContentLength = (
   variant: keyof MaxFileSizes,
   contentLength: number,
 ) =>
-  createMiddleware<HonoEnv>(async (c, next) => {
-    const orgId = c.env.locals.org!.id;
+  createMiddleware(async (c, next) => {
+    const { org } = useAuthenticated();
 
     const maxFileSizes = validate(
       MaxFileSizes,
       await getSsmParameter({
-        Name: buildSsmParameterPath(orgId, MAX_FILE_SIZES_PARAMETER_NAME),
+        Name: buildSsmParameterPath(org.id, MAX_FILE_SIZES_PARAMETER_NAME),
       }),
       {
         Error: InternalServerError,

@@ -1,11 +1,12 @@
 import { createContext } from "react";
 
+import type { Auth } from "@paperwait/core/auth";
 import type { UserRole } from "@paperwait/core/user";
 import type { Replicache } from "replicache";
 import type { Resource } from "sst";
 import type { StoreApi } from "zustand";
 import type { Mutators } from "~/app/lib/hooks/replicache";
-import type { Auth, Authenticated, CommandBarPage, Slot } from "~/app/types";
+import type { Authenticated, CommandBarPage, Slot } from "~/app/types";
 
 type AuthActions = {
   initializeReplicache: (client: Replicache<Mutators>) => void;

@@ -16,7 +16,6 @@ import {
 
 import type { WriteTransaction } from "replicache";
 import type { LuciaUser } from "../auth/lucia";
-import type { Transaction } from "../database/transaction";
 import type { Channel } from "../realtime";
 
 export const Mutation = v.object({
@@ -56,12 +55,7 @@ export type Mutation = v.InferOutput<typeof Mutation>;
 export type AuthoritativeMutators<TSchema extends v.GenericSchema = any> =
   Record<
     Mutation["name"],
-    (
-      user: LuciaUser,
-    ) => (
-      tx: Transaction,
-      values: v.InferOutput<TSchema>,
-    ) => Promise<Array<Channel>>
+    () => (values: v.InferOutput<TSchema>) => Promise<Array<Channel>>
   >;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

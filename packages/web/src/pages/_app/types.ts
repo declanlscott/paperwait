@@ -1,5 +1,9 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
+import type {
+  Authenticated as BaseAuthenticated,
+  Unauthenticated as BaseUnauthenticated,
+} from "@paperwait/core/auth";
 import type { Room } from "@paperwait/core/room";
 import type { StartsWith } from "@paperwait/core/types";
 import type { UserRole } from "@paperwait/core/user";
@@ -42,15 +46,13 @@ export type AppRouter = ReturnType<
   typeof createRouter<typeof routeTree, "always" | "never" | "preserve">
 >;
 
-export type Auth = Pick<App.Locals, "user" | "session" | "org">;
+export interface Authenticated extends BaseAuthenticated {
+  replicache: Replicache<Mutators>;
+}
 
-export type Authenticated = {
-  [TKey in keyof Auth]: NonNullable<Auth[TKey]>;
-} & { isAuthed: true; replicache: Replicache<Mutators> };
-
-export type Unauthenticated = {
-  [TKey in keyof Auth]: null;
-} & { isAuthed: false; replicache: null };
+export interface Unauthenticated extends BaseUnauthenticated {
+  replicache: null;
+}
 
 export type Slot = {
   loadingIndicator: ReactNode;

@@ -15,9 +15,7 @@ import organizations from "~/api/routes/organizations";
 import replicache from "~/api/routes/replicache";
 import users from "~/api/routes/users";
 
-import type { HonoEnv } from "~/api/types";
-
-const api = new Hono<HonoEnv>()
+const api = new Hono()
   .basePath("/api/")
   .use(logger())
   .route("/auth", auth)

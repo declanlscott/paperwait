@@ -1,6 +1,7 @@
 import { and, eq, lt, sql } from "drizzle-orm";
 
 import { Announcement } from "../announcement/announcement.sql";
+import { useAuthenticated } from "../auth";
 import { Comment } from "../comment/comment.sql";
 import { getClientGroup, getData } from "../data/get";
 import {
@@ -16,10 +17,10 @@ import {
   searchRooms,
   searchUsers,
 } from "../data/search";
-import { serializable } from "../database/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import { Organization } from "../organization/organization.sql";
+import { serializable } from "../orm/transaction";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -38,9 +39,7 @@ import type {
   PullResponseOKV1,
   VersionNotSupportedResponse,
 } from "replicache";
-import type { LuciaUser } from "../auth/lucia";
 import type { DomainsMetadata, Metadata } from "../data/search";
-import type { Transaction } from "../database/transaction";
 import type { OmitTimestamps } from "../types/drizzle";
 import type {
   ClientViewRecordDiff,
@@ -60,10 +59,9 @@ type PullResult =
 // Implements pull algorithm from Replicache docs (modified)
 // https://doc.replicache.dev/strategies/row-version#pull
 // Some steps are out of order due to what is included in the transaction
-export async function pull(
-  user: LuciaUser,
-  pullRequest: PullRequest,
-): Promise<PullResult> {
+export async function pull(pullRequest: PullRequest): Promise<PullResult> {
+  const { user } = useAuthenticated();
+
   if (pullRequest.pullVersion !== 1)
     return {
       type: "error",
@@ -84,7 +82,7 @@ export async function pull(
   // 3: Begin transaction
   const result = await serializable(async (tx) => {
     // 1: Fetch previous client view record
-    const [prevClientView] = pullRequest.cookie
+    const prevClientView = pullRequest.cookie
       ? await tx
           .select({ record: ReplicacheClientView.record })
           .from(ReplicacheClientView)
@@ -95,17 +93,15 @@ export async function pull(
               eq(ReplicacheClientView.orgId, user.orgId),
             ),
           )
-      : [undefined];
+          .execute()
+          .then((rows) => rows.at(0))
+      : undefined;
 
     // 2: Initialize base client view record
     const baseCvr = buildCvr({ variant: "base", prev: prevClientView?.record });
 
     // 4: Get client group
-    const baseClientGroup = await getClientGroup(
-      tx,
-      user,
-      pullRequest.clientGroupID,
-    );
+    const baseClientGroup = await getClientGroup(pullRequest.clientGroupID);
 
     // 5: Verify requesting client group owns requested client
     if (baseClientGroup.userId !== user.id)
@@ -113,7 +109,7 @@ export async function pull(
 
     // 6: Read all domain data, just ids and versions
     // 7: Read all clients in the client group
-    const metadata = await getMetadata(tx, user, baseClientGroup);
+    const metadata = await getMetadata(baseClientGroup);
 
     // 8: Build next client view record
     const nextCvr = buildCvr({ variant: "next", metadata });
@@ -125,7 +121,7 @@ export async function pull(
     if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
     // 11: Get entities
-    const entities = await getEntities(tx, user, diff);
+    const entities = await getEntities(diff);
 
     // 12: Changed clients - no need to re-read clients from database,
     // we already have their versions.
@@ -211,11 +207,7 @@ export async function pull(
   };
 }
 
-async function getMetadata(
-  tx: Transaction,
-  user: LuciaUser,
-  clientGroup: OmitTimestamps<ReplicacheClientGroup>,
-) {
+async function getMetadata(clientGroup: OmitTimestamps<ReplicacheClientGroup>) {
   const [
     organizationsMetadata,
     usersMetadata,
@@ -229,17 +221,17 @@ async function getMetadata(
     commentsMetadata,
     clientsMetadata,
   ] = await Promise.all([
-    searchOrganizations(tx, user),
-    searchUsers(tx, user),
-    searchPapercutAccounts(tx, user),
-    searchPapercutAccountCustomerAuthorizations(tx, user),
-    searchPapercutAccountManagerAuthorizations(tx, user),
-    searchRooms(tx, user),
-    searchAnnouncements(tx, user),
-    searchProducts(tx, user),
-    searchOrders(tx, user),
-    searchComments(tx, user),
-    searchClients(tx, clientGroup.id),
+    searchOrganizations(),
+    searchUsers(),
+    searchPapercutAccounts(),
+    searchPapercutAccountCustomerAuthorizations(),
+    searchPapercutAccountManagerAuthorizations(),
+    searchRooms(),
+    searchAnnouncements(),
+    searchProducts(),
+    searchOrders(),
+    searchComments(),
+    searchClients(clientGroup.id),
   ]);
 
   return {
@@ -277,11 +269,7 @@ type Entities = {
   comment: PutsDels<Comment>;
 };
 
-async function getEntities(
-  tx: Transaction,
-  user: LuciaUser,
-  diff: ClientViewRecordDiff,
-) {
+async function getEntities(diff: ClientViewRecordDiff) {
   const [
     organizations,
     users,
@@ -295,79 +283,51 @@ async function getEntities(
     comments,
   ] = await Promise.all([
     getData(
-      tx,
       Organization,
       { orgId: Organization.id, id: Organization.id },
-      { orgId: user.orgId, ids: diff.organization.puts },
+      diff.organization.puts,
     ),
+    getData(User, { orgId: User.orgId, id: User.id }, diff.user.puts),
     getData(
-      tx,
-      User,
-      { orgId: User.orgId, id: User.id },
-      { orgId: user.orgId, ids: diff.user.puts },
-    ),
-    getData(
-      tx,
       PapercutAccount,
       { orgId: PapercutAccount.orgId, id: PapercutAccount.id },
-      { orgId: user.orgId, ids: diff.papercutAccount.puts },
+      diff.papercutAccount.puts,
     ),
     getData(
-      tx,
       PapercutAccountCustomerAuthorization,
       {
         orgId: PapercutAccountCustomerAuthorization.orgId,
         id: PapercutAccountCustomerAuthorization.id,
       },
-      {
-        orgId: user.orgId,
-        ids: diff.papercutAccountCustomerAuthorization.puts,
-      },
+      diff.papercutAccountCustomerAuthorization.puts,
     ),
     getData(
-      tx,
       PapercutAccountManagerAuthorization,
       {
         orgId: PapercutAccountManagerAuthorization.orgId,
         id: PapercutAccountManagerAuthorization.id,
       },
-      {
-        orgId: user.orgId,
-        ids: diff.papercutAccountManagerAuthorization.puts,
-      },
+      diff.papercutAccountManagerAuthorization.puts,
     ),
+    getData(Room, { orgId: Room.orgId, id: Room.id }, diff.room.puts),
     getData(
-      tx,
-      Room,
-      { orgId: Room.orgId, id: Room.id },
-      { orgId: user.orgId, ids: diff.room.puts },
-    ),
-    getData(
-      tx,
       Announcement,
       {
         orgId: Announcement.orgId,
         id: Announcement.id,
       },
-      { orgId: user.orgId, ids: diff.announcement.puts },
+      diff.announcement.puts,
     ),
     getData(
-      tx,
       Product,
       { orgId: Product.orgId, id: Product.id },
-      { orgId: user.orgId, ids: diff.product.puts },
+      diff.product.puts,
     ),
+    getData(Order, { orgId: Order.orgId, id: Order.id }, diff.order.puts),
     getData(
-      tx,
-      Order,
-      { orgId: Order.orgId, id: Order.id },
-      { orgId: user.orgId, ids: diff.order.puts },
-    ),
-    getData(
-      tx,
       Comment,
       { orgId: Comment.orgId, id: Comment.id },
-      { orgId: user.orgId, ids: diff.comment.puts },
+      diff.comment.puts,
     ),
   ]);
 

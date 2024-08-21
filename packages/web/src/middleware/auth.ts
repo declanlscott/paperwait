@@ -1,4 +1,4 @@
-import { lucia } from "@paperwait/core/auth";
+import { lucia, withAuth } from "@paperwait/core/auth";
 import { db } from "@paperwait/core/database";
 import { Organization } from "@paperwait/core/organization";
 import { defineMiddleware } from "astro:middleware";
@@ -11,36 +11,13 @@ export const auth = defineMiddleware(async (context, next) => {
 
   const sessionId = context.cookies.get(lucia.sessionCookieName)?.value ?? null;
 
-  if (!sessionId) {
-    context.locals.user = null;
-    context.locals.session = null;
-    context.locals.org = null;
-
-    return await next();
-  }
+  if (!sessionId)
+    return await withAuth(
+      { isAuthed: false, session: null, user: null, org: null },
+      next,
+    );
 
   const { session, user } = await lucia.validateSession(sessionId);
-
-  const org = user
-    ? await db
-        .select({
-          id: Organization.id,
-          slug: Organization.slug,
-        })
-        .from(Organization)
-        .where(eq(Organization.id, user.orgId))
-        .then((rows) => rows.at(0) ?? null)
-    : null;
-
-  if (session?.fresh) {
-    const sessionCookie = lucia.createSessionCookie(session.id);
-
-    context.cookies.set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes,
-    );
-  }
 
   if (!session) {
     const sessionCookie = lucia.createBlankSessionCookie();
@@ -50,11 +27,32 @@ export const auth = defineMiddleware(async (context, next) => {
       sessionCookie.value,
       sessionCookie.attributes,
     );
+
+    return await withAuth(
+      { isAuthed: false, session: null, user: null, org: null },
+      next,
+    );
   }
 
-  context.locals.session = session;
-  context.locals.user = user;
-  context.locals.org = org;
+  const org = await db
+    .select({
+      id: Organization.id,
+      slug: Organization.slug,
+    })
+    .from(Organization)
+    .where(eq(Organization.id, user.orgId))
+    .then((rows) => rows.at(0));
+  if (!org) throw new Error("Organization not found");
 
-  return await next();
+  if (session.fresh) {
+    const sessionCookie = lucia.createSessionCookie(session.id);
+
+    context.cookies.set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes,
+    );
+  }
+
+  return await withAuth({ isAuthed: true, session, user, org }, next);
 });

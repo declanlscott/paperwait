@@ -15,9 +15,10 @@ import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
+import type { Auth } from "@paperwait/core/auth";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { Mutators } from "~/app/lib/hooks/replicache";
-import type { AppRouter, Auth } from "~/app/types";
+import type { AppRouter } from "~/app/types";
 
 interface AuthStoreProviderProps extends PropsWithChildren {
   auth: Auth;

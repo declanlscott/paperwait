@@ -10,8 +10,9 @@ import { useAuthStore } from "~/app/lib/hooks/auth";
 import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
+import type { Auth } from "@paperwait/core/auth";
 import type { Resource } from "sst";
-import type { AppRouter, Auth, Slot } from "~/app/types";
+import type { AppRouter, Slot } from "~/app/types";
 
 const queryClient = new QueryClient();
 

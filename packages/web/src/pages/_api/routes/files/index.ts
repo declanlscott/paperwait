@@ -1,3 +1,4 @@
+import { useAuthenticated } from "@paperwait/core/auth";
 import { buildSsmParameterPath, getSsmParameter } from "@paperwait/core/aws";
 import { MAX_FILE_SIZES_PARAMETER_NAME } from "@paperwait/core/constants";
 import { InternalServerError } from "@paperwait/core/errors";
@@ -9,20 +10,18 @@ import { authorization } from "~/api/middleware";
 import assets from "~/api/routes/files/assets";
 import documents from "~/api/routes/files/documents";
 
-import type { HonoEnv } from "~/api/types";
-
-export default new Hono<HonoEnv>()
+export default new Hono()
   .use(authorization())
   .get(
     "/max-file-sizes",
     authorization(["administrator", "operator"]),
     async (c) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
 
       const maxFileSizes = validate(
         MaxFileSizes,
         await getSsmParameter({
-          Name: buildSsmParameterPath(orgId, MAX_FILE_SIZES_PARAMETER_NAME),
+          Name: buildSsmParameterPath(org.id, MAX_FILE_SIZES_PARAMETER_NAME),
         }),
         {
           Error: InternalServerError,

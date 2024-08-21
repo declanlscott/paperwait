@@ -10,8 +10,8 @@ import {
   DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
   MAX_FILE_SIZES_PARAMETER_NAME,
 } from "@paperwait/core/constants";
-import { transact } from "@paperwait/core/database";
 import { License, Organization } from "@paperwait/core/organization";
+import { transact } from "@paperwait/core/orm";
 import { Room } from "@paperwait/core/room";
 import { OrgSlug, Registration } from "@paperwait/core/schemas";
 import { eq } from "drizzle-orm";
@@ -19,11 +19,8 @@ import { Hono } from "hono";
 import * as v from "valibot";
 
 import { isOrgSlugValid } from "~/api/lib/organization";
-import infra from "~/api/routes/organizations/infra";
 
-import type { HonoEnv } from "~/api/types";
-
-export default new Hono<HonoEnv>()
+export default new Hono()
   .post("/", vValidator("form", Registration), async (c) => {
     const values = c.req.valid("form");
 
@@ -115,5 +112,5 @@ export default new Hono<HonoEnv>()
 
       return c.json({ isValid });
     },
-  )
-  .route("/setup", infra);
+  );
+// .route("/setup", infra);

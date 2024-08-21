@@ -1,5 +1,5 @@
-/* eslint-disable drizzle/enforce-delete-with-where */
 import { vValidator } from "@hono/valibot-validator";
+import { useAuthenticated } from "@paperwait/core/auth";
 import {
   buildS3ObjectKey,
   buildSsmParameterPath,
@@ -10,8 +10,8 @@ import {
 } from "@paperwait/core/aws";
 import { DOCUMENTS_MIME_TYPES_PARAMETER_NAME } from "@paperwait/core/constants";
 import { requireAccessToOrder } from "@paperwait/core/data";
-import { serializable } from "@paperwait/core/database";
 import { BadRequestError } from "@paperwait/core/errors";
+import { serializable } from "@paperwait/core/orm";
 import { NanoId } from "@paperwait/core/schemas";
 import { Hono } from "hono";
 import { Resource } from "sst";
@@ -19,9 +19,8 @@ import * as v from "valibot";
 
 import { maxContentLength } from "~/api/middleware";
 
-import type { HonoEnv } from "~/api/types";
-
-export default new Hono<HonoEnv>()
+// eslint-disable-next-line drizzle/enforce-delete-with-where
+export default new Hono()
   .get(
     "/signed-put-url",
     vValidator(
@@ -36,11 +35,14 @@ export default new Hono<HonoEnv>()
       }),
     ),
     async (c, next) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
       const { metadata } = c.req.valid("query");
 
       const documentsMimeTypes = await getSsmParameter({
-        Name: buildSsmParameterPath(orgId, DOCUMENTS_MIME_TYPES_PARAMETER_NAME),
+        Name: buildSsmParameterPath(
+          org.id,
+          DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+        ),
       }).then((value) => value.split(","));
 
       if (!documentsMimeTypes.includes(metadata.contentType))
@@ -54,12 +56,12 @@ export default new Hono<HonoEnv>()
         c.req.valid("query").metadata.contentLength,
       )(c, next),
     async (c) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
       const { name, orderId, metadata } = c.req.valid("query");
 
       const signedUrl = await getS3SignedPutUrl({
         Bucket: Resource.Storage.documents.bucket,
-        Key: buildS3ObjectKey(orgId, orderId, name),
+        Key: buildS3ObjectKey(org.id, orderId, name),
         ContentType: metadata.contentType,
         ContentLength: metadata.contentLength,
       });
@@ -73,19 +75,17 @@ export default new Hono<HonoEnv>()
     async (c, next) => {
       const { orderId } = c.req.valid("query");
 
-      await serializable(async (tx) => {
-        await requireAccessToOrder(tx, c.env.locals.user!, orderId);
-      });
+      await serializable(() => requireAccessToOrder(orderId));
 
       await next();
     },
     async (c) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
       const { name, orderId } = c.req.valid("query");
 
       const signedUrl = await getS3SignedGetUrl({
         Bucket: Resource.Storage.documents.bucket,
-        Key: buildS3ObjectKey(orgId, orderId, name),
+        Key: buildS3ObjectKey(org.id, orderId, name),
       });
 
       return c.json({ signedUrl });
@@ -97,19 +97,17 @@ export default new Hono<HonoEnv>()
     async (c, next) => {
       const { orderId } = c.req.valid("query");
 
-      await serializable((tx) =>
-        requireAccessToOrder(tx, c.env.locals.user!, orderId),
-      );
+      await serializable(() => requireAccessToOrder(orderId));
 
       await next();
     },
     async (c) => {
-      const orgId = c.env.locals.org!.id;
+      const { org } = useAuthenticated();
       const { name, orderId } = c.req.valid("query");
 
       await deleteS3Object({
         Bucket: Resource.Storage.documents.bucket,
-        Key: buildS3ObjectKey(orgId, orderId, name),
+        Key: buildS3ObjectKey(org.id, orderId, name),
       });
 
       return c.body(null, 204);
