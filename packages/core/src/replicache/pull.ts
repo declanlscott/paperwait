@@ -1,26 +1,13 @@
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 
 import { Announcement } from "../announcement/announcement.sql";
 import { useAuthenticated } from "../auth";
 import { Comment } from "../comment/comment.sql";
-import { getClientGroup, getData } from "../data/get";
-import {
-  searchAnnouncements,
-  searchClients,
-  searchComments,
-  searchOrders,
-  searchOrganizations,
-  searchPapercutAccountCustomerAuthorizations,
-  searchPapercutAccountManagerAuthorizations,
-  searchPapercutAccounts,
-  searchProducts,
-  searchRooms,
-  searchUsers,
-} from "../data/search";
+import { getClientGroup } from "../data/get";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
 import { Order } from "../order/order.sql";
 import { Organization } from "../organization/organization.sql";
-import { serializable } from "../orm/transaction";
+import { serializable, useTransaction } from "../orm/transaction";
 import {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -30,8 +17,17 @@ import { Product } from "../product/product.sql";
 import { Room } from "../room/room.sql";
 import { User } from "../user/user.sql";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
-import { ReplicacheClientGroup, ReplicacheClientView } from "./replicache.sql";
+import {
+  syncedTableMetadataQueryBuilderFactory,
+  syncedTables,
+} from "./metadata";
+import {
+  ReplicacheClient,
+  ReplicacheClientGroup,
+  ReplicacheClientView,
+} from "./replicache.sql";
 
+import type { PgSelect } from "drizzle-orm/pg-core";
 import type {
   ClientStateNotFoundResponse,
   PatchOperation,
@@ -39,12 +35,16 @@ import type {
   PullResponseOKV1,
   VersionNotSupportedResponse,
 } from "replicache";
-import type { DomainsMetadata, Metadata } from "../data/search";
-import type { OmitTimestamps } from "../types/drizzle";
 import type {
   ClientViewRecordDiff,
   ClientViewRecordEntries,
 } from "./client-view-record";
+import type {
+  Metadata,
+  SyncedTable,
+  SyncedTableMetadata,
+  SyncedTableName,
+} from "./metadata";
 
 type PullResult =
   | {
@@ -58,7 +58,7 @@ type PullResult =
 
 // Implements pull algorithm from Replicache docs (modified)
 // https://doc.replicache.dev/strategies/row-version#pull
-// Some steps are out of order due to what is included in the transaction
+// Some steps may be out of numerical order due to what is included in the transaction
 export async function pull(pullRequest: PullRequest): Promise<PullResult> {
   const { user } = useAuthenticated();
 
@@ -93,7 +93,6 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
               eq(ReplicacheClientView.orgId, user.orgId),
             ),
           )
-          .execute()
           .then((rows) => rows.at(0))
       : undefined;
 
@@ -107,12 +106,43 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
     if (baseClientGroup.userId !== user.id)
       throw new UnauthorizedError("User does not own client group");
 
-    // 6: Read all domain data, just ids and versions
-    // 7: Read all clients in the client group
-    const metadata = await getMetadata(baseClientGroup);
+    const [syncedTablesMetadata, clientsMetadata] = await Promise.all([
+      // 6: Read all id/version pairs from the database that should be in the client view
+      Promise.all(
+        syncedTables.map(async (table) => {
+          const name = table._.name;
+
+          const metadata = await syncedTableMetadataQueryBuilderFactory()[name](
+            tx
+              .select({
+                id: table.id,
+                rowVersion: sql<number>`"${name}"."xmin"`,
+              })
+              .from(table)
+              .$dynamic(),
+          );
+
+          return [name, metadata] as const satisfies SyncedTableMetadata;
+        }),
+      ),
+      // 7: Read all clients in the client group
+      tx
+        .select({
+          id: ReplicacheClient.id,
+          rowVersion: ReplicacheClient.lastMutationId,
+        })
+        .from(ReplicacheClient)
+        .where(eq(ReplicacheClient.clientGroupId, baseClientGroup.id)),
+    ]);
 
     // 8: Build next client view record
-    const nextCvr = buildCvr({ variant: "next", metadata });
+    const nextCvr = buildCvr({
+      variant: "next",
+      metadata: {
+        syncedTables: syncedTablesMetadata,
+        clients: clientsMetadata,
+      },
+    });
 
     // 9: Calculate diff
     const diff = diffCvr(baseCvr, nextCvr);
@@ -120,15 +150,18 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
     // 10: If diff is empty, return no-op
     if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
-    // 11: Get entities
-    const entities = await getEntities(diff);
+    // 11: Read only the data that changed
+    const data = await readData(diff);
 
     // 12: Changed clients - no need to re-read clients from database,
     // we already have their versions.
-    const clients = diff.client.puts.reduce((clients, clientId) => {
-      clients[clientId] = nextCvr.client[clientId];
-      return clients;
-    }, {} as ClientViewRecordEntries);
+    const clients = diff[ReplicacheClient._.name].puts.reduce(
+      (clients, clientId) => {
+        clients[clientId] = nextCvr[ReplicacheClient._.name][clientId];
+        return clients;
+      },
+      {} as ClientViewRecordEntries,
+    );
 
     // 13: new client view record version
     const nextCvrVersion = Math.max(order, baseClientGroup.cvrVersion) + 1;
@@ -173,7 +206,7 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
 
     // 15: Commit transaction
     return {
-      entities,
+      data,
       clients,
       prevCvr: prevClientView?.record,
       nextCvr,
@@ -207,173 +240,151 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
   };
 }
 
-async function getMetadata(clientGroup: OmitTimestamps<ReplicacheClientGroup>) {
-  const [
-    organizationsMetadata,
-    usersMetadata,
-    papercutAccountsMetadata,
-    papercutAccountCustomerAuthorizationsMetadata,
-    papercutAccountManagerAuthorizationsMetadata,
-    roomsMetadata,
-    announcementsMetadata,
-    productsMetadata,
-    ordersMetadata,
-    commentsMetadata,
-    clientsMetadata,
-  ] = await Promise.all([
-    searchOrganizations(),
-    searchUsers(),
-    searchPapercutAccounts(),
-    searchPapercutAccountCustomerAuthorizations(),
-    searchPapercutAccountManagerAuthorizations(),
-    searchRooms(),
-    searchAnnouncements(),
-    searchProducts(),
-    searchOrders(),
-    searchComments(),
-    searchClients(clientGroup.id),
-  ]);
-
-  return {
-    organization: organizationsMetadata,
-    user: usersMetadata,
-    papercutAccount: papercutAccountsMetadata,
-    papercutAccountCustomerAuthorization:
-      papercutAccountCustomerAuthorizationsMetadata,
-    papercutAccountManagerAuthorization:
-      papercutAccountManagerAuthorizationsMetadata,
-    room: roomsMetadata,
-    announcement: announcementsMetadata,
-    product: productsMetadata,
-    order: ordersMetadata,
-    comment: commentsMetadata,
-    client: clientsMetadata,
-  } satisfies DomainsMetadata;
-}
-
-type PutsDels<TEntity> = {
-  puts: Array<TEntity>;
+type PutsDels<TData> = {
+  puts: Array<TData>;
   dels: Array<Metadata["id"]>;
 };
 
-type Entities = {
-  organization: PutsDels<Organization>;
-  user: PutsDels<User>;
-  papercutAccount: PutsDels<PapercutAccount>;
-  papercutAccountCustomerAuthorization: PutsDels<PapercutAccountCustomerAuthorization>;
-  papercutAccountManagerAuthorization: PutsDels<PapercutAccountManagerAuthorization>;
-  room: PutsDels<Room>;
-  announcement: PutsDels<Announcement>;
-  product: PutsDels<Product>;
-  order: PutsDels<Order>;
-  comment: PutsDels<Comment>;
-};
+// type Entities = {
+//   organization: PutsDels<Organization>;
+//   user: PutsDels<User>;
+//   papercutAccount: PutsDels<PapercutAccount>;
+//   papercutAccountCustomerAuthorization: PutsDels<PapercutAccountCustomerAuthorization>;
+//   papercutAccountManagerAuthorization: PutsDels<PapercutAccountManagerAuthorization>;
+//   room: PutsDels<Room>;
+//   announcement: PutsDels<Announcement>;
+//   product: PutsDels<Product>;
+//   order: PutsDels<Order>;
+//   comment: PutsDels<Comment>;
+// };
 
-async function getEntities(diff: ClientViewRecordDiff) {
-  const [
-    organizations,
-    users,
-    papercutAccounts,
-    papercutAccountCustomerAuthorizations,
-    papercutAccountManagerAuthorizations,
-    rooms,
-    announcements,
-    products,
-    orders,
-    comments,
-  ] = await Promise.all([
-    getData(
-      Organization,
-      { orgId: Organization.id, id: Organization.id },
-      diff.organization.puts,
-    ),
-    getData(User, { orgId: User.orgId, id: User.id }, diff.user.puts),
-    getData(
-      PapercutAccount,
-      { orgId: PapercutAccount.orgId, id: PapercutAccount.id },
-      diff.papercutAccount.puts,
-    ),
-    getData(
-      PapercutAccountCustomerAuthorization,
-      {
-        orgId: PapercutAccountCustomerAuthorization.orgId,
-        id: PapercutAccountCustomerAuthorization.id,
-      },
-      diff.papercutAccountCustomerAuthorization.puts,
-    ),
-    getData(
-      PapercutAccountManagerAuthorization,
-      {
-        orgId: PapercutAccountManagerAuthorization.orgId,
-        id: PapercutAccountManagerAuthorization.id,
-      },
-      diff.papercutAccountManagerAuthorization.puts,
-    ),
-    getData(Room, { orgId: Room.orgId, id: Room.id }, diff.room.puts),
-    getData(
-      Announcement,
-      {
-        orgId: Announcement.orgId,
-        id: Announcement.id,
-      },
-      diff.announcement.puts,
-    ),
-    getData(
-      Product,
-      { orgId: Product.orgId, id: Product.id },
-      diff.product.puts,
-    ),
-    getData(Order, { orgId: Order.orgId, id: Order.id }, diff.order.puts),
-    getData(
-      Comment,
-      { orgId: Comment.orgId, id: Comment.id },
-      diff.comment.puts,
-    ),
-  ]);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SyncedTableData<TTable extends SyncedTable = any> = [
+  TTable["_"]["name"],
+  PutsDels<TTable["$inferSelect"]>,
+];
+
+type SyncedTableDataQueryBuilderFactory = Record<
+  SyncedTableName,
+  <TSelect extends PgSelect>(
+    select: TSelect,
+    ids: Array<Metadata["id"]>,
+  ) => TSelect
+>;
+
+function syncedTableDataQueryBuilderFactor() {
+  const { org } = useAuthenticated();
 
   return {
-    organization: { puts: organizations, dels: diff.organization.dels },
-    user: { puts: users, dels: diff.user.dels },
-    papercutAccount: {
-      puts: papercutAccounts,
-      dels: diff.papercutAccount.dels,
-    },
-    papercutAccountCustomerAuthorization: {
-      puts: papercutAccountCustomerAuthorizations,
-      dels: diff.papercutAccountCustomerAuthorization.dels,
-    },
-    papercutAccountManagerAuthorization: {
-      puts: papercutAccountManagerAuthorizations,
-      dels: diff.papercutAccountManagerAuthorization.dels,
-    },
-    room: { puts: rooms, dels: diff.room.dels },
-    announcement: { puts: announcements, dels: diff.announcement.dels },
-    product: { puts: products, dels: diff.product.dels },
-    order: { puts: orders, dels: diff.order.dels },
-    comment: { puts: comments, dels: diff.comment.dels },
-  } satisfies Entities;
+    announcement: (select, ids) =>
+      select.where(
+        and(
+          inArray(Announcement.id, ids as Array<Announcement["id"]>),
+          eq(Announcement.orgId, org.id),
+        ),
+      ),
+    comment: (select, ids) =>
+      select.where(
+        and(
+          inArray(Comment.id, ids as Array<Comment["id"]>),
+          eq(Comment.orgId, org.id),
+        ),
+      ),
+    order: (select, ids) =>
+      select.where(
+        and(
+          inArray(Order.id, ids as Array<Order["id"]>),
+          eq(Order.orgId, org.id),
+        ),
+      ),
+    organization: (select, ids) =>
+      select.where(
+        and(
+          inArray(Organization.id, ids as Array<Organization["id"]>),
+          eq(Organization.id, org.id),
+        ),
+      ),
+    papercut_account: (select, ids) =>
+      select.where(
+        and(
+          inArray(PapercutAccount.id, ids as Array<PapercutAccount["id"]>),
+          eq(PapercutAccount.orgId, org.id),
+        ),
+      ),
+    papercut_account_customer_authorization: (select, ids) =>
+      select.where(
+        and(
+          inArray(
+            PapercutAccountCustomerAuthorization.id,
+            ids as Array<PapercutAccountCustomerAuthorization["id"]>,
+          ),
+          eq(PapercutAccountCustomerAuthorization.orgId, org.id),
+        ),
+      ),
+    papercut_account_manager_authorization: (select, ids) =>
+      select.where(
+        and(
+          inArray(
+            PapercutAccountManagerAuthorization.id,
+            ids as Array<PapercutAccountManagerAuthorization["id"]>,
+          ),
+          eq(PapercutAccountManagerAuthorization.orgId, org.id),
+        ),
+      ),
+    product: (select, ids) =>
+      select.where(
+        and(
+          inArray(Product.id, ids as Array<Product["id"]>),
+          eq(Product.orgId, org.id),
+        ),
+      ),
+    room: (select, ids) =>
+      select.where(
+        and(inArray(Room.id, ids as Array<Room["id"]>), eq(Room.orgId, org.id)),
+      ),
+    user: (select, ids) =>
+      select.where(
+        and(inArray(User.id, ids as Array<User["id"]>), eq(User.orgId, org.id)),
+      ),
+  } satisfies SyncedTableDataQueryBuilderFactory;
 }
 
-function buildPatch(entities: Entities, clear: boolean) {
-  const patch: Array<PatchOperation> = [];
+const readData = (diff: ClientViewRecordDiff) =>
+  useTransaction((tx) =>
+    Promise.all(
+      syncedTables.map(async (table) => {
+        const name = table._.name;
 
-  if (clear) patch.push({ op: "clear" });
+        const data = await syncedTableDataQueryBuilderFactor()[name](
+          tx.select().from(table).$dynamic(),
+          diff[name].puts,
+        );
 
-  patch.push(
-    ...Object.entries(entities).reduce((patch, [name, { puts, dels }]) => {
-      dels.forEach((id) => patch.push({ op: "del", key: `${name}/${id}` }));
-
-      puts.forEach((entity) => {
-        patch.push({
-          op: "put",
-          key: `${name}/${entity.id}`,
-          value: entity,
-        });
-      });
-
-      return patch;
-    }, [] as Array<PatchOperation>),
+        return [name, data] as const;
+      }),
+    ),
   );
 
-  return patch;
-}
+// function buildPatch(entities: Entities, clear: boolean) {
+//   const patch: Array<PatchOperation> = [];
+
+//   if (clear) patch.push({ op: "clear" });
+
+//   patch.push(
+//     ...Object.entries(entities).reduce((patch, [name, { puts, dels }]) => {
+//       dels.forEach((id) => patch.push({ op: "del", key: `${name}/${id}` }));
+
+//       puts.forEach((entity) => {
+//         patch.push({
+//           op: "put",
+//           key: `${name}/${entity.id}`,
+//           value: entity,
+//         });
+//       });
+
+//       return patch;
+//     }, [] as Array<PatchOperation>),
+//   );
+
+//   return patch;
+// }
