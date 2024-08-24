@@ -1,27 +1,37 @@
 import * as R from "remeda";
 
 import { InternalServerError } from "../errors/http";
-import { syncedTables } from "./metadata";
+import { syncedTables } from "./data";
 import { ReplicacheClient } from "./replicache.sql";
 
-import type { Metadata, SyncedTableMetadata, TableName } from "./metadata";
+import type { Metadata, Table, TableMetadata, TableName } from "./data";
 
-export type ClientViewRecord = Record<TableName, ClientViewRecordEntries>;
-export type ClientViewRecordEntries = Record<
-  Metadata["id"],
-  Metadata["rowVersion"]
+export type ClientViewRecord = {
+  [Name in TableName]: ClientViewRecordEntries<
+    Extract<Table, { _: { name: Name } }>
+  >;
+};
+export type ClientViewRecordEntries<TTable extends Table> = Record<
+  Metadata<TTable>["id"],
+  Metadata<TTable>["rowVersion"]
 >;
-export type ClientViewRecordDiff = Record<TableName, ClientViewRecordDiffEntry>;
-export type ClientViewRecordDiffEntry = {
-  puts: Array<Metadata["id"]>;
-  dels: Array<Metadata["id"]>;
+export type ClientViewRecordDiff = {
+  [Name in TableName]: ClientViewRecordDiffEntry<
+    Extract<Table, { _: { name: Name } }>
+  >;
+};
+export type ClientViewRecordDiffEntry<TTable extends Table> = {
+  puts: Array<Metadata<TTable>["id"]>;
+  dels: Array<Metadata<TTable>["id"]>;
 };
 
-export const buildCvrEntries = (tableMetadata: Array<Metadata>) =>
+export const buildCvrEntries = <TTable extends Table>(
+  tableMetadata: Array<Metadata<TTable>>,
+) =>
   tableMetadata.reduce((entries, { id, rowVersion }) => {
     entries[id] = rowVersion;
     return entries;
-  }, {} as ClientViewRecordEntries);
+  }, {} as ClientViewRecordEntries<TTable>);
 
 export function buildCvr(
   args:
@@ -31,10 +41,7 @@ export function buildCvr(
       }
     | {
         variant: "next";
-        metadata: {
-          clients: Array<Metadata>;
-          syncedTables: Array<SyncedTableMetadata>;
-        };
+        metadata: Array<TableMetadata>;
       },
 ) {
   const variant = args.variant;
@@ -52,15 +59,10 @@ export function buildCvr(
         )
       );
     case "next":
-      return args.metadata.syncedTables.reduce(
-        (nextCvr, [name, metadata]) => {
-          nextCvr[name] = buildCvrEntries(metadata);
-          return nextCvr;
-        },
-        {
-          [ReplicacheClient._.name]: buildCvrEntries(args.metadata.clients),
-        } as ClientViewRecord,
-      );
+      return args.metadata.reduce((nextCvr, [name, metadata]) => {
+        nextCvr[name] = buildCvrEntries(metadata);
+        return nextCvr;
+      }, {} as ClientViewRecord);
     default:
       variant satisfies never;
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

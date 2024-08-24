@@ -8,14 +8,14 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
-import { id, timestamps } from "../orm/columns";
+import { bigintString, id, timestamps } from "../orm/columns";
 import { orgIdColumns, orgTable } from "../orm/tables";
 import { User } from "../user/user.sql";
 
 export const PapercutAccount = pgTable(
   "papercut_account",
   {
-    id: bigint("id", { mode: "number" }).notNull(),
+    id: bigintString("id").notNull(),
     orgId: orgIdColumns.orgId,
     name: text("name").notNull(),
     ...timestamps,
