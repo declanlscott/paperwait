@@ -90,7 +90,7 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
     if (baseClientGroup.userId !== user.id)
       throw new UnauthorizedError("User does not own client group");
 
-    const metadata = (await Promise.all(
+    const metadata = await Promise.all(
       tables.map(async (table) => {
         const name = table._.name;
 
@@ -104,7 +104,7 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
             .from(ReplicacheClient)
             .where(eq(ReplicacheClient.clientGroupId, baseClientGroup.id));
 
-          return [name, metadata];
+          return [name, metadata] satisfies TableMetadata;
         }
 
         // 6: Read all id/version pairs from the database that should be in the client view
@@ -118,9 +118,9 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
             .$dynamic(),
         );
 
-        return [name, metadata];
+        return [name, metadata] satisfies TableMetadata;
       }),
-    )) satisfies Array<TableMetadata>;
+    );
 
     // 8: Build next client view record
     const nextCvr = buildCvr({ variant: "next", metadata });
