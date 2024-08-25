@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { ProductStatus } from "../product";
+import { productStatuses } from "../drizzle/enums";
 import { isUniqueByName } from "../utils";
 
 export const Cost = v.pipe(
@@ -191,7 +191,7 @@ export type ProductAttributesV1 = v.InferOutput<typeof ProductAttributesV1>;
 export const ProductConfigurationV1 = v.object({
   version: v.literal(1),
   image: v.string(),
-  productVisibility: v.picklist(ProductStatus.enumValues),
+  productVisibility: v.picklist(productStatuses),
   orderAttachments: v.optional(
     v.object({
       fileUploadEnabled: v.boolean(),

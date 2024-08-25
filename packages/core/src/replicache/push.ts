@@ -1,13 +1,16 @@
-import { eq, sql } from "drizzle-orm";
-
-import { useAuthenticated } from "../auth";
+import {
+  clientFromId,
+  clientGroupFromId,
+  poke,
+  putClient,
+  putClientGroup,
+} from ".";
+import { useAuthenticated } from "../auth/context";
+import { serializable } from "../drizzle/transaction";
 import { BadRequestError } from "../errors/http";
-import { serializable } from "../orm/transaction";
 import { Mutation } from "../schemas/mutators";
-import { mutators } from "../server-authority/mutators";
-import { fn } from "../valibot";
-import { poke } from "./poke";
-import { ReplicacheClient, ReplicacheClientGroup } from "./replicache.sql";
+import { fn } from "../utils/fn";
+import { mutators } from "./server-authority";
 
 import type {
   ClientStateNotFoundResponse,
@@ -15,7 +18,8 @@ import type {
   PushRequest,
   VersionNotSupportedResponse,
 } from "replicache";
-import type { OmitTimestamps } from "../types/drizzle";
+import type { OmitTimestamps } from "../drizzle/columns";
+import type { ReplicacheClient, ReplicacheClientGroup } from "./sql";
 
 type PushResult =
   | { type: "success" }
@@ -63,35 +67,20 @@ async function processMutation(
   errorMode = false,
 ) {
   // 2: Begin transaction
-  return await serializable(async (tx) => {
+  return await serializable(async () => {
     const { user } = useAuthenticated();
 
     let channels: Array<string> = [];
 
     // 3: Get client group
-    const clientGroup = await tx
-      .select({
-        id: ReplicacheClientGroup.id,
-        orgId: ReplicacheClientGroup.orgId,
-        cvrVersion: ReplicacheClientGroup.cvrVersion,
-        userId: ReplicacheClientGroup.userId,
-      })
-      .from(ReplicacheClientGroup)
-      .where(eq(ReplicacheClientGroup.id, clientGroupId))
-      .execute()
-      .then((rows): OmitTimestamps<ReplicacheClientGroup> => {
-        const result = rows.at(0);
-
-        if (!result)
-          return {
-            id: clientGroupId,
-            orgId: user.orgId,
-            cvrVersion: 0,
-            userId: user.id,
-          };
-
-        return result;
-      });
+    const clientGroup =
+      (await clientGroupFromId(clientGroupId)) ??
+      ({
+        id: clientGroupId,
+        orgId: user.orgId,
+        cvrVersion: 0,
+        userId: user.id,
+      } satisfies OmitTimestamps<ReplicacheClientGroup>);
 
     // 4: Verify requesting user owns the client group
     if (clientGroup.userId !== user.id)
@@ -100,29 +89,14 @@ async function processMutation(
       );
 
     // 5: Get client
-    const client = await tx
-      .select({
-        id: ReplicacheClient.id,
-        orgId: ReplicacheClient.orgId,
-        clientGroupId: ReplicacheClient.clientGroupId,
-        lastMutationId: ReplicacheClient.lastMutationId,
-      })
-      .from(ReplicacheClient)
-      .where(eq(ReplicacheClient.id, mutation.clientID))
-      .execute()
-      .then((rows): OmitTimestamps<ReplicacheClient> => {
-        const result = rows.at(0);
-
-        if (!result)
-          return {
-            id: mutation.clientID,
-            orgId: user.orgId,
-            clientGroupId: clientGroupId,
-            lastMutationId: 0,
-          };
-
-        return result;
-      });
+    const client =
+      (await clientFromId(mutation.clientID)) ??
+      ({
+        id: mutation.clientID,
+        orgId: user.orgId,
+        clientGroupId: clientGroupId,
+        lastMutationId: 0,
+      } satisfies OmitTimestamps<ReplicacheClient>);
 
     // 6: Verify requesting client group owns the client
     if (client.clientGroupId !== clientGroupId)
@@ -173,22 +147,10 @@ async function processMutation(
 
     await Promise.all([
       // 11. Upsert client group
-      await tx
-        .insert(ReplicacheClientGroup)
-        .values(clientGroup)
-        .onConflictDoUpdate({
-          target: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
-          set: { ...clientGroup, updatedAt: sql`now()` },
-        }),
+      await putClientGroup(clientGroup),
 
       // 12. Upsert client
-      await tx
-        .insert(ReplicacheClient)
-        .values(nextClient)
-        .onConflictDoUpdate({
-          target: [ReplicacheClient.id, ReplicacheClient.orgId],
-          set: { ...nextClient, updatedAt: sql`now()` },
-        }),
+      await putClient(nextClient),
     ]);
 
     const end = Date.now();

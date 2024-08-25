@@ -8,8 +8,8 @@ import {
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import { AWS_REGION } from "../constants";
-import { NotFoundError } from "../errors";
+import { AWS_REGION } from "../constants/misc";
+import { NotFoundError } from "../errors/http";
 
 import type {
   DeleteObjectCommandInput,

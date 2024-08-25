@@ -1,6 +1,6 @@
-import { createContext } from "../context";
+import { createContext } from "../utils/context";
 
-import type { Authenticated, Unauthenticated } from "./types";
+import type { Authenticated, Unauthenticated } from ".";
 
 export type AuthContext = Authenticated | Unauthenticated;
 export const AuthContext = createContext<AuthContext>();

@@ -1,0 +1,30 @@
+import { foreignKey, index, json, varchar } from "drizzle-orm/pg-core";
+
+import { VARCHAR_LENGTH } from "../constants/db";
+import { id } from "../drizzle/columns";
+import { productStatus } from "../drizzle/enums";
+import { orgTable } from "../drizzle/tables";
+import { rooms } from "../room/sql";
+
+import type { ProductConfiguration } from "../schemas/product-configuration";
+
+export const products = orgTable(
+  "products",
+  {
+    name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
+    status: productStatus("status").notNull(),
+    roomId: id("room_id").notNull(),
+    config: json("config").$type<ProductConfiguration>().notNull(),
+  },
+  (table) => ({
+    roomReference: foreignKey({
+      columns: [table.roomId, table.orgId],
+      foreignColumns: [rooms.id, rooms.orgId],
+      name: "room_fk",
+    }),
+    statusIndex: index("status_idx").on(table.status),
+    roomIdIndex: index("room_id_idx").on(table.roomId),
+  }),
+);
+
+export type Product = typeof products.$inferSelect;

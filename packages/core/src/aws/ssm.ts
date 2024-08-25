@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-ssm";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
-import { AWS_REGION } from "../constants";
+import { AWS_REGION } from "../constants/misc";
 import { ConflictError, NotFoundError } from "../errors/http";
 
 import type {

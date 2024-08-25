@@ -2,7 +2,7 @@ import * as R from "remeda";
 
 import { InternalServerError } from "../errors/http";
 import { syncedTables } from "./data";
-import { ReplicacheClient } from "./replicache.sql";
+import { replicacheClients } from "./sql";
 
 import type { Metadata, Table, TableMetadata, TableName } from "./data";
 
@@ -55,7 +55,7 @@ export function buildCvr(
             baseCvr[table._.name] = {};
             return baseCvr;
           },
-          { [ReplicacheClient._.name]: {} } as ClientViewRecord,
+          { [replicacheClients._.name]: {} } as ClientViewRecord,
         )
       );
     case "next":

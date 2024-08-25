@@ -1,9 +1,10 @@
-import { createContext } from "../context";
+import { createContext } from "../utils/context";
 
-import type { OAuth2ProviderData } from "./types";
+import type { OmitTimestamps } from "../drizzle/columns";
+import type { OAuth2Provider } from "./sql";
 
 export type OAuth2Context = {
-  provider: OAuth2ProviderData;
+  provider: OmitTimestamps<OAuth2Provider>;
 };
 export const OAuth2Context = createContext<OAuth2Context>();
 

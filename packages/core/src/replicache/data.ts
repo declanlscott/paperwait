@@ -1,35 +1,39 @@
-import { and, eq, inArray } from "drizzle-orm";
-
-import { Announcement } from "../announcement/announcement.sql";
-import { useAuthenticated } from "../auth/context";
-import { Comment } from "../comment/comment.sql";
-import { Order } from "../order/order.sql";
-import { Organization } from "../organization/organization.sql";
+import { clientMetadataFromGroupId } from ".";
+import * as Announcement from "../announcement";
+import { announcements } from "../announcement/sql";
+import * as Comment from "../comment";
+import { comments } from "../comment/sql";
+import * as Order from "../order";
+import { orders } from "../order/sql";
+import * as Organization from "../organization";
+import { organizations } from "../organization/sql";
+import * as Papercut from "../papercut";
 import {
-  PapercutAccount,
-  PapercutAccountCustomerAuthorization,
-  PapercutAccountManagerAuthorization,
-} from "../papercut/account.sql";
-import { Product } from "../product/product.sql";
-import { Room } from "../room/room.sql";
-import { User } from "../user/user.sql";
-import { ReplicacheClient } from "./replicache.sql";
-
-import type { PgSelect } from "drizzle-orm/pg-core";
+  papercutAccountCustomerAuthorizations,
+  papercutAccountManagerAuthorizations,
+  papercutAccounts,
+} from "../papercut/sql";
+import * as Product from "../product";
+import { products } from "../product/sql";
+import * as Room from "../room";
+import { rooms } from "../room/sql";
+import * as User from "../user";
+import { users } from "../user/sql";
+import { replicacheClients } from "./sql";
 
 export const syncedTables = [
-  Announcement,
-  Comment,
-  Order,
-  Organization,
-  PapercutAccount,
-  PapercutAccountCustomerAuthorization,
-  PapercutAccountManagerAuthorization,
-  Product,
-  Room,
-  User,
+  announcements,
+  comments,
+  orders,
+  organizations,
+  papercutAccounts,
+  papercutAccountCustomerAuthorizations,
+  papercutAccountManagerAuthorizations,
+  products,
+  rooms,
+  users,
 ];
-export const nonSyncedTables = [ReplicacheClient];
+export const nonSyncedTables = [replicacheClients];
 export const tables = [...syncedTables, ...nonSyncedTables];
 
 export type SyncedTable = (typeof syncedTables)[number];
@@ -60,85 +64,55 @@ export type TableMetadata = [
   Array<Metadata<Extract<Table, { _: { name: TableName } }>>>,
 ];
 
-export type MetadataQueryFactory = Record<
-  SyncedTableName,
-  <TSelect extends PgSelect>(select: TSelect) => TSelect
->;
+export type MetadataQueryFactory = {
+  [Name in TableName]: (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...args: Array<any>
+  ) => Promise<Array<Metadata<Extract<Table, { _: { name: Name } }>>>>;
+};
 
-export function metadataQueryFactory() {
-  const { org } = useAuthenticated();
-
-  return {
-    announcement: (select) => select.where(eq(Announcement.orgId, org.id)),
-    comment: (select) => select.where(eq(Comment.orgId, org.id)),
-    order: (select) => select.where(eq(Order.orgId, org.id)),
-    organization: (select) => select.where(eq(Organization.id, org.id)),
-    papercut_account: (select) =>
-      select.where(eq(PapercutAccount.orgId, org.id)),
-    papercut_account_customer_authorization: (select) =>
-      select.where(eq(PapercutAccountCustomerAuthorization.orgId, org.id)),
-    papercut_account_manager_authorization: (select) =>
-      select.where(eq(PapercutAccountManagerAuthorization.orgId, org.id)),
-    product: (select) => select.where(eq(Product.orgId, org.id)),
-    room: (select) => select.where(eq(Room.orgId, org.id)),
-    user: (select) => select.where(eq(User.orgId, org.id)),
-  } satisfies MetadataQueryFactory;
-}
+export const metadataQueryFactory = {
+  announcements: Announcement.metadata,
+  comments: Comment.metadata,
+  orders: Order.metadata,
+  organizations: Organization.metadata,
+  papercut_accounts: Papercut.accountsMetadata,
+  papercut_account_customer_authorizations:
+    Papercut.accountCustomerAuthorizationsMetadata,
+  papercut_account_manager_authorizations:
+    Papercut.accountManagerAuthorizationsMetadata,
+  products: Product.metadata,
+  replicache_clients: clientMetadataFromGroupId,
+  rooms: Room.metadata,
+  users: User.metadata,
+} satisfies MetadataQueryFactory;
 
 export type DataQueryFactory = {
-  [Name in SyncedTableName]: <TSelect extends PgSelect>(
-    select: TSelect,
+  [Name in SyncedTableName]: (
     ids: Array<
       Extract<SyncedTable, { _: { name: Name } }>["$inferSelect"]["id"]
     >,
-  ) => TSelect;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...args: Array<any>
+  ) => Promise<
+    Array<Extract<SyncedTable, { _: { name: Name } }>["$inferSelect"]>
+  >;
 };
 
-export function dataQueryFactory() {
-  const { org } = useAuthenticated();
-
-  return {
-    announcement: (select, ids) =>
-      select.where(
-        and(inArray(Announcement.id, ids), eq(Announcement.orgId, org.id)),
-      ),
-    comment: (select, ids) =>
-      select.where(and(inArray(Comment.id, ids), eq(Comment.orgId, org.id))),
-    order: (select, ids) =>
-      select.where(and(inArray(Order.id, ids), eq(Order.orgId, org.id))),
-    organization: (select, ids) =>
-      select.where(
-        and(inArray(Organization.id, ids), eq(Organization.id, org.id)),
-      ),
-    papercut_account: (select, ids) =>
-      select.where(
-        and(
-          inArray(PapercutAccount.id, ids),
-          eq(PapercutAccount.orgId, org.id),
-        ),
-      ),
-    papercut_account_customer_authorization: (select, ids) =>
-      select.where(
-        and(
-          inArray(PapercutAccountCustomerAuthorization.id, ids),
-          eq(PapercutAccountCustomerAuthorization.orgId, org.id),
-        ),
-      ),
-    papercut_account_manager_authorization: (select, ids) =>
-      select.where(
-        and(
-          inArray(PapercutAccountManagerAuthorization.id, ids),
-          eq(PapercutAccountManagerAuthorization.orgId, org.id),
-        ),
-      ),
-    product: (select, ids) =>
-      select.where(and(inArray(Product.id, ids), eq(Product.orgId, org.id))),
-    room: (select, ids) =>
-      select.where(and(inArray(Room.id, ids), eq(Room.orgId, org.id))),
-    user: (select, ids) =>
-      select.where(and(inArray(User.id, ids), eq(User.orgId, org.id))),
-  } satisfies DataQueryFactory;
-}
+export const dataQueryFactory = {
+  announcements: Announcement.fromIds,
+  comments: Comment.fromIds,
+  orders: Order.fromIds,
+  organizations: Organization.fromId,
+  papercut_accounts: Papercut.accountsFromIds,
+  papercut_account_customer_authorizations:
+    Papercut.accountCustomerAuthorizationsFromIds,
+  papercut_account_manager_authorizations:
+    Papercut.accountManagerAuthorizationsFromIds,
+  products: Product.fromIds,
+  rooms: Room.fromIds,
+  users: User.fromIds,
+} satisfies DataQueryFactory;
 
 export type PutsDels<TTable extends SyncedTable> = {
   puts: Array<TTable["$inferSelect"]>;

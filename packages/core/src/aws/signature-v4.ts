@@ -2,7 +2,7 @@ import { Sha256 } from "@aws-crypto/sha256-js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { SignatureV4 } from "@smithy/signature-v4";
 
-import { AWS_REGION } from "../constants";
+import { AWS_REGION } from "../constants/misc";
 
 import type { SignatureV4Init } from "@smithy/signature-v4";
 

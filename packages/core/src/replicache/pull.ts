@@ -1,9 +1,9 @@
-import { and, eq, getTableColumns, lt, sql } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 
-import { useAuthenticated } from "../auth";
-import { getClientGroup } from "../data/get";
+import { clientGroupFromId } from ".";
+import { useAuthenticated } from "../auth/context";
+import { serializable } from "../drizzle/transaction";
 import { BadRequestError, UnauthorizedError } from "../errors/http";
-import { serializable, useTransaction } from "../orm/transaction";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import {
   dataQueryFactory,
@@ -12,10 +12,10 @@ import {
   tables,
 } from "./data";
 import {
-  ReplicacheClient,
-  ReplicacheClientGroup,
-  ReplicacheClientView,
-} from "./replicache.sql";
+  replicacheClientGroups,
+  replicacheClients,
+  replicacheClientViews,
+} from "./sql";
 
 import type {
   ClientStateNotFoundResponse,
@@ -24,19 +24,35 @@ import type {
   PullResponseOKV1,
   VersionNotSupportedResponse,
 } from "replicache";
+import type { OmitTimestamps } from "../drizzle/columns";
 import type {
-  ClientViewRecordDiff,
+  ClientViewRecord,
   ClientViewRecordEntries,
 } from "./client-view-record";
 import type { TableData, TableMetadata } from "./data";
+import type { ReplicacheClientGroup } from "./sql";
+
+type PullTransactionResult = {
+  data: Array<TableData>;
+  clients: ClientViewRecordEntries<typeof replicacheClients>;
+  cvr: {
+    prev: {
+      value?: ClientViewRecord;
+    };
+    next: {
+      value: ClientViewRecord;
+      version: number;
+    };
+  };
+} | null;
 
 type PullResult =
   | {
-      type: "success";
+      variant: "success";
       response: PullResponseOKV1;
     }
   | {
-      type: "error";
+      variant: "error";
       response: ClientStateNotFoundResponse | VersionNotSupportedResponse;
     };
 
@@ -48,7 +64,7 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
 
   if (pullRequest.pullVersion !== 1)
     return {
-      type: "error",
+      variant: "error",
       response: {
         error: "VersionNotSupported",
         versionType: "pull",
@@ -64,17 +80,20 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
   if (isNaN(order)) throw new BadRequestError("Cookie order is not a number");
 
   // 3: Begin transaction
-  const result = await serializable(async (tx) => {
+  const result: PullTransactionResult = await serializable(async (tx) => {
     // 1: Fetch previous client view record
     const prevClientView = pullRequest.cookie
       ? await tx
-          .select({ record: ReplicacheClientView.record })
-          .from(ReplicacheClientView)
+          .select({ record: replicacheClientViews.record })
+          .from(replicacheClientViews)
           .where(
             and(
-              eq(ReplicacheClientView.clientGroupId, pullRequest.clientGroupID),
-              eq(ReplicacheClientView.version, order),
-              eq(ReplicacheClientView.orgId, user.orgId),
+              eq(
+                replicacheClientViews.clientGroupId,
+                pullRequest.clientGroupID,
+              ),
+              eq(replicacheClientViews.version, order),
+              eq(replicacheClientViews.orgId, user.orgId),
             ),
           )
           .then((rows) => rows.at(0))
@@ -84,7 +103,14 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
     const baseCvr = buildCvr({ variant: "base", prev: prevClientView?.record });
 
     // 4: Get client group
-    const baseClientGroup = await getClientGroup(pullRequest.clientGroupID);
+    const baseClientGroup =
+      (await clientGroupFromId(pullRequest.clientGroupID)) ??
+      ({
+        id: pullRequest.clientGroupID,
+        orgId: user.orgId,
+        cvrVersion: 0,
+        userId: user.id,
+      } satisfies OmitTimestamps<ReplicacheClientGroup>);
 
     // 5: Verify requesting client group owns requested client
     if (baseClientGroup.userId !== user.id)
@@ -94,29 +120,9 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
       tables.map(async (table) => {
         const name = table._.name;
 
-        if (name === ReplicacheClient._.name) {
-          // 7: Read all clients in the client group
-          const metadata = await tx
-            .select({
-              id: ReplicacheClient.id,
-              rowVersion: ReplicacheClient.lastMutationId,
-            })
-            .from(ReplicacheClient)
-            .where(eq(ReplicacheClient.clientGroupId, baseClientGroup.id));
-
-          return [name, metadata] satisfies TableMetadata;
-        }
-
         // 6: Read all id/version pairs from the database that should be in the client view
-        const metadata = await metadataQueryFactory()[name](
-          tx
-            .select({
-              id: table.id,
-              rowVersion: sql<number>`"${name}"."xmin"`,
-            })
-            .from(table)
-            .$dynamic(),
-        );
+        // 7: Read all clients in the client group
+        const metadata = await metadataQueryFactory[name](baseClientGroup.id);
 
         return [name, metadata] satisfies TableMetadata;
       }),
@@ -132,16 +138,34 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
     if (prevClientView && isCvrDiffEmpty(diff)) return null;
 
     // 11: Read only the data that changed
-    const data = await readData(diff);
+    const data = await Promise.all(
+      syncedTables.map(async (table) => {
+        const name = table._.name;
+        const ids = diff[name].puts;
+
+        if (ids.length === 0)
+          return [
+            name,
+            { puts: [], dels: diff[name].dels },
+          ] as const satisfies TableData;
+
+        const data = await dataQueryFactory[name](diff[name].puts);
+
+        return [
+          name,
+          { puts: data, dels: diff[name].dels },
+        ] as const satisfies TableData;
+      }),
+    );
 
     // 12: Changed clients - no need to re-read clients from database,
     // we already have their versions.
-    const clients = diff[ReplicacheClient._.name].puts.reduce(
+    const clients = diff[replicacheClients._.name].puts.reduce(
       (clients, clientId) => {
-        clients[clientId] = nextCvr[ReplicacheClient._.name][clientId];
+        clients[clientId] = nextCvr[replicacheClients._.name][clientId];
         return clients;
       },
-      {} as ClientViewRecordEntries<typeof ReplicacheClient>,
+      {} as ClientViewRecordEntries<typeof replicacheClients>,
     );
 
     // 13: new client view record version
@@ -155,10 +179,10 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
     await Promise.all([
       // 14: Write client group record
       tx
-        .insert(ReplicacheClientGroup)
+        .insert(replicacheClientGroups)
         .values(nextClientGroup)
         .onConflictDoUpdate({
-          target: [ReplicacheClientGroup.id, ReplicacheClientGroup.orgId],
+          target: [replicacheClientGroups.id, replicacheClientGroups.orgId],
           set: {
             orgId: nextClientGroup.orgId,
             userId: nextClientGroup.userId,
@@ -167,7 +191,7 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
           },
         }),
       // 16-17: Generate client view record id, store client view record
-      tx.insert(ReplicacheClientView).values({
+      tx.insert(replicacheClientViews).values({
         clientGroupId: baseClientGroup.id,
         orgId: user.orgId,
         version: nextCvrVersion,
@@ -175,12 +199,12 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
       }),
       // Delete old client view records
       tx
-        .delete(ReplicacheClientView)
+        .delete(replicacheClientViews)
         .where(
           and(
-            eq(ReplicacheClientView.clientGroupId, baseClientGroup.id),
-            eq(ReplicacheClientView.orgId, user.orgId),
-            lt(ReplicacheClientView.version, nextCvrVersion - 10),
+            eq(replicacheClientViews.clientGroupId, baseClientGroup.id),
+            eq(replicacheClientViews.orgId, user.orgId),
+            lt(replicacheClientViews.version, nextCvrVersion - 10),
           ),
         ),
     ]);
@@ -204,7 +228,7 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
   // 10: If transaction result returns empty diff, return no-op
   if (!result)
     return {
-      type: "success",
+      variant: "success",
       response: {
         patch: [],
         cookie: pullRequest.cookie,
@@ -212,46 +236,10 @@ export async function pull(pullRequest: PullRequest): Promise<PullResult> {
       },
     };
 
-  return {
-    type: "success",
-    response: {
-      // 18(i): Build patch
-      patch: buildPatch(result.data, result.cvr.prev.value === undefined),
-
-      // 18(ii): Construct cookie
-      cookie: result.cvr.next.version,
-
-      // 18(iii): Last mutation ID changes
-      lastMutationIDChanges: result.clients,
-    },
-  };
-}
-
-const readData = (diff: ClientViewRecordDiff) =>
-  useTransaction((tx) =>
-    Promise.all(
-      syncedTables.map(async (table) => {
-        const name = table._.name;
-
-        const data = await dataQueryFactory()[name](
-          tx.select(getTableColumns(table)).from(table).$dynamic(),
-          diff[name].puts,
-        );
-
-        return [
-          name,
-          { puts: data, dels: diff[name].dels },
-        ] as const satisfies TableData;
-      }),
-    ),
-  );
-
-function buildPatch(data: Array<TableData>, clear: boolean) {
+  // 18(i): Build patch
   const patch: Array<PatchOperation> = [];
-
-  if (clear) patch.push({ op: "clear" });
-
-  for (const [name, { puts, dels }] of data) {
+  if (result.cvr.prev.value === undefined) patch.push({ op: "clear" });
+  for (const [name, { puts, dels }] of result.data) {
     dels.forEach((id) => patch.push({ op: "del", key: `${name}/${id}` }));
 
     puts.forEach((value) => {
@@ -263,5 +251,18 @@ function buildPatch(data: Array<TableData>, clear: boolean) {
     });
   }
 
-  return patch;
+  // 18(ii): Construct cookie
+  const cookie = result.cvr.next.version;
+
+  // 18(iii): Last mutation ID changes
+  const lastMutationIDChanges = result.clients;
+
+  return {
+    variant: "success",
+    response: {
+      patch,
+      cookie,
+      lastMutationIDChanges,
+    },
+  };
 }

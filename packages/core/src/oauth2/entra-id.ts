@@ -3,11 +3,11 @@ import { parseJWT } from "oslo/jwt";
 import { Resource } from "sst";
 import * as v from "valibot";
 
-import { AUTH_CALLBACK_PATH } from "../constants";
+import { AUTH_CALLBACK_PATH } from "../constants/misc";
 import { InternalServerError } from "../errors/http";
-import { fn } from "../valibot";
+import { fn } from "../utils/fn";
 
-import type { IdToken, ProviderTokens } from "./types";
+import type { IdToken, ProviderTokens } from "./tokens";
 
 export const entraId = new MicrosoftEntraId(
   "organizations",
