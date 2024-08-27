@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
-    "@types/aws-lambda": "^8.10.143",
-    "@types/node": "^22.4.1"
+    "@types/aws-lambda": "^8.10.144",
+    "@types/node": "^22.5.0"
   }
 }
