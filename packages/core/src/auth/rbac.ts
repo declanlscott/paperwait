@@ -2,7 +2,7 @@ import type { LuciaUser } from ".";
 import type { UserRole } from "../constants/tuples";
 import type { ApplicationError } from "../errors/application";
 import type { HttpError } from "../errors/http";
-import type { Mutation } from "../replicache/schemas";
+import type { MutationV1 } from "../replicache";
 
 export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
   user: LuciaUser,
@@ -23,12 +23,11 @@ export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
 /**
  * Role-based access control for mutators.
  */
-export const mutatorRbac = {
+export const mutationRbac = {
   updateOrganization: ["administrator"],
   updateUserRole: ["administrator"],
   deleteUser: ["administrator"],
   restoreUser: ["administrator"],
-  syncPapercutAccounts: ["administrator"],
   deletePapercutAccount: ["administrator"],
   createPapercutAccountManagerAuthorization: ["administrator"],
   deletePapercutAccountManagerAuthorization: ["administrator"],
@@ -48,4 +47,4 @@ export const mutatorRbac = {
   createComment: ["administrator", "operator"],
   updateComment: ["administrator"],
   deleteComment: ["administrator"],
-} as const satisfies Record<Mutation["name"], Array<UserRole>>;
+} as const satisfies Record<MutationV1["name"], Array<UserRole>>;

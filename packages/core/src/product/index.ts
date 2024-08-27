@@ -1,16 +1,48 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
+import { enforceRbac, mutationRbac } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
-import { useTransaction } from "../drizzle/transaction";
+import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { ForbiddenError } from "../errors/http";
+import { NonExhaustiveValueError } from "../errors/misc";
+import * as Realtime from "../realtime";
+import * as Replicache from "../replicache";
+import { fn } from "../utils/helpers";
+import {
+  createProductMutationArgsSchema,
+  deleteProductMutationArgsSchema,
+  updateProductMutationArgsSchema,
+} from "./shared";
 import { products } from "./sql";
 
 import type { Product } from "./sql";
 
-export const metadata = async () =>
-  useTransaction((tx) => {
-    const { org, user } = useAuthenticated();
+export const create = fn(createProductMutationArgsSchema, async (values) => {
+  const { user, org } = useAuthenticated();
 
+  enforceRbac(user, mutationRbac.createProduct, ForbiddenError);
+
+  return useTransaction(async (tx) => {
+    const product = await tx
+      .insert(products)
+      .values(values)
+      .returning({ id: products.id })
+      .then((rows) => rows.at(0));
+    if (!product) throw new Error("Failed to insert product");
+
+    await afterTransaction(() =>
+      Replicache.poke([Realtime.formatChannel("org", org.id)]),
+    );
+
+    return { product };
+  });
+});
+
+export async function metadata() {
+  const { user, org } = useAuthenticated();
+
+  return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
         id: products.id,
@@ -33,22 +65,61 @@ export const metadata = async () =>
         return baseQuery.where(
           and(eq(products.status, "published"), isNull(products.deletedAt)),
         );
-      default: {
-        user.role satisfies never;
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        throw new Error(`Unexpected user role: ${user.role}`);
-      }
+      default:
+        throw new NonExhaustiveValueError(user.role);
     }
   });
+}
 
-export const fromIds = async (ids: Array<Product["id"]>) =>
-  useTransaction((tx) => {
-    const { org } = useAuthenticated();
+export async function fromIds(ids: Array<Product["id"]>) {
+  const { org } = useAuthenticated();
 
-    return tx
+  return useTransaction((tx) =>
+    tx
       .select()
       .from(products)
-      .where(and(inArray(products.id, ids), eq(products.orgId, org.id)));
-  });
+      .where(and(inArray(products.id, ids), eq(products.orgId, org.id))),
+  );
+}
 
-export { productSchema as schema } from "./schemas";
+export const update = fn(
+  updateProductMutationArgsSchema,
+  ({ id, ...values }) => {
+    const { user, org } = useAuthenticated();
+
+    enforceRbac(user, mutationRbac.updateProduct, ForbiddenError);
+
+    return useTransaction(async (tx) => {
+      await tx
+        .update(products)
+        .set(values)
+        .where(and(eq(products.id, id), eq(products.orgId, org.id)));
+
+      await afterTransaction(() =>
+        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+      );
+    });
+  },
+);
+
+export const delete_ = fn(
+  deleteProductMutationArgsSchema,
+  async ({ id, ...values }) => {
+    const { user, org } = useAuthenticated();
+
+    enforceRbac(user, mutationRbac.deleteProduct, ForbiddenError);
+
+    return useTransaction(async (tx) => {
+      await tx
+        .update(products)
+        .set(values)
+        .where(and(eq(products.id, id), eq(products.orgId, org.id)));
+
+      await afterTransaction(() =>
+        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+      );
+    });
+  },
+);
+
+export { productSchema as schema } from "./shared";

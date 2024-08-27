@@ -1,8 +1,13 @@
 {
   "name": "@paperwait/core",
+  "version": "0.0.0",
   "type": "module",
+  "sideEffects": false,
   "exports": {
-    "./*": "./src/*.ts"
+    "./*": [
+      "./src/*/index.ts",
+      "./src/*.ts"
+    ]
   },
   "scripts": {
     "db:push": "drizzle-kit push",
@@ -36,6 +41,6 @@
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
     "@types/ws": "^8.5.12",
-    "drizzle-kit": "^0.24.0"
+    "drizzle-kit": "^0.24.2"
   }
 }

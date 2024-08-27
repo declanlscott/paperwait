@@ -1,30 +1,32 @@
 import * as v from "valibot";
 
-import { productStatuses } from "../drizzle/enums";
-import { isUniqueByName } from "../utils";
+import { VARCHAR_LENGTH } from "../constants/db";
+import { productStatuses } from "../constants/tuples";
+import { isUniqueByName } from "../utils/misc";
+import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
 
-export const Cost = v.pipe(
+export const costSchema = v.pipe(
   v.union([v.number(), v.pipe(v.string(), v.decimal())]),
   v.transform(Number),
 );
 
-export const Option = v.object({
+export const optionSchema = v.object({
   name: v.pipe(v.string(), v.trim()),
   image: v.string(),
   description: v.optional(v.string()),
-  cost: Cost,
+  cost: costSchema,
 });
 
-export const Field = v.object({
+export const fieldSchema = v.object({
   name: v.pipe(v.string(), v.trim()),
   required: v.boolean(),
   options: v.pipe(
-    v.array(Option),
+    v.array(optionSchema),
     v.check(isUniqueByName, "Field option names must be unique"),
   ),
 });
 
-export const ProductAttributesV1 = v.object({
+export const productAttributesV1Schema = v.object({
   copies: v.object({
     visible: v.fallback(v.boolean(), true),
   }),
@@ -42,7 +44,7 @@ export const ProductAttributesV1 = v.object({
   paperStock: v.optional(
     v.object({
       options: v.pipe(
-        v.array(Option),
+        v.array(optionSchema),
         v.check(isUniqueByName, "Paper stock option names must be unique"),
       ),
     }),
@@ -51,7 +53,7 @@ export const ProductAttributesV1 = v.object({
     v.object({
       name: v.pipe(v.string(), v.trim()),
       fields: v.pipe(
-        v.array(Field),
+        v.array(fieldSchema),
         v.check(isUniqueByName, "Custom field names must be unique"),
       ),
     }),
@@ -60,7 +62,7 @@ export const ProductAttributesV1 = v.object({
     v.object({
       name: v.pipe(v.string(), v.trim()),
       fields: v.pipe(
-        v.array(Field),
+        v.array(fieldSchema),
         v.check(
           isUniqueByName,
           "Custom operator only field names must be unique",
@@ -71,7 +73,7 @@ export const ProductAttributesV1 = v.object({
   collating: v.optional(
     v.object({
       options: v.pipe(
-        v.array(Option),
+        v.array(optionSchema),
         v.check(isUniqueByName, "Collating option names must be unique"),
       ),
     }),
@@ -81,7 +83,7 @@ export const ProductAttributesV1 = v.object({
       options: v.pipe(
         v.array(
           v.object({
-            ...Option.entries,
+            ...optionSchema.entries,
             printable: v.boolean(),
           }),
         ),
@@ -92,7 +94,7 @@ export const ProductAttributesV1 = v.object({
   backCover: v.optional(
     v.object({
       options: v.pipe(
-        v.array(Option),
+        v.array(optionSchema),
         v.check(isUniqueByName, "Back cover option names must be unique"),
       ),
     }),
@@ -100,7 +102,7 @@ export const ProductAttributesV1 = v.object({
   cutting: v.optional(
     v.object({
       options: v.pipe(
-        v.array(Option),
+        v.array(optionSchema),
         v.check(isUniqueByName, "Cutting option names must be unique"),
       ),
     }),
@@ -110,14 +112,14 @@ export const ProductAttributesV1 = v.object({
       options: v.pipe(
         v.array(
           v.object({
-            ...Option.entries,
+            ...optionSchema.entries,
             subAttributes: v.pipe(
               v.array(
                 v.object({
                   name: v.pipe(v.string(), v.trim()),
                   description: v.optional(v.string()),
                   options: v.pipe(
-                    v.array(Option),
+                    v.array(optionSchema),
                     v.check(
                       isUniqueByName,
                       "Binding sub-attribute option names must be unique",
@@ -138,19 +140,19 @@ export const ProductAttributesV1 = v.object({
   ),
   holePunching: v.optional(
     v.pipe(
-      v.array(Option),
+      v.array(optionSchema),
       v.check(isUniqueByName, "Hole punching option names must be unique"),
     ),
   ),
   folding: v.optional(
     v.pipe(
-      v.array(Option),
+      v.array(optionSchema),
       v.check(isUniqueByName, "Folding option names must be unique"),
     ),
   ),
   laminating: v.optional(
     v.pipe(
-      v.array(Option),
+      v.array(optionSchema),
       v.check(isUniqueByName, "Laminating option names must be unique"),
     ),
   ),
@@ -158,7 +160,7 @@ export const ProductAttributesV1 = v.object({
     v.object({
       name: v.pipe(v.string(), v.trim()),
       image: v.string(),
-      cost: Cost,
+      cost: costSchema,
       showItemsPerSet: v.boolean(),
     }),
   ),
@@ -169,7 +171,7 @@ export const ProductAttributesV1 = v.object({
         name: v.pipe(v.string(), v.trim()),
         value: v.optional(v.pipe(v.string(), v.hexColor())),
       }),
-      cost: Cost,
+      cost: costSchema,
     }),
   ),
   proofRequired: v.optional(
@@ -186,9 +188,11 @@ export const ProductAttributesV1 = v.object({
     }),
   ),
 });
-export type ProductAttributesV1 = v.InferOutput<typeof ProductAttributesV1>;
+export type ProductAttributesV1 = v.InferOutput<
+  typeof productAttributesV1Schema
+>;
 
-export const ProductConfigurationV1 = v.object({
+export const productConfigurationV1Schema = v.object({
   version: v.literal(1),
   image: v.string(),
   productVisibility: v.picklist(productStatuses),
@@ -198,13 +202,59 @@ export const ProductConfigurationV1 = v.object({
       physicalCopyEnabled: v.boolean(),
     }),
   ),
-  attributes: ProductAttributesV1,
+  attributes: productAttributesV1Schema,
 });
 export type ProductConfigurationV1 = v.InferOutput<
-  typeof ProductConfigurationV1
+  typeof productConfigurationV1Schema
 >;
 
-export const ProductConfiguration = v.variant("version", [
-  ProductConfigurationV1,
+export const productConfigurationSchema = v.variant("version", [
+  productConfigurationV1Schema,
 ]);
-export type ProductConfiguration = v.InferOutput<typeof ProductConfiguration>;
+export type ProductConfiguration = v.InferOutput<
+  typeof productConfigurationSchema
+>;
+
+export const productSchema = v.object({
+  ...orgTableSchema.entries,
+  name: v.pipe(v.string(), v.maxLength(VARCHAR_LENGTH)),
+  status: v.picklist(productStatuses),
+  roomId: nanoIdSchema,
+  config: productConfigurationSchema,
+});
+
+export const productMutationNames = [
+  "createProduct",
+  "updateProduct",
+  "deleteProduct",
+] as const;
+
+export const createProductMutationArgsSchema = productSchema;
+export type CreateProductMutationArgs = v.InferOutput<
+  typeof createProductMutationArgsSchema
+>;
+
+export const updateProductMutationArgsSchema = v.object({
+  id: nanoIdSchema,
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  ...v.partial(
+    v.omit(productSchema, [
+      "id",
+      "orgId",
+      "updatedAt",
+      "createdAt",
+      "deletedAt",
+    ]),
+  ).entries,
+});
+export type UpdateProductMutationArgs = v.InferOutput<
+  typeof updateProductMutationArgsSchema
+>;
+
+export const deleteProductMutationArgsSchema = v.object({
+  id: nanoIdSchema,
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+});
+export type DeleteProductMutationArgs = v.InferOutput<
+  typeof deleteProductMutationArgsSchema
+>;

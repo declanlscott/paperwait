@@ -1,6 +1,6 @@
-import { bigint, foreignKey, index } from "drizzle-orm/pg-core";
+import { foreignKey, index } from "drizzle-orm/pg-core";
 
-import { id } from "../drizzle/columns";
+import { bigintString, id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
 import { papercutAccounts } from "../papercut/sql";
 import { products } from "../product/sql";
@@ -13,9 +13,7 @@ export const orders = orgTable(
     managerId: id("manager_id"),
     operatorId: id("operator_id"),
     productId: id("product_id").notNull(),
-    papercutAccountId: bigint("papercut_account_id", {
-      mode: "number",
-    }).notNull(),
+    papercutAccountId: bigintString("papercut_account_id").notNull(),
   },
   (table) => ({
     customerReference: foreignKey({

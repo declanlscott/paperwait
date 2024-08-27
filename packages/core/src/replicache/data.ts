@@ -21,6 +21,9 @@ import * as User from "../user";
 import { users } from "../user/sql";
 import { replicacheClients } from "./sql";
 
+import type * as v from "valibot";
+import type { MutationName } from "./shared";
+
 export const syncedTables = [
   announcements,
   comments,
@@ -114,12 +117,45 @@ export const dataQueryFactory = {
   users: User.fromIds,
 } satisfies DataQueryFactory;
 
-export type PutsDels<TTable extends SyncedTable> = {
+export type TablePatchData<TTable extends SyncedTable> = {
   puts: Array<TTable["$inferSelect"]>;
   dels: Array<TTable["$inferSelect"]["id"]>;
 };
 
 export type TableData = [
   SyncedTableName,
-  PutsDels<Extract<SyncedTable, { _: { name: SyncedTableName } }>>,
+  TablePatchData<Extract<SyncedTable, { _: { name: SyncedTableName } }>>,
 ];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AuthoritativeMutatorFactory<TSchema extends v.GenericSchema = any> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Record<MutationName, (args: v.InferOutput<TSchema>) => Promise<any>>;
+
+export const authoritativeMutatorFactory = {
+  createAnnouncement: Announcement.create,
+  updateAnnouncement: Announcement.update,
+  deleteAnnouncement: Announcement.delete_,
+  createComment: Comment.create,
+  updateComment: Comment.update,
+  deleteComment: Comment.delete_,
+  createOrder: Order.create,
+  updateOrder: Order.update,
+  deleteOrder: Order.delete_,
+  updateOrganization: Organization.update,
+  createPapercutAccountManagerAuthorization:
+    Papercut.createAccountManagerAuthorization,
+  deletePapercutAccount: Papercut.deleteAccount,
+  deletePapercutAccountManagerAuthorization:
+    Papercut.deleteAccountManagerAuthorization,
+  createProduct: Product.create,
+  updateProduct: Product.update,
+  deleteProduct: Product.delete_,
+  createRoom: Room.create,
+  updateRoom: Room.update,
+  deleteRoom: Room.delete_,
+  restoreRoom: Room.restore,
+  updateUserRole: User.updateRole,
+  deleteUser: User.delete_,
+  restoreUser: User.restore,
+} satisfies AuthoritativeMutatorFactory;

@@ -4,7 +4,7 @@ import * as v from "valibot";
 import { VARCHAR_LENGTH } from "../constants/db";
 import { roomStatuses, workflowStatusTypes } from "../constants/tuples";
 import { isUniqueByName } from "../utils/misc";
-import { orgTableSchema } from "../utils/schemas";
+import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
 
 export const deliveryOptionAttributesSchema = v.object({
   name: v.pipe(v.string(), v.trim()),
@@ -88,3 +88,41 @@ export const roomSchema = v.object({
   details: v.nullable(v.string()),
   config: roomConfigurationSchema,
 });
+
+export const roomMutationNames = [
+  "createRoom",
+  "updateRoom",
+  "deleteRoom",
+  "restoreRoom",
+] as const;
+
+export const createRoomMutationArgsSchema = roomSchema;
+export type CreateRoomMutationArgs = v.InferOutput<
+  typeof createRoomMutationArgsSchema
+>;
+
+export const updateRoomMutationArgsSchema = v.object({
+  id: nanoIdSchema,
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  ...v.partial(
+    v.omit(roomSchema, ["id", "orgId", "createdAt", "updatedAt", "deletedAt"]),
+  ).entries,
+});
+export type UpdateRoomMutationArgs = v.InferOutput<
+  typeof updateRoomMutationArgsSchema
+>;
+
+export const deleteRoomMutationArgsSchema = v.object({
+  id: nanoIdSchema,
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+});
+export type DeleteRoomMutationArgs = v.InferOutput<
+  typeof deleteRoomMutationArgsSchema
+>;
+
+export const restoreRoomMutationArgsSchema = v.object({
+  id: nanoIdSchema,
+});
+export type RestoreRoomMutationArgs = v.InferOutput<
+  typeof restoreRoomMutationArgsSchema
+>;

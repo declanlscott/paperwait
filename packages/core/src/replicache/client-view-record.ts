@@ -1,6 +1,6 @@
 import * as R from "remeda";
 
-import { InternalServerError } from "../errors/http";
+import { NonExhaustiveValueError } from "../errors/misc";
 import { syncedTables } from "./data";
 import { replicacheClients } from "./sql";
 
@@ -64,9 +64,7 @@ export function buildCvr(
         return nextCvr;
       }, {} as ClientViewRecord);
     default:
-      variant satisfies never;
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-      throw new InternalServerError(`Unknown cvr variant: ${variant}`);
+      throw new NonExhaustiveValueError(variant);
   }
 }
 

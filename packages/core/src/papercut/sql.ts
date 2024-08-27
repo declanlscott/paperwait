@@ -1,5 +1,4 @@
 import {
-  bigint,
   foreignKey,
   index,
   pgTable,
@@ -60,9 +59,7 @@ export const papercutAccountManagerAuthorizations = orgTable(
   "papercut_account_manager_authorizations",
   {
     managerId: id("manager_id").notNull(),
-    papercutAccountId: bigint("papercut_account_id", {
-      mode: "number",
-    }).notNull(),
+    papercutAccountId: bigintString("papercut_account_id").notNull(),
   },
   (table) => ({
     managerReference: foreignKey({

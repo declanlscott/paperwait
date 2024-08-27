@@ -2,20 +2,56 @@ import { and, arrayOverlaps, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
 import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
-import { useTransaction } from "../drizzle/transaction";
+import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { ForbiddenError } from "../errors/http";
+import { NonExhaustiveValueError } from "../errors/misc";
 import { orders } from "../order/sql";
 import {
   papercutAccountManagerAuthorizations,
   papercutAccounts,
 } from "../papercut/sql";
+import * as Realtime from "../realtime";
+import * as Replicache from "../replicache";
+import * as User from "../user";
+import { fn } from "../utils/helpers";
+import {
+  createCommentMutationArgsSchema,
+  deleteCommentMutationArgsSchema,
+  updateCommentMutationArgsSchema,
+} from "./shared";
 import { comments } from "./sql";
 
 import type { Comment } from "./sql";
 
-export const metadata = async () =>
-  useTransaction((tx) => {
-    const { org, user } = useAuthenticated();
+export const create = fn(createCommentMutationArgsSchema, async (values) => {
+  const { user } = useAuthenticated();
 
+  const users = await User.withOrderAccess(values.orderId);
+  if (!users.some((u) => u.id === user.id))
+    throw new ForbiddenError(
+      `User "${user.id}" cannot create a comment on order "${values.orderId}", order access forbidden.`,
+    );
+
+  return useTransaction(async (tx) => {
+    const comment = await tx
+      .insert(comments)
+      .values(values)
+      .returning({ id: comments.id })
+      .then((rows) => rows.at(0));
+    if (!comment) throw new Error("Failed to insert comment");
+
+    await afterTransaction(() =>
+      Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
+    );
+
+    return { comment };
+  });
+});
+
+export async function metadata() {
+  const { user, org } = useAuthenticated();
+
+  return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
         id: comments.id,
@@ -90,22 +126,69 @@ export const metadata = async () =>
               isNull(comments.deletedAt),
             ),
           );
-      default: {
-        user.role satisfies never;
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        throw new Error(`Unexpected user role: ${user.role}`);
-      }
+      default:
+        throw new NonExhaustiveValueError(user.role);
     }
   });
+}
 
-export const fromIds = async (ids: Array<Comment["id"]>) =>
-  useTransaction((tx) => {
-    const { org } = useAuthenticated();
+export async function fromIds(ids: Array<Comment["id"]>) {
+  const { org } = useAuthenticated();
 
-    return tx
+  return useTransaction((tx) =>
+    tx
       .select()
       .from(comments)
-      .where(and(inArray(comments.id, ids), eq(comments.orgId, org.id)));
-  });
+      .where(and(inArray(comments.id, ids), eq(comments.orgId, org.id))),
+  );
+}
 
-export { commentSchema as schema } from "./schemas";
+export const update = fn(
+  updateCommentMutationArgsSchema,
+  async ({ id, ...values }) => {
+    const { user, org } = useAuthenticated();
+
+    const users = await User.withOrderAccess(values.orderId);
+    if (!users.some((u) => u.id === user.id))
+      throw new ForbiddenError(
+        `User "${user.id}" cannot update comment "${id}" on order "${values.orderId}", order access forbidden.`,
+      );
+
+    return useTransaction(async (tx) => {
+      await tx
+        .update(comments)
+        .set(values)
+        .where(and(eq(comments.id, id), eq(comments.orgId, org.id)));
+
+      await afterTransaction(() =>
+        Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
+      );
+    });
+  },
+);
+
+export const delete_ = fn(
+  deleteCommentMutationArgsSchema,
+  async ({ id, ...values }) => {
+    const { user, org } = useAuthenticated();
+
+    const users = await User.withOrderAccess(values.orderId);
+    if (!users.some((u) => u.id === user.id))
+      throw new ForbiddenError(
+        `User "${user.id}" cannot delete comment "${id}" on order "${values.orderId}", order access forbidden.`,
+      );
+
+    return useTransaction(async (tx) => {
+      await tx
+        .update(comments)
+        .set(values)
+        .where(and(eq(comments.id, id), eq(comments.orgId, org.id)));
+
+      await afterTransaction(() =>
+        Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
+      );
+    });
+  },
+);
+
+export { commentSchema as schema } from "./shared";

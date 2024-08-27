@@ -1,24 +1,22 @@
-import { vValidator } from "@hono/valibot-validator";
-import { pull, push } from "@paperwait/core/replicache";
-import { PullRequest, PushRequest } from "@paperwait/core/schemas";
+import * as Replicache from "@paperwait/core/replicache";
 import { Hono } from "hono";
 
 import { authorization } from "~/api/middleware";
 
 export default new Hono()
   .use(authorization())
-  .post("/pull", vValidator("json", PullRequest), async (c) => {
-    const pullResult = await pull(c.req.valid("json"));
+  .post("/pull", async (c) => {
+    const pullResult = await Replicache.pull(await c.req.json());
 
-    if (pullResult.type !== "success")
+    if (pullResult.variant !== "success")
       return c.json(pullResult.response, { status: 400 });
 
     return c.json(pullResult.response, { status: 200 });
   })
-  .post("/push", vValidator("json", PushRequest), async (c) => {
-    const pushResult = await push(c.req.valid("json"));
+  .post("/push", async (c) => {
+    const pushResult = await Replicache.push(await c.req.json());
 
-    if (pushResult.type !== "success")
+    if (pushResult.variant !== "success")
       return c.json(pushResult.response, { status: 400 });
 
     return c.json(null, { status: 200 });

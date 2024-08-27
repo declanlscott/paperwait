@@ -1,21 +1,56 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import * as R from "remeda";
 
 import { useAuthenticated } from "../auth/context";
+import { enforceRbac, mutationRbac } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
-import { useTransaction } from "../drizzle/transaction";
+import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { ForbiddenError } from "../errors/http";
+import { NonExhaustiveValueError } from "../errors/misc";
 import {
   papercutAccountManagerAuthorizations,
   papercutAccounts,
 } from "../papercut/sql";
+import * as Realtime from "../realtime";
+import * as Replicache from "../replicache";
+import * as User from "../user";
+import { fn } from "../utils/helpers";
+import {
+  createOrderMutationArgsSchema,
+  deleteOrderMutationArgsSchema,
+  updateOrderMutationArgsSchema,
+} from "./shared";
 import { orders } from "./sql";
 
 import type { Order } from "./sql";
 
-export const metadata = async () =>
-  useTransaction(async (tx) => {
-    const { org, user } = useAuthenticated();
+export const create = fn(createOrderMutationArgsSchema, async (values) => {
+  const { user } = useAuthenticated();
 
+  enforceRbac(user, mutationRbac.createOrder, ForbiddenError);
+
+  return useTransaction(async (tx) => {
+    const order = await tx
+      .insert(orders)
+      .values(values)
+      .returning({ id: orders.id })
+      .then((rows) => rows.at(0));
+    if (!order) throw new Error("Failed to insert order");
+
+    const usersToPoke = await User.withOrderAccess(order.id);
+    await afterTransaction(() =>
+      Replicache.poke(
+        usersToPoke.map(({ id }) => Realtime.formatChannel("user", id)),
+      ),
+    );
+
+    return { order };
+  });
+});
+
+export async function metadata() {
+  const { org, user } = useAuthenticated();
+
+  return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
         id: orders.id,
@@ -25,8 +60,7 @@ export const metadata = async () =>
       .where(eq(orders.orgId, org.id))
       .$dynamic();
 
-    const getCustomerOrders = async () =>
-      baseQuery.where(eq(orders.customerId, user.id));
+    const customerOrdersQuery = baseQuery.where(eq(orders.customerId, user.id));
 
     switch (user.role) {
       case "administrator":
@@ -35,7 +69,7 @@ export const metadata = async () =>
         return baseQuery.where(isNull(orders.deletedAt));
       case "manager": {
         const [customerOrders, managerOrders] = await Promise.all([
-          getCustomerOrders(),
+          customerOrdersQuery,
           baseQuery
             .innerJoin(
               papercutAccounts,
@@ -60,29 +94,73 @@ export const metadata = async () =>
             .where(isNull(orders.deletedAt)),
         ]);
 
-        return R.uniqueBy(
-          [...customerOrders, ...managerOrders],
-          ({ id }) => id,
-        );
+        return [...customerOrders, ...managerOrders];
       }
       case "customer":
-        return getCustomerOrders();
-      default: {
-        user.role satisfies never;
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        throw new Error(`Unexpected user role: ${user.role}`);
-      }
+        return customerOrdersQuery;
+      default:
+        throw new NonExhaustiveValueError(user.role);
     }
   });
+}
 
-export const fromIds = async (ids: Array<Order["id"]>) =>
-  useTransaction((tx) => {
-    const { org } = useAuthenticated();
+export async function fromIds(ids: Array<Order["id"]>) {
+  const { org } = useAuthenticated();
 
-    return tx
+  return useTransaction((tx) =>
+    tx
       .select()
       .from(orders)
-      .where(and(inArray(orders.id, ids), eq(orders.orgId, org.id)));
-  });
+      .where(and(inArray(orders.id, ids), eq(orders.orgId, org.id))),
+  );
+}
 
-export { orderSchema as schema } from "./schemas";
+export const update = fn(
+  updateOrderMutationArgsSchema,
+  async ({ id, ...values }) => {
+    const { user, org } = useAuthenticated();
+
+    const users = await User.withOrderAccess(id);
+    if (!users.some((u) => u.id === user.id))
+      throw new ForbiddenError(
+        `User "${user.id}" cannot update order "${id}" because they do not have access to that order.`,
+      );
+
+    return useTransaction(async (tx) => {
+      await tx
+        .update(orders)
+        .set(values)
+        .where(and(eq(orders.id, id), eq(orders.orgId, org.id)));
+
+      await afterTransaction(() =>
+        Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
+      );
+    });
+  },
+);
+
+export const delete_ = fn(
+  deleteOrderMutationArgsSchema,
+  async ({ id, ...values }) => {
+    const { user, org } = useAuthenticated();
+
+    const users = await User.withOrderAccess(id);
+    if (!users.some((u) => u.id === user.id))
+      throw new ForbiddenError(
+        `User "${user.id}" cannot delete order "${id}", order access forbidden.`,
+      );
+
+    return useTransaction(async (tx) => {
+      await tx
+        .update(orders)
+        .set(values)
+        .where(and(eq(orders.id, id), eq(orders.orgId, org.id)));
+
+      await afterTransaction(() =>
+        Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
+      );
+    });
+  },
+);
+
+export { orderSchema as schema } from "./shared";

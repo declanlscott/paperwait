@@ -3,7 +3,7 @@ import {
   foreignKey,
   index,
   integer,
-  json,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -18,7 +18,7 @@ import type { ClientViewRecord } from "./client-view-record";
 
 export const ReplicacheMeta = pgTable("replicache_meta", {
   key: text("key").primaryKey(),
-  value: json("value").notNull(),
+  value: jsonb("value").notNull(),
 });
 
 export const replicacheClientGroups = pgTable(
@@ -70,7 +70,7 @@ export const replicacheClientViews = pgTable(
     orgId: orgIdColumns.orgId,
     clientGroupId: uuid("client_group_id").notNull(),
     version: integer("version").notNull(),
-    record: json("record").$type<ClientViewRecord>().notNull(),
+    record: jsonb("record").$type<ClientViewRecord>().notNull(),
     ...timestamps,
   },
   (table) => ({

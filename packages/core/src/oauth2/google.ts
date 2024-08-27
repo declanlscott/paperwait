@@ -5,7 +5,7 @@ import * as v from "valibot";
 
 import { AUTH_CALLBACK_PATH } from "../constants/misc";
 import { InternalServerError } from "../errors/http";
-import { fn } from "../utils/fn";
+import { fn } from "../utils/helpers";
 
 import type { IdToken, ProviderTokens } from "./tokens";
 
