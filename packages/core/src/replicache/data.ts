@@ -127,10 +127,14 @@ export type TableData = [
   TablePatchData<Extract<SyncedTable, { _: { name: SyncedTableName } }>>,
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AuthoritativeMutatorFactory<TSchema extends v.GenericSchema = any> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Record<MutationName, (args: v.InferOutput<TSchema>) => Promise<any>>;
+export type AuthoritativeMutator = <TSchema extends v.GenericSchema>(
+  args: v.InferOutput<TSchema>,
+) => Promise<void>;
+
+export type AuthoritativeMutatorFactory = Record<
+  MutationName,
+  AuthoritativeMutator
+>;
 
 export const authoritativeMutatorFactory = {
   createAnnouncement: Announcement.create,

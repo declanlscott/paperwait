@@ -1,4 +1,11 @@
-import type { MaxFileSizes } from "../schemas/shared";
+export const DB_SCHEMA_VERSION = 1;
+export const DB_TRANSACTION_MAX_RETRIES = 10;
+export const POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE = "40001";
+export const POSTGRES_DEADLOCK_DETECTED_ERROR_CODE = "40P01";
+
+export const ROW_VERSION_COLUMN_NAME = "xmin";
+
+export const VARCHAR_LENGTH = 40;
 
 export const AWS_REGION = "us-east-2";
 
@@ -22,7 +29,10 @@ export const ASSETS_MIME_TYPES = [
 
 export const DEFAULT_DOCUMENTS_MIME_TYPES = ["application/pdf"] as const;
 
-export const defaultMaxFileSizes = {
-  assets: 250 * 1024, // 250 KB
-  documents: 10 * 1024 * 1024, // 10 MB
-} as const satisfies MaxFileSizes;
+export const NANOID_CUSTOM_ALPHABET = "2346789abcdefghijkmnpqrtwxyz";
+export const NANOID_LENGTH = 20;
+export const NANOID_PATTERN = new RegExp(
+  `^[${NANOID_CUSTOM_ALPHABET}]{${NANOID_LENGTH}}$`,
+);
+
+export const ORG_SLUG_PATTERN = new RegExp(/^[a-zA-Z0-9-]+$/);

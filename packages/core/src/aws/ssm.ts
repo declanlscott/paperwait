@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-ssm";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
-import { AWS_REGION } from "../constants/misc";
+import { AWS_REGION } from "../constants";
 import { ConflictError, NotFoundError } from "../errors/http";
 
 import type {
@@ -16,7 +16,7 @@ import type {
   GetParameterCommandInput,
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
-import type { NanoId } from "../schemas";
+import type { NanoId } from "../utils/schemas";
 
 export const ssmClient = new SSMClient({
   region: AWS_REGION,

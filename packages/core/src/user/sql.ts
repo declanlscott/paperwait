@@ -2,9 +2,10 @@ import { index, text } from "drizzle-orm/pg-core";
 
 import { userRole } from "../drizzle/enums";
 import { orgTable } from "../drizzle/tables";
+import { usersTableName } from "./shared";
 
 export const users = orgTable(
-  "users",
+  usersTableName,
   {
     providerId: text("provider_id").notNull().unique(),
     role: userRole("role").notNull().default("customer"),

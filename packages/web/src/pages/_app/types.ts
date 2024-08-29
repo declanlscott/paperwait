@@ -1,12 +1,8 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
-import type {
-  Authenticated as BaseAuthenticated,
-  Unauthenticated as BaseUnauthenticated,
-} from "@paperwait/core/auth";
-import type { Room } from "@paperwait/core/room";
-import type { StartsWith } from "@paperwait/core/types";
-import type { UserRole } from "@paperwait/core/user";
+import type { Room } from "@paperwait/core/room/sql";
+import type { UserRole } from "@paperwait/core/user/shared";
+import type { StartsWith } from "@paperwait/core/utils/types";
 import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import type { MutationOptions } from "@tanstack/react-query";
 import type {
@@ -15,8 +11,7 @@ import type {
   ToOptions,
 } from "@tanstack/react-router";
 import type { FilterFn } from "@tanstack/react-table";
-import type { ReadTransaction, Replicache } from "replicache";
-import type { Mutators } from "~/app/lib/hooks/replicache";
+import type { ReadTransaction } from "replicache";
 import type { routeTree } from "~/app/routeTree.gen";
 
 declare module "@tanstack/react-router" {
@@ -45,14 +40,6 @@ declare module "@tanstack/react-table" {
 export type AppRouter = ReturnType<
   typeof createRouter<typeof routeTree, "always" | "never" | "preserve">
 >;
-
-export interface Authenticated extends BaseAuthenticated {
-  replicache: Replicache<Mutators>;
-}
-
-export interface Unauthenticated extends BaseUnauthenticated {
-  replicache: null;
-}
 
 export type Slot = {
   loadingIndicator: ReactNode;
@@ -88,8 +75,8 @@ export type QueryFactory = Record<
   (...args: Array<any>) => (tx: ReadTransaction) => Promise<any>
 >;
 
-export type QueryData<TQueryFn extends QueryFactory[keyof QueryFactory]> =
-  Awaited<ReturnType<ReturnType<TQueryFn>>>;
+export type QueryData<TQuerier extends QueryFactory[keyof QueryFactory]> =
+  Awaited<ReturnType<ReturnType<TQuerier>>>;
 
 export type MutationOptionsFactory = Record<
   string,

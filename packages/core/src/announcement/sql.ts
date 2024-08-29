@@ -3,9 +3,10 @@ import { foreignKey, text } from "drizzle-orm/pg-core";
 import { id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
 import { rooms } from "../room/sql";
+import { announcementsTableName } from "./shared";
 
 export const announcements = orgTable(
-  "announcements",
+  announcementsTableName,
   {
     content: text("content").notNull(),
     roomId: id("room_id").notNull(),

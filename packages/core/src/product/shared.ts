@@ -1,7 +1,6 @@
 import * as v from "valibot";
 
-import { VARCHAR_LENGTH } from "../constants/db";
-import { productStatuses } from "../constants/tuples";
+import { VARCHAR_LENGTH } from "../constants";
 import { isUniqueByName } from "../utils/misc";
 import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
 
@@ -191,6 +190,11 @@ export const productAttributesV1Schema = v.object({
 export type ProductAttributesV1 = v.InferOutput<
   typeof productAttributesV1Schema
 >;
+
+export const productsTableName = "products";
+
+export const productStatuses = ["draft", "published"] as const;
+export type ProductStatus = (typeof productStatuses)[number];
 
 export const productConfigurationV1Schema = v.object({
   version: v.literal(1),

@@ -10,9 +10,14 @@ import {
 import { bigintString, id, timestamps } from "../drizzle/columns";
 import { orgIdColumns, orgTable } from "../drizzle/tables";
 import { users } from "../user/sql";
+import {
+  papercutAccountCustomerAuthorizationsTableName,
+  papercutAccountManagerAuthorizationsTableName,
+  papercutAccountsTableName,
+} from "./shared";
 
 export const papercutAccounts = pgTable(
-  "papercut_accounts",
+  papercutAccountsTableName,
   {
     id: bigintString("id").notNull(),
     orgId: orgIdColumns.orgId,
@@ -27,7 +32,7 @@ export const papercutAccounts = pgTable(
 export type PapercutAccount = typeof papercutAccounts.$inferSelect;
 
 export const papercutAccountCustomerAuthorizations = orgTable(
-  "papercut_account_customer_authorizations",
+  papercutAccountCustomerAuthorizationsTableName,
   {
     customerId: id("customer_id").notNull(),
     papercutAccountId: bigintString("papercut_account_id").notNull(),
@@ -56,7 +61,7 @@ export type PapercutAccountCustomerAuthorization =
   typeof papercutAccountCustomerAuthorizations.$inferSelect;
 
 export const papercutAccountManagerAuthorizations = orgTable(
-  "papercut_account_manager_authorizations",
+  papercutAccountManagerAuthorizationsTableName,
   {
     managerId: id("manager_id").notNull(),
     papercutAccountId: bigintString("papercut_account_id").notNull(),

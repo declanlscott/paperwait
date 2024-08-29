@@ -5,9 +5,10 @@ import { orgTable } from "../drizzle/tables";
 import { papercutAccounts } from "../papercut/sql";
 import { products } from "../product/sql";
 import { users } from "../user/sql";
+import { ordersTableName } from "./shared";
 
 export const orders = orgTable(
-  "orders",
+  ordersTableName,
   {
     customerId: id("customer_id").notNull(),
     managerId: id("manager_id"),

@@ -1,5 +1,3 @@
-import type { Domain } from "../schemas";
-
 export class ApplicationError extends Error {
   constructor(message: string) {
     super(message);
@@ -22,8 +20,8 @@ export class InvalidMutationError extends ApplicationError {
 }
 
 export class EntityNotFoundError extends InvalidMutationError {
-  constructor(domain?: Domain, id?: string | number) {
-    super(`${domain ? domain : "Entity"} ${id ? `"${id}"` : ""} not found.`);
+  constructor(domain?: string, id?: string | number) {
+    super(`Entity "${id}" not found in "${domain}".`);
     this.name = "EntityNotFoundError";
   }
 }

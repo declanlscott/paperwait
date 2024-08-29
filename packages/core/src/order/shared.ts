@@ -6,6 +6,8 @@ import {
   papercutAccountIdSchema,
 } from "../utils/schemas";
 
+export const ordersTableName = "orders";
+
 export const orderSchema = v.object({
   ...orgTableSchema.entries,
   customerId: nanoIdSchema,

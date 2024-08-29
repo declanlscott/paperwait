@@ -1,8 +1,8 @@
 import { getTableColumns, sql } from "drizzle-orm";
 import { char, customType, timestamp } from "drizzle-orm/pg-core";
 
-import { NANOID_LENGTH } from "../constants/patterns";
-import { generateId } from "../schemas/id";
+import { NANOID_LENGTH } from "../constants";
+import { generateId } from "../utils/helpers";
 
 import type { SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";

@@ -4,7 +4,7 @@ import * as R from "remeda";
 import * as Auth from "../auth";
 import { useAuthenticated } from "../auth/context";
 import { enforceRbac, mutationRbac } from "../auth/rbac";
-import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
+import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
@@ -23,8 +23,8 @@ import {
 } from "./shared";
 import { users } from "./sql";
 
-import type { UserRole } from "../constants/tuples";
 import type { Order } from "../order/sql";
+import type { UserRole } from "./shared";
 import type { User } from "./sql";
 
 export async function metadata() {
@@ -116,7 +116,7 @@ export const withOrderAccess = async (orderId: Order["id"]) =>
 
 export const updateRole = fn(
   updateUserRoleMutationArgsSchema,
-  ({ id, ...values }) => {
+  async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.updateUserRole, ForbiddenError);
@@ -134,28 +134,31 @@ export const updateRole = fn(
   },
 );
 
-export const delete_ = fn(deleteUserMutationArgsSchema, ({ id, ...values }) => {
-  const { user, org } = useAuthenticated();
+export const delete_ = fn(
+  deleteUserMutationArgsSchema,
+  async ({ id, ...values }) => {
+    const { user, org } = useAuthenticated();
 
-  const isRoleAuthorized = enforceRbac(user, mutationRbac.deleteUser);
-  if (!isRoleAuthorized && user.id !== id) throw new ForbiddenError();
+    const isRoleAuthorized = enforceRbac(user, mutationRbac.deleteUser);
+    if (!isRoleAuthorized && user.id !== id) throw new ForbiddenError();
 
-  return useTransaction(async (tx) => {
-    await tx
-      .update(users)
-      .set(values)
-      .where(and(eq(users.id, id), eq(users.orgId, org.id)));
+    return useTransaction(async (tx) => {
+      await tx
+        .update(users)
+        .set(values)
+        .where(and(eq(users.id, id), eq(users.orgId, org.id)));
 
-    await afterTransaction(() =>
-      Promise.all([
-        Auth.invalidateUserSessions(id),
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
-      ]),
-    );
-  });
-});
+      await afterTransaction(() =>
+        Promise.all([
+          Auth.invalidateUserSessions(id),
+          Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        ]),
+      );
+    });
+  },
+);
 
-export const restore = fn(restoreUserMutationArgsSchema, ({ id }) => {
+export const restore = fn(restoreUserMutationArgsSchema, async ({ id }) => {
   const { org } = useAuthenticated();
 
   return useTransaction(async (tx) => {

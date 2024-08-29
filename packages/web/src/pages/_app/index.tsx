@@ -4,9 +4,11 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 
 import { AuthStoreProvider } from "~/app/components/providers/auth";
+import { ReplicacheProvider } from "~/app/components/providers/replicache";
 import { ResourceProvider } from "~/app/components/providers/resource";
 import { SlotProvider } from "~/app/components/providers/slot";
 import { useAuthStore } from "~/app/lib/hooks/auth";
+import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
@@ -31,6 +33,7 @@ export function App(props: AppProps) {
         // These will be set after we wrap the app router in providers
         resource: undefined!,
         authStore: undefined!,
+        replicache: undefined!,
         queryClient,
       },
       defaultPendingComponent: () => loadingIndicator,
@@ -47,11 +50,13 @@ export function App(props: AppProps) {
     <ResourceProvider resource={clientResource}>
       <SlotProvider slot={{ loadingIndicator, logo }}>
         <AuthStoreProvider auth={auth} router={router}>
-          <QueryClientProvider client={queryClient}>
-            <AppRouter router={router} />
+          <ReplicacheProvider router={router}>
+            <QueryClientProvider client={queryClient}>
+              <AppRouter router={router} />
 
-            <Toaster richColors />
-          </QueryClientProvider>
+              <Toaster richColors />
+            </QueryClientProvider>
+          </ReplicacheProvider>
         </AuthStoreProvider>
       </SlotProvider>
     </ResourceProvider>
@@ -65,11 +70,12 @@ type AppRouterProps = {
 function AppRouter(props: AppRouterProps) {
   const resource = useResource();
   const authStore = useAuthStore((store) => store);
+  const replicache = useReplicache();
 
   return (
     <RouterProvider
       router={props.router}
-      context={{ resource, authStore, queryClient }}
+      context={{ resource, authStore, replicache, queryClient }}
     />
   );
 }

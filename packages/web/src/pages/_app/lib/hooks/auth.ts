@@ -1,15 +1,19 @@
 import { useCallback, useContext } from "react";
-import { MissingContextProviderError } from "@paperwait/core/errors";
+import { MissingContextProviderError } from "@paperwait/core/errors/application";
 import { useRouter } from "@tanstack/react-router";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
-import { AuthContext, AuthenticatedContext } from "~/app/lib/contexts";
+import {
+  AuthContext,
+  AuthenticatedContext,
+  ReplicacheContext,
+} from "~/app/lib/contexts";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
+import type { Authenticated, Unauthenticated } from "@paperwait/core/auth";
 import type { AuthStore } from "~/app/lib/contexts";
-import type { Authenticated, Unauthenticated } from "~/app/types";
 
 export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
   const store = useContext(AuthContext);
@@ -21,14 +25,13 @@ export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
 
 export const useAuth = () =>
   useAuthStore(
-    useShallow(({ user, session, org, replicache }) => {
-      if (!user || !session || !org || replicache?.status !== "ready")
+    useShallow(({ user, session, org }) => {
+      if (!user || !session || !org)
         return {
           isAuthed: false,
           user: null,
           session: null,
           org: null,
-          replicache: null,
         } satisfies Unauthenticated;
 
       return {
@@ -36,7 +39,6 @@ export const useAuth = () =>
         user,
         session,
         org,
-        replicache: replicache.client,
       } satisfies Authenticated;
     }),
   );
@@ -46,10 +48,13 @@ export const useAuthActions = () =>
 
 export function useAuthenticated() {
   const auth = useContext(AuthenticatedContext);
+  const replicache = useContext(ReplicacheContext);
 
   if (!auth) throw new MissingContextProviderError("Authenticated");
+  if (!replicache) throw new MissingContextProviderError("Replicache");
+  if (replicache.status !== "ready") throw new Error("Replicache not ready");
 
-  return auth;
+  return { ...auth, replicache: replicache.client };
 }
 
 export function useLogout() {

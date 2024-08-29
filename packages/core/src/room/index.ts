@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
 import { enforceRbac, mutationRbac } from "../auth/rbac";
-import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
+import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
@@ -26,18 +26,11 @@ export const create = fn(createRoomMutationArgsSchema, async (values) => {
   enforceRbac(user, mutationRbac.createRoom, ForbiddenError);
 
   return useTransaction(async (tx) => {
-    const room = await tx
-      .insert(rooms)
-      .values(values)
-      .returning({ id: rooms.id })
-      .then((rows) => rows.at(0));
-    if (!room) throw new Error("Failed to insert room");
+    await tx.insert(rooms).values(values);
 
     await afterTransaction(() =>
       Replicache.poke([Realtime.formatChannel("org", org.id)]),
     );
-
-    return { room };
   });
 });
 

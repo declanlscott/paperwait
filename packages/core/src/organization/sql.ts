@@ -7,7 +7,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { VARCHAR_LENGTH } from "../constants/db";
+import { VARCHAR_LENGTH } from "../constants";
 import {
   id,
   idPrimaryKey,
@@ -16,8 +16,9 @@ import {
   timestamps,
 } from "../drizzle/columns";
 import { oAuth2Providers } from "../oauth2/sql";
+import { licensesTableName, organizationsTableName } from "./shared";
 
-export const licenses = pgTable("licenses", {
+export const licenses = pgTable(licensesTableName, {
   key: uuid("key").defaultRandom().primaryKey(),
   orgId: id("org_id"),
   status: licenseStatus("status").notNull().default("active"),
@@ -25,7 +26,7 @@ export const licenses = pgTable("licenses", {
 export type License = typeof licenses.$inferSelect;
 
 export const organizations = pgTable(
-  "organizations",
+  organizationsTableName,
   {
     ...idPrimaryKey,
     slug: varchar("slug", { length: VARCHAR_LENGTH }).notNull().unique(),

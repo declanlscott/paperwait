@@ -8,7 +8,7 @@ import {
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import { AWS_REGION } from "../constants/misc";
+import { AWS_REGION } from "../constants";
 import { NotFoundError } from "../errors/http";
 
 import type {
@@ -16,7 +16,7 @@ import type {
   GetObjectCommandInput,
   PutObjectCommandInput,
 } from "@aws-sdk/client-s3";
-import type { NanoId } from "../schemas";
+import type { NanoId } from "../utils/schemas";
 
 type RequestPresigningArguments = Parameters<typeof getSignedUrl>[2];
 

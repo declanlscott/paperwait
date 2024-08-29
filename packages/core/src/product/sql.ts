@@ -1,15 +1,16 @@
 import { foreignKey, index, jsonb, varchar } from "drizzle-orm/pg-core";
 
-import { VARCHAR_LENGTH } from "../constants/db";
+import { VARCHAR_LENGTH } from "../constants";
 import { id } from "../drizzle/columns";
 import { productStatus } from "../drizzle/enums";
 import { orgTable } from "../drizzle/tables";
 import { rooms } from "../room/sql";
+import { productsTableName } from "./shared";
 
 import type { ProductConfiguration } from "./shared";
 
 export const products = orgTable(
-  "products",
+  productsTableName,
   {
     name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
     status: productStatus("status").notNull(),
