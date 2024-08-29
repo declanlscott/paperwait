@@ -3,13 +3,9 @@
   "scripts": {
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
-  "dependencies": {
-    "@paperwait/core": "workspace:*",
-    "socks-proxy-agent": "^8.0.4"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
-    "@types/aws-lambda": "^8.10.145",
-    "@types/node": "^22.5.1"
+    "@types/aws-lambda": "^8.10.145"
   }
 }
