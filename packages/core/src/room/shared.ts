@@ -1,8 +1,7 @@
 import * as R from "remeda";
 import * as v from "valibot";
 
-import { VARCHAR_LENGTH } from "../constants/db";
-import { roomStatuses, workflowStatusTypes } from "../constants/tuples";
+import { VARCHAR_LENGTH } from "../constants";
 import { isUniqueByName } from "../utils/misc";
 import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
 
@@ -30,6 +29,14 @@ export const deliveryOptionAttributesSchema = v.object({
 export type DeliveryOptionAttributes = v.InferOutput<
   typeof deliveryOptionAttributesSchema
 >;
+
+export const workflowStatusTypes = [
+  "Pending",
+  "New",
+  "InProgress",
+  "Completed",
+] as const;
+export type WorkflowStatusType = (typeof workflowStatusTypes)[number];
 
 export const workflowStatusAttributesSchema = v.object({
   name: v.pipe(v.string(), v.trim()),
@@ -80,6 +87,11 @@ export const roomConfigurationSchema = v.object({
   deliveryOptions: deliveryOptionsConfigurationSchema,
 });
 export type RoomConfiguration = v.InferOutput<typeof roomConfigurationSchema>;
+
+export const roomsTableName = "rooms";
+
+export const roomStatuses = ["draft", "published"] as const;
+export type RoomStatus = (typeof roomStatuses)[number];
 
 export const roomSchema = v.object({
   ...orgTableSchema.entries,

@@ -1,8 +1,8 @@
 import type { LuciaUser } from ".";
-import type { UserRole } from "../constants/tuples";
 import type { ApplicationError } from "../errors/application";
 import type { HttpError } from "../errors/http";
-import type { MutationV1 } from "../replicache";
+import type { MutationName } from "../replicache";
+import type { UserRole } from "../user/shared";
 
 export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
   user: LuciaUser,
@@ -24,27 +24,27 @@ export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
  * Role-based access control for mutators.
  */
 export const mutationRbac = {
+  createAnnouncement: ["administrator", "operator"],
+  updateAnnouncement: ["administrator", "operator"],
+  deleteAnnouncement: ["administrator", "operator"],
+  createComment: ["administrator", "operator"],
+  updateComment: ["administrator"],
+  deleteComment: ["administrator"],
+  createOrder: ["administrator", "operator", "manager", "customer"],
+  updateOrder: ["administrator", "operator"],
+  deleteOrder: ["administrator", "operator"],
   updateOrganization: ["administrator"],
-  updateUserRole: ["administrator"],
-  deleteUser: ["administrator"],
-  restoreUser: ["administrator"],
   deletePapercutAccount: ["administrator"],
   createPapercutAccountManagerAuthorization: ["administrator"],
   deletePapercutAccountManagerAuthorization: ["administrator"],
+  createProduct: ["administrator", "operator"],
+  updateProduct: ["administrator", "operator"],
+  deleteProduct: ["administrator", "operator"],
   createRoom: ["administrator"],
   updateRoom: ["administrator", "operator"],
   deleteRoom: ["administrator"],
   restoreRoom: ["administrator"],
-  createAnnouncement: ["administrator", "operator"],
-  updateAnnouncement: ["administrator", "operator"],
-  deleteAnnouncement: ["administrator", "operator"],
-  createProduct: ["administrator", "operator"],
-  updateProduct: ["administrator", "operator"],
-  deleteProduct: ["administrator", "operator"],
-  createOrder: ["administrator", "operator", "manager", "customer"],
-  updateOrder: ["administrator", "operator"],
-  deleteOrder: ["administrator", "operator"],
-  createComment: ["administrator", "operator"],
-  updateComment: ["administrator"],
-  deleteComment: ["administrator"],
-} as const satisfies Record<MutationV1["name"], Array<UserRole>>;
+  updateUserRole: ["administrator"],
+  deleteUser: ["administrator"],
+  restoreUser: ["administrator"],
+} as const satisfies Record<MutationName, Array<UserRole>>;

@@ -1,13 +1,14 @@
 import { index, jsonb, text, unique, varchar } from "drizzle-orm/pg-core";
 
-import { VARCHAR_LENGTH } from "../constants/db";
+import { VARCHAR_LENGTH } from "../constants";
 import { roomStatus } from "../drizzle/enums";
 import { orgTable } from "../drizzle/tables";
+import { roomsTableName } from "./shared";
 
 import type { RoomConfiguration } from "./shared";
 
 export const rooms = orgTable(
-  "rooms",
+  roomsTableName,
   {
     name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
     status: roomStatus("status").notNull(),

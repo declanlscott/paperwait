@@ -2,7 +2,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
 import { enforceRbac, mutationRbac } from "../auth/rbac";
-import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
+import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import * as Realtime from "../realtime";
@@ -25,18 +25,11 @@ export const create = fn(
     enforceRbac(user, mutationRbac.createAnnouncement, ForbiddenError);
 
     return useTransaction(async (tx) => {
-      const announcement = await tx
-        .insert(announcements)
-        .values(values)
-        .returning({ id: announcements.id })
-        .then((rows) => rows.at(0));
-      if (!announcement) throw new Error("Failed to insert announcement");
+      await tx.insert(announcements).values(values);
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),
       );
-
-      return { announcement };
     });
   },
 );

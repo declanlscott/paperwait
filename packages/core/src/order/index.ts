@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
 import { enforceRbac, mutationRbac } from "../auth/rbac";
-import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
+import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
@@ -42,8 +42,6 @@ export const create = fn(createOrderMutationArgsSchema, async (values) => {
         usersToPoke.map(({ id }) => Realtime.formatChannel("user", id)),
       ),
     );
-
-    return { order };
   });
 });
 

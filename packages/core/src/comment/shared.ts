@@ -1,8 +1,10 @@
 import * as R from "remeda";
 import * as v from "valibot";
 
-import { userRoles } from "../constants/tuples";
+import { userRoles } from "../user/shared";
 import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
+
+export const commentsTableName = "comments";
 
 export const commentSchema = v.object({
   ...orgTableSchema.entries,

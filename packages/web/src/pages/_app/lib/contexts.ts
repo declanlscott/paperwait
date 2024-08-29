@@ -1,15 +1,13 @@
 import { createContext } from "react";
 
-import type { Auth } from "@paperwait/core/auth";
-import type { UserRole } from "@paperwait/core/user";
+import type { Auth, Authenticated } from "@paperwait/core/auth";
+import type { UserRole } from "@paperwait/core/user/shared";
 import type { Replicache } from "replicache";
 import type { Resource } from "sst";
 import type { StoreApi } from "zustand";
-import type { Mutators } from "~/app/lib/hooks/replicache";
-import type { Authenticated, CommandBarPage, Slot } from "~/app/types";
+import type { CommandBarPage, Slot } from "~/app/types";
 
-type AuthActions = {
-  initializeReplicache: (client: Replicache<Mutators>) => void;
+export type AuthActions = {
   reset: () => void;
   logout: () => Promise<void>;
   authenticateRoute: (from: string) => Omit<Authenticated, "isAuthed">;
@@ -17,23 +15,26 @@ type AuthActions = {
 };
 
 export interface AuthStore extends Auth {
-  replicache:
-    | { status: "initializing" }
-    | { status: "ready"; client: Replicache<Mutators> }
-    | null;
   actions: AuthActions;
 }
-
 export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
 export const AuthenticatedContext = createContext<Authenticated | null>(null);
 
-export type ResourceContext = Resource["Client"];
+export type ReplicacheContext =
+  | {
+      status: "initializing";
+    }
+  | {
+      status: "ready";
+      client: Replicache;
+    };
+export const ReplicacheContext = createContext<ReplicacheContext | null>(null);
 
+export type ResourceContext = Resource["Client"];
 export const ResourceContext = createContext<Resource["Client"] | null>(null);
 
 export type SlotContext = Slot;
-
 export const SlotContext = createContext<SlotContext | null>(null);
 
 export type CommandBarStore = {
@@ -47,6 +48,5 @@ export type CommandBarStore = {
     reset: () => void;
   };
 };
-
 export const CommandBarContext =
   createContext<StoreApi<CommandBarStore> | null>(null);

@@ -3,7 +3,7 @@ import {
   DB_TRANSACTION_MAX_RETRIES,
   POSTGRES_DEADLOCK_DETECTED_ERROR_CODE,
   POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE,
-} from "../constants/db";
+} from "../constants";
 import { InternalServerError } from "../errors/http";
 import { createContext } from "../utils/context";
 

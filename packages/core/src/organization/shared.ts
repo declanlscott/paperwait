@@ -1,7 +1,12 @@
 import * as v from "valibot";
 
-import { orgStatuses } from "../constants/tuples";
 import { nanoIdSchema, timestampsSchema } from "../utils/schemas";
+
+export const licensesTableName = "licenses";
+export const organizationsTableName = "organizations";
+
+export const orgStatuses = ["initializing", "active", "suspended"] as const;
+export type OrgStatus = (typeof orgStatuses)[number];
 
 export const organizationSchema = v.object({
   id: nanoIdSchema,

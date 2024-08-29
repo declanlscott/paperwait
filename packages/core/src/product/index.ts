@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
 import { enforceRbac, mutationRbac } from "../auth/rbac";
-import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
+import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
@@ -24,18 +24,11 @@ export const create = fn(createProductMutationArgsSchema, async (values) => {
   enforceRbac(user, mutationRbac.createProduct, ForbiddenError);
 
   return useTransaction(async (tx) => {
-    const product = await tx
-      .insert(products)
-      .values(values)
-      .returning({ id: products.id })
-      .then((rows) => rows.at(0));
-    if (!product) throw new Error("Failed to insert product");
+    await tx.insert(products).values(values);
 
     await afterTransaction(() =>
       Replicache.poke([Realtime.formatChannel("org", org.id)]),
     );
-
-    return { product };
   });
 });
 
@@ -84,7 +77,7 @@ export async function fromIds(ids: Array<Product["id"]>) {
 
 export const update = fn(
   updateProductMutationArgsSchema,
-  ({ id, ...values }) => {
+  async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.updateProduct, ForbiddenError);

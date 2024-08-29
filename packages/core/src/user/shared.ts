@@ -1,7 +1,16 @@
 import * as v from "valibot";
 
-import { userRoles } from "../constants/tuples";
 import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
+
+export const usersTableName = "users";
+
+export const userRoles = [
+  "administrator",
+  "operator",
+  "manager",
+  "customer",
+] as const;
+export type UserRole = (typeof userRoles)[number];
 
 export const userSchema = v.object({
   ...orgTableSchema.entries,

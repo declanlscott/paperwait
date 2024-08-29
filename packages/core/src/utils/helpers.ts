@@ -3,7 +3,10 @@ import * as v from "valibot";
 
 import { NANOID_CUSTOM_ALPHABET, NANOID_LENGTH } from "../constants/patterns";
 
+import type { WriteTransaction } from "replicache";
+import type { LuciaUser } from "../auth";
 import type { HttpError } from "../errors/http";
+import type { OptimisticMutator } from "../replicache/client";
 
 export const generateId = customAlphabet(NANOID_CUSTOM_ALPHABET, NANOID_LENGTH);
 
@@ -31,5 +34,33 @@ export const fn =
       throw e;
     }
 
-    return callback.apply(callback, [output]);
+    return callback(output);
+  };
+
+export const optimisticMutator =
+  <
+    TSchema extends v.GenericSchema,
+    TAuthorizer extends (
+      user: LuciaUser,
+      tx: WriteTransaction,
+      args: v.InferOutput<TSchema>,
+    ) => ReturnType<TAuthorizer>,
+    TMutator extends OptimisticMutator<TSchema>,
+  >(
+    schema: TSchema,
+    authorizer: TAuthorizer,
+    getMutator: (context: {
+      user: LuciaUser;
+      authorized: Awaited<ReturnType<TAuthorizer>>;
+    }) => TMutator,
+  ) =>
+  (user: LuciaUser) =>
+  async (tx: WriteTransaction, args: v.InferInput<TSchema>) => {
+    const values = v.parse(schema, args);
+
+    const authorized = await Promise.resolve(authorizer(user, tx, values));
+
+    const mutator = getMutator({ user, authorized });
+
+    return mutator(tx, values);
   };

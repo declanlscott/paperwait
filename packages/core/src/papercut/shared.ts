@@ -7,6 +7,12 @@ import {
   timestampsSchema,
 } from "../utils/schemas";
 
+export const papercutAccountsTableName = "papercut_accounts";
+export const papercutAccountCustomerAuthorizationsTableName =
+  "papercut_account_customer_authorizations";
+export const papercutAccountManagerAuthorizationsTableName =
+  "papercut_account_manager_authorizations";
+
 export const papercutAccountSchema = v.object({
   id: papercutAccountIdSchema,
   orgId: nanoIdSchema,

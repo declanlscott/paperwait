@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { MissingContextProviderError } from "@paperwait/core/errors";
+import { MissingContextProviderError } from "@paperwait/core/errors/application";
 
 import { ResourceContext } from "~/app/lib/contexts";
 

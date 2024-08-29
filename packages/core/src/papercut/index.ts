@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
 import { enforceRbac, mutationRbac } from "../auth/rbac";
-import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
+import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
@@ -39,22 +39,14 @@ export const createAccountManagerAuthorization = fn(
     );
 
     return useTransaction(async (tx) => {
-      const authorization = await tx
+      await tx
         .insert(papercutAccountManagerAuthorizations)
         .values(values)
-        .onConflictDoNothing()
-        .returning({ id: papercutAccountManagerAuthorizations.id })
-        .then((rows) => rows.at(0));
-      if (!authorization)
-        throw new Error(
-          "Failed to insert papercut account manager authorization",
-        );
+        .onConflictDoNothing();
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),
       );
-
-      return { authorization };
     });
   },
 );
@@ -206,7 +198,7 @@ export const accountManagerAuthorizationsFromIds = async (
 
 export const deleteAccount = fn(
   deletePapercutAccountMutationArgsSchema,
-  ({ id, ...values }) => {
+  async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.deletePapercutAccount, ForbiddenError);
@@ -264,7 +256,7 @@ export const deleteAccount = fn(
 
 export const deleteAccountManagerAuthorization = fn(
   deletePapercutAccountManagerAuthorizationMutationArgsSchema,
-  ({ id, ...values }) => {
+  async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
     enforceRbac(

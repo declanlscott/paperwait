@@ -4,9 +4,10 @@ import { id } from "../drizzle/columns";
 import { userRole } from "../drizzle/enums";
 import { orgTable } from "../drizzle/tables";
 import { orders } from "../order/sql";
+import { commentsTableName } from "./shared";
 
 export const comments = orgTable(
-  "comments",
+  commentsTableName,
   {
     orderId: id("order_id").notNull(),
     authorId: id("author_id").notNull(),

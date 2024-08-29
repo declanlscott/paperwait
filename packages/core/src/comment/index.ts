@@ -1,7 +1,7 @@
 import { and, arrayOverlaps, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
-import { ROW_VERSION_COLUMN_NAME } from "../constants/db";
+import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
@@ -33,18 +33,11 @@ export const create = fn(createCommentMutationArgsSchema, async (values) => {
     );
 
   return useTransaction(async (tx) => {
-    const comment = await tx
-      .insert(comments)
-      .values(values)
-      .returning({ id: comments.id })
-      .then((rows) => rows.at(0));
-    if (!comment) throw new Error("Failed to insert comment");
+    await tx.insert(comments).values(values);
 
     await afterTransaction(() =>
       Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
     );
-
-    return { comment };
   });
 });
 
