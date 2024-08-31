@@ -1,7 +1,7 @@
 import { customAlphabet } from "nanoid";
 import * as v from "valibot";
 
-import { NANOID_CUSTOM_ALPHABET, NANOID_LENGTH } from "../constants/patterns";
+import { NANOID_CUSTOM_ALPHABET, NANOID_LENGTH } from "../constants";
 
 import type { WriteTransaction } from "replicache";
 import type { LuciaUser } from "../auth";
