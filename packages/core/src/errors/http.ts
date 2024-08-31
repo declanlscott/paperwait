@@ -77,17 +77,3 @@ export class NotImplementedError extends HttpError {
     this.name = "NotImplementedError";
   }
 }
-
-export function handlePromiseResult<TValue>(
-  result: PromiseSettledResult<TValue>,
-) {
-  if (result.status === "rejected") {
-    console.error(result.reason);
-
-    if (result.reason instanceof HttpError) throw result.reason;
-
-    throw new InternalServerError();
-  }
-
-  return result.value;
-}

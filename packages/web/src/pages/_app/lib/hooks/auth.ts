@@ -1,5 +1,8 @@
 import { useCallback, useContext } from "react";
-import { MissingContextProviderError } from "@paperwait/core/errors/application";
+import {
+  ApplicationError,
+  MissingContextProviderError,
+} from "@paperwait/core/errors/application";
 import { useRouter } from "@tanstack/react-router";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -52,7 +55,8 @@ export function useAuthenticated() {
 
   if (!auth) throw new MissingContextProviderError("Authenticated");
   if (!replicache) throw new MissingContextProviderError("Replicache");
-  if (replicache.status !== "ready") throw new Error("Replicache not ready");
+  if (replicache.status !== "ready")
+    throw new ApplicationError("Replicache is not in ready state");
 
   return { ...auth, replicache: replicache.client };
 }

@@ -1,8 +1,8 @@
-import { lucia, withAuth } from "@paperwait/core/auth";
-import { db } from "@paperwait/core/database";
-import { Organization } from "@paperwait/core/organization";
+import { lucia } from "@paperwait/core/auth";
+import { withAuth } from "@paperwait/core/auth/context";
+import { db, eq } from "@paperwait/core/drizzle";
+import { organizations } from "@paperwait/core/organization/sql";
 import { defineMiddleware } from "astro:middleware";
-import { eq } from "drizzle-orm";
 
 import { isPrerenderedPage } from "~/middleware/utils";
 
@@ -36,11 +36,12 @@ export const auth = defineMiddleware(async (context, next) => {
 
   const org = await db
     .select({
-      id: Organization.id,
-      slug: Organization.slug,
+      id: organizations.id,
+      slug: organizations.slug,
+      status: organizations.status,
     })
-    .from(Organization)
-    .where(eq(Organization.id, user.orgId))
+    .from(organizations)
+    .where(eq(organizations.id, user.orgId))
     .then((rows) => rows.at(0));
   if (!org) throw new Error("Organization not found");
 

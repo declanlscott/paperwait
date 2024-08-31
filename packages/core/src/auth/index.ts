@@ -6,7 +6,11 @@ import { users } from "../user/sql";
 import { generateId } from "../utils/helpers";
 import { sessions, sessionsTokens } from "./sql";
 
-import type { Session as LuciaSession, User as LuciaUser } from "lucia";
+import type {
+  Session as LuciaSession,
+  User as LuciaUser,
+  RegisteredDatabaseSessionAttributes,
+} from "lucia";
 import type { OAuth2Tokens } from "../oauth2/tokens";
 import type { Organization } from "../organization/sql";
 import type { User } from "../user/sql";
@@ -15,7 +19,7 @@ import type { Session, SessionsTokens } from "./sql";
 export type Auth = {
   session: LuciaSession | null;
   user: LuciaUser | null;
-  org: Pick<Organization, "id" | "slug"> | null;
+  org: Pick<Organization, "id" | "slug" | "status"> | null;
 };
 
 export type Authenticated = {
@@ -33,7 +37,7 @@ export const lucia = new Lucia(adapter, {
     attributes: { secure: (process.env.PROD ?? "false") === "true" },
   },
   getUserAttributes: (attributes) => ({
-    providerId: attributes.providerId,
+    oAuth2UserId: attributes.oAuth2UserId,
     orgId: attributes.orgId,
     name: attributes.name,
     role: attributes.role,
@@ -57,15 +61,13 @@ export type { User as LuciaUser, Session as LuciaSession } from "lucia";
 
 export async function createSession(
   userId: LuciaUser["id"],
-  orgId: LuciaUser["orgId"],
+  attributes: RegisteredDatabaseSessionAttributes,
   tokens: OAuth2Tokens,
 ) {
   const session = await db.transaction(async (tx) => {
-    const session = await lucia.createSession(
-      userId,
-      { orgId },
-      { sessionId: generateId() },
-    );
+    const session = await lucia.createSession(userId, attributes, {
+      sessionId: generateId(),
+    });
 
     const sessionTokens = {
       idToken: tokens.idToken(),
@@ -82,7 +84,7 @@ export async function createSession(
       .values({
         sessionId: session.id,
         userId,
-        orgId,
+        orgId: attributes.orgId,
         ...sessionTokens,
       })
       .onConflictDoUpdate({

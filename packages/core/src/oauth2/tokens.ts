@@ -6,8 +6,8 @@ export type ProviderTokens = Pick<
 >;
 
 export type IdToken = {
-  userProviderId: string;
-  orgProviderId: string;
+  providerId: string;
+  userId: string;
   username: string;
 };
 

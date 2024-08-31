@@ -1,4 +1,4 @@
-import { useAuthenticated } from "@paperwait/core/auth";
+import { useAuthenticated } from "@paperwait/core/auth/context";
 import { defineMiddleware } from "astro:middleware";
 import { Resource } from "sst";
 

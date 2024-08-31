@@ -27,6 +27,15 @@ import type { Order } from "../order/sql";
 import type { UserRole } from "./shared";
 import type { User } from "./sql";
 
+export const create = async (user: typeof users.$inferInsert) =>
+  useTransaction(async (tx) =>
+    tx
+      .insert(users)
+      .values(user)
+      .returning({ id: users.id })
+      .then((rows) => rows.at(0)),
+  );
+
 export async function metadata() {
   const { user, org } = useAuthenticated();
 
@@ -55,32 +64,34 @@ export async function metadata() {
   });
 }
 
-export const fromIds = async (ids: Array<User["id"]>) =>
-  useTransaction((tx) => {
-    const { org } = useAuthenticated();
+export async function fromIds(ids: Array<User["id"]>) {
+  const { org } = useAuthenticated();
 
-    return tx
+  return useTransaction((tx) =>
+    tx
       .select()
       .from(users)
-      .where(and(inArray(users.id, ids), eq(users.orgId, org.id)));
-  });
+      .where(and(inArray(users.id, ids), eq(users.orgId, org.id))),
+  );
+}
 
-export const fromRoles = async (
+export async function fromRoles(
   roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],
-) =>
-  useTransaction((tx) => {
-    const { org } = useAuthenticated();
+) {
+  const { org } = useAuthenticated();
 
-    return tx
+  return useTransaction((tx) =>
+    tx
       .select({ id: users.id, role: users.role })
       .from(users)
-      .where(and(inArray(users.role, roles), eq(users.orgId, org.id)));
-  });
+      .where(and(inArray(users.role, roles), eq(users.orgId, org.id))),
+  );
+}
 
-export const withOrderAccess = async (orderId: Order["id"]) =>
-  useTransaction(async (tx) => {
-    const { org } = useAuthenticated();
+export async function withOrderAccess(orderId: Order["id"]) {
+  const { org } = useAuthenticated();
 
+  return useTransaction(async (tx) => {
     const [adminsOps, managers, [customer]] = await Promise.all([
       fromRoles(["administrator", "operator"]),
       tx
@@ -113,6 +124,20 @@ export const withOrderAccess = async (orderId: Order["id"]) =>
 
     return R.uniqueBy([...adminsOps, ...managers, customer], ({ id }) => id);
   });
+}
+
+export async function exists(userId: User["id"]) {
+  const { org } = useAuthenticated();
+
+  return useTransaction(async (tx) => {
+    const rows = await tx
+      .select()
+      .from(users)
+      .where(and(eq(users.id, userId), eq(users.orgId, org.id)));
+
+    return rows.length > 0;
+  });
+}
 
 export const updateRole = fn(
   updateUserRoleMutationArgsSchema,

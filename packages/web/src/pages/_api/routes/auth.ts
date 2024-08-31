@@ -1,38 +1,35 @@
 import { vValidator } from "@hono/valibot-validator";
+import * as Auth from "@paperwait/core/auth";
+import { useAuthenticated } from "@paperwait/core/auth/context";
+import { and, db, eq, or, sql } from "@paperwait/core/drizzle";
 import {
-  createSession,
-  invalidateSession,
-  invalidateUserSessions,
-  useAuthenticated,
-} from "@paperwait/core/auth";
-import { db } from "@paperwait/core/database";
+  afterTransaction,
+  withTransaction,
+} from "@paperwait/core/drizzle/transaction";
 import {
-  handlePromiseResult,
   NotFoundError,
   NotImplementedError,
   UnauthorizedError,
-} from "@paperwait/core/errors";
-import {
-  createEntraIdAuthorizationUrl,
-  createGoogleAuthorizationUrl,
-  entraId,
-  google,
-  parseEntraIdIdToken,
-  parseGoogleIdToken,
-} from "@paperwait/core/oauth2";
-import { Organization } from "@paperwait/core/organization";
-import { isUserExists } from "@paperwait/core/papercut";
-import { NanoId, Registration } from "@paperwait/core/schemas";
-import { User } from "@paperwait/core/user";
-import { and, eq, or, sql } from "drizzle-orm";
+} from "@paperwait/core/errors/http";
+import * as EntraId from "@paperwait/core/oauth2/entra-id";
+import * as Google from "@paperwait/core/oauth2/google";
+import { oAuth2ProviderVariants } from "@paperwait/core/oauth2/shared";
+import { oAuth2Providers } from "@paperwait/core/oauth2/sql";
+import { organizations } from "@paperwait/core/organization/sql";
+import * as Realtime from "@paperwait/core/realtime";
+import * as Replicache from "@paperwait/core/replicache";
+import * as User from "@paperwait/core/user";
+import { users } from "@paperwait/core/user/sql";
+import { nanoIdSchema } from "@paperwait/core/utils/schemas";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
+import * as R from "remeda";
 import * as v from "valibot";
 
-import { getUserInfo, processUser } from "~/api/lib/auth/user";
 import { authorization } from "~/api/middleware";
 
-import type { IdToken, OAuth2Tokens } from "@paperwait/core/oauth2";
+import type { UserInfo } from "@paperwait/core/oauth2/shared";
+import type { IdToken, OAuth2Tokens } from "@paperwait/core/oauth2/tokens";
 
 export default new Hono()
   // Login
@@ -47,21 +44,28 @@ export default new Hono()
 
       const org = await db
         .select({
-          id: Organization.id,
-          provider: Organization.provider,
-          providerId: Organization.providerId,
+          id: organizations.id,
+          oAuth2ProviderId: oAuth2Providers.id,
+          oAuth2ProviderVariant: oAuth2Providers.variant,
         })
-        .from(Organization)
+        .from(organizations)
         .where(
           or(
             eq(
-              sql`TRIM(LOWER(${Organization.name}))`,
+              sql`TRIM(LOWER(${organizations.name}))`,
               sql`TRIM(LOWER(${orgParam}))`,
             ),
             eq(
-              sql`TRIM(LOWER(${Organization.slug}))`,
+              sql`TRIM(LOWER(${organizations.slug}))`,
               sql`TRIM(LOWER(${orgParam}))`,
             ),
+          ),
+        )
+        .innerJoin(
+          oAuth2Providers,
+          and(
+            eq(organizations.oAuth2ProviderId, oAuth2Providers.id),
+            eq(organizations.id, oAuth2Providers.orgId),
           ),
         )
         .then((rows) => rows.at(0));
@@ -70,33 +74,33 @@ export default new Hono()
       let state: string;
       let codeVerifier: string;
       let authorizationUrl: URL;
-      switch (org.provider) {
+      switch (org.oAuth2ProviderVariant) {
         case "entra-id": {
-          const entraId = createEntraIdAuthorizationUrl();
+          const entraId = EntraId.createAuthorizationUrl();
           state = entraId.state;
           codeVerifier = entraId.codeVerifier;
           authorizationUrl = entraId.authorizationUrl;
           break;
         }
         case "google": {
-          const google = createGoogleAuthorizationUrl(org.providerId);
+          const google = Google.createAuthorizationUrl(org.oAuth2ProviderId);
           state = google.state;
           codeVerifier = google.codeVerifier;
           authorizationUrl = google.authorizationUrl;
           break;
         }
         default: {
-          org.provider satisfies never;
+          org.oAuth2ProviderVariant satisfies never;
 
           throw new NotImplementedError(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Provider "${org.provider}" not implemented`,
+            `Provider "${org.oAuth2ProviderVariant}" not implemented`,
           );
         }
       }
 
       // store the provider as a cookie
-      setCookie(c, "provider", org.provider, {
+      setCookie(c, "provider", org.oAuth2ProviderVariant, {
         path: "/",
         secure: import.meta.env.PROD,
         httpOnly: true,
@@ -151,7 +155,7 @@ export default new Hono()
     vValidator(
       "cookie",
       v.object({
-        provider: Registration.entries.authProvider,
+        provider: v.picklist(oAuth2ProviderVariants),
         state: v.string(),
         code_verifier: v.string(),
         orgId: v.string(),
@@ -167,13 +171,13 @@ export default new Hono()
       let idToken: IdToken;
       switch (provider) {
         case "entra-id": {
-          tokens = await entraId.validateAuthorizationCode(code, code_verifier);
-          idToken = parseEntraIdIdToken(tokens.idToken());
+          tokens = await EntraId.validateAuthorizationCode(code, code_verifier);
+          idToken = EntraId.parseIdToken(tokens.idToken());
           break;
         }
         case "google": {
-          tokens = await google.validateAuthorizationCode(code, code_verifier);
-          idToken = parseGoogleIdToken(tokens.idToken());
+          tokens = await Google.validateAuthorizationCode(code, code_verifier);
+          idToken = Google.parseIdToken(tokens.idToken());
           break;
         }
         default: {
@@ -187,43 +191,109 @@ export default new Hono()
       }
 
       const org = await db
-        .select({ status: Organization.status })
-        .from(Organization)
+        .select({ status: organizations.status })
+        .from(organizations)
         .where(
           and(
-            eq(Organization.providerId, idToken.orgProviderId),
-            eq(Organization.id, orgId),
+            eq(organizations.oAuth2ProviderId, idToken.providerId),
+            eq(organizations.id, orgId),
           ),
         )
         .execute()
         .then((rows) => rows.at(0));
       if (!org)
         throw new NotFoundError(`
-        Failed to find organization (${orgId}) with providerId: ${idToken.orgProviderId}
+        Failed to find organization (${orgId}) with oauth2 provider id: ${idToken.providerId}
       `);
 
-      const results = await Promise.allSettled([
-        isUserExists({
-          orgId,
-          input: { username: idToken.username },
-        }).then((exists) => {
-          if (!exists)
-            throw new UnauthorizedError("User does not exist in PaperCut");
+      // TODO: Implement api.isUserExists call to customer's papercut server
+      const userExists = true;
+      if (!userExists)
+        throw new UnauthorizedError("User does not exist in PaperCut");
 
-          return exists;
-        }),
-        getUserInfo(provider, tokens.accessToken()),
-      ]);
+      let userInfo: UserInfo;
+      switch (provider) {
+        case "entra-id":
+          userInfo = await EntraId.getUserInfo(tokens.accessToken());
+          break;
+        case "google":
+          userInfo = await Google.getUserInfo(tokens.accessToken());
+          break;
+        default: {
+          provider satisfies never;
 
-      handlePromiseResult(results[0]);
-      const userInfo = handlePromiseResult(results[1]);
+          throw new NotImplementedError(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Provider "${provider}" not implemented`,
+          );
+        }
+      }
 
-      const userId = await processUser(
-        { id: orgId, status: org.status },
-        { idToken, info: userInfo },
-      );
+      const userId = await withTransaction(async (tx) => {
+        const existingUser = await tx
+          .select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            username: users.username,
+            role: users.role,
+            deletedAt: users.deletedAt,
+          })
+          .from(users)
+          .where(
+            and(eq(users.oAuth2UserId, idToken.userId), eq(users.orgId, orgId)),
+          )
+          .then((rows) => rows.at(0));
 
-      const { cookie } = await createSession(userId, orgId, tokens);
+        if (!existingUser) {
+          if (org.status === "suspended")
+            throw new UnauthorizedError("Organization is suspended");
+
+          const newUser = await User.create({
+            orgId,
+            oAuth2UserId: idToken.userId,
+            name: userInfo.name,
+            username: idToken.username,
+            email: userInfo.email,
+          });
+          if (!newUser) throw new Error("Failed to insert new user");
+
+          await afterTransaction(() =>
+            Replicache.poke([Realtime.formatChannel("org", orgId)]),
+          );
+
+          return newUser.id;
+        }
+
+        if (existingUser.deletedAt)
+          throw new UnauthorizedError("User is deleted");
+
+        const existingUserInfo = {
+          name: existingUser.name,
+          email: existingUser.email,
+          username: existingUser.username,
+        };
+        const freshUserInfo = {
+          name: userInfo.name,
+          email: userInfo.email,
+          username: idToken.username,
+        };
+
+        if (!R.isDeepEqual(existingUserInfo, freshUserInfo)) {
+          await tx
+            .update(users)
+            .set(freshUserInfo)
+            .where(and(eq(users.id, existingUser.id), eq(users.orgId, orgId)));
+
+          await afterTransaction(() =>
+            Replicache.poke([Realtime.formatChannel("org", orgId)]),
+          );
+        }
+
+        return existingUser.id;
+      });
+
+      const { cookie } = await Auth.createSession(userId, { orgId }, tokens);
 
       setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
@@ -234,7 +304,7 @@ export default new Hono()
   .post("/logout", authorization(), async (c) => {
     const { session } = useAuthenticated();
 
-    const { cookie } = await invalidateSession(session.id);
+    const { cookie } = await Auth.invalidateSession(session.id);
 
     setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
@@ -244,20 +314,14 @@ export default new Hono()
   .post(
     "/logout/:userId",
     authorization(["administrator"]),
-    vValidator("param", v.object({ userId: NanoId })),
+    vValidator("param", v.object({ userId: nanoIdSchema })),
     async (c) => {
-      const { org } = useAuthenticated();
       const { userId } = c.req.valid("param");
 
-      const exists = await db
-        .select({})
-        .from(User)
-        .where(and(eq(User.id, userId), eq(User.orgId, org.id)))
-        .execute()
-        .then((rows) => rows.length > 0);
-      if (!exists) throw new NotFoundError(`User "${userId}" not found`);
+      const userExists = await User.exists(userId);
+      if (!userExists) throw new NotFoundError(`User "${userId}" not found`);
 
-      await invalidateUserSessions(userId);
+      await Auth.invalidateUserSessions(userId);
 
       return c.body(null, 204);
     },

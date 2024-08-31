@@ -4,12 +4,11 @@ import { Resource } from "sst";
 import * as v from "valibot";
 
 import { AUTH_CALLBACK_PATH } from "../constants";
-import { InternalServerError } from "../errors/http";
-import { fn } from "../utils/helpers";
+import { HttpError, InternalServerError } from "../errors/http";
 
 import type { IdToken, ProviderTokens } from "./tokens";
 
-export const entraId = new MicrosoftEntraId(
+export const provider = new MicrosoftEntraId(
   "organizations",
   Resource.Auth.entraId.clientId,
   Resource.Auth.entraId.clientSecret,
@@ -18,42 +17,63 @@ export const entraId = new MicrosoftEntraId(
     : `https://${Resource.Meta.domain}${AUTH_CALLBACK_PATH}`,
 );
 
-export function createEntraIdAuthorizationUrl() {
+export function createAuthorizationUrl() {
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
 
-  const authorizationUrl = entraId.createAuthorizationURL(state, codeVerifier, [
-    "profile",
-    "email",
-    "offline_access",
-    "User.Read",
-    "User.ReadBasic.All",
-  ]);
+  const authorizationUrl = provider.createAuthorizationURL(
+    state,
+    codeVerifier,
+    ["profile", "email", "offline_access", "User.Read", "User.ReadBasic.All"],
+  );
 
   return { authorizationUrl, state, codeVerifier };
 }
 
-export function parseEntraIdIdToken(
-  idToken: ProviderTokens["idToken"],
-): IdToken {
-  const jwt = parseJWT(idToken);
+export const validateAuthorizationCode = async (
+  code: string,
+  codeVerifier: string,
+) => provider.validateAuthorizationCode(code, codeVerifier);
 
+export async function getUserInfo(accessToken: string) {
+  const res = await fetch("https://graph.microsoft.com/oidc/userinfo", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new HttpError(res.statusText, res.status);
+
+  return v.parse(
+    v.looseObject({
+      sub: v.string(),
+      name: v.string(),
+      picture: v.string(),
+      email: v.string(),
+      family_name: v.optional(v.string()),
+      given_name: v.optional(v.string()),
+    }),
+    await res.json(),
+  );
+}
+
+export function parseIdToken(idToken: ProviderTokens["idToken"]): IdToken {
+  const jwt = parseJWT(idToken);
   if (!jwt?.payload) throw new InternalServerError("Empty id token payload");
 
-  return fn(
+  const { tid, oid, preferred_username } = v.parse(
     v.object({
       tid: v.pipe(v.string(), v.uuid()),
       oid: v.pipe(v.string(), v.uuid()),
       preferred_username: v.string(),
     }),
-    ({ tid, oid, preferred_username }) => ({
-      orgProviderId: tid,
-      userProviderId: oid,
-      username: preferred_username,
-    }),
-    {
-      Error: InternalServerError,
-      message: `Failed to parse entra-id id token payload`,
-    },
-  )(jwt.payload);
+    jwt.payload,
+  );
+
+  return {
+    providerId: tid,
+    userId: oid,
+    username: preferred_username,
+  };
 }

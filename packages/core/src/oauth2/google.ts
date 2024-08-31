@@ -4,12 +4,11 @@ import { Resource } from "sst";
 import * as v from "valibot";
 
 import { AUTH_CALLBACK_PATH } from "../constants";
-import { InternalServerError } from "../errors/http";
-import { fn } from "../utils/helpers";
+import { HttpError, InternalServerError } from "../errors/http";
 
 import type { IdToken, ProviderTokens } from "./tokens";
 
-export const google = new Google(
+export const provider = new Google(
   Resource.Auth.google.clientId,
   Resource.Auth.google.clientSecret,
   Resource.Meta.isDev === "true"
@@ -17,37 +16,59 @@ export const google = new Google(
     : `https://${Resource.Meta.domain}${AUTH_CALLBACK_PATH}`,
 );
 
-export function createGoogleAuthorizationUrl(hostedDomain: string) {
+export function createAuthorizationUrl(hostedDomain: string) {
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
 
-  const authorizationUrl = google.createAuthorizationURL(state, codeVerifier, [
-    "profile",
-    "email",
-  ]);
+  const authorizationUrl = provider.createAuthorizationURL(
+    state,
+    codeVerifier,
+    ["profile", "email"],
+  );
 
   authorizationUrl.searchParams.set("hd", hostedDomain);
 
   return { authorizationUrl, state, codeVerifier };
 }
 
-export function parseGoogleIdToken(
-  idToken: ProviderTokens["idToken"],
-): IdToken {
-  const jwt = parseJWT(idToken);
+export const validateAuthorizationCode = async (
+  code: string,
+  codeVerifier: string,
+) => provider.validateAuthorizationCode(code, codeVerifier);
 
+export async function getUserInfo(accessToken: string) {
+  const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new HttpError(res.statusText, res.status);
+
+  return v.parse(
+    v.looseObject({
+      sub: v.string(),
+      name: v.string(),
+      picture: v.string(),
+      email: v.string(),
+      given_name: v.optional(v.string()),
+    }),
+    await res.json(),
+  );
+}
+
+export function parseIdToken(idToken: ProviderTokens["idToken"]): IdToken {
+  const jwt = parseJWT(idToken);
   if (!jwt?.payload) throw new InternalServerError("Empty id token payload");
 
-  return fn(
+  const { hd, sub, name } = v.parse(
     v.object({ hd: v.string(), sub: v.string(), name: v.string() }),
-    ({ hd, sub, name }) => ({
-      orgProviderId: hd,
-      userProviderId: sub,
-      username: name,
-    }),
-    {
-      Error: InternalServerError,
-      message: `Failed to parse google id token payload`,
-    },
-  )(jwt.payload);
+    jwt.payload,
+  );
+
+  return {
+    providerId: hd,
+    userId: sub,
+    username: name,
+  };
 }
