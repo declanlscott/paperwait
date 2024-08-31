@@ -1,10 +1,11 @@
 import { createContext } from "../utils/context";
 
-import type { OmitTimestamps } from "../drizzle/columns";
+import type { SessionTokens } from "../auth/sql";
 import type { OAuth2Provider } from "./sql";
 
 export type OAuth2Context = {
-  provider: OmitTimestamps<OAuth2Provider>;
+  provider: Pick<OAuth2Provider, "variant" | "id"> &
+    Pick<SessionTokens, "accessToken">;
 };
 export const OAuth2Context = createContext<OAuth2Context>();
 

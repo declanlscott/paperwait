@@ -13,6 +13,8 @@ import { fn } from "../utils/helpers";
 import { updateOrganizationMutationArgsSchema } from "./shared";
 import { organizations } from "./sql";
 
+import type { Organization } from "./sql";
+
 export async function metadata() {
   const { org } = useAuthenticated();
 
@@ -64,5 +66,14 @@ export const update = fn(
     });
   },
 );
+
+export const isSlugUnique = async (slug: Organization["slug"]) =>
+  useTransaction((tx) =>
+    tx
+      .select({})
+      .from(organizations)
+      .where(eq(organizations.slug, slug))
+      .then((rows) => rows.length === 0),
+  );
 
 export { organizationSchema as schema } from "./shared";

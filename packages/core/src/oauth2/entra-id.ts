@@ -1,12 +1,19 @@
 import { generateCodeVerifier, generateState, MicrosoftEntraId } from "arctic";
+import { and, eq } from "drizzle-orm";
 import { parseJWT } from "oslo/jwt";
 import { Resource } from "sst";
 import * as v from "valibot";
 
+import { useAuthenticated } from "../auth/context";
 import { AUTH_CALLBACK_PATH } from "../constants";
-import { HttpError, InternalServerError } from "../errors/http";
+import { useTransaction } from "../drizzle/transaction";
+import { HttpError, InternalServerError, NotFoundError } from "../errors/http";
+import { users } from "../user/sql";
+import { useOAuth2 } from "./context";
 
-import type { IdToken, ProviderTokens } from "./tokens";
+import type { SessionTokens } from "../auth/sql";
+import type { User } from "../user/sql";
+import type { IdToken } from "./tokens";
 
 export const provider = new MicrosoftEntraId(
   "organizations",
@@ -58,7 +65,7 @@ export async function getUserInfo(accessToken: string) {
   );
 }
 
-export function parseIdToken(idToken: ProviderTokens["idToken"]): IdToken {
+export function parseIdToken(idToken: SessionTokens["idToken"]): IdToken {
   const jwt = parseJWT(idToken);
   if (!jwt?.payload) throw new InternalServerError("Empty id token payload");
 
@@ -76,4 +83,34 @@ export function parseIdToken(idToken: ProviderTokens["idToken"]): IdToken {
     userId: oid,
     username: preferred_username,
   };
+}
+
+export const refreshAccessToken = async (
+  refreshToken: NonNullable<SessionTokens["refreshToken"]>,
+) => provider.refreshAccessToken(refreshToken);
+
+export async function photo(userId: User["id"]): Promise<Response> {
+  const { org } = useAuthenticated();
+  const oAuth2 = useOAuth2();
+
+  const user = await useTransaction((tx) =>
+    tx
+      .select({ id: users.oAuth2UserId })
+      .from(users)
+      .where(and(eq(users.id, userId), eq(users.orgId, org.id)))
+      .then((rows) => rows.at(0)),
+  );
+  if (!user) throw new NotFoundError("User not found");
+
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/users/${user.id}/photo/$value`,
+    {
+      headers: {
+        Authorization: `Bearer ${oAuth2.provider.accessToken}`,
+      },
+    },
+  );
+  if (!res.ok) throw new HttpError(res.statusText, res.status);
+
+  return res;
 }

@@ -1,6 +1,9 @@
 import * as v from "valibot";
 
-export const oAuth2ProviderVariants = ["entra-id", "google"] as const;
+export const ENTRA_ID = "entra-id";
+export const GOOGLE = "google";
+
+export const oAuth2ProviderVariants = [ENTRA_ID, GOOGLE] as const;
 export type OAuth2ProviderVariant = (typeof oAuth2ProviderVariants)[number];
 
 export const entraIdUserInfoSchema = v.looseObject({

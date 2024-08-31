@@ -33,4 +33,4 @@ export const sessionsTokens = pgTable("session_tokens", {
   accessTokenExpiresAt: timestamp("access_token_expires_at").notNull(),
   refreshToken: text("refresh_token"),
 });
-export type SessionsTokens = typeof sessionsTokens.$inferSelect;
+export type SessionTokens = typeof sessionsTokens.$inferSelect;

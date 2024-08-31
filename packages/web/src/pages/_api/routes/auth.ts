@@ -13,9 +13,14 @@ import {
 } from "@paperwait/core/errors/http";
 import * as EntraId from "@paperwait/core/oauth2/entra-id";
 import * as Google from "@paperwait/core/oauth2/google";
-import { oAuth2ProviderVariants } from "@paperwait/core/oauth2/shared";
+import {
+  ENTRA_ID,
+  GOOGLE,
+  oAuth2ProviderVariants,
+} from "@paperwait/core/oauth2/shared";
 import { oAuth2Providers } from "@paperwait/core/oauth2/sql";
 import { organizations } from "@paperwait/core/organization/sql";
+import * as PapercutApi from "@paperwait/core/papercut/api";
 import * as Realtime from "@paperwait/core/realtime";
 import * as Replicache from "@paperwait/core/replicache";
 import * as User from "@paperwait/core/user";
@@ -75,14 +80,14 @@ export default new Hono()
       let codeVerifier: string;
       let authorizationUrl: URL;
       switch (org.oAuth2ProviderVariant) {
-        case "entra-id": {
+        case ENTRA_ID: {
           const entraId = EntraId.createAuthorizationUrl();
           state = entraId.state;
           codeVerifier = entraId.codeVerifier;
           authorizationUrl = entraId.authorizationUrl;
           break;
         }
-        case "google": {
+        case GOOGLE: {
           const google = Google.createAuthorizationUrl(org.oAuth2ProviderId);
           state = google.state;
           codeVerifier = google.codeVerifier;
@@ -170,12 +175,12 @@ export default new Hono()
       let tokens: OAuth2Tokens;
       let idToken: IdToken;
       switch (provider) {
-        case "entra-id": {
+        case ENTRA_ID: {
           tokens = await EntraId.validateAuthorizationCode(code, code_verifier);
           idToken = EntraId.parseIdToken(tokens.idToken());
           break;
         }
-        case "google": {
+        case GOOGLE: {
           tokens = await Google.validateAuthorizationCode(code, code_verifier);
           idToken = Google.parseIdToken(tokens.idToken());
           break;
@@ -202,21 +207,20 @@ export default new Hono()
         .execute()
         .then((rows) => rows.at(0));
       if (!org)
-        throw new NotFoundError(`
-        Failed to find organization (${orgId}) with oauth2 provider id: ${idToken.providerId}
-      `);
+        throw new NotFoundError(
+          `Organization "${orgId}" not found with oauth2 provider "${idToken.providerId}"`,
+        );
 
-      // TODO: Implement api.isUserExists call to customer's papercut server
-      const userExists = true;
+      const userExists = await PapercutApi.isUserExists(idToken.username);
       if (!userExists)
         throw new UnauthorizedError("User does not exist in PaperCut");
 
       let userInfo: UserInfo;
       switch (provider) {
-        case "entra-id":
+        case ENTRA_ID:
           userInfo = await EntraId.getUserInfo(tokens.accessToken());
           break;
-        case "google":
+        case GOOGLE:
           userInfo = await Google.getUserInfo(tokens.accessToken());
           break;
         default: {

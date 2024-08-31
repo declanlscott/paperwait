@@ -1,15 +1,10 @@
 import { vValidator } from "@hono/valibot-validator";
-import { useAuthenticated } from "@paperwait/core/auth";
-import { db } from "@paperwait/core/database";
-import {
-  HttpError,
-  NotFoundError,
-  NotImplementedError,
-} from "@paperwait/core/errors";
-import { useOAuth2 } from "@paperwait/core/oauth2";
-import { NanoId } from "@paperwait/core/schemas";
-import { User } from "@paperwait/core/user";
-import { and, eq } from "drizzle-orm";
+import { NotImplementedError } from "@paperwait/core/errors/http";
+import { useOAuth2 } from "@paperwait/core/oauth2/context";
+import * as EntraId from "@paperwait/core/oauth2/entra-id";
+import * as Google from "@paperwait/core/oauth2/google";
+import { ENTRA_ID, GOOGLE } from "@paperwait/core/oauth2/shared";
+import { nanoIdSchema } from "@paperwait/core/utils/schemas";
 import { Hono } from "hono";
 import * as v from "valibot";
 
@@ -20,35 +15,28 @@ export default new Hono()
   .use(provider)
   .get(
     "/:id/photo",
-    vValidator("param", v.object({ id: NanoId })),
+    vValidator("param", v.object({ id: nanoIdSchema })),
     async (c) => {
-      const { org } = useAuthenticated();
+      const userId = c.req.valid("param").id;
       const oAuth2 = useOAuth2();
 
-      // TODO: Implement google provider
-      if (oAuth2.provider.variant !== "entra-id")
-        throw new NotImplementedError(
-          `Provider "${oAuth2.provider.variant}" not implemented`,
-        );
+      let res: Response;
+      switch (oAuth2.provider.variant) {
+        case ENTRA_ID:
+          res = await EntraId.photo(userId);
+          break;
+        case GOOGLE:
+          res = await Google.photo(userId);
+          break;
+        default: {
+          oAuth2.provider.variant satisfies never;
 
-      const user = await db
-        .select({ providerId: User.providerId })
-        .from(User)
-        .where(
-          and(eq(User.id, c.req.valid("param").id), eq(User.orgId, org.id)),
-        )
-        .then((rows) => rows.at(0));
-      if (!user) throw new NotFoundError("User not found");
-
-      const res = await fetch(
-        `https://graph.microsoft.com/v1.0/users/${user.providerId}/photo/$value`,
-        {
-          headers: {
-            Authorization: `Bearer ${oAuth2.provider.accessToken}`,
-          },
-        },
-      );
-      if (!res.ok) throw new HttpError(res.statusText, res.status);
+          throw new NotImplementedError(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `Provider variant "${oAuth2.provider.variant}" not implemented`,
+          );
+        }
+      }
 
       const contentType = res.headers.get("Content-Type");
 

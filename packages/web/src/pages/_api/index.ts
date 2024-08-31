@@ -1,9 +1,9 @@
+import { DatabaseError } from "@paperwait/core/errors/database";
+import { HttpError } from "@paperwait/core/errors/http";
 import {
   ArcticFetchError,
-  DatabaseError,
-  HttpError,
   OAuth2RequestError,
-} from "@paperwait/core/errors";
+} from "@paperwait/core/errors/oauth2";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";

@@ -4,9 +4,16 @@ import { Resource } from "sst";
 import * as v from "valibot";
 
 import { AUTH_CALLBACK_PATH } from "../constants";
-import { HttpError, InternalServerError } from "../errors/http";
+import {
+  HttpError,
+  InternalServerError,
+  NotImplementedError,
+} from "../errors/http";
+import { GOOGLE } from "./shared";
 
-import type { IdToken, ProviderTokens } from "./tokens";
+import type { SessionTokens } from "../auth/sql";
+import type { User } from "../user/sql";
+import type { IdToken } from "./tokens";
 
 export const provider = new Google(
   Resource.Auth.google.clientId,
@@ -57,7 +64,7 @@ export async function getUserInfo(accessToken: string) {
   );
 }
 
-export function parseIdToken(idToken: ProviderTokens["idToken"]): IdToken {
+export function parseIdToken(idToken: SessionTokens["idToken"]): IdToken {
   const jwt = parseJWT(idToken);
   if (!jwt?.payload) throw new InternalServerError("Empty id token payload");
 
@@ -71,4 +78,13 @@ export function parseIdToken(idToken: ProviderTokens["idToken"]): IdToken {
     userId: sub,
     username: name,
   };
+}
+
+export const refreshAccessToken = async (
+  refreshToken: NonNullable<SessionTokens["refreshToken"]>,
+) => provider.refreshAccessToken(refreshToken);
+
+// TODO: Implement this function
+export async function photo(_userId: User["id"]): Promise<Response> {
+  throw new NotImplementedError(`Provider variant "${GOOGLE}" not implemented`);
 }
