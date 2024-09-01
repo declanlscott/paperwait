@@ -8,7 +8,7 @@ import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
-import { orders } from "../order/sql";
+import { orders } from "../orders/sql";
 import {
   papercutAccountManagerAuthorizations,
   papercutAccounts,
@@ -23,7 +23,7 @@ import {
 } from "./shared";
 import { users } from "./sql";
 
-import type { Order } from "../order/sql";
+import type { Order } from "../orders/sql";
 import type { UserRole } from "./shared";
 import type { User } from "./sql";
 

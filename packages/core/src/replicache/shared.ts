@@ -1,13 +1,18 @@
 import * as v from "valibot";
 
-import { announcementMutationNames } from "../announcement/shared";
-import { commentMutationNames } from "../comment/shared";
-import { orderMutationNames } from "../order/shared";
-import { organizationMutationNames } from "../organization/shared";
+import { announcementMutationNames } from "../announcements/shared";
+import { commentMutationNames } from "../comments/shared";
+import { orderMutationNames } from "../orders/shared";
+import { organizationMutationNames } from "../organizations/shared";
 import { papercutMutationNames } from "../papercut/shared";
-import { productMutationNames } from "../product/shared";
-import { roomMutationNames } from "../room/shared";
-import { userMutationNames } from "../user/shared";
+import { productMutationNames } from "../products/shared";
+import { roomMutationNames } from "../rooms/shared";
+import { userMutationNames } from "../users/shared";
+
+export const replicacheMetaTableName = "replicache_meta";
+export const replicacheClientGroupsTableName = "replicache_client_groups";
+export const replicacheClientsTableName = "replicache_clients";
+export const replicacheClientViewsTableName = "replicache_client_views";
 
 export const genericMutationSchema = v.object({
   name: v.string(),

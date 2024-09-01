@@ -3,8 +3,8 @@ import { foreignKey, index } from "drizzle-orm/pg-core";
 import { bigintString, id } from "../drizzle/columns";
 import { orgTable } from "../drizzle/tables";
 import { papercutAccounts } from "../papercut/sql";
-import { products } from "../product/sql";
-import { users } from "../user/sql";
+import { products } from "../products/sql";
+import { users } from "../users/sql";
 import { ordersTableName } from "./shared";
 
 export const orders = orgTable(

@@ -12,7 +12,7 @@ import {
 } from "../papercut/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
-import * as User from "../user";
+import * as Users from "../users";
 import { fn } from "../utils/helpers";
 import {
   createOrderMutationArgsSchema,
@@ -36,7 +36,7 @@ export const create = fn(createOrderMutationArgsSchema, async (values) => {
       .then((rows) => rows.at(0));
     if (!order) throw new Error("Failed to insert order");
 
-    const usersToPoke = await User.withOrderAccess(order.id);
+    const usersToPoke = await Users.withOrderAccess(order.id);
     await afterTransaction(() =>
       Replicache.poke(
         usersToPoke.map(({ id }) => Realtime.formatChannel("user", id)),
@@ -118,7 +118,7 @@ export const update = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    const users = await User.withOrderAccess(id);
+    const users = await Users.withOrderAccess(id);
     if (!users.some((u) => u.id === user.id))
       throw new ForbiddenError(
         `User "${user.id}" cannot update order "${id}" because they do not have access to that order.`,
@@ -142,7 +142,7 @@ export const delete_ = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    const users = await User.withOrderAccess(id);
+    const users = await Users.withOrderAccess(id);
     if (!users.some((u) => u.id === user.id))
       throw new ForbiddenError(
         `User "${user.id}" cannot delete order "${id}", order access forbidden.`,

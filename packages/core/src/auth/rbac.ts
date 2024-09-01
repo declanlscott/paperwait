@@ -2,7 +2,7 @@ import type { LuciaUser } from ".";
 import type { ApplicationError } from "../errors/application";
 import type { HttpError } from "../errors/http";
 import type { MutationName } from "../replicache";
-import type { UserRole } from "../user/shared";
+import type { UserRole } from "../users/shared";
 
 export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
   user: LuciaUser,

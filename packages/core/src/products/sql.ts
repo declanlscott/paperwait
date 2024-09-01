@@ -4,7 +4,7 @@ import { VARCHAR_LENGTH } from "../constants";
 import { id } from "../drizzle/columns";
 import { productStatus } from "../drizzle/enums";
 import { orgTable } from "../drizzle/tables";
-import { rooms } from "../room/sql";
+import { rooms } from "../rooms/sql";
 import { productsTableName } from "./shared";
 
 import type { ProductConfiguration } from "./shared";

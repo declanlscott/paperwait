@@ -12,17 +12,23 @@ import {
 
 import { id, timestamps } from "../drizzle/columns";
 import { orgIdColumns } from "../drizzle/tables";
-import { users } from "../user/sql";
+import { users } from "../users/sql";
+import {
+  replicacheClientGroupsTableName,
+  replicacheClientsTableName,
+  replicacheClientViewsTableName,
+  replicacheMetaTableName,
+} from "./shared";
 
 import type { ClientViewRecord } from "./client-view-record";
 
-export const ReplicacheMeta = pgTable("replicache_meta", {
+export const ReplicacheMeta = pgTable(replicacheMetaTableName, {
   key: text("key").primaryKey(),
   value: jsonb("value").notNull(),
 });
 
 export const replicacheClientGroups = pgTable(
-  "replicache_client_groups",
+  replicacheClientGroupsTableName,
   {
     id: uuid("id").notNull(),
     orgId: orgIdColumns.orgId,
@@ -42,7 +48,7 @@ export const replicacheClientGroups = pgTable(
 export type ReplicacheClientGroup = typeof replicacheClientGroups.$inferSelect;
 
 export const replicacheClients = pgTable(
-  "replicache_clients",
+  replicacheClientsTableName,
   {
     id: uuid("id").notNull(),
     orgId: orgIdColumns.orgId,
@@ -65,7 +71,7 @@ export const replicacheClients = pgTable(
 export type ReplicacheClient = typeof replicacheClients.$inferSelect;
 
 export const replicacheClientViews = pgTable(
-  "replicache_client_views",
+  replicacheClientViewsTableName,
   {
     orgId: orgIdColumns.orgId,
     clientGroupId: uuid("client_group_id").notNull(),

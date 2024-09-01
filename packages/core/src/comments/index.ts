@@ -5,14 +5,14 @@ import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
-import { orders } from "../order/sql";
+import { orders } from "../orders/sql";
 import {
   papercutAccountManagerAuthorizations,
   papercutAccounts,
 } from "../papercut/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
-import * as User from "../user";
+import * as Users from "../users";
 import { fn } from "../utils/helpers";
 import {
   createCommentMutationArgsSchema,
@@ -26,7 +26,7 @@ import type { Comment } from "./sql";
 export const create = fn(createCommentMutationArgsSchema, async (values) => {
   const { user } = useAuthenticated();
 
-  const users = await User.withOrderAccess(values.orderId);
+  const users = await Users.withOrderAccess(values.orderId);
   if (!users.some((u) => u.id === user.id))
     throw new ForbiddenError(
       `User "${user.id}" cannot create a comment on order "${values.orderId}", order access forbidden.`,
@@ -141,7 +141,7 @@ export const update = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    const users = await User.withOrderAccess(values.orderId);
+    const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
       throw new ForbiddenError(
         `User "${user.id}" cannot update comment "${id}" on order "${values.orderId}", order access forbidden.`,
@@ -165,7 +165,7 @@ export const delete_ = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    const users = await User.withOrderAccess(values.orderId);
+    const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
       throw new ForbiddenError(
         `User "${user.id}" cannot delete comment "${id}" on order "${values.orderId}", order access forbidden.`,

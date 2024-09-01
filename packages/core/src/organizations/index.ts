@@ -8,7 +8,7 @@ import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
-import * as User from "../user";
+import * as Users from "../users";
 import { fn } from "../utils/helpers";
 import { updateOrganizationMutationArgsSchema } from "./shared";
 import { organizations } from "./sql";
@@ -44,10 +44,10 @@ export const update = fn(
 
     enforceRbac(user, mutationRbac.updateOrganization, ForbiddenError);
 
-    const usersToLogout: Awaited<ReturnType<typeof User.fromRoles>> = [];
+    const usersToLogout: Awaited<ReturnType<typeof Users.fromRoles>> = [];
     if (values.status === "suspended") {
       usersToLogout.push(
-        ...(await User.fromRoles(["operator", "manager", "customer"])),
+        ...(await Users.fromRoles(["operator", "manager", "customer"])),
       );
     }
 

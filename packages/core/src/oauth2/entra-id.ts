@@ -8,11 +8,11 @@ import { useAuthenticated } from "../auth/context";
 import { AUTH_CALLBACK_PATH } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { HttpError, InternalServerError, NotFoundError } from "../errors/http";
-import { users } from "../user/sql";
+import { users } from "../users/sql";
 import { useOAuth2 } from "./context";
 
 import type { SessionTokens } from "../auth/sql";
-import type { User } from "../user/sql";
+import type { User } from "../users/sql";
 import type { IdToken } from "./tokens";
 
 export const provider = new MicrosoftEntraId(

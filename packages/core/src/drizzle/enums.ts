@@ -1,10 +1,10 @@
 import { pgEnum } from "drizzle-orm/pg-core";
 
 import { oAuth2ProviderVariants } from "../oauth2/shared";
-import { orgStatuses } from "../organization/shared";
-import { productStatuses } from "../product/shared";
-import { roomStatuses } from "../room/shared";
-import { userRoles } from "../user/shared";
+import { orgStatuses } from "../organizations/shared";
+import { productStatuses } from "../products/shared";
+import { roomStatuses } from "../rooms/shared";
+import { userRoles } from "../users/shared";
 
 export const licenseStatuses = ["active", "expired"] as const;
 export type LicenseStatus = (typeof licenseStatuses)[number];

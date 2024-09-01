@@ -2,7 +2,7 @@ import { foreignKey, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgIdColumns } from "../drizzle/tables";
-import { users } from "../user/sql";
+import { users } from "../users/sql";
 
 export const sessions = pgTable(
   "sessions",

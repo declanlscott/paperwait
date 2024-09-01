@@ -9,7 +9,7 @@ import {
 
 import { bigintString, id, timestamps } from "../drizzle/columns";
 import { orgIdColumns, orgTable } from "../drizzle/tables";
-import { users } from "../user/sql";
+import { users } from "../users/sql";
 import {
   papercutAccountCustomerAuthorizationsTableName,
   papercutAccountManagerAuthorizationsTableName,

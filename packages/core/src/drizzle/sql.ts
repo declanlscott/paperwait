@@ -1,23 +1,23 @@
 import { relations } from "drizzle-orm";
 
-import { announcements } from "../announcement/sql";
+import { announcements } from "../announcements/sql";
 import { sessions } from "../auth/sql";
-import { comments } from "../comment/sql";
-import { orders } from "../order/sql";
-import { organizations } from "../organization/sql";
+import { comments } from "../comments/sql";
+import { orders } from "../orders/sql";
+import { organizations } from "../organizations/sql";
 import {
   papercutAccountCustomerAuthorizations,
   papercutAccountManagerAuthorizations,
   papercutAccounts,
 } from "../papercut/sql";
-import { products } from "../product/sql";
+import { products } from "../products/sql";
 import {
   replicacheClientGroups,
   replicacheClients,
   replicacheClientViews,
 } from "../replicache/sql";
-import { rooms } from "../room/sql";
-import { users } from "../user/sql";
+import { rooms } from "../rooms/sql";
+import { users } from "../users/sql";
 
 export const organizationRelations = relations(organizations, ({ many }) => ({
   user: many(users, { relationName: "userOrg" }),

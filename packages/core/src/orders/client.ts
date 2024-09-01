@@ -4,7 +4,7 @@ import {
   EntityNotFoundError,
   InvalidUserRoleError,
 } from "../errors/application";
-import * as User from "../user/client";
+import * as Users from "../users/client";
 import { optimisticMutator } from "../utils/helpers";
 import {
   createOrderMutationArgsSchema,
@@ -25,7 +25,7 @@ export const create = optimisticMutator(
 export const update = optimisticMutator(
   updateOrderMutationArgsSchema,
   async (user, tx, values) => {
-    const users = await User.withOrderAccess(tx, values.id);
+    const users = await Users.withOrderAccess(tx, values.id);
 
     if (
       users.some((u) => u.id === user.id) ||
@@ -51,7 +51,7 @@ export const update = optimisticMutator(
 export const delete_ = optimisticMutator(
   deleteOrderMutationArgsSchema,
   async (user, tx, { id }) => {
-    const users = await User.withOrderAccess(tx, id);
+    const users = await Users.withOrderAccess(tx, id);
 
     if (
       users.some((u) => u.id === user.id) ||

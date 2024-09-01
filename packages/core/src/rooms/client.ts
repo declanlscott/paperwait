@@ -3,7 +3,7 @@ import {
   EntityNotFoundError,
   InvalidUserRoleError,
 } from "../errors/application";
-import { productsTableName } from "../product/shared";
+import { productsTableName } from "../products/shared";
 import { optimisticMutator } from "../utils/helpers";
 import {
   createRoomMutationArgsSchema,
@@ -14,7 +14,7 @@ import {
 } from "./shared";
 
 import type { DeepReadonlyObject } from "replicache";
-import type { Product } from "../product/sql";
+import type { Product } from "../products/sql";
 import type { Room } from "./sql";
 
 export const create = optimisticMutator(

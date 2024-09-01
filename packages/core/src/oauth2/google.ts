@@ -12,7 +12,7 @@ import {
 import { GOOGLE } from "./shared";
 
 import type { SessionTokens } from "../auth/sql";
-import type { User } from "../user/sql";
+import type { User } from "../users/sql";
 import type { IdToken } from "./tokens";
 
 export const provider = new Google(

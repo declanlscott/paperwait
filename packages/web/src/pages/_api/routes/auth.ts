@@ -19,12 +19,12 @@ import {
   oAuth2ProviderVariants,
 } from "@paperwait/core/oauth2/shared";
 import { oAuth2Providers } from "@paperwait/core/oauth2/sql";
-import { organizations } from "@paperwait/core/organization/sql";
+import { organizations } from "@paperwait/core/organizations/sql";
 import * as PapercutApi from "@paperwait/core/papercut/api";
 import * as Realtime from "@paperwait/core/realtime";
 import * as Replicache from "@paperwait/core/replicache";
-import * as User from "@paperwait/core/user";
-import { users } from "@paperwait/core/user/sql";
+import * as Users from "@paperwait/core/users";
+import { users } from "@paperwait/core/users/sql";
 import { nanoIdSchema } from "@paperwait/core/utils/schemas";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
@@ -253,7 +253,7 @@ export default new Hono()
           if (org.status === "suspended")
             throw new UnauthorizedError("Organization is suspended");
 
-          const newUser = await User.create({
+          const newUser = await Users.create({
             orgId,
             oAuth2UserId: idToken.userId,
             name: userInfo.name,
@@ -322,7 +322,7 @@ export default new Hono()
     async (c) => {
       const { userId } = c.req.valid("param");
 
-      const userExists = await User.exists(userId);
+      const userExists = await Users.exists(userId);
       if (!userExists) throw new NotFoundError(`User "${userId}" not found`);
 
       await Auth.invalidateUserSessions(userId);

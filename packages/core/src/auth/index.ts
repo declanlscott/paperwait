@@ -2,7 +2,7 @@ import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
 
 import { db } from "../drizzle";
-import { users } from "../user/sql";
+import { users } from "../users/sql";
 import { generateId } from "../utils/helpers";
 import { sessions, sessionsTokens } from "./sql";
 
@@ -12,9 +12,9 @@ import type {
   RegisteredDatabaseSessionAttributes,
 } from "lucia";
 import type { OAuth2Tokens } from "../oauth2/tokens";
-import type { Organization } from "../organization/sql";
-import type { User } from "../user/sql";
-import type { Session, SessionsTokens } from "./sql";
+import type { Organization } from "../organizations/sql";
+import type { User } from "../users/sql";
+import type { Session, SessionTokens } from "./sql";
 
 export type Auth = {
   session: LuciaSession | null;
@@ -75,7 +75,7 @@ export async function createSession(
       accessTokenExpiresAt: tokens.accessTokenExpiresAt(),
       refreshToken: tokens.refreshToken(),
     } satisfies Pick<
-      SessionsTokens,
+      SessionTokens,
       "idToken" | "accessToken" | "accessTokenExpiresAt" | "refreshToken"
     >;
 

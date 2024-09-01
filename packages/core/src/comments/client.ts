@@ -4,7 +4,7 @@ import {
   EntityNotFoundError,
   InvalidUserRoleError,
 } from "../errors/application";
-import * as User from "../user/client";
+import * as Users from "../users/client";
 import { optimisticMutator } from "../utils/helpers";
 import {
   commentsTableName,
@@ -19,7 +19,7 @@ import type { Comment } from "./sql";
 export const create = optimisticMutator(
   createCommentMutationArgsSchema,
   async (user, tx, values) => {
-    const users = await User.withOrderAccess(tx, values.orderId);
+    const users = await Users.withOrderAccess(tx, values.orderId);
 
     if (
       users.some((u) => u.id === user.id) ||
@@ -36,7 +36,7 @@ export const create = optimisticMutator(
 export const update = optimisticMutator(
   updateCommentMutationArgsSchema,
   async (user, tx, values) => {
-    const users = await User.withOrderAccess(tx, values.orderId);
+    const users = await Users.withOrderAccess(tx, values.orderId);
 
     if (
       users.some((u) => u.id === user.id) ||
@@ -62,7 +62,7 @@ export const update = optimisticMutator(
 export const delete_ = optimisticMutator(
   deleteCommentMutationArgsSchema,
   async (user, tx, values) => {
-    const users = await User.withOrderAccess(tx, values.orderId);
+    const users = await Users.withOrderAccess(tx, values.orderId);
 
     if (
       users.some((u) => u.id === user.id) ||

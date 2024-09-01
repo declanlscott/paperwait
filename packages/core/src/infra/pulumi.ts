@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { physicalName } from "./helpers";
 
-import type { Organization } from "../organization/sql";
+import type { Organization } from "../organizations/sql";
 
 export async function program(orgId: Organization["id"]) {
   const apiName = `Tenant-${orgId}-Api`;

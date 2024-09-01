@@ -6,7 +6,7 @@ import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
-import { products } from "../product/sql";
+import { products } from "../products/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
 import { fn } from "../utils/helpers";

@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import * as Announcement from "@paperwait/core/announcement/client";
+import * as Announcements from "@paperwait/core/announcements/client";
 import { MissingContextProviderError } from "@paperwait/core/errors/application";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
@@ -80,7 +80,7 @@ export function useIsSyncing() {
 }
 
 export function useMutatorFactory(user: LuciaUser) {
-  const test = Announcement.create(user)({} as WriteTransaction, {});
+  const test = Announcements.create(user)({} as WriteTransaction, {});
 
   // const withUser = useCallback(
   //   <TMutator extends OptimisticMutatorWithUser>(

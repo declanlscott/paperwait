@@ -1,24 +1,24 @@
 import { clientMetadataFromGroupId } from ".";
-import * as Announcement from "../announcement";
-import { announcements } from "../announcement/sql";
-import * as Comment from "../comment";
-import { comments } from "../comment/sql";
-import * as Order from "../order";
-import { orders } from "../order/sql";
-import * as Organization from "../organization";
-import { organizations } from "../organization/sql";
+import * as Announcements from "../announcements";
+import { announcements } from "../announcements/sql";
+import * as Comments from "../comments";
+import { comments } from "../comments/sql";
+import * as Orders from "../orders";
+import { orders } from "../orders/sql";
+import * as Organizations from "../organizations";
+import { organizations } from "../organizations/sql";
 import * as Papercut from "../papercut";
 import {
   papercutAccountCustomerAuthorizations,
   papercutAccountManagerAuthorizations,
   papercutAccounts,
 } from "../papercut/sql";
-import * as Product from "../product";
-import { products } from "../product/sql";
-import * as Room from "../room";
-import { rooms } from "../room/sql";
-import * as User from "../user";
-import { users } from "../user/sql";
+import * as Products from "../products";
+import { products } from "../products/sql";
+import * as Rooms from "../rooms";
+import { rooms } from "../rooms/sql";
+import * as Users from "../users";
+import { users } from "../users/sql";
 import { replicacheClients } from "./sql";
 
 import type * as v from "valibot";
@@ -75,19 +75,19 @@ export type MetadataQueryFactory = {
 };
 
 export const metadataQueryFactory = {
-  announcements: Announcement.metadata,
-  comments: Comment.metadata,
-  orders: Order.metadata,
-  organizations: Organization.metadata,
+  announcements: Announcements.metadata,
+  comments: Comments.metadata,
+  orders: Orders.metadata,
+  organizations: Organizations.metadata,
   papercut_accounts: Papercut.accountsMetadata,
   papercut_account_customer_authorizations:
     Papercut.accountCustomerAuthorizationsMetadata,
   papercut_account_manager_authorizations:
     Papercut.accountManagerAuthorizationsMetadata,
-  products: Product.metadata,
+  products: Products.metadata,
   replicache_clients: clientMetadataFromGroupId,
-  rooms: Room.metadata,
-  users: User.metadata,
+  rooms: Rooms.metadata,
+  users: Users.metadata,
 } satisfies MetadataQueryFactory;
 
 export type DataQueryFactory = {
@@ -103,18 +103,18 @@ export type DataQueryFactory = {
 };
 
 export const dataQueryFactory = {
-  announcements: Announcement.fromIds,
-  comments: Comment.fromIds,
-  orders: Order.fromIds,
-  organizations: Organization.fromId,
+  announcements: Announcements.fromIds,
+  comments: Comments.fromIds,
+  orders: Orders.fromIds,
+  organizations: Organizations.fromId,
   papercut_accounts: Papercut.accountsFromIds,
   papercut_account_customer_authorizations:
     Papercut.accountCustomerAuthorizationsFromIds,
   papercut_account_manager_authorizations:
     Papercut.accountManagerAuthorizationsFromIds,
-  products: Product.fromIds,
-  rooms: Room.fromIds,
-  users: User.fromIds,
+  products: Products.fromIds,
+  rooms: Rooms.fromIds,
+  users: Users.fromIds,
 } satisfies DataQueryFactory;
 
 export type TablePatchData<TTable extends SyncedTable> = {
@@ -137,29 +137,29 @@ export type AuthoritativeMutatorFactory = Record<
 >;
 
 export const authoritativeMutatorFactory = {
-  createAnnouncement: Announcement.create,
-  updateAnnouncement: Announcement.update,
-  deleteAnnouncement: Announcement.delete_,
-  createComment: Comment.create,
-  updateComment: Comment.update,
-  deleteComment: Comment.delete_,
-  createOrder: Order.create,
-  updateOrder: Order.update,
-  deleteOrder: Order.delete_,
-  updateOrganization: Organization.update,
+  createAnnouncement: Announcements.create,
+  updateAnnouncement: Announcements.update,
+  deleteAnnouncement: Announcements.delete_,
+  createComment: Comments.create,
+  updateComment: Comments.update,
+  deleteComment: Comments.delete_,
+  createOrder: Orders.create,
+  updateOrder: Orders.update,
+  deleteOrder: Orders.delete_,
+  updateOrganization: Organizations.update,
   createPapercutAccountManagerAuthorization:
     Papercut.createAccountManagerAuthorization,
   deletePapercutAccount: Papercut.deleteAccount,
   deletePapercutAccountManagerAuthorization:
     Papercut.deleteAccountManagerAuthorization,
-  createProduct: Product.create,
-  updateProduct: Product.update,
-  deleteProduct: Product.delete_,
-  createRoom: Room.create,
-  updateRoom: Room.update,
-  deleteRoom: Room.delete_,
-  restoreRoom: Room.restore,
-  updateUserRole: User.updateRole,
-  deleteUser: User.delete_,
-  restoreUser: User.restore,
+  createProduct: Products.create,
+  updateProduct: Products.update,
+  deleteProduct: Products.delete_,
+  createRoom: Rooms.create,
+  updateRoom: Rooms.update,
+  deleteRoom: Rooms.delete_,
+  restoreRoom: Rooms.restore,
+  updateUserRole: Users.updateRole,
+  deleteUser: Users.delete_,
+  restoreUser: Users.restore,
 } satisfies AuthoritativeMutatorFactory;

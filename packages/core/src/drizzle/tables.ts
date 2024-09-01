@@ -1,6 +1,6 @@
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 
-import { organizations } from "../organization/sql";
+import { organizations } from "../organizations/sql";
 import { generateId } from "../utils/helpers";
 import { id, timestamps } from "./columns";
 

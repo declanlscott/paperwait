@@ -6,7 +6,7 @@ import {
   EntityNotFoundError,
   InvalidUserRoleError,
 } from "../errors/application";
-import { ordersTableName } from "../order/shared";
+import { ordersTableName } from "../orders/shared";
 import { optimisticMutator } from "../utils/helpers";
 import {
   deleteUserMutationArgsSchema,
@@ -16,7 +16,7 @@ import {
 } from "./shared";
 
 import type { DeepReadonlyObject, WriteTransaction } from "replicache";
-import type { Order } from "../order/sql";
+import type { Order } from "../orders/sql";
 import type { PapercutAccountManagerAuthorization } from "../papercut/sql";
 import type { UserRole } from "./shared";
 import type { User } from "./sql";

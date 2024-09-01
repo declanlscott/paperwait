@@ -1,7 +1,7 @@
 import * as R from "remeda";
 import * as v from "valibot";
 
-import { userRoles } from "../user/shared";
+import { userRoles } from "../users/shared";
 import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
 
 export const commentsTableName = "comments";

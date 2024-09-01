@@ -8,7 +8,7 @@ import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
-import * as User from "../user";
+import * as Users from "../users";
 import { fn } from "../utils/helpers";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
@@ -205,7 +205,7 @@ export const deleteAccount = fn(
 
     return useTransaction(async (tx) => {
       const [adminsOps, managers, customers] = await Promise.all([
-        User.fromRoles(["administrator", "operator"]),
+        Users.fromRoles(["administrator", "operator"]),
         tx
           .select({
             managerId: papercutAccountManagerAuthorizations.managerId,
