@@ -28,7 +28,6 @@
     "@smithy/signature-v4": "^4.1.0",
     "arctic": "next",
     "drizzle-orm": "^0.33.0",
-    "esbuild": "^0.23.1",
     "lucia": "^3.2.0",
     "nanoid": "^5.0.7",
     "oslo": "^1.2.1",
