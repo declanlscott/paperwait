@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { NANOID_PATTERN } from "../constants/patterns";
+import { NANOID_PATTERN } from "../constants";
 
 export const nanoIdSchema = v.pipe(v.string(), v.regex(NANOID_PATTERN));
 export type NanoId = v.InferOutput<typeof nanoIdSchema>;
