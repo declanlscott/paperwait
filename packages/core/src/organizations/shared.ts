@@ -48,15 +48,43 @@ export type UpdateOrganizationMutationArgs = v.InferOutput<
   typeof updateOrganizationMutationArgsSchema
 >;
 
+const registrationStepsSchemas = [
+  v.object({
+    licenseKey: licenseSchema.entries.key,
+    orgName: organizationSchema.entries.name,
+    orgSlug: organizationSchema.entries.slug,
+  }),
+  v.object({
+    oAuth2ProviderVariant: oAuth2ProvidersSchema.entries.variant,
+    oAuth2ProviderId: oAuth2ProvidersSchema.entries.id,
+  }),
+  v.object({
+    papercutAuthToken: v.string(),
+    tailscaleOAuth2ClientId: v.string(),
+    tailscaleOAuth2ClientSecret: v.string(),
+  }),
+] as const;
+
 export const registrationStep1Schema = v.object({
-  licenseKey: licenseSchema.entries.key,
-  name: organizationSchema.entries.name,
-  slug: organizationSchema.entries.slug,
+  ...registrationStepsSchemas[0].entries,
+  ...v.partial(registrationStepsSchemas[1]).entries,
+  ...v.partial(registrationStepsSchemas[2]).entries,
 });
 export type RegistrationStep1 = v.InferOutput<typeof registrationStep1Schema>;
 
 export const registrationStep2Schema = v.object({
-  ...v.pick(oAuth2ProvidersSchema, ["variant", "id"]).entries,
-  ...registrationStep1Schema.entries,
+  ...registrationStepsSchemas[0].entries,
+  ...registrationStepsSchemas[1].entries,
+  ...v.partial(registrationStepsSchemas[2]).entries,
 });
 export type RegistrationStep2 = v.InferOutput<typeof registrationStep2Schema>;
+
+export const registrationStep3Schema = v.object({
+  ...registrationStepsSchemas[0].entries,
+  ...registrationStepsSchemas[1].entries,
+  ...registrationStepsSchemas[2].entries,
+});
+export type RegistrationStep3 = v.InferOutput<typeof registrationStep3Schema>;
+
+export const registrationSchema = registrationStep3Schema;
+export type Registration = v.InferOutput<typeof registrationSchema>;
