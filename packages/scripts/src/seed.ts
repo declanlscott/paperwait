@@ -1,9 +1,9 @@
 import { DB_SCHEMA_VERSION } from "@paperwait/core/constants";
-import { db } from "@paperwait/core/database";
-import { ReplicacheMeta } from "@paperwait/core/replicache";
+import { db } from "@paperwait/core/drizzle";
+import { replicacheMeta } from "@paperwait/core/replicache/sql";
 
 async function seed() {
-  await db.insert(ReplicacheMeta).values({
+  await db.insert(replicacheMeta).values({
     key: "schemaVersion",
     value: DB_SCHEMA_VERSION,
   });

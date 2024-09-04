@@ -1,8 +1,6 @@
 {
   "name": "@paperwait/web",
   "version": "0.0.0",
-  "type": "module",
-  "sideEffects": false,
   "scripts": {
     "dev": "sst dev astro dev",
     "lint": "eslint ./src/**/*.{ts,tsx,astro} --report-unused-disable-directives --max-warnings 0",

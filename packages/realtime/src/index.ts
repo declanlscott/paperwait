@@ -3,7 +3,7 @@ import {
   HttpError,
   MethodNotAllowedError,
   UnauthorizedError,
-} from "@paperwait/core/errors";
+} from "@paperwait/core/errors/http";
 
 import type * as Party from "partykit/server";
 

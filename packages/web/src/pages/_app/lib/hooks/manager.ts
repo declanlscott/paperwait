@@ -1,10 +1,10 @@
-import { InvalidUserRoleError } from "@paperwait/core/errors";
+import { InvalidUserRoleError } from "@paperwait/core/errors/application";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 
-import type { PapercutAccountId } from "@paperwait/core/schemas";
-import type { User } from "@paperwait/core/user";
+import type { PapercutAccount } from "@paperwait/core/papercut/sql";
+import type { User } from "@paperwait/core/users/sql";
 
 export function useManager() {
   const { user } = useAuthenticated();
@@ -13,7 +13,7 @@ export function useManager() {
 
   const papercutAccountIds = useQuery(
     queryFactory.managedPapercutAccountIds(user.id),
-    { defaultData: [] as Array<PapercutAccountId> },
+    { defaultData: [] as Array<PapercutAccount["id"]> },
   );
 
   const customerIds = useQuery(queryFactory.managedCustomerIds(user.id), {

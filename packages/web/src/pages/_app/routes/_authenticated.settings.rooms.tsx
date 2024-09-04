@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { RoomStatus } from "@paperwait/core/room";
-import { mutatorRbac } from "@paperwait/core/schemas";
+import { mutationRbac } from "@paperwait/core/auth/rbac";
+import { roomStatuses } from "@paperwait/core/rooms/shared";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import {
   flexRender,
@@ -58,8 +58,8 @@ import { fuzzyFilter } from "~/app/lib/fuzzy";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
-import type { Product } from "@paperwait/core/product";
-import type { Room } from "@paperwait/core/room";
+import type { Product } from "@paperwait/core/products/sql";
+import type { Room } from "@paperwait/core/rooms/sql";
 import type {
   ColumnDef,
   SortingState,
@@ -310,7 +310,7 @@ function RoomStatusSelect(props: RoomStatusSelectProps) {
     <Select
       aria-label="status"
       selectedKey={status}
-      onSelectionChange={onSelectionChange(RoomStatus.enumValues, mutate)}
+      onSelectionChange={onSelectionChange(roomStatuses, mutate)}
     >
       <SelectTrigger
         className="w-fit gap-2"
@@ -322,7 +322,7 @@ function RoomStatusSelect(props: RoomStatusSelectProps) {
       </SelectTrigger>
 
       <SelectPopover className="w-fit">
-        <SelectListBox items={RoomStatus.enumValues.map(collectionItem)}>
+        <SelectListBox items={roomStatuses.map(collectionItem)}>
           {(item) => (
             <SelectItem id={item.name} textValue={item.name}>
               <Badge
@@ -377,7 +377,7 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
             </MenuItem>
 
             {props.room.deletedAt ? (
-              <EnforceRbac roles={mutatorRbac.restoreRoom}>
+              <EnforceRbac roles={mutationRbac.restoreRoom}>
                 <MenuSeparator />
 
                 <MenuSection>
@@ -391,7 +391,7 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
                 </MenuSection>
               </EnforceRbac>
             ) : (
-              <EnforceRbac roles={mutatorRbac.deleteRoom}>
+              <EnforceRbac roles={mutationRbac.deleteRoom}>
                 <MenuSeparator />
 
                 <MenuSection>

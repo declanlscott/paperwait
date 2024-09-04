@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import { mutatorRbac } from "@paperwait/core/schemas";
-import { UserRole } from "@paperwait/core/user";
-import { enforceRbac, getUserInitials } from "@paperwait/core/utils";
+import { enforceRbac } from "@paperwait/core/auth/rbac";
+import { userRoles } from "@paperwait/core/users/shared";
+import { getUserInitials } from "@paperwait/core/utils/misc";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   flexRender,
@@ -68,7 +68,7 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { useManager } from "~/app/lib/hooks/manager";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
-import type { User } from "@paperwait/core/user";
+import type { User } from "@paperwait/core/users/sql";
 import type {
   ColumnDef,
   SortingState,

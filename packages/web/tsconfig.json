@@ -5,14 +5,14 @@
     "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
+      "@paperwait/core/*": ["../core/src/*"],
       "~/api/*": ["src/pages/_api/*"],
       "~/app/*": ["src/pages/_app/*"],
       "~/components/*": ["src/components/*"],
       "~/layouts/*": ["src/layouts/*"],
       "~/middleware/*": ["src/middleware/*"],
       "~/pages/*": ["src/pages/*"],
-      "~/styles/*": ["src/styles/*"],
-      "~/types/*": ["src/types/*"]
+      "~/styles/*": ["src/styles/*"]
     }
   }
 }

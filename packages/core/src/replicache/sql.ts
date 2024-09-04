@@ -22,7 +22,7 @@ import {
 
 import type { ClientViewRecord } from "./client-view-record";
 
-export const ReplicacheMeta = pgTable(replicacheMetaTableName, {
+export const replicacheMeta = pgTable(replicacheMetaTableName, {
   key: text("key").primaryKey(),
   value: jsonb("value").notNull(),
 });

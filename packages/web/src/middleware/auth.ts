@@ -1,7 +1,7 @@
 import { lucia } from "@paperwait/core/auth";
 import { withAuth } from "@paperwait/core/auth/context";
 import { db, eq } from "@paperwait/core/drizzle";
-import { organizations } from "@paperwait/core/organization/sql";
+import { organizations } from "@paperwait/core/organizations/sql";
 import { defineMiddleware } from "astro:middleware";
 
 import { isPrerenderedPage } from "~/middleware/utils";

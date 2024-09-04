@@ -1,4 +1,3 @@
-import { validate } from "@paperwait/core/valibot";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
 import * as v from "valibot";
@@ -12,7 +11,7 @@ import { buttonStyles } from "~/styles/components/primitives/button";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search) =>
-    validate(v.fallback(LoginSearchParams, initialLoginSearchParams), search),
+    v.parse(v.fallback(LoginSearchParams, initialLoginSearchParams), search),
   beforeLoad: ({ context }) => {
     if (context.authStore.user) throw redirect({ to: "/dashboard" });
   },

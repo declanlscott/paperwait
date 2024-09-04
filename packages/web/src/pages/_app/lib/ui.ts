@@ -1,4 +1,4 @@
-import { fn } from "@paperwait/core/valibot";
+import { fn } from "@paperwait/core/utils/helpers";
 import * as v from "valibot";
 
 export const collectionItem = (name: string) => ({ name });
