@@ -71,6 +71,4 @@ export const bigintString = customType<{
   fromDriver: (value) => BigInt(value).toString(10),
 });
 
-export * from "./enums";
-
 export type OmitTimestamps<TTable> = Omit<TTable, keyof typeof timestamps>;

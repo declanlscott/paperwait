@@ -1,7 +1,7 @@
 import { foreignKey, index, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
-import { userRole } from "../drizzle/enums";
+import { userRole } from "../drizzle/enums.sql";
 import { orgTable } from "../drizzle/tables";
 import { orders } from "../orders/sql";
 import { commentsTableName } from "./shared";

@@ -1,7 +1,7 @@
 import { index, jsonb, text, unique, varchar } from "drizzle-orm/pg-core";
 
 import { VARCHAR_LENGTH } from "../constants";
-import { roomStatus } from "../drizzle/enums";
+import { roomStatus } from "../drizzle/enums.sql";
 import { orgTable } from "../drizzle/tables";
 import { roomsTableName } from "./shared";
 

@@ -8,13 +8,8 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { VARCHAR_LENGTH } from "../constants";
-import {
-  id,
-  idPrimaryKey,
-  licenseStatus,
-  orgStatus,
-  timestamps,
-} from "../drizzle/columns";
+import { id, idPrimaryKey, timestamps } from "../drizzle/columns";
+import { licenseStatus, orgStatus } from "../drizzle/enums.sql";
 import { oAuth2Providers } from "../oauth2/sql";
 import { licensesTableName, organizationsTableName } from "./shared";
 

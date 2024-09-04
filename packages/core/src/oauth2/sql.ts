@@ -1,6 +1,7 @@
 import { pgTable, primaryKey, text } from "drizzle-orm/pg-core";
 
-import { id, oAuth2ProviderVariant, timestamps } from "../drizzle/columns";
+import { id, timestamps } from "../drizzle/columns";
+import { oAuth2ProviderVariant } from "../drizzle/enums.sql";
 import { oAuth2ProvidersTableName } from "./shared";
 
 export const oAuth2Providers = pgTable(

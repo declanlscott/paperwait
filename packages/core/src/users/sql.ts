@@ -1,6 +1,6 @@
 import { index, text, unique } from "drizzle-orm/pg-core";
 
-import { userRole } from "../drizzle/enums";
+import { userRole } from "../drizzle/enums.sql";
 import { orgTable } from "../drizzle/tables";
 import { usersTableName } from "./shared";
 

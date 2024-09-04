@@ -1,11 +1,13 @@
 import * as v from "valibot";
 
 import { ORG_SLUG_PATTERN } from "../constants";
-import { licenseStatuses } from "../drizzle/enums";
 import { oAuth2ProvidersSchema } from "../oauth2/shared";
 import { nanoIdSchema, timestampsSchema } from "../utils/schemas";
 
 export const licensesTableName = "licenses";
+
+export const licenseStatuses = ["active", "expired"] as const;
+export type LicenseStatus = (typeof licenseStatuses)[number];
 
 export const licenseSchema = v.object({
   key: v.pipe(v.string(), v.uuid()),
