@@ -1,0 +1,134 @@
+---
+import { buttonStyles } from "~/styles/components/primitives/button";
+import { labelStyles } from "~/styles/components/primitives/field";
+import { selectTriggerStyles } from "~/styles/components/primitives/select";
+import { inputStyles } from "~/styles/components/primitives/text-field";
+
+import type { RegistrationConfirmationProps } from "~/components/props";
+
+type Props = RegistrationConfirmationProps;
+
+const { input } = Astro.props;
+---
+
+<div class="grid gap-4" hx-target="this" hx-swap="outerHTML">
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="license-key">License Key</label>
+    <input
+      id="license-key"
+      name="licenseKey"
+      class={inputStyles({ isHtml: true })}
+      disabled
+      value={input.licenseKey}
+    />
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="org-name">Organization Name</label>
+    <input
+      id="org-name"
+      name="orgName"
+      class={inputStyles({ isHtml: true })}
+      disabled
+      value={input.orgName}
+    />
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="org-slug">Organization Slug</label>
+    <input
+      id="org-slug"
+      name="orgSlug"
+      class={inputStyles({ isHtml: true })}
+      disabled
+      value={input.orgSlug}
+    />
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="oauth2-provider-variant"
+      >OAuth Provider</label
+    >
+    <select
+      id="oauth2-provider-variant"
+      name="oAuth2ProviderVariant"
+      class={selectTriggerStyles({
+        isHtml: true,
+        class:
+          "border-0 border-r-8 border-transparent outline-input outline-1 outline",
+      })}
+      disabled
+    >
+      <option
+        value="entra-id"
+        selected={input.oAuth2ProviderVariant === "entra-id"}
+        >Microsoft Entra ID</option
+      >
+      <option value="google" selected={input.oAuth2ProviderVariant === "google"}
+        >Google</option
+      >
+    </select>
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="oauth2-provider-id"
+      >OAuth Provider ID</label
+    >
+    <input
+      id="oauth2-provider-id"
+      name="oAuth2ProviderId"
+      class={inputStyles({ isHtml: true })}
+      disabled
+      value={input.oAuth2ProviderId}
+    />
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="papercut-auth-token"
+      >PaperCut Auth Token</label
+    >
+    <input
+      id="papercut-auth-token"
+      name="papercutAuthToken"
+      class={inputStyles({ isHtml: true })}
+      placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+      disabled
+      value={input.papercutAuthToken}
+    />
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="tailscale-oauth2-client-id"
+      >Tailscale OAuth Client ID</label
+    >
+    <input
+      id="tailscale-oauth2-client-id"
+      name="tailscaleOAuth2ClientId"
+      class={inputStyles({ isHtml: true })}
+      disabled
+      value={input.tailscaleOAuth2ClientId}
+    />
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="tailscale-oauth2-client-secret"
+      >Tailscale OAuth Client Secret</label
+    >
+    <input
+      id="tailscale-oauth2-client-secret"
+      name="tailscaleOAuth2ClientSecret"
+      class={inputStyles({ isHtml: true })}
+      disabled
+      value={input.tailscaleOAuth2ClientSecret}
+    />
+  </div>
+
+  <div class="flex justify-between">
+    <button
+      type="button"
+      hx-post="/partials/registration/step-3?from=confirm"
+      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Back</button
+    >
+    <button type="submit" class={buttonStyles({ isHtml: true })}>Submit</button>
+  </div>
+</div>

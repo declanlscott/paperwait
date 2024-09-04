@@ -66,7 +66,7 @@ const registrationStepsSchemas = [
 ] as const;
 
 export const registrationStep1Schema = v.object({
-  ...registrationStepsSchemas[0].entries,
+  ...v.partial(registrationStepsSchemas[0]).entries,
   ...v.partial(registrationStepsSchemas[1]).entries,
   ...v.partial(registrationStepsSchemas[2]).entries,
 });
@@ -74,7 +74,7 @@ export type RegistrationStep1 = v.InferOutput<typeof registrationStep1Schema>;
 
 export const registrationStep2Schema = v.object({
   ...registrationStepsSchemas[0].entries,
-  ...registrationStepsSchemas[1].entries,
+  ...v.partial(registrationStepsSchemas[1]).entries,
   ...v.partial(registrationStepsSchemas[2]).entries,
 });
 export type RegistrationStep2 = v.InferOutput<typeof registrationStep2Schema>;
@@ -82,9 +82,13 @@ export type RegistrationStep2 = v.InferOutput<typeof registrationStep2Schema>;
 export const registrationStep3Schema = v.object({
   ...registrationStepsSchemas[0].entries,
   ...registrationStepsSchemas[1].entries,
-  ...registrationStepsSchemas[2].entries,
+  ...v.partial(registrationStepsSchemas[2]).entries,
 });
 export type RegistrationStep3 = v.InferOutput<typeof registrationStep3Schema>;
 
-export const registrationSchema = registrationStep3Schema;
+export const registrationSchema = v.object({
+  ...registrationStepsSchemas[0].entries,
+  ...registrationStepsSchemas[1].entries,
+  ...registrationStepsSchemas[2].entries,
+});
 export type Registration = v.InferOutput<typeof registrationSchema>;

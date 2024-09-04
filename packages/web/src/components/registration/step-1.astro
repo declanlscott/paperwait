@@ -1,0 +1,98 @@
+---
+import { buttonStyles } from "~/styles/components/primitives/button";
+import { labelStyles } from "~/styles/components/primitives/field";
+import { inputStyles } from "~/styles/components/primitives/text-field";
+
+import type { RegistrationStepProps } from "~/components/props";
+
+type Props = RegistrationStepProps;
+
+const { input, errors } = Astro.props;
+---
+
+<div class="grid gap-4" hx-target="this" hx-swap="outerHTML">
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="license-key">License Key</label>
+    <input
+      id="license-key"
+      name="licenseKey"
+      class={inputStyles({
+        isHtml: true,
+        variant: errors?.licenseKey ? "destructive" : "default",
+      })}
+      placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+      required
+      value={input.licenseKey}
+    />
+    {
+      errors?.licenseKey ? (
+        <p class="text-destructive text-sm">{errors.licenseKey}</p>
+      ) : null
+    }
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="org-name">Organization Name</label>
+    <input
+      id="org-name"
+      name="orgName"
+      class={inputStyles({
+        isHtml: true,
+        variant: errors?.orgName ? "destructive" : "default",
+      })}
+      required
+      value={input.orgName}
+    />
+    {
+      errors?.orgName ? (
+        <p class="text-destructive text-sm">{errors.orgName}</p>
+      ) : null
+    }
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="org-slug">Organization Slug</label>
+    <input
+      id="org-slug"
+      name="orgSlug"
+      class={inputStyles({ isHtml: true })}
+      required
+      value={input.orgSlug}
+    />
+    {
+      errors?.orgSlug ? (
+        <p class="text-destructive text-sm">{errors.orgSlug}</p>
+      ) : null
+    }
+  </div>
+
+  <input
+    type="hidden"
+    name="oAuth2ProviderVariant"
+    value={input.oAuth2ProviderVariant}
+  />
+  <input type="hidden" name="oAuth2ProviderId" value={input.oAuth2ProviderId} />
+  <input
+    type="hidden"
+    name="papercutAuthToken"
+    value={input.papercutAuthToken}
+  />
+  <input
+    type="hidden"
+    name="tailscaleOAuth2ClientId"
+    value={input.tailscaleOAuth2ClientId}
+  />
+  <input
+    type="hidden"
+    name="tailscaleOAuth2ClientSecret"
+    value={input.tailscaleOAuth2ClientSecret}
+  />
+
+  <div class="flex justify-between gap-4">
+    <button
+      type="button"
+      hx-post="/partials/registration/step-2?from=step-1"
+      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Next</button
+    >
+  </div>
+</div>

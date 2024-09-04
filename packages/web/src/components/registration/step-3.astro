@@ -1,0 +1,117 @@
+---
+import { buttonStyles } from "~/styles/components/primitives/button";
+import { labelStyles } from "~/styles/components/primitives/field";
+import { inputStyles } from "~/styles/components/primitives/text-field";
+
+import type { RegistrationStepProps } from "~/components/props";
+
+type Props = RegistrationStepProps;
+
+const { input, errors } = Astro.props;
+---
+
+<div class="grid gap-4" hx-target="this" hx-swap="outerHTML">
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="papercut-auth-token"
+      >PaperCut Auth Token</label
+    >
+    <input
+      id="papercut-auth-token"
+      name="papercutAuthToken"
+      class={inputStyles({
+        isHtml: true,
+        variant: errors?.papercutAuthToken ? "destructive" : "default",
+      })}
+      placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+      required
+      value={input.papercutAuthToken}
+    />
+    {
+      errors?.papercutAuthToken ? (
+        <p class="text-destructive text-sm">{errors.papercutAuthToken}</p>
+      ) : null
+    }
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="tailscale-oauth2-client-id"
+      >Tailscale OAuth2 Client ID</label
+    >
+    <input
+      id="tailscale-oauth2-client-id"
+      name="tailscaleOAuth2ClientId"
+      class={inputStyles({
+        isHtml: true,
+        variant: errors?.tailscaleOAuth2ClientId ? "destructive" : "default",
+      })}
+      required
+      value={input.tailscaleOAuth2ClientId}
+    />
+    {
+      errors?.tailscaleOAuth2ClientId ? (
+        <p class="text-destructive text-sm">{errors.tailscaleOAuth2ClientId}</p>
+      ) : null
+    }
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="tailscale-oauth2-client-secret"
+      >Tailscale OAuth2 Client Secret</label
+    >
+    <input
+      id="tailscale-oauth2-client-secret"
+      name="tailscaleOAuth2ClientSecret"
+      class={inputStyles({
+        isHtml: true,
+        variant: errors?.tailscaleOAuth2ClientId ? "destructive" : "default",
+      })}
+      required
+      value={input.tailscaleOAuth2ClientSecret}
+    />
+    {
+      errors?.tailscaleOAuth2ClientSecret ? (
+        <p class="text-destructive text-sm">
+          {errors.tailscaleOAuth2ClientSecret}
+        </p>
+      ) : null
+    }
+  </div>
+
+  <input type="hidden" name="licenseKey" value={input.licenseKey} />
+  <input type="hidden" name="orgName" value={input.orgName} />
+  <input type="hidden" name="orgSlug" value={input.orgSlug} />
+  <input
+    type="hidden"
+    name="oAuth2ProviderVariant"
+    value={input.oAuth2ProviderVariant}
+  />
+  <input type="hidden" name="oAuth2ProviderId" value={input.oAuth2ProviderId} />
+  <input
+    type="hidden"
+    name="papercutAuthToken"
+    value={input.papercutAuthToken}
+  />
+  <input
+    type="hidden"
+    name="tailscaleOAuth2ClientId"
+    value={input.tailscaleOAuth2ClientId}
+  />
+  <input
+    type="hidden"
+    name="tailscaleOAuth2ClientSecret"
+    value={input.tailscaleOAuth2ClientSecret}
+  />
+
+  <div class="flex justify-between gap-4">
+    <button
+      type="button"
+      hx-post="/partials/registration/step-2?from=step-3"
+      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Back</button
+    >
+    <button
+      type="button"
+      hx-post="/partials/registration/confirm?from=step-3"
+      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Next</button
+    >
+  </div>
+</div>

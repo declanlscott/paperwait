@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 import * as Auth from "../auth";
 import { useAuthenticated } from "../auth/context";
@@ -11,7 +11,7 @@ import * as Replicache from "../replicache";
 import * as Users from "../users";
 import { fn } from "../utils/helpers";
 import { updateOrganizationMutationArgsSchema } from "./shared";
-import { organizations } from "./sql";
+import { licenses, organizations } from "./sql";
 
 import type { Organization } from "./sql";
 
@@ -74,6 +74,23 @@ export const isSlugUnique = async (slug: Organization["slug"]) =>
       .from(organizations)
       .where(eq(organizations.slug, slug))
       .then((rows) => rows.length === 0),
+  );
+
+export const isLicenseKeyAvailable = async (
+  licenseKey: Organization["licenseKey"],
+) =>
+  useTransaction((tx) =>
+    tx
+      .select({})
+      .from(licenses)
+      .where(
+        and(
+          eq(licenses.key, licenseKey),
+          eq(licenses.status, "active"),
+          isNull(licenses.orgId),
+        ),
+      )
+      .then((rows) => rows.length === 1),
   );
 
 export { organizationSchema as schema } from "./shared";

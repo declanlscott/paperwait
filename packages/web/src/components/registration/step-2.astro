@@ -1,0 +1,92 @@
+---
+import { buttonStyles } from "~/styles/components/primitives/button";
+import { labelStyles } from "~/styles/components/primitives/field";
+import { selectTriggerStyles } from "~/styles/components/primitives/select";
+import { inputStyles } from "~/styles/components/primitives/text-field";
+
+import type { RegistrationStepProps } from "~/components/props";
+
+type Props = RegistrationStepProps;
+
+const { input, errors } = Astro.props;
+---
+
+<div class="grid gap-4" hx-target="this" hx-swap="outerHTML">
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="oauth2-provider-variant"
+      >OAuth Provider</label
+    >
+    <select
+      id="oauth2-provider-variant"
+      name="oAuth2ProviderVariant"
+      class={selectTriggerStyles({
+        isHtml: true,
+        class:
+          "border-0 border-r-8 border-transparent outline-input outline-1 outline",
+      })}
+      required
+    >
+      <option
+        value="entra-id"
+        selected={input.oAuth2ProviderVariant === "entra-id"}
+        >Microsoft Entra ID</option
+      >
+      <option value="google" selected={input.oAuth2ProviderVariant === "google"}
+        >Google</option
+      >
+    </select>
+    {
+      errors?.oAuth2ProviderVariant ? (
+        <p class="text-destructive text-sm">{errors.oAuth2ProviderVariant}</p>
+      ) : null
+    }
+  </div>
+
+  <div class="grid gap-2">
+    <label class={labelStyles()} for="oauth2-provider-id"
+      >OAuth2 Provider ID</label
+    >
+    <input
+      id="oauth2-provider-id"
+      name="oAuth2ProviderId"
+      class={inputStyles({
+        isHtml: true,
+        variant: errors?.oAuth2ProviderId ? "destructive" : "default",
+      })}
+      required
+      value={input.oAuth2ProviderId}
+    />
+  </div>
+
+  <input type="hidden" name="licenseKey" value={input.licenseKey} />
+  <input type="hidden" name="orgName" value={input.orgName} />
+  <input type="hidden" name="orgSlug" value={input.orgSlug} />
+  <input
+    type="hidden"
+    name="papercutAuthToken"
+    value={input.papercutAuthToken}
+  />
+  <input
+    type="hidden"
+    name="tailscaleOAuth2ClientId"
+    value={input.tailscaleOAuth2ClientId}
+  />
+  <input
+    type="hidden"
+    name="tailscaleOAuth2ClientSecret"
+    value={input.tailscaleOAuth2ClientSecret}
+  />
+
+  <div class="flex justify-between gap-4">
+    <button
+      type="button"
+      hx-post="/partials/registration/step-1?from=step-2"
+      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Back</button
+    >
+    <button
+      type="button"
+      hx-post="/partials/registration/step-3?from=step-2"
+      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Next</button
+    >
+  </div>
+</div>

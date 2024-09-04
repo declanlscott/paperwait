@@ -1,0 +1,101 @@
+---
+import * as Organizations from "@paperwait/core/organizations";
+import {
+  registrationSchema,
+  registrationStep2Schema,
+} from "@paperwait/core/organizations/shared";
+import * as R from "remeda";
+import * as v from "valibot";
+
+import RegistrationStep1 from "~/components/registration/step-1.astro";
+import RegistrationStep2 from "~/components/registration/step-2.astro";
+
+import type { Registration } from "@paperwait/core/organizations/shared";
+import type { RegistrationStepProps } from "~/components/props";
+
+export const partial = true;
+
+type ComponentProps =
+  | { variant: "step-1"; data: RegistrationStepProps }
+  | { variant: "step-2"; data: RegistrationStepProps };
+
+const from = v.parse(
+  v.picklist(["step-1", "step-3"]),
+  new URL(Astro.request.url).searchParams.get("from"),
+);
+
+const formData = await Astro.request.formData();
+const input = R.keys(registrationSchema.entries).reduce(
+  (fields, key) => {
+    fields[key] = formData.get(key)?.toString();
+    return fields;
+  },
+  {} as Record<keyof Registration, string | undefined>,
+);
+
+let props: ComponentProps;
+switch (from) {
+  case "step-1": {
+    const schema = v.pipeAsync(
+      registrationStep2Schema,
+      v.forwardAsync(
+        v.partialCheckAsync(
+          [["licenseKey"]],
+          ({ licenseKey }) =>
+            licenseKey
+              ? Organizations.isLicenseKeyAvailable(licenseKey)
+              : false,
+          "license key is not available",
+        ),
+        ["licenseKey"],
+      ),
+      v.forwardAsync(
+        v.partialCheckAsync(
+          [["orgSlug"]],
+          ({ orgSlug }) =>
+            orgSlug ? Organizations.isSlugUnique(orgSlug) : false,
+          "organization slug is not unique",
+        ),
+        ["orgSlug"],
+      ),
+    );
+
+    const result = await v.safeParseAsync(schema, input);
+
+    props = !result.success
+      ? {
+          variant: "step-1",
+          data: {
+            input,
+            errors: result.issues.reduce(
+              (errors, issue) => {
+                const path = v.getDotPath<typeof schema>(issue);
+                if (path) errors[path]?.push(issue.message);
+                return errors;
+              },
+              {} as NonNullable<RegistrationStepProps["errors"]>,
+            ),
+          },
+        }
+      : { variant: "step-2", data: { input: result.output } };
+    break;
+  }
+  case "step-3": {
+    props = {
+      variant: "step-2",
+      data: { input },
+    };
+    break;
+  }
+  default:
+    return new Response(null, { status: 400 });
+}
+---
+
+{
+  props.variant === "step-1" ? (
+    <RegistrationStep1 {...props.data} />
+  ) : (
+    <RegistrationStep2 {...props.data} />
+  )
+}
