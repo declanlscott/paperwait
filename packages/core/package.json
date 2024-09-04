@@ -33,7 +33,7 @@
     "oslo": "^1.2.1",
     "remeda": "^2.11.0",
     "replicache": "^15.0.1",
-    "valibot": "^0.37.0",
+    "valibot": "^0.41.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
