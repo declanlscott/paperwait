@@ -2,6 +2,7 @@ import react from "@astrojs/react";
 import starlight from "@astrojs/starlight";
 import tailwind from "@astrojs/tailwind";
 import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
+import icon from "astro-icon";
 import aws from "astro-sst";
 import { defineConfig } from "astro/config";
 
@@ -16,6 +17,7 @@ export default defineConfig({
     react(),
     tailwind({ applyBaseStyles: false }),
     starlight({ title: "Paperwait" }),
+    icon(),
   ],
   vite: { plugins: [TanStackRouterVite()] },
   security: {

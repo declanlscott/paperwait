@@ -1,5 +1,6 @@
 ---
-import Logo from "~/components/logo.astro";
+import { Icon } from "astro-icon/components";
+
 import RegistrationStep1 from "~/components/registration/step-1.astro";
 import Layout from "~/layouts/layout.astro";
 import { buttonStyles } from "~/styles/components/primitives/button";
@@ -18,7 +19,7 @@ export const prerender = true;
         <div class="flex justify-center">
           <a href="/">
             <div class="flex h-24 w-20 items-center overflow-hidden">
-              <Logo />
+              <Icon name="logo" />
             </div>
           </a>
         </div>

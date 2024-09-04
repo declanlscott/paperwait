@@ -15,11 +15,3 @@ export type RegistrationConfirmationProps = {
 export type AppLoadingIndicatorProps = {
   isInitial?: boolean;
 };
-
-export type LoadingIndicatorProps = {
-  color?: string;
-};
-
-export type LogoProps = {
-  color?: string;
-};

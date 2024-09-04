@@ -1,5 +1,5 @@
 ---
-import LoadingIndicator from "~/components/loading-indicator.astro";
+import { Icon } from "astro-icon/components";
 
 import type { AppLoadingIndicatorProps } from "~/components/props";
 
@@ -12,5 +12,5 @@ const { isInitial = false } = Astro.props;
   id=`${isInitial ? "initial-": ""}app-loading-indicator`
   class="flex h-screen w-screen items-center justify-center"
 >
-  <LoadingIndicator />
+  <Icon name="loading-indicator" />
 </div>

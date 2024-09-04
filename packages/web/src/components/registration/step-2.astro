@@ -1,4 +1,6 @@
 ---
+import { Icon } from "astro-icon/components";
+
 import { buttonStyles } from "~/styles/components/primitives/button";
 import { labelStyles } from "~/styles/components/primitives/field";
 import { selectTriggerStyles } from "~/styles/components/primitives/select";
@@ -81,12 +83,26 @@ const { input, errors } = Astro.props;
     <button
       type="button"
       hx-post="/partials/registration/step-1?from=step-2"
-      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Back</button
+      class={buttonStyles({
+        isHtml: true,
+        variant: "secondary",
+        class: "gap-2",
+      })}
     >
+      <Icon name="lucide:arrow-left" />
+      Back
+    </button>
     <button
       type="button"
       hx-post="/partials/registration/step-3?from=step-2"
-      class={buttonStyles({ isHtml: true, variant: "secondary" })}>Next</button
+      class={buttonStyles({
+        isHtml: true,
+        variant: "secondary",
+        class: "gap-2",
+      })}
     >
+      <Icon name="lucide:arrow-right" />
+      Next
+    </button>
   </div>
 </div>
