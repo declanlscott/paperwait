@@ -31,14 +31,9 @@ declare module "sst" {
           "database": string
           "host": string
           "password": string
-          "port": string
-          "ssl": string
+          "port": number
           "user": string
         }
-      }
-      "redis": {
-        "endpoint": string
-        "restToken": string
       }
       "type": "sst.sst.Linkable"
     }
@@ -71,35 +66,7 @@ declare module "sst" {
       "isDev": string
       "type": "sst.sst.Linkable"
     }
-    "Paperwait": {
-      "type": "sst.aws.Astro"
-      "url": string
-    }
     "PartyKitUrl": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresDatabase": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresHost": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresPassword": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresPort": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresSsl": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "PostgresUser": {
       "type": "sst.sst.Secret"
       "value": string
     }
@@ -111,6 +78,10 @@ declare module "sst" {
     "ReplicacheLicenseKey": {
       "type": "sst.sst.Secret"
       "value": string
+    }
+    "ReverseProxy": {
+      "type": "sst.cloudflare.Worker"
+      "url": string
     }
     "Storage": {
       "assets": {
@@ -130,6 +101,10 @@ declare module "sst" {
         "bucket": string
       }
       "type": "sst.sst.Linkable"
+    }
+    "Web": {
+      "type": "sst.aws.Astro"
+      "url": string
     }
   }
 }

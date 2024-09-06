@@ -1,10 +1,10 @@
 import { auth } from "./auth";
 import { db } from "./db";
-import { client, meta } from "./misc";
+import { client, domain, meta } from "./misc";
 import { realtime } from "./realtime";
 import { storage } from "./storage";
 
-export const web = new sst.aws.Astro("Paperwait", {
+export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
   link: [auth, client, db, meta, realtime, storage],
@@ -24,5 +24,25 @@ export const web = new sst.aws.Astro("Paperwait", {
   ],
   environment: {
     PROD: String($app.stage === "production"),
+  },
+});
+
+export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
+  handler: "packages/workers/src/reverse-proxy.ts",
+  domain: domain.value,
+  link: [web],
+  transform: {
+    worker: {
+      serviceBindings: [
+        {
+          name: "SESSION_RATE_LIMITER",
+          service: "paperwait-session-rate-limiter",
+        },
+        {
+          name: "IP_RATE_LIMITER",
+          service: "paperwait-ip-rate-limiter",
+        },
+      ],
+    },
   },
 });

@@ -1,0 +1,16 @@
+{
+  "name": "@paperwait/workers",
+  "version": "0.0.0",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {},
+  "dependencies": {
+    "@paperwait/core": "workspace:*",
+    "cloudflare": "^3.5.0",
+    "hono": "^4.5.11"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240903.0",
+    "@paperwait/eslint-config": "workspace:*"
+  }
+}

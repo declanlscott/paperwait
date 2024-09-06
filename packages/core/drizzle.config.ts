@@ -15,6 +15,5 @@ export default defineConfig({
     user: Resource.Db.postgres.credentials.user,
     password: Resource.Db.postgres.credentials.password,
     database: Resource.Db.postgres.credentials.database,
-    ssl: Resource.Db.postgres.credentials.ssl === "true",
   },
 });

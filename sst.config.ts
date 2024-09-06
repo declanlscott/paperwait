@@ -6,6 +6,9 @@ if (!AWS_ORG_NAME) throw new Error("AWS_ORG_NAME is not set");
 const AWS_REGION = process.env.AWS_REGION;
 if (!AWS_REGION) throw new Error("AWS_REGION is not set");
 
+const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+if (!SUPABASE_ACCESS_TOKEN) throw new Error("SUPABASE_ACCESS_TOKEN is not set");
+
 export default $config({
   app(input) {
     return {
@@ -22,7 +25,9 @@ export default $config({
         },
         cloudflare: true,
         azuread: true,
-        "@upstash/pulumi": true,
+        supabase: {
+          accessToken: process.env.SUPABASE_ACCESS_TOKEN,
+        },
         "@pulumiverse/time": true,
         tls: true,
         random: true,
@@ -51,7 +56,7 @@ export default $config({
     });
 
     return {
-      url: infra.web.url,
+      url: infra.reverseProxy.url,
     };
   },
 });

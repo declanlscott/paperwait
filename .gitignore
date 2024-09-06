@@ -31,3 +31,6 @@ pnpm-debug.log*
 
 # partykit
 .partykit
+
+# wrangler
+.wrangler

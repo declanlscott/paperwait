@@ -1,34 +1,27 @@
-export const postgres = {
-  credentials: {
-    host: new sst.Secret("PostgresHost"),
-    port: new sst.Secret("PostgresPort"),
-    user: new sst.Secret("PostgresUser"),
-    password: new sst.Secret("PostgresPassword"),
-    database: new sst.Secret("PostgresDatabase"),
-    ssl: new sst.Secret("PostgresSsl"),
-  },
-} as const;
+const AWS_REGION = process.env.AWS_REGION;
+if (!AWS_REGION) throw new Error("AWS_REGION is not set");
 
-export const redis = new upstash.RedisDatabase("Redis", {
-  databaseName: `paperwait-${$app.stage}`,
-  region: "us-east-1",
+const SUPABASE_ORG_ID = process.env.SUPABASE_ORG_ID;
+if (!SUPABASE_ORG_ID) throw new Error("SUPABASE_ORG_ID is not set");
+
+export const postgres = new supabase.Project("Postgres", {
+  name: $interpolate`${$app.name}-${$app.stage}`,
+  region: AWS_REGION,
+  organizationId: SUPABASE_ORG_ID,
+  databasePassword: new random.RandomString("PostgresPassword", { length: 16 })
+    .result,
 });
 
 export const db = new sst.Linkable("Db", {
   properties: {
     postgres: {
       credentials: {
-        host: postgres.credentials.host.value,
-        port: postgres.credentials.port.value,
-        user: postgres.credentials.user.value,
-        password: postgres.credentials.password.value,
-        database: postgres.credentials.database.value,
-        ssl: postgres.credentials.ssl.value,
+        host: $interpolate`aws-0-${postgres.region}.pooler.supabase.com`,
+        port: 6543,
+        user: $interpolate`postgres.${postgres.id}`,
+        password: postgres.databasePassword,
+        database: "postgres",
       },
-    },
-    redis: {
-      endpoint: redis.endpoint,
-      restToken: redis.restToken,
     },
   },
 });
