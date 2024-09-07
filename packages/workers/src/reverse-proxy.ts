@@ -7,32 +7,31 @@ import { HTTPException } from "hono/http-exception";
 
 export default new Hono<{
   Bindings: {
-    SESSION_RATE_LIMITER: (sessionId: string) => Promise<boolean>;
-    IP_RATE_LIMITER: (ip: string) => Promise<boolean>;
+    SESSION_RATE_LIMITER: { limit: (sessionId: string) => Promise<boolean> };
+    IP_RATE_LIMITER: { limit: (ip: string) => Promise<boolean> };
   };
 }>()
-  .use(async (c, next) => {
-    if (c.req.path.startsWith("/api")) {
-      const sessionId = getCookie(c, lucia.sessionCookieName);
-      if (sessionId) {
-        const success = await c.env.SESSION_RATE_LIMITER(sessionId);
-        if (!success) throw new TooManyRequestsError();
-      } else {
-        const ip = getConnInfo(c).remote.address;
-        if (!ip) throw new Error("Missing remote address");
+  .use("/api/:path{.+}", async (c, next) => {
+    const sessionId = getCookie(c, lucia.sessionCookieName);
 
-        const success = await c.env.IP_RATE_LIMITER(ip);
-        if (!success) throw new TooManyRequestsError();
-      }
-    }
-
-    if (c.req.path.startsWith("/partials")) {
+    let success: boolean;
+    if (sessionId) success = await c.env.SESSION_RATE_LIMITER.limit(sessionId);
+    else {
       const ip = getConnInfo(c).remote.address;
       if (!ip) throw new Error("Missing remote address");
 
-      const success = await c.env.IP_RATE_LIMITER(ip);
-      if (!success) throw new TooManyRequestsError();
+      success = await c.env.IP_RATE_LIMITER.limit(ip);
     }
+    if (!success) throw new TooManyRequestsError();
+
+    await next();
+  })
+  .use("/partials/:path{.+}", async (c, next) => {
+    const ip = getConnInfo(c).remote.address;
+    if (!ip) throw new Error("Missing remote address");
+
+    const success = await c.env.IP_RATE_LIMITER.limit(ip);
+    if (!success) throw new TooManyRequestsError();
 
     await next();
   })
