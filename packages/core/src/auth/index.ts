@@ -58,7 +58,11 @@ declare module "lucia" {
   }
 }
 
-export type { User as LuciaUser, Session as LuciaSession } from "lucia";
+export function createSessionCookie(sessionId?: LuciaSession["id"]) {
+  if (!sessionId) return lucia.createBlankSessionCookie();
+
+  return lucia.createSessionCookie(sessionId);
+}
 
 export async function createSession(
   userId: LuciaUser["id"],
@@ -96,15 +100,18 @@ export async function createSession(
     return session;
   });
 
-  const cookie = lucia.createSessionCookie(session.id);
+  const cookie = createSessionCookie(session.id);
 
   return { session, cookie };
 }
 
+export const validateSession = async (sessionId: LuciaSession["id"]) =>
+  lucia.validateSession(sessionId);
+
 export async function invalidateSession(sessionId: LuciaSession["id"]) {
   await lucia.invalidateSession(sessionId);
 
-  const cookie = lucia.createBlankSessionCookie();
+  const cookie = createSessionCookie();
 
   return { cookie };
 }
@@ -112,3 +119,7 @@ export async function invalidateSession(sessionId: LuciaSession["id"]) {
 export async function invalidateUserSessions(userId: LuciaUser["id"]) {
   await lucia.invalidateUserSessions(userId);
 }
+
+export const deleteExpiredSessions = async () => lucia.deleteExpiredSessions();
+
+export const sessionCookieName = lucia.sessionCookieName;

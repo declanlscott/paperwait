@@ -1,6 +1,6 @@
 import type { WriteTransaction } from "replicache";
 import type * as v from "valibot";
-import type { LuciaUser } from "../auth";
+import type { Authenticated } from "../auth";
 import type { MutationName } from "./shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,7 +11,7 @@ export type OptimisticMutator<TSchema extends v.GenericSchema> = (
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OptimisticMutatorWithUser<TSchema extends v.GenericSchema = any> = (
-  user: LuciaUser,
+  user: Authenticated["user"],
 ) => OptimisticMutator<TSchema>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

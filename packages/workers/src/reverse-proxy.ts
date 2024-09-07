@@ -1,4 +1,4 @@
-import { lucia } from "@paperwait/core/auth";
+import * as Auth from "@paperwait/core/auth";
 import { HttpError, TooManyRequestsError } from "@paperwait/core/errors/http";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/cloudflare-workers";
@@ -12,7 +12,7 @@ export default new Hono<{
   };
 }>()
   .use("/api/*", async (c, next) => {
-    const sessionId = getCookie(c, lucia.sessionCookieName);
+    const sessionId = getCookie(c, Auth.sessionCookieName);
 
     let success: boolean;
     if (sessionId) success = await c.env.SESSION_RATE_LIMITER.limit(sessionId);

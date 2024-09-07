@@ -13,12 +13,12 @@ import { ENTRA_ID, GOOGLE } from "./shared";
 import { oAuth2Providers } from "./sql";
 
 import type { OAuth2Tokens } from "arctic";
-import type { LuciaSession } from "../auth";
+import type { Authenticated } from "../auth";
 import type { SessionTokens } from "../auth/sql";
 import type { OAuth2Context } from "./context";
 
 export const fromSessionId = async (
-  sessionId: LuciaSession["id"],
+  sessionId: Authenticated["session"]["id"],
 ): Promise<OAuth2Context["provider"]> =>
   useTransaction(async (tx) => {
     const provider = await tx

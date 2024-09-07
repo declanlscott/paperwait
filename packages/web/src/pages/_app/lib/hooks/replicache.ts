@@ -5,7 +5,7 @@ import { MissingContextProviderError } from "@paperwait/core/errors/application"
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 
-import type { LuciaUser } from "@paperwait/core/auth";
+import type { Authenticated } from "@paperwait/core/auth";
 import type {
   OptimisticMutatorFactory,
   OptimisticMutatorWithUser,
@@ -79,12 +79,12 @@ export function useIsSyncing() {
   return isSyncing;
 }
 
-export function useMutatorFactory(user: LuciaUser) {
+export function useMutatorFactory(user: Authenticated["user"]) {
   const test = Announcements.create(user)({} as WriteTransaction, {});
 
   // const withUser = useCallback(
   //   <TMutator extends OptimisticMutatorWithUser>(
-  //     user: LuciaUser,
+  //     user: Authenticated["user"],
   //     mutator: TMutator,
   //     // eslint-disable-next-line @typescript-eslint/no-empty-function
   //   ) => (user ? mutator(user) : async () => {}),

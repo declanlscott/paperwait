@@ -1,11 +1,11 @@
-import type { LuciaUser } from ".";
+import type { Authenticated } from ".";
 import type { ApplicationError } from "../errors/application";
 import type { HttpError } from "../errors/http";
 import type { MutationName } from "../replicache";
 import type { UserRole } from "../users/shared";
 
 export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
-  user: LuciaUser,
+  user: Authenticated["user"],
   roles: Array<UserRole>,
   CustomError?: new () => TCustomError,
 ) {
@@ -21,7 +21,7 @@ export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
 }
 
 /**
- * Role-based access control for mutators.
+ * Role-based access control for mutations.
  */
 export const mutationRbac = {
   createAnnouncement: ["administrator", "operator"],

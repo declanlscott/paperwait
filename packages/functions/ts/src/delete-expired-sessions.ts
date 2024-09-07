@@ -1,3 +1,3 @@
-import { lucia } from "@paperwait/core/auth";
+import * as Auth from "@paperwait/core/auth";
 
-export const handler = () => lucia.deleteExpiredSessions();
+export const handler = Auth.deleteExpiredSessions;
