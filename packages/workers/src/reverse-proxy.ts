@@ -11,7 +11,7 @@ export default new Hono<{
     IP_RATE_LIMITER: { limit: (ip: string) => Promise<boolean> };
   };
 }>()
-  .use("/api/:path{.+}", async (c, next) => {
+  .use("/api/*", async (c, next) => {
     const sessionId = getCookie(c, lucia.sessionCookieName);
 
     let success: boolean;
@@ -26,7 +26,7 @@ export default new Hono<{
 
     await next();
   })
-  .use("/partials/:path{.+}", async (c, next) => {
+  .use("/partials/*", async (c, next) => {
     const ip = getConnInfo(c).remote.address;
     if (!ip) throw new Error("Missing remote address");
 
