@@ -327,36 +327,263 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  AuthenticatedRoute: AuthenticatedRoute.addChildren({
-    AuthenticatedDashboardRoute,
-    AuthenticatedProductsLazyRoute: AuthenticatedProductsLazyRoute.addChildren({
-      AuthenticatedProductsIndexRoute,
-    }),
-    AuthenticatedSettingsLazyRoute: AuthenticatedSettingsLazyRoute.addChildren({
-      AuthenticatedSettingsImagesRoute,
+interface AuthenticatedProductsLazyRouteChildren {
+  AuthenticatedProductsIndexRoute: typeof AuthenticatedProductsIndexRoute
+}
+
+const AuthenticatedProductsLazyRouteChildren: AuthenticatedProductsLazyRouteChildren =
+  {
+    AuthenticatedProductsIndexRoute: AuthenticatedProductsIndexRoute,
+  }
+
+const AuthenticatedProductsLazyRouteWithChildren =
+  AuthenticatedProductsLazyRoute._addFileChildren(
+    AuthenticatedProductsLazyRouteChildren,
+  )
+
+interface AuthenticatedSettingsLazyRouteChildren {
+  AuthenticatedSettingsImagesRoute: typeof AuthenticatedSettingsImagesRoute
+  AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
+  AuthenticatedSettingsRoomsRoute: typeof AuthenticatedSettingsRoomsRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+}
+
+const AuthenticatedSettingsLazyRouteChildren: AuthenticatedSettingsLazyRouteChildren =
+  {
+    AuthenticatedSettingsImagesRoute: AuthenticatedSettingsImagesRoute,
+    AuthenticatedSettingsIntegrationsRoute:
       AuthenticatedSettingsIntegrationsRoute,
-      AuthenticatedSettingsRoomsRoute,
-      AuthenticatedSettingsIndexRoute,
-    }),
-    AuthenticatedUsersLazyRoute: AuthenticatedUsersLazyRoute.addChildren({
-      AuthenticatedUsersUserIdRoute,
-      AuthenticatedUsersIndexRoute,
-    }),
-    AuthenticatedSettingsRoomsRoomIdLazyRoute:
-      AuthenticatedSettingsRoomsRoomIdLazyRoute.addChildren({
-        AuthenticatedSettingsRoomsRoomIdConfigurationRoute,
-        AuthenticatedSettingsRoomsRoomIdCostScriptsRoute,
-        AuthenticatedSettingsRoomsRoomIdProductsRoute,
-        AuthenticatedSettingsRoomsRoomIdIndexRoute,
-      }),
-    AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute:
-      AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute.addChildren({
-        AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute,
-      }),
-  }),
-  LoginRoute,
-})
+    AuthenticatedSettingsRoomsRoute: AuthenticatedSettingsRoomsRoute,
+    AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  }
+
+const AuthenticatedSettingsLazyRouteWithChildren =
+  AuthenticatedSettingsLazyRoute._addFileChildren(
+    AuthenticatedSettingsLazyRouteChildren,
+  )
+
+interface AuthenticatedUsersLazyRouteChildren {
+  AuthenticatedUsersUserIdRoute: typeof AuthenticatedUsersUserIdRoute
+  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+}
+
+const AuthenticatedUsersLazyRouteChildren: AuthenticatedUsersLazyRouteChildren =
+  {
+    AuthenticatedUsersUserIdRoute: AuthenticatedUsersUserIdRoute,
+    AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  }
+
+const AuthenticatedUsersLazyRouteWithChildren =
+  AuthenticatedUsersLazyRoute._addFileChildren(
+    AuthenticatedUsersLazyRouteChildren,
+  )
+
+interface AuthenticatedSettingsRoomsRoomIdLazyRouteChildren {
+  AuthenticatedSettingsRoomsRoomIdConfigurationRoute: typeof AuthenticatedSettingsRoomsRoomIdConfigurationRoute
+  AuthenticatedSettingsRoomsRoomIdCostScriptsRoute: typeof AuthenticatedSettingsRoomsRoomIdCostScriptsRoute
+  AuthenticatedSettingsRoomsRoomIdProductsRoute: typeof AuthenticatedSettingsRoomsRoomIdProductsRoute
+  AuthenticatedSettingsRoomsRoomIdIndexRoute: typeof AuthenticatedSettingsRoomsRoomIdIndexRoute
+}
+
+const AuthenticatedSettingsRoomsRoomIdLazyRouteChildren: AuthenticatedSettingsRoomsRoomIdLazyRouteChildren =
+  {
+    AuthenticatedSettingsRoomsRoomIdConfigurationRoute:
+      AuthenticatedSettingsRoomsRoomIdConfigurationRoute,
+    AuthenticatedSettingsRoomsRoomIdCostScriptsRoute:
+      AuthenticatedSettingsRoomsRoomIdCostScriptsRoute,
+    AuthenticatedSettingsRoomsRoomIdProductsRoute:
+      AuthenticatedSettingsRoomsRoomIdProductsRoute,
+    AuthenticatedSettingsRoomsRoomIdIndexRoute:
+      AuthenticatedSettingsRoomsRoomIdIndexRoute,
+  }
+
+const AuthenticatedSettingsRoomsRoomIdLazyRouteWithChildren =
+  AuthenticatedSettingsRoomsRoomIdLazyRoute._addFileChildren(
+    AuthenticatedSettingsRoomsRoomIdLazyRouteChildren,
+  )
+
+interface AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteChildren {
+  AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute: typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute
+}
+
+const AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteChildren: AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteChildren =
+  {
+    AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute:
+      AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute,
+  }
+
+const AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteWithChildren =
+  AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute._addFileChildren(
+    AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedProductsLazyRoute: typeof AuthenticatedProductsLazyRouteWithChildren
+  AuthenticatedSettingsLazyRoute: typeof AuthenticatedSettingsLazyRouteWithChildren
+  AuthenticatedUsersLazyRoute: typeof AuthenticatedUsersLazyRouteWithChildren
+  AuthenticatedSettingsRoomsRoomIdLazyRoute: typeof AuthenticatedSettingsRoomsRoomIdLazyRouteWithChildren
+  AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute: typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteWithChildren
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedProductsLazyRoute: AuthenticatedProductsLazyRouteWithChildren,
+  AuthenticatedSettingsLazyRoute: AuthenticatedSettingsLazyRouteWithChildren,
+  AuthenticatedUsersLazyRoute: AuthenticatedUsersLazyRouteWithChildren,
+  AuthenticatedSettingsRoomsRoomIdLazyRoute:
+    AuthenticatedSettingsRoomsRoomIdLazyRouteWithChildren,
+  AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRoute:
+    AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteWithChildren,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
+export interface FileRoutesByFullPath {
+  '': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/products': typeof AuthenticatedProductsLazyRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsLazyRouteWithChildren
+  '/users': typeof AuthenticatedUsersLazyRouteWithChildren
+  '/settings/images': typeof AuthenticatedSettingsImagesRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
+  '/settings/rooms': typeof AuthenticatedSettingsRoomsRoute
+  '/users/$userId': typeof AuthenticatedUsersUserIdRoute
+  '/products/': typeof AuthenticatedProductsIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/users/': typeof AuthenticatedUsersIndexRoute
+  '/settings/rooms/$roomId': typeof AuthenticatedSettingsRoomsRoomIdLazyRouteWithChildren
+  '/settings/rooms/$roomId/configuration': typeof AuthenticatedSettingsRoomsRoomIdConfigurationRoute
+  '/settings/rooms/$roomId/cost-scripts': typeof AuthenticatedSettingsRoomsRoomIdCostScriptsRoute
+  '/settings/rooms/$roomId/products': typeof AuthenticatedSettingsRoomsRoomIdProductsRoute
+  '/settings/rooms/$roomId/': typeof AuthenticatedSettingsRoomsRoomIdIndexRoute
+  '/settings/rooms/$roomId/products/$productId': typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteWithChildren
+  '/settings/rooms/$roomId/products/$productId/': typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute
+}
+
+export interface FileRoutesByTo {
+  '': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/settings/images': typeof AuthenticatedSettingsImagesRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
+  '/settings/rooms': typeof AuthenticatedSettingsRoomsRoute
+  '/users/$userId': typeof AuthenticatedUsersUserIdRoute
+  '/products': typeof AuthenticatedProductsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/users': typeof AuthenticatedUsersIndexRoute
+  '/settings/rooms/$roomId/configuration': typeof AuthenticatedSettingsRoomsRoomIdConfigurationRoute
+  '/settings/rooms/$roomId/cost-scripts': typeof AuthenticatedSettingsRoomsRoomIdCostScriptsRoute
+  '/settings/rooms/$roomId/products': typeof AuthenticatedSettingsRoomsRoomIdProductsRoute
+  '/settings/rooms/$roomId': typeof AuthenticatedSettingsRoomsRoomIdIndexRoute
+  '/settings/rooms/$roomId/products/$productId': typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute
+}
+
+export interface FileRoutesById {
+  __root__: typeof rootRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/products': typeof AuthenticatedProductsLazyRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsLazyRouteWithChildren
+  '/_authenticated/users': typeof AuthenticatedUsersLazyRouteWithChildren
+  '/_authenticated/settings/images': typeof AuthenticatedSettingsImagesRoute
+  '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
+  '/_authenticated/settings/rooms': typeof AuthenticatedSettingsRoomsRoute
+  '/_authenticated/users/$userId': typeof AuthenticatedUsersUserIdRoute
+  '/_authenticated/products/': typeof AuthenticatedProductsIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/settings/rooms/$roomId': typeof AuthenticatedSettingsRoomsRoomIdLazyRouteWithChildren
+  '/_authenticated/settings/rooms/$roomId/configuration': typeof AuthenticatedSettingsRoomsRoomIdConfigurationRoute
+  '/_authenticated/settings/rooms/$roomId/cost-scripts': typeof AuthenticatedSettingsRoomsRoomIdCostScriptsRoute
+  '/_authenticated/settings/rooms/$roomId/products': typeof AuthenticatedSettingsRoomsRoomIdProductsRoute
+  '/_authenticated/settings/rooms/$roomId/': typeof AuthenticatedSettingsRoomsRoomIdIndexRoute
+  '/_authenticated/settings/rooms/$roomId/products/$productId': typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdLazyRouteWithChildren
+  '/_authenticated/settings/rooms/$roomId/products/$productId/': typeof AuthenticatedSettingsRoomsRoomIdProductsProductIdIndexRoute
+}
+
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | ''
+    | '/login'
+    | '/dashboard'
+    | '/products'
+    | '/settings'
+    | '/users'
+    | '/settings/images'
+    | '/settings/integrations'
+    | '/settings/rooms'
+    | '/users/$userId'
+    | '/products/'
+    | '/settings/'
+    | '/users/'
+    | '/settings/rooms/$roomId'
+    | '/settings/rooms/$roomId/configuration'
+    | '/settings/rooms/$roomId/cost-scripts'
+    | '/settings/rooms/$roomId/products'
+    | '/settings/rooms/$roomId/'
+    | '/settings/rooms/$roomId/products/$productId'
+    | '/settings/rooms/$roomId/products/$productId/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | ''
+    | '/login'
+    | '/dashboard'
+    | '/settings/images'
+    | '/settings/integrations'
+    | '/settings/rooms'
+    | '/users/$userId'
+    | '/products'
+    | '/settings'
+    | '/users'
+    | '/settings/rooms/$roomId/configuration'
+    | '/settings/rooms/$roomId/cost-scripts'
+    | '/settings/rooms/$roomId/products'
+    | '/settings/rooms/$roomId'
+    | '/settings/rooms/$roomId/products/$productId'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/products'
+    | '/_authenticated/settings'
+    | '/_authenticated/users'
+    | '/_authenticated/settings/images'
+    | '/_authenticated/settings/integrations'
+    | '/_authenticated/settings/rooms'
+    | '/_authenticated/users/$userId'
+    | '/_authenticated/products/'
+    | '/_authenticated/settings/'
+    | '/_authenticated/users/'
+    | '/_authenticated/settings/rooms/$roomId'
+    | '/_authenticated/settings/rooms/$roomId/configuration'
+    | '/_authenticated/settings/rooms/$roomId/cost-scripts'
+    | '/_authenticated/settings/rooms/$roomId/products'
+    | '/_authenticated/settings/rooms/$roomId/'
+    | '/_authenticated/settings/rooms/$roomId/products/$productId'
+    | '/_authenticated/settings/rooms/$roomId/products/$productId/'
+  fileRoutesById: FileRoutesById
+}
+
+export interface RootRouteChildren {
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
+}
+
+export const routeTree = rootRoute
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 
