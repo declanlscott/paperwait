@@ -10,7 +10,7 @@ export const licenseStatuses = ["active", "expired"] as const;
 export type LicenseStatus = (typeof licenseStatuses)[number];
 
 export const licenseSchema = v.object({
-  key: v.pipe(v.string(), v.uuid()),
+  key: v.pipe(v.string(), v.uuid("Invalid license key format")),
   orgId: nanoIdSchema,
   status: v.picklist(licenseStatuses),
 });
@@ -22,7 +22,13 @@ export type OrgStatus = (typeof orgStatuses)[number];
 
 export const organizationSchema = v.object({
   id: nanoIdSchema,
-  slug: v.pipe(v.string(), v.regex(ORG_SLUG_PATTERN)),
+  slug: v.pipe(
+    v.string(),
+    v.regex(
+      ORG_SLUG_PATTERN,
+      "Invalid format, only alphanumeric characters and hyphens are allowed",
+    ),
+  ),
   name: v.string(),
   status: v.picklist(orgStatuses),
   licenseKey: v.pipe(v.string(), v.uuid()),

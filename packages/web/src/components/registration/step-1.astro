@@ -57,7 +57,10 @@ const { input, errors } = Astro.props;
     <input
       id="org-slug"
       name="orgSlug"
-      class={inputStyles({ isHtml: true })}
+      class={inputStyles({
+        isHtml: true,
+        variant: errors?.orgSlug ? "destructive" : "default",
+      })}
       required
       value={input.orgSlug}
     />
@@ -90,7 +93,7 @@ const { input, errors } = Astro.props;
     value={input.tailscaleOAuth2ClientSecret}
   />
 
-  <div class="flex justify-between gap-4">
+  <div class="flex justify-end gap-4">
     <button
       type="button"
       hx-post="/partials/registration/step-2?from=step-1"

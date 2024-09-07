@@ -1,15 +1,11 @@
 ---
-import {
-  registrationSchema,
-  registrationStep3Schema,
-} from "@paperwait/core/organizations/shared";
-import * as R from "remeda";
+import { registrationStep3Schema } from "@paperwait/core/organizations/shared";
 import * as v from "valibot";
 
 import RegistrationStep2 from "~/components/registration/step-2.astro";
 import RegistrationStep3 from "~/components/registration/step-3.astro";
+import { getFormErrors, getFormInput } from "./_utils";
 
-import type { Registration } from "@paperwait/core/organizations/shared";
 import type { RegistrationStepProps } from "~/components/props";
 
 export const partial = true;
@@ -24,13 +20,7 @@ const from = v.parse(
 );
 
 const formData = await Astro.request.formData();
-const input = R.keys(registrationSchema.entries).reduce(
-  (fields, key) => {
-    fields[key] = formData.get(key)?.toString();
-    return fields;
-  },
-  {} as Record<keyof Registration, string | undefined>,
-);
+const input = getFormInput(formData);
 
 let props: ComponentProps;
 switch (from) {
@@ -42,15 +32,7 @@ switch (from) {
           variant: "step-2",
           data: {
             input,
-            errors: result.issues.reduce(
-              (errors, issue) => {
-                const path =
-                  v.getDotPath<typeof registrationStep3Schema>(issue);
-                if (path) errors[path]?.push(issue.message);
-                return errors;
-              },
-              {} as NonNullable<RegistrationStepProps["errors"]>,
-            ),
+            errors: getFormErrors(result.issues),
           },
         }
       : { variant: "step-3", data: { input: result.output } };

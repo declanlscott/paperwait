@@ -24,7 +24,6 @@ const { input, errors } = Astro.props;
         isHtml: true,
         variant: errors?.papercutAuthToken ? "destructive" : "default",
       })}
-      placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
       required
       value={input.papercutAuthToken}
     />
@@ -37,7 +36,7 @@ const { input, errors } = Astro.props;
 
   <div class="grid gap-2">
     <label class={labelStyles()} for="tailscale-oauth2-client-id"
-      >Tailscale OAuth2 Client ID</label
+      >Tailscale OAuth Client ID</label
     >
     <input
       id="tailscale-oauth2-client-id"
@@ -58,7 +57,7 @@ const { input, errors } = Astro.props;
 
   <div class="grid gap-2">
     <label class={labelStyles()} for="tailscale-oauth2-client-secret"
-      >Tailscale OAuth2 Client Secret</label
+      >Tailscale OAuth Client Secret</label
     >
     <input
       id="tailscale-oauth2-client-secret"

@@ -1,22 +1,13 @@
 ---
-import { registrationSchema } from "@paperwait/core/organizations/shared";
-import * as R from "remeda";
-
 import RegistrationStep1 from "~/components/registration/step-1.astro";
+import { getFormInput } from "./_utils";
 
-import type { Registration } from "@paperwait/core/organizations/shared";
 import type { RegistrationStepProps } from "~/components/props";
 
 export const partial = true;
 
 const formData = await Astro.request.formData();
-const input = R.keys(registrationSchema.entries).reduce(
-  (fields, key) => {
-    fields[key] = formData.get(key)?.toString();
-    return fields;
-  },
-  {} as Record<keyof Registration, string | undefined>,
-);
+const input = getFormInput(formData);
 
 const props = { input } satisfies RegistrationStepProps;
 ---

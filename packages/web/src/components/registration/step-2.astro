@@ -46,7 +46,7 @@ const { input, errors } = Astro.props;
 
   <div class="grid gap-2">
     <label class={labelStyles()} for="oauth2-provider-id"
-      >OAuth2 Provider ID</label
+      >OAuth Provider ID</label
     >
     <input
       id="oauth2-provider-id"
@@ -58,6 +58,11 @@ const { input, errors } = Astro.props;
       required
       value={input.oAuth2ProviderId}
     />
+    {
+      errors?.oAuth2ProviderId ? (
+        <p class="text-destructive text-sm">{errors.oAuth2ProviderId}</p>
+      ) : null
+    }
   </div>
 
   <input type="hidden" name="licenseKey" value={input.licenseKey} />
