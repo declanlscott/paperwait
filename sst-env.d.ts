@@ -27,13 +27,7 @@ declare module "sst" {
     }
     "Db": {
       "postgres": {
-        "credentials": {
-          "database": string
-          "host": string
-          "password": string
-          "port": number
-          "user": string
-        }
+        "url": string
       }
       "type": "sst.sst.Linkable"
     }

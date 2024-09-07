@@ -15,13 +15,7 @@ export const postgres = new supabase.Project("Postgres", {
 export const db = new sst.Linkable("Db", {
   properties: {
     postgres: {
-      credentials: {
-        host: $interpolate`aws-0-${postgres.region}.pooler.supabase.com`,
-        port: 6543,
-        user: $interpolate`postgres.${postgres.id}`,
-        password: postgres.databasePassword,
-        database: "postgres",
-      },
+      url: $interpolate`postgresql://postgres.${postgres.id}:${postgres.databasePassword}@aws-0-${postgres.region}.pooler.supabase.com:6543/postgres`,
     },
   },
 });
