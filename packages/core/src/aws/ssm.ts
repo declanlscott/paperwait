@@ -18,19 +18,17 @@ import type {
 } from "@aws-sdk/client-ssm";
 import type { NanoId } from "../utils/schemas";
 
-export const ssmClient = new SSMClient({
+export const client = new SSMClient({
   region: AWS_REGION,
   credentials: fromNodeProviderChain(),
 });
 
-export const buildSsmParameterPath = (
-  orgId: NanoId,
-  ...segments: Array<string>
-) => `/paperwait/org/${orgId}/${segments.join("/")}`;
+export const buildParameterPath = (orgId: NanoId, ...segments: Array<string>) =>
+  `/paperwait/org/${orgId}/${segments.join("/")}`;
 
-export async function putSsmParameter(input: PutParameterCommandInput) {
+export async function putParameter(input: PutParameterCommandInput) {
   try {
-    await ssmClient.send(new PutParameterCommand(input));
+    await client.send(new PutParameterCommand(input));
   } catch (e) {
     if (e instanceof ParameterAlreadyExists)
       throw new ConflictError("Parameter already exists");
@@ -39,9 +37,9 @@ export async function putSsmParameter(input: PutParameterCommandInput) {
   }
 }
 
-export async function getSsmParameter(input: GetParameterCommandInput) {
+export async function getParameter(input: GetParameterCommandInput) {
   try {
-    const { Parameter } = await ssmClient.send(new GetParameterCommand(input));
+    const { Parameter } = await client.send(new GetParameterCommand(input));
 
     if (!Parameter?.Value)
       throw new NotFoundError("Parameter exists but has no value");
@@ -55,9 +53,9 @@ export async function getSsmParameter(input: GetParameterCommandInput) {
   }
 }
 
-export async function deleteSsmParameter(input: DeleteParameterCommandInput) {
+export async function deleteParameter(input: DeleteParameterCommandInput) {
   try {
-    await ssmClient.send(new DeleteParameterCommand(input));
+    await client.send(new DeleteParameterCommand(input));
   } catch (e) {
     if (e instanceof ParameterNotFound)
       throw new NotFoundError("Parameter not found");
