@@ -1,1 +1,1 @@
-export { NeonDbError as DatabaseError } from "@neondatabase/serverless";
+export { Error as DatabaseError } from "postgres";
