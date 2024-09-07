@@ -204,7 +204,6 @@ export default new Hono()
             eq(organizations.id, orgId),
           ),
         )
-        .execute()
         .then((rows) => rows.at(0));
       if (!org)
         throw new NotFoundError(
@@ -233,7 +232,7 @@ export default new Hono()
         }
       }
 
-      const userId = await withTransaction(async (tx) => {
+      const { cookie } = await withTransaction(async (tx) => {
         const existingUser = await tx
           .select({
             id: users.id,
@@ -266,7 +265,7 @@ export default new Hono()
             Replicache.poke([Realtime.formatChannel("org", orgId)]),
           );
 
-          return newUser.id;
+          return Auth.createSession(newUser.id, { orgId }, tokens);
         }
 
         if (existingUser.deletedAt)
@@ -294,10 +293,8 @@ export default new Hono()
           );
         }
 
-        return existingUser.id;
+        return Auth.createSession(existingUser.id, { orgId }, tokens);
       });
-
-      const { cookie } = await Auth.createSession(userId, { orgId }, tokens);
 
       setCookie(c, cookie.name, cookie.value, cookie.attributes);
 

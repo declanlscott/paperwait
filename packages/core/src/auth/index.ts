@@ -2,6 +2,7 @@ import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
 
 import { db } from "../drizzle";
+import { useTransaction } from "../drizzle/transaction";
 import { users } from "../users/sql";
 import { generateId } from "../utils/helpers";
 import { sessions, sessionsTokens } from "./sql";
@@ -64,7 +65,7 @@ export async function createSession(
   attributes: RegisteredDatabaseSessionAttributes,
   tokens: OAuth2Tokens,
 ) {
-  const session = await db.transaction(async (tx) => {
+  const session = await useTransaction(async (tx) => {
     const session = await lucia.createSession(userId, attributes, {
       sessionId: generateId(),
     });
