@@ -20,6 +20,7 @@ export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
           service: "paperwait-ip-rate-limiter",
         },
       ],
+      compatibilityFlags: ["nodejs_compat_v2"],
     },
   },
 });
