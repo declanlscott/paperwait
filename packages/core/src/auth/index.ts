@@ -1,6 +1,7 @@
 import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
 
+import { AUTH_SESSION_COOKIE_NAME } from "../constants";
 import { db } from "../drizzle";
 import { useTransaction } from "../drizzle/transaction";
 import { users } from "../users/sql";
@@ -36,6 +37,7 @@ export const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users);
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
     attributes: { secure: (process.env.PROD ?? "false") === "true" },
+    name: AUTH_SESSION_COOKIE_NAME,
   },
   getUserAttributes: (attributes) => ({
     oAuth2UserId: attributes.oAuth2UserId,
@@ -121,5 +123,3 @@ export async function invalidateUserSessions(userId: LuciaUser["id"]) {
 }
 
 export const deleteExpiredSessions = async () => lucia.deleteExpiredSessions();
-
-export const sessionCookieName = lucia.sessionCookieName;

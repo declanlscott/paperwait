@@ -1,5 +1,6 @@
 import * as Auth from "@paperwait/core/auth";
 import { withAuth } from "@paperwait/core/auth/context";
+import { AUTH_SESSION_COOKIE_NAME } from "@paperwait/core/constants";
 import { db, eq } from "@paperwait/core/drizzle";
 import { organizations } from "@paperwait/core/organizations/sql";
 import { defineMiddleware } from "astro:middleware";
@@ -9,7 +10,8 @@ import { isPrerenderedPage } from "~/middleware/utils";
 export const auth = defineMiddleware(async (context, next) => {
   if (isPrerenderedPage(context.url.pathname)) return await next();
 
-  const sessionId = context.cookies.get(Auth.sessionCookieName)?.value ?? null;
+  const sessionId =
+    context.cookies.get(AUTH_SESSION_COOKIE_NAME)?.value ?? null;
 
   if (!sessionId)
     return await withAuth(

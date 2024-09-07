@@ -1,4 +1,4 @@
-import * as Auth from "@paperwait/core/auth";
+import { AUTH_SESSION_COOKIE_NAME } from "@paperwait/core/constants";
 import { HttpError, TooManyRequestsError } from "@paperwait/core/errors/http";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/cloudflare-workers";
@@ -12,7 +12,7 @@ export default new Hono<{
   };
 }>()
   .use("/api/*", async (c, next) => {
-    const sessionId = getCookie(c, Auth.sessionCookieName);
+    const sessionId = getCookie(c, AUTH_SESSION_COOKIE_NAME);
 
     let success: boolean;
     if (sessionId) success = await c.env.SESSION_RATE_LIMITER.limit(sessionId);

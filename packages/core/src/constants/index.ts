@@ -36,3 +36,5 @@ export const NANOID_PATTERN = new RegExp(
 );
 
 export const ORG_SLUG_PATTERN = new RegExp(/^[a-zA-Z0-9-]+$/);
+
+export const AUTH_SESSION_COOKIE_NAME = "auth_session";
