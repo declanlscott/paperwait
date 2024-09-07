@@ -10,7 +10,6 @@
     "hono": "^4.5.11"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240903.0",
     "@paperwait/eslint-config": "workspace:*"
   }
 }
