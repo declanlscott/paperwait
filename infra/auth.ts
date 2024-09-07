@@ -1,4 +1,4 @@
-import { domain } from "./misc";
+import { domain } from "./dns";
 
 const wellKnownOutput = azuread.getApplicationPublishedAppIdsOutput({});
 
@@ -15,13 +15,13 @@ const { oauth2PermissionScopeIds } = new azuread.ServicePrincipal(
 export const entraIdApplication = new azuread.Application(
   "EntraIdApplication",
   {
-    displayName: "Paperwait",
+    displayName: $interpolate`${$app.name}-${$app.stage}`,
     preventDuplicateNames: true,
     signInAudience: "AzureADMultipleOrgs",
     web: {
       redirectUris: [
         "http://localhost:4321/api/auth/callback",
-        $interpolate`https://${domain.value}/api/auth/callback`,
+        $interpolate`https://${domain}/api/auth/callback`,
       ],
     },
     requiredResourceAccesses: [

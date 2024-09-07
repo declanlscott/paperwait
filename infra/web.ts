@@ -1,8 +1,28 @@
 import { auth } from "./auth";
 import { db } from "./db";
-import { client, domain, meta } from "./misc";
+import { domain } from "./dns";
+import { client, meta } from "./meta";
 import { realtime } from "./realtime";
 import { storage } from "./storage";
+
+export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
+  handler: "packages/workers/src/reverse-proxy.ts",
+  domain,
+  transform: {
+    worker: {
+      serviceBindings: [
+        {
+          name: "SESSION_RATE_LIMITER",
+          service: "paperwait-session-rate-limiter",
+        },
+        {
+          name: "IP_RATE_LIMITER",
+          service: "paperwait-ip-rate-limiter",
+        },
+      ],
+    },
+  },
+});
 
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
@@ -25,24 +45,8 @@ export const web = new sst.aws.Astro("Web", {
   environment: {
     PROD: String($app.stage === "production"),
   },
-});
-
-export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
-  handler: "packages/workers/src/reverse-proxy.ts",
-  domain: domain.value,
-  link: [web],
-  transform: {
-    worker: {
-      serviceBindings: [
-        {
-          name: "SESSION_RATE_LIMITER",
-          service: "paperwait-session-rate-limiter",
-        },
-        {
-          name: "IP_RATE_LIMITER",
-          service: "paperwait-ip-rate-limiter",
-        },
-      ],
-    },
+  domain: {
+    name: domain,
+    dns: sst.cloudflare.dns(),
   },
 });
