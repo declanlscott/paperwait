@@ -3,7 +3,7 @@ export type PrefixedRecord<
   TDelimiter extends string,
   TKey extends string,
 > = {
-  [Key in TKey]: `${TPrefix}${TDelimiter}${Key}`;
+  [K in TKey]: `${TPrefix}${TDelimiter}${K}`;
 };
 
 export type StartsWith<

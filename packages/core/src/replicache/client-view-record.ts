@@ -7,8 +7,8 @@ import { replicacheClients } from "./sql";
 import type { Metadata, Table, TableMetadata, TableName } from "./data";
 
 export type ClientViewRecord = {
-  [Name in TableName]: ClientViewRecordEntries<
-    Extract<Table, { _: { name: Name } }>
+  [TName in TableName]: ClientViewRecordEntries<
+    Extract<Table, { _: { name: TName } }>
   >;
 };
 export type ClientViewRecordEntries<TTable extends Table> = Record<
@@ -16,8 +16,8 @@ export type ClientViewRecordEntries<TTable extends Table> = Record<
   Metadata<TTable>["rowVersion"]
 >;
 export type ClientViewRecordDiff = {
-  [Name in TableName]: ClientViewRecordDiffEntry<
-    Extract<Table, { _: { name: Name } }>
+  [TName in TableName]: ClientViewRecordDiffEntry<
+    Extract<Table, { _: { name: TName } }>
   >;
 };
 export type ClientViewRecordDiffEntry<TTable extends Table> = {

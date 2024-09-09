@@ -68,10 +68,10 @@ export type TableMetadata = [
 ];
 
 export type MetadataQueryFactory = {
-  [Name in TableName]: (
+  [TName in TableName]: (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...args: Array<any>
-  ) => Promise<Array<Metadata<Extract<Table, { _: { name: Name } }>>>>;
+  ) => Promise<Array<Metadata<Extract<Table, { _: { name: TName } }>>>>;
 };
 
 export const metadataQueryFactory = {
@@ -91,14 +91,14 @@ export const metadataQueryFactory = {
 } satisfies MetadataQueryFactory;
 
 export type DataQueryFactory = {
-  [Name in SyncedTableName]: (
+  [TName in SyncedTableName]: (
     ids: Array<
-      Extract<SyncedTable, { _: { name: Name } }>["$inferSelect"]["id"]
+      Extract<SyncedTable, { _: { name: TName } }>["$inferSelect"]["id"]
     >,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...args: Array<any>
   ) => Promise<
-    Array<Extract<SyncedTable, { _: { name: Name } }>["$inferSelect"]>
+    Array<Extract<SyncedTable, { _: { name: TName } }>["$inferSelect"]>
   >;
 };
 

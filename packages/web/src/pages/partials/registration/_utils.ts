@@ -27,7 +27,5 @@ export const getFormErrors = <TSchema extends v.GenericSchema>(
 
       return errors;
     },
-    {} as {
-      [Key in v.IssueDotPath<TSchema>]?: Array<string>;
-    },
+    {} as Partial<Record<v.IssueDotPath<TSchema>, Array<string>>>,
   );

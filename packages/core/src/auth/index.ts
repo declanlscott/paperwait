@@ -28,9 +28,9 @@ export type Authenticated = {
   [TKey in keyof Auth]: NonNullable<Auth[TKey]>;
 } & { isAuthed: true };
 
-export type Unauthenticated = {
-  [TKey in keyof Auth]: null;
-} & { isAuthed: false };
+export interface Unauthenticated extends Record<keyof Auth, null> {
+  isAuthed: false;
+}
 
 export const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users);
 

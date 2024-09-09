@@ -1,8 +1,6 @@
 import type { Registration } from "@paperwait/core/organizations/shared";
 
-type Errors = {
-  [Key in keyof Registration]?: Array<string>;
-};
+type Errors = Partial<Record<keyof Registration, Array<string>>>;
 
 export type RegistrationStepProps = {
   input: Record<string, string | undefined>;
