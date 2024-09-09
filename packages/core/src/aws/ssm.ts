@@ -101,7 +101,7 @@ export async function getParameter(input: {
 
   const res = await fetch(url, {
     headers: {
-      "X-Aws-Parameters-Secrets-Token": sessionToken,
+      "X-AWS-Parameters-Secrets-Token": sessionToken,
     },
   });
   if (!res.ok)
