@@ -49,4 +49,12 @@ export const web = new sst.aws.Astro("Web", {
     name: domain,
     dns: sst.cloudflare.dns(),
   },
+  transform: {
+    server: {
+      architecture: "arm64",
+      layers: [
+        "arn:aws:lambda:us-east-2:590474943231:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:11",
+      ],
+    },
+  },
 });
