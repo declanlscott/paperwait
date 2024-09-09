@@ -1,7 +1,6 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
-  NoSuchKey,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -9,7 +8,6 @@ import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { AWS_REGION } from "../constants";
-import { NotFoundError } from "../errors/http";
 
 import type {
   DeleteObjectCommandInput,
@@ -39,11 +37,5 @@ export const getSignedGetUrl = (
 ) => getSignedUrl(client, new GetObjectCommand(input), args);
 
 export async function deleteObject(input: DeleteObjectCommandInput) {
-  try {
-    await client.send(new DeleteObjectCommand(input));
-  } catch (e) {
-    if (e instanceof NoSuchKey) throw new NotFoundError("Object not found");
-
-    throw e;
-  }
+  await client.send(new DeleteObjectCommand(input));
 }
