@@ -6,8 +6,8 @@
     "baseUrl": ".",
     "paths": {
       "@paperwait/core/*": ["../core/src/*"],
-      "~/api/*": ["src/pages/_api/*"],
-      "~/app/*": ["src/pages/_app/*"],
+      "~/api/*": ["src/pages/api/_api/*"],
+      "~/app/*": ["src/pages/[...app]/_app/*"],
       "~/components/*": ["src/components/*"],
       "~/layouts/*": ["src/layouts/*"],
       "~/middleware/*": ["src/middleware/*"],

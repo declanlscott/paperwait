@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
-import type { Room } from "@paperwait/core/room/sql";
-import type { UserRole } from "@paperwait/core/user/shared";
+import type { Room } from "@paperwait/core/rooms/sql";
+import type { UserRole } from "@paperwait/core/users/shared";
 import type { StartsWith } from "@paperwait/core/utils/types";
 import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import type { MutationOptions } from "@tanstack/react-query";
