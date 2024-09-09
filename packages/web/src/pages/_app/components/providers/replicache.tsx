@@ -51,7 +51,7 @@ export function ReplicacheProvider(props: ReplicacheProviderProps) {
       licenseKey: replicacheLicenseKey,
       pushURL: "/api/replicache/push",
       pullURL: "/api/replicache/pull",
-      logLevel: isDev === "true" ? "info" : "error",
+      logLevel: isDev ? "info" : "error",
     });
 
     client.getAuth = () => getAuth(client);

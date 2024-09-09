@@ -20,7 +20,7 @@ declare module "sst" {
     }
     "Client": {
       "domain": string
-      "isDev": string
+      "isDev": boolean
       "realtimeUrl": string
       "replicacheLicenseKey": string
       "type": "sst.sst.Linkable"
@@ -53,7 +53,7 @@ declare module "sst" {
         "stage": string
       }
       "domain": string
-      "isDev": string
+      "isDev": boolean
       "type": "sst.sst.Linkable"
     }
     "PartyKitUrl": {

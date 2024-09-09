@@ -19,7 +19,7 @@ export const provider = new MicrosoftEntraId(
   "organizations",
   Resource.Auth.entraId.clientId,
   Resource.Auth.entraId.clientSecret,
-  Resource.Meta.isDev === "true"
+  Resource.Meta.isDev
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
     : `https://${Resource.Meta.domain}${AUTH_CALLBACK_PATH}`,
 );

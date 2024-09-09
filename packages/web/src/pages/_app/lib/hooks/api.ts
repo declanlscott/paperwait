@@ -9,8 +9,7 @@ export function useApi() {
   const { isDev, domain } = useResource();
 
   const client = useMemo(
-    () =>
-      hc<Api>(isDev === "true" ? "http://localhost:4321" : `https://${domain}`),
+    () => hc<Api>(isDev ? "http://localhost:4321" : `https://${domain}`),
     [isDev, domain],
   );
 

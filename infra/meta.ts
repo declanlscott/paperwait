@@ -3,7 +3,7 @@ import { partyKitUrl } from "./realtime";
 
 export const replicacheLicenseKey = new sst.Secret("ReplicacheLicenseKey");
 
-const isDev = String($dev);
+const isDev = $dev;
 
 export const client = new sst.Linkable("Client", {
   properties: {
