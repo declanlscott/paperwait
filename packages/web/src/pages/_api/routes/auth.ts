@@ -16,9 +16,9 @@ import * as Google from "@paperwait/core/oauth2/google";
 import {
   ENTRA_ID,
   GOOGLE,
-  oAuth2ProviderVariants,
+  oauth2ProviderVariants,
 } from "@paperwait/core/oauth2/shared";
-import { oAuth2Providers } from "@paperwait/core/oauth2/sql";
+import { oauth2Providers } from "@paperwait/core/oauth2/sql";
 import { organizations } from "@paperwait/core/organizations/sql";
 import * as PapercutApi from "@paperwait/core/papercut/api";
 import * as Realtime from "@paperwait/core/realtime";
@@ -29,12 +29,13 @@ import { nanoIdSchema } from "@paperwait/core/utils/schemas";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
 import * as R from "remeda";
+import { Resource } from "sst";
 import * as v from "valibot";
 
 import { authorization } from "~/api/middleware";
 
 import type { UserInfo } from "@paperwait/core/oauth2/shared";
-import type { IdToken, OAuth2Tokens } from "@paperwait/core/oauth2/tokens";
+import type { IdToken, Oauth2Tokens } from "@paperwait/core/oauth2/tokens";
 
 export default new Hono()
   // Login
@@ -50,8 +51,8 @@ export default new Hono()
       const org = await db
         .select({
           id: organizations.id,
-          oAuth2ProviderId: oAuth2Providers.id,
-          oAuth2ProviderVariant: oAuth2Providers.variant,
+          oauth2ProviderId: oauth2Providers.id,
+          oauth2ProviderVariant: oauth2Providers.variant,
         })
         .from(organizations)
         .where(
@@ -67,10 +68,10 @@ export default new Hono()
           ),
         )
         .innerJoin(
-          oAuth2Providers,
+          oauth2Providers,
           and(
-            eq(organizations.oAuth2ProviderId, oAuth2Providers.id),
-            eq(organizations.id, oAuth2Providers.orgId),
+            eq(organizations.oauth2ProviderId, oauth2Providers.id),
+            eq(organizations.id, oauth2Providers.orgId),
           ),
         )
         .then((rows) => rows.at(0));
@@ -79,7 +80,7 @@ export default new Hono()
       let state: string;
       let codeVerifier: string;
       let authorizationUrl: URL;
-      switch (org.oAuth2ProviderVariant) {
+      switch (org.oauth2ProviderVariant) {
         case ENTRA_ID: {
           const entraId = EntraId.createAuthorizationUrl();
           state = entraId.state;
@@ -88,67 +89,40 @@ export default new Hono()
           break;
         }
         case GOOGLE: {
-          const google = Google.createAuthorizationUrl(org.oAuth2ProviderId);
+          const google = Google.createAuthorizationUrl(org.oauth2ProviderId);
           state = google.state;
           codeVerifier = google.codeVerifier;
           authorizationUrl = google.authorizationUrl;
           break;
         }
         default: {
-          org.oAuth2ProviderVariant satisfies never;
+          org.oauth2ProviderVariant satisfies never;
 
           throw new NotImplementedError(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Provider "${org.oAuth2ProviderVariant}" not implemented`,
+            `Provider "${org.oauth2ProviderVariant}" not implemented`,
           );
         }
       }
 
-      // store the provider as a cookie
-      setCookie(c, "provider", org.oAuth2ProviderVariant, {
-        path: "/",
-        secure: import.meta.env.PROD,
-        httpOnly: true,
-        maxAge: 60 * 10, // 10 minutes
-        sameSite: "lax",
+      (
+        [
+          ["provider", org.oauth2ProviderVariant],
+          ["state", state],
+          ["code_verifier", codeVerifier],
+          ["orgId", org.id],
+          ["redirect", redirect],
+        ] as const
+      ).forEach(([name, value]) => {
+        if (value)
+          setCookie(c, name, value, {
+            path: "/",
+            secure: Resource.Meta.app.stage === "production",
+            httpOnly: true,
+            maxAge: 60 * 10, // 10 minutes
+            sameSite: "lax",
+          });
       });
-
-      // store state verifier as cookie
-      setCookie(c, "state", state, {
-        path: "/",
-        secure: import.meta.env.PROD,
-        httpOnly: true,
-        maxAge: 60 * 10, // 10 minutes
-        sameSite: "lax",
-      });
-
-      // store code verifier as cookie
-      setCookie(c, "code_verifier", codeVerifier, {
-        secure: import.meta.env.PROD,
-        path: "/",
-        httpOnly: true,
-        maxAge: 60 * 10, // 10 minutes
-        sameSite: "lax",
-      });
-
-      // store the org id as a cookie
-      setCookie(c, "orgId", org.id, {
-        secure: import.meta.env.PROD,
-        path: "/",
-        httpOnly: true,
-        maxAge: 60 * 10, // 10 minutes
-        sameSite: "lax",
-      });
-
-      if (redirect) {
-        setCookie(c, "redirect", redirect, {
-          path: "/",
-          secure: import.meta.env.PROD,
-          httpOnly: true,
-          maxAge: 60 * 10, // 10 minutes
-          sameSite: "lax",
-        });
-      }
 
       return c.redirect(authorizationUrl.toString());
     },
@@ -160,7 +134,7 @@ export default new Hono()
     vValidator(
       "cookie",
       v.object({
-        provider: v.picklist(oAuth2ProviderVariants),
+        provider: v.picklist(oauth2ProviderVariants),
         state: v.string(),
         code_verifier: v.string(),
         orgId: v.string(),
@@ -172,7 +146,7 @@ export default new Hono()
       const { provider, code_verifier, orgId, redirect } =
         c.req.valid("cookie");
 
-      let tokens: OAuth2Tokens;
+      let tokens: Oauth2Tokens;
       let idToken: IdToken;
       switch (provider) {
         case ENTRA_ID: {
@@ -200,7 +174,7 @@ export default new Hono()
         .from(organizations)
         .where(
           and(
-            eq(organizations.oAuth2ProviderId, idToken.providerId),
+            eq(organizations.oauth2ProviderId, idToken.providerId),
             eq(organizations.id, orgId),
           ),
         )
@@ -244,7 +218,7 @@ export default new Hono()
           })
           .from(users)
           .where(
-            and(eq(users.oAuth2UserId, idToken.userId), eq(users.orgId, orgId)),
+            and(eq(users.oauth2UserId, idToken.userId), eq(users.orgId, orgId)),
           )
           .then((rows) => rows.at(0));
 
@@ -254,7 +228,7 @@ export default new Hono()
 
           const newUser = await Users.create({
             orgId,
-            oAuth2UserId: idToken.userId,
+            oauth2UserId: idToken.userId,
             name: userInfo.name,
             username: idToken.username,
             email: userInfo.email,

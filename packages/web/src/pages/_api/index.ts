@@ -1,8 +1,7 @@
-import { DatabaseError } from "@paperwait/core/errors/database";
 import { HttpError } from "@paperwait/core/errors/http";
 import {
   ArcticFetchError,
-  OAuth2RequestError,
+  Oauth2RequestError,
 } from "@paperwait/core/errors/oauth2";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -29,11 +28,10 @@ const api = new Hono()
 
     if (e instanceof HttpError)
       return c.json(e.message, { status: e.statusCode });
-    if (e instanceof OAuth2RequestError)
+    if (e instanceof Oauth2RequestError)
       return c.json(e.description, { status: 400 });
     if (e instanceof ArcticFetchError)
       return c.json(e.message, { status: 500 });
-    if (e instanceof DatabaseError) return c.json(e.message, { status: 500 });
     if (e instanceof HTTPException) return e.getResponse();
 
     return c.json("Internal server error", { status: 500 });

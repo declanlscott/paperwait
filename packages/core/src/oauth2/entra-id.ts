@@ -9,7 +9,7 @@ import { AUTH_CALLBACK_PATH } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { HttpError, InternalServerError, NotFoundError } from "../errors/http";
 import { users } from "../users/sql";
-import { useOAuth2 } from "./context";
+import { useOauth2 } from "./context";
 
 import type { SessionTokens } from "../auth/sql";
 import type { User } from "../users/sql";
@@ -17,8 +17,8 @@ import type { IdToken } from "./tokens";
 
 export const provider = new MicrosoftEntraId(
   "organizations",
-  Resource.Auth.entraId.clientId,
-  Resource.Auth.entraId.clientSecret,
+  Resource.Oauth2.entraId.clientId,
+  Resource.Oauth2.entraId.clientSecret,
   Resource.Meta.isDev
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
     : `https://${Resource.Meta.domain}${AUTH_CALLBACK_PATH}`,
@@ -91,11 +91,11 @@ export const refreshAccessToken = async (
 
 export async function photo(userId: User["id"]): Promise<Response> {
   const { org } = useAuthenticated();
-  const oAuth2 = useOAuth2();
+  const oauth2 = useOauth2();
 
   const user = await useTransaction((tx) =>
     tx
-      .select({ id: users.oAuth2UserId })
+      .select({ id: users.oauth2UserId })
       .from(users)
       .where(and(eq(users.id, userId), eq(users.orgId, org.id)))
       .then((rows) => rows.at(0)),
@@ -106,7 +106,7 @@ export async function photo(userId: User["id"]): Promise<Response> {
     `https://graph.microsoft.com/v1.0/users/${user.id}/photo/$value`,
     {
       headers: {
-        Authorization: `Bearer ${oAuth2.provider.accessToken}`,
+        Authorization: `Bearer ${oauth2.provider.accessToken}`,
       },
     },
   );

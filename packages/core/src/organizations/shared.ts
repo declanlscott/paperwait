@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import { ORG_SLUG_PATTERN } from "../constants";
-import { oAuth2ProvidersSchema } from "../oauth2/shared";
+import { oauth2ProvidersSchema } from "../oauth2/shared";
 import { nanoIdSchema, timestampsSchema } from "../utils/schemas";
 
 export const licensesTableName = "licenses";
@@ -32,7 +32,7 @@ export const organizationSchema = v.object({
   name: v.string(),
   status: v.picklist(orgStatuses),
   licenseKey: v.pipe(v.string(), v.uuid()),
-  oAuth2ProviderId: v.nullable(v.string()),
+  oauth2ProviderId: v.nullable(v.string()),
   ...timestampsSchema.entries,
 });
 
@@ -45,7 +45,7 @@ export const updateOrganizationMutationArgsSchema = v.object({
     v.omit(organizationSchema, [
       "id",
       "licenseKey",
-      "oAuth2ProviderId",
+      "oauth2ProviderId",
       "createdAt",
       "updatedAt",
       "deletedAt",
@@ -63,13 +63,13 @@ const registrationStepsSchemas = [
     orgSlug: organizationSchema.entries.slug,
   }),
   v.object({
-    oAuth2ProviderVariant: oAuth2ProvidersSchema.entries.variant,
-    oAuth2ProviderId: oAuth2ProvidersSchema.entries.id,
+    oauth2ProviderVariant: oauth2ProvidersSchema.entries.variant,
+    oauth2ProviderId: oauth2ProvidersSchema.entries.id,
   }),
   v.object({
     papercutAuthToken: v.string(),
-    tailscaleOAuth2ClientId: v.string(),
-    tailscaleOAuth2ClientSecret: v.string(),
+    tailscaleOauth2ClientId: v.string(),
+    tailscaleOauth2ClientSecret: v.string(),
   }),
 ] as const;
 

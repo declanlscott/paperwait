@@ -1,5 +1,6 @@
 import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
+import { Resource } from "sst";
 
 import { AUTH_SESSION_COOKIE_NAME } from "../constants";
 import { db } from "../drizzle";
@@ -13,7 +14,7 @@ import type {
   User as LuciaUser,
   RegisteredDatabaseSessionAttributes,
 } from "lucia";
-import type { OAuth2Tokens } from "../oauth2/tokens";
+import type { Oauth2Tokens } from "../oauth2/tokens";
 import type { Organization } from "../organizations/sql";
 import type { User } from "../users/sql";
 import type { Session, SessionTokens } from "./sql";
@@ -36,11 +37,11 @@ export const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
-    attributes: { secure: (process.env.PROD ?? "false") === "true" },
+    attributes: { secure: Resource.Meta.app.stage === "production" },
     name: AUTH_SESSION_COOKIE_NAME,
   },
   getUserAttributes: (attributes) => ({
-    oAuth2UserId: attributes.oAuth2UserId,
+    oauth2UserId: attributes.oauth2UserId,
     orgId: attributes.orgId,
     name: attributes.name,
     role: attributes.role,
@@ -69,7 +70,7 @@ export function createSessionCookie(sessionId?: LuciaSession["id"]) {
 export async function createSession(
   userId: LuciaUser["id"],
   attributes: RegisteredDatabaseSessionAttributes,
-  tokens: OAuth2Tokens,
+  tokens: Oauth2Tokens,
 ) {
   const session = await useTransaction(async (tx) => {
     const session = await lucia.createSession(userId, attributes, {

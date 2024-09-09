@@ -10,21 +10,21 @@ import {
 import * as EntraId from "./entra-id";
 import * as Google from "./google";
 import { ENTRA_ID, GOOGLE } from "./shared";
-import { oAuth2Providers } from "./sql";
+import { oauth2Providers } from "./sql";
 
-import type { OAuth2Tokens } from "arctic";
 import type { Authenticated } from "../auth";
 import type { SessionTokens } from "../auth/sql";
-import type { OAuth2Context } from "./context";
+import type { Oauth2Context } from "./context";
+import type { Oauth2Tokens } from "./tokens";
 
 export const fromSessionId = async (
   sessionId: Authenticated["session"]["id"],
-): Promise<OAuth2Context["provider"]> =>
+): Promise<Oauth2Context["provider"]> =>
   useTransaction(async (tx) => {
     const provider = await tx
       .select({
-        variant: oAuth2Providers.variant,
-        id: oAuth2Providers.id,
+        variant: oauth2Providers.variant,
+        id: oauth2Providers.id,
         idToken: sessionsTokens.idToken,
         accessToken: sessionsTokens.accessToken,
         accessTokenExpiresAt: sessionsTokens.accessTokenExpiresAt,
@@ -32,8 +32,8 @@ export const fromSessionId = async (
       })
       .from(sessionsTokens)
       .innerJoin(
-        oAuth2Providers,
-        eq(sessionsTokens.orgId, oAuth2Providers.orgId),
+        oauth2Providers,
+        eq(sessionsTokens.orgId, oauth2Providers.orgId),
       )
       .where(eq(sessionsTokens.sessionId, sessionId))
       .then((rows) => rows.at(0));
@@ -52,7 +52,7 @@ export const fromSessionId = async (
     if (!provider.refreshToken)
       throw new InternalServerError("Access token expired, no refresh token");
 
-    let refreshed: OAuth2Tokens;
+    let refreshed: Oauth2Tokens;
     switch (provider.variant) {
       case ENTRA_ID:
         refreshed = await EntraId.refreshAccessToken(provider.refreshToken);

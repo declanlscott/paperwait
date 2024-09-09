@@ -53,7 +53,7 @@ const { input } = Astro.props;
     >
     <select
       id="oauth2-provider-variant"
-      name="oAuth2ProviderVariant"
+      name="oauth2ProviderVariant"
       class={selectTriggerStyles({
         isHtml: true,
         class:
@@ -63,10 +63,10 @@ const { input } = Astro.props;
     >
       <option
         value="entra-id"
-        selected={input.oAuth2ProviderVariant === "entra-id"}
+        selected={input.oauth2ProviderVariant === "entra-id"}
         >Microsoft Entra ID</option
       >
-      <option value="google" selected={input.oAuth2ProviderVariant === "google"}
+      <option value="google" selected={input.oauth2ProviderVariant === "google"}
         >Google</option
       >
     </select>
@@ -78,10 +78,10 @@ const { input } = Astro.props;
     >
     <input
       id="oauth2-provider-id"
-      name="oAuth2ProviderId"
+      name="oauth2ProviderId"
       class={inputStyles({ isHtml: true })}
       disabled
-      value={input.oAuth2ProviderId}
+      value={input.oauth2ProviderId}
     />
   </div>
 
@@ -105,10 +105,10 @@ const { input } = Astro.props;
     >
     <input
       id="tailscale-oauth2-client-id"
-      name="tailscaleOAuth2ClientId"
+      name="tailscaleOauth2ClientId"
       class={inputStyles({ isHtml: true })}
       disabled
-      value={input.tailscaleOAuth2ClientId}
+      value={input.tailscaleOauth2ClientId}
     />
   </div>
 
@@ -118,10 +118,10 @@ const { input } = Astro.props;
     >
     <input
       id="tailscale-oauth2-client-secret"
-      name="tailscaleOAuth2ClientSecret"
+      name="tailscaleOauth2ClientSecret"
       class={inputStyles({ isHtml: true })}
       disabled
-      value={input.tailscaleOAuth2ClientSecret}
+      value={input.tailscaleOauth2ClientSecret}
     />
   </div>
 

@@ -83,7 +83,7 @@ export const googleClientId = new sst.Secret("GoogleClientId");
 
 export const googleClientSecret = new sst.Secret("GoogleClientSecret");
 
-export const auth = new sst.Linkable("Auth", {
+export const oauth2 = new sst.Linkable("Oauth2", {
   properties: {
     entraId: {
       clientId: entraIdApplication.clientId,

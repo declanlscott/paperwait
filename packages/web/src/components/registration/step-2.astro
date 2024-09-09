@@ -20,7 +20,7 @@ const { input, errors } = Astro.props;
     >
     <select
       id="oauth2-provider-variant"
-      name="oAuth2ProviderVariant"
+      name="oauth2ProviderVariant"
       class={selectTriggerStyles({
         isHtml: true,
         class:
@@ -30,16 +30,16 @@ const { input, errors } = Astro.props;
     >
       <option
         value="entra-id"
-        selected={input.oAuth2ProviderVariant === "entra-id"}
+        selected={input.oauth2ProviderVariant === "entra-id"}
         >Microsoft Entra ID</option
       >
-      <option value="google" selected={input.oAuth2ProviderVariant === "google"}
+      <option value="google" selected={input.oauth2ProviderVariant === "google"}
         >Google</option
       >
     </select>
     {
-      errors?.oAuth2ProviderVariant ? (
-        <p class="text-destructive text-sm">{errors.oAuth2ProviderVariant}</p>
+      errors?.oauth2ProviderVariant ? (
+        <p class="text-destructive text-sm">{errors.oauth2ProviderVariant}</p>
       ) : null
     }
   </div>
@@ -50,17 +50,17 @@ const { input, errors } = Astro.props;
     >
     <input
       id="oauth2-provider-id"
-      name="oAuth2ProviderId"
+      name="oauth2ProviderId"
       class={inputStyles({
         isHtml: true,
-        variant: errors?.oAuth2ProviderId ? "destructive" : "default",
+        variant: errors?.oauth2ProviderId ? "destructive" : "default",
       })}
       required
-      value={input.oAuth2ProviderId}
+      value={input.oauth2ProviderId}
     />
     {
-      errors?.oAuth2ProviderId ? (
-        <p class="text-destructive text-sm">{errors.oAuth2ProviderId}</p>
+      errors?.oauth2ProviderId ? (
+        <p class="text-destructive text-sm">{errors.oauth2ProviderId}</p>
       ) : null
     }
   </div>
@@ -75,13 +75,13 @@ const { input, errors } = Astro.props;
   />
   <input
     type="hidden"
-    name="tailscaleOAuth2ClientId"
-    value={input.tailscaleOAuth2ClientId}
+    name="tailscaleOauth2ClientId"
+    value={input.tailscaleOauth2ClientId}
   />
   <input
     type="hidden"
-    name="tailscaleOAuth2ClientSecret"
-    value={input.tailscaleOAuth2ClientSecret}
+    name="tailscaleOauth2ClientSecret"
+    value={input.tailscaleOauth2ClientSecret}
   />
 
   <div class="flex justify-between gap-4">

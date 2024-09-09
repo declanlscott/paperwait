@@ -16,8 +16,8 @@ import type { User } from "../users/sql";
 import type { IdToken } from "./tokens";
 
 export const provider = new Google(
-  Resource.Auth.google.clientId,
-  Resource.Auth.google.clientSecret,
+  Resource.Oauth2.google.clientId,
+  Resource.Oauth2.google.clientSecret,
   Resource.Meta.isDev
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
     : `https://${Resource.Meta.domain}${AUTH_CALLBACK_PATH}`,

@@ -2,11 +2,11 @@ import { useAuthenticated } from "@paperwait/core/auth/context";
 import { enforceRbac } from "@paperwait/core/auth/rbac";
 import { withTransaction } from "@paperwait/core/drizzle/transaction";
 import { ForbiddenError } from "@paperwait/core/errors/http";
-import * as OAuth2 from "@paperwait/core/oauth2";
-import { withOAuth2 } from "@paperwait/core/oauth2/context";
+import * as Oauth2 from "@paperwait/core/oauth2";
+import { withOauth2 } from "@paperwait/core/oauth2/context";
 import { createMiddleware } from "hono/factory";
 
-import type { UserRole } from "@paperwait/core/user/shared";
+import type { UserRole } from "@paperwait/core/users/shared";
 
 export const authorization = (
   roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],
@@ -17,10 +17,10 @@ export const authorization = (
   });
 
 export const provider = createMiddleware(async (_, next) =>
-  withOAuth2(
+  withOauth2(
     {
       provider: await withTransaction(() =>
-        OAuth2.fromSessionId(useAuthenticated().session.id),
+        Oauth2.fromSessionId(useAuthenticated().session.id),
       ),
     },
     next,

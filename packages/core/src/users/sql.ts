@@ -7,19 +7,19 @@ import { usersTableName } from "./shared";
 export const users = orgTable(
   usersTableName,
   {
-    oAuth2UserId: text("oauth2_user_id").notNull(),
+    oauth2UserId: text("oauth2_user_id").notNull(),
     role: userRole("role").notNull().default("customer"),
     name: text("name").notNull(),
     email: text("email").notNull().unique(),
     username: text("username").notNull(),
   },
   (table) => ({
-    uniqueOAuth2UserId: unique("unique_oauth2_user_id").on(
-      table.oAuth2UserId,
+    uniqueOauth2UserId: unique("unique_oauth2_user_id").on(
+      table.oauth2UserId,
       table.orgId,
     ),
     uniqueEmail: unique("unique_email").on(table.email, table.orgId),
-    oAuth2UserIdIndex: index("oauth2_user_id_idx").on(table.oAuth2UserId),
+    oauth2UserIdIndex: index("oauth2_user_id_idx").on(table.oauth2UserId),
     roleIndex: index("role_idx").on(table.role),
   }),
 );

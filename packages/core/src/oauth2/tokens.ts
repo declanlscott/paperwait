@@ -4,4 +4,4 @@ export type IdToken = {
   username: string;
 };
 
-export type { OAuth2Tokens } from "arctic";
+export type { OAuth2Tokens as Oauth2Tokens } from "arctic";

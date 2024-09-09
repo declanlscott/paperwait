@@ -10,7 +10,7 @@ import {
 import { VARCHAR_LENGTH } from "../constants";
 import { id, idPrimaryKey, timestamps } from "../drizzle/columns";
 import { licenseStatus, orgStatus } from "../drizzle/enums.sql";
-import { oAuth2Providers } from "../oauth2/sql";
+import { oauth2Providers } from "../oauth2/sql";
 import { licensesTableName, organizationsTableName } from "./shared";
 
 export const licenses = pgTable(licensesTableName, {
@@ -28,15 +28,15 @@ export const organizations = pgTable(
     name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
     status: orgStatus("status").notNull().default("initializing"),
     licenseKey: uuid("license_key").notNull(),
-    oAuth2ProviderId: text("oauth2_provider_id"),
+    oauth2ProviderId: text("oauth2_provider_id"),
     ...timestamps,
   },
   (table) => ({
     slugIndex: index("slug_idx").on(table.slug),
     nameIndex: index("name_idx").on(table.name),
     oauth2ProviderReference: foreignKey({
-      columns: [table.oAuth2ProviderId, table.id],
-      foreignColumns: [oAuth2Providers.id, oAuth2Providers.orgId],
+      columns: [table.oauth2ProviderId, table.id],
+      foreignColumns: [oauth2Providers.id, oauth2Providers.orgId],
       name: "oauth2_provider_fk",
     }),
   }),

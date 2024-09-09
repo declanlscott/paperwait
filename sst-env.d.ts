@@ -7,17 +7,6 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "Auth": {
-      "entraId": {
-        "clientId": string
-        "clientSecret": string
-      }
-      "google": {
-        "clientId": string
-        "clientSecret": string
-      }
-      "type": "sst.sst.Linkable"
-    }
     "Client": {
       "domain": string
       "isDev": boolean
@@ -54,6 +43,17 @@ declare module "sst" {
       }
       "domain": string
       "isDev": boolean
+      "type": "sst.sst.Linkable"
+    }
+    "Oauth2": {
+      "entraId": {
+        "clientId": string
+        "clientSecret": string
+      }
+      "google": {
+        "clientId": string
+        "clientSecret": string
+      }
       "type": "sst.sst.Linkable"
     }
     "PartyKitUrl": {

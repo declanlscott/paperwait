@@ -1,20 +1,20 @@
 import { createContext } from "../utils/context";
 
 import type { SessionTokens } from "../auth/sql";
-import type { OAuth2Provider } from "./sql";
+import type { Oauth2Provider } from "./sql";
 
-export type OAuth2Context = {
-  provider: Pick<OAuth2Provider, "variant" | "id"> &
+export type Oauth2Context = {
+  provider: Pick<Oauth2Provider, "variant" | "id"> &
     Pick<SessionTokens, "accessToken">;
 };
-export const OAuth2Context = createContext<OAuth2Context>();
+export const Oauth2Context = createContext<Oauth2Context>();
 
-export const useOAuth2 = OAuth2Context.use;
+export const useOauth2 = Oauth2Context.use;
 
-export const withOAuth2 = <
-  TOAuth2Context extends OAuth2Context,
+export const withOauth2 = <
+  TOauth2Context extends Oauth2Context,
   TCallback extends () => ReturnType<TCallback>,
 >(
-  context: TOAuth2Context,
+  context: TOauth2Context,
   callback: TCallback,
-) => OAuth2Context.with(context, callback);
+) => Oauth2Context.with(context, callback);

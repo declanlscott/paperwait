@@ -1,7 +1,7 @@
-import { auth } from "./auth";
 import { db } from "./db";
 import { domain } from "./dns";
 import { client, meta } from "./meta";
+import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
 import { storage } from "./storage";
 
@@ -27,7 +27,7 @@ export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
-  link: [auth, client, db, meta, realtime, storage],
+  link: [client, db, meta, oauth2, realtime, storage],
   permissions: [
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
@@ -42,9 +42,6 @@ export const web = new sst.aws.Astro("Web", {
       ],
     },
   ],
-  environment: {
-    PROD: String($app.stage === "production"),
-  },
   domain: {
     name: domain,
     dns: sst.cloudflare.dns(),

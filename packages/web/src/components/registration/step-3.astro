@@ -40,17 +40,17 @@ const { input, errors } = Astro.props;
     >
     <input
       id="tailscale-oauth2-client-id"
-      name="tailscaleOAuth2ClientId"
+      name="tailscaleOauth2ClientId"
       class={inputStyles({
         isHtml: true,
-        variant: errors?.tailscaleOAuth2ClientId ? "destructive" : "default",
+        variant: errors?.tailscaleOauth2ClientId ? "destructive" : "default",
       })}
       required
-      value={input.tailscaleOAuth2ClientId}
+      value={input.tailscaleOauth2ClientId}
     />
     {
-      errors?.tailscaleOAuth2ClientId ? (
-        <p class="text-destructive text-sm">{errors.tailscaleOAuth2ClientId}</p>
+      errors?.tailscaleOauth2ClientId ? (
+        <p class="text-destructive text-sm">{errors.tailscaleOauth2ClientId}</p>
       ) : null
     }
   </div>
@@ -61,18 +61,18 @@ const { input, errors } = Astro.props;
     >
     <input
       id="tailscale-oauth2-client-secret"
-      name="tailscaleOAuth2ClientSecret"
+      name="tailscaleOauth2ClientSecret"
       class={inputStyles({
         isHtml: true,
-        variant: errors?.tailscaleOAuth2ClientId ? "destructive" : "default",
+        variant: errors?.tailscaleOauth2ClientId ? "destructive" : "default",
       })}
       required
-      value={input.tailscaleOAuth2ClientSecret}
+      value={input.tailscaleOauth2ClientSecret}
     />
     {
-      errors?.tailscaleOAuth2ClientSecret ? (
+      errors?.tailscaleOauth2ClientSecret ? (
         <p class="text-destructive text-sm">
-          {errors.tailscaleOAuth2ClientSecret}
+          {errors.tailscaleOauth2ClientSecret}
         </p>
       ) : null
     }
@@ -83,10 +83,10 @@ const { input, errors } = Astro.props;
   <input type="hidden" name="orgSlug" value={input.orgSlug} />
   <input
     type="hidden"
-    name="oAuth2ProviderVariant"
-    value={input.oAuth2ProviderVariant}
+    name="oauth2ProviderVariant"
+    value={input.oauth2ProviderVariant}
   />
-  <input type="hidden" name="oAuth2ProviderId" value={input.oAuth2ProviderId} />
+  <input type="hidden" name="oauth2ProviderId" value={input.oauth2ProviderId} />
   <input
     type="hidden"
     name="papercutAuthToken"
@@ -94,13 +94,13 @@ const { input, errors } = Astro.props;
   />
   <input
     type="hidden"
-    name="tailscaleOAuth2ClientId"
-    value={input.tailscaleOAuth2ClientId}
+    name="tailscaleOauth2ClientId"
+    value={input.tailscaleOauth2ClientId}
   />
   <input
     type="hidden"
-    name="tailscaleOAuth2ClientSecret"
-    value={input.tailscaleOAuth2ClientSecret}
+    name="tailscaleOauth2ClientSecret"
+    value={input.tailscaleOauth2ClientSecret}
   />
 
   <div class="flex justify-between gap-4">
