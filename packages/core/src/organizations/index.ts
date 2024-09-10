@@ -11,7 +11,7 @@ import * as Replicache from "../replicache";
 import * as Users from "../users";
 import { fn } from "../utils/helpers";
 import { updateOrganizationMutationArgsSchema } from "./shared";
-import { licenses, organizations } from "./sql";
+import { licensesTable, organizationsTable } from "./sql";
 
 import type { Organization } from "./sql";
 
@@ -21,11 +21,11 @@ export async function metadata() {
   return useTransaction((tx) =>
     tx
       .select({
-        id: organizations.id,
-        rowVersion: sql<number>`"${organizations._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: organizationsTable.id,
+        rowVersion: sql<number>`"${organizationsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(organizations)
-      .where(eq(organizations.id, org.id)),
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, org.id)),
   );
 }
 
@@ -33,7 +33,10 @@ export async function fromId() {
   const { org } = useAuthenticated();
 
   return useTransaction((tx) =>
-    tx.select().from(organizations).where(eq(organizations.id, org.id)),
+    tx
+      .select()
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, org.id)),
   );
 }
 
@@ -53,9 +56,9 @@ export const update = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(organizations)
+        .update(organizationsTable)
         .set(values)
-        .where(eq(organizations.id, org.id));
+        .where(eq(organizationsTable.id, org.id));
 
       await afterTransaction(() =>
         Promise.all([
@@ -71,8 +74,8 @@ export const isSlugUnique = async (slug: Organization["slug"]) =>
   useTransaction((tx) =>
     tx
       .select({})
-      .from(organizations)
-      .where(eq(organizations.slug, slug))
+      .from(organizationsTable)
+      .where(eq(organizationsTable.slug, slug))
       .then((rows) => rows.length === 0),
   );
 
@@ -82,12 +85,12 @@ export const isLicenseKeyAvailable = async (
   useTransaction((tx) =>
     tx
       .select({})
-      .from(licenses)
+      .from(licensesTable)
       .where(
         and(
-          eq(licenses.key, licenseKey),
-          eq(licenses.status, "active"),
-          isNull(licenses.orgId),
+          eq(licensesTable.key, licenseKey),
+          eq(licensesTable.status, "active"),
+          isNull(licensesTable.orgId),
         ),
       )
       .then((rows) => rows.length === 1),

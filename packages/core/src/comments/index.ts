@@ -5,10 +5,10 @@ import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
-import { orders } from "../orders/sql";
+import { ordersTable } from "../orders/sql";
 import {
-  papercutAccountManagerAuthorizations,
-  papercutAccounts,
+  papercutAccountManagerAuthorizationsTable,
+  papercutAccountsTable,
 } from "../papercut/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
@@ -19,7 +19,7 @@ import {
   deleteCommentMutationArgsSchema,
   updateCommentMutationArgsSchema,
 } from "./shared";
-import { comments } from "./sql";
+import { commentsTable } from "./sql";
 
 import type { Comment } from "./sql";
 
@@ -33,7 +33,7 @@ export const create = fn(createCommentMutationArgsSchema, async (values) => {
     );
 
   return useTransaction(async (tx) => {
-    await tx.insert(comments).values(values);
+    await tx.insert(commentsTable).values(values);
 
     await afterTransaction(() =>
       Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
@@ -47,11 +47,11 @@ export async function metadata() {
   return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
-        id: comments.id,
-        rowVersion: sql<number>`"${comments._.name}"."${ROW_VERSION_COLUMN_NAME}`,
+        id: commentsTable.id,
+        rowVersion: sql<number>`"${commentsTable._.name}"."${ROW_VERSION_COLUMN_NAME}`,
       })
-      .from(comments)
-      .where(eq(comments.orgId, org.id))
+      .from(commentsTable)
+      .where(eq(commentsTable.orgId, org.id))
       .$dynamic();
 
     switch (user.role) {
@@ -60,63 +60,63 @@ export async function metadata() {
       case "operator":
         return baseQuery.where(
           and(
-            arrayOverlaps(comments.visibleTo, [
+            arrayOverlaps(commentsTable.visibleTo, [
               "operator",
               "manager",
               "customer",
             ]),
-            isNull(comments.deletedAt),
+            isNull(commentsTable.deletedAt),
           ),
         );
       case "manager":
         return baseQuery
           .innerJoin(
-            orders,
+            ordersTable,
             and(
-              eq(comments.orderId, orders.id),
-              eq(comments.orgId, orders.orgId),
+              eq(commentsTable.orderId, ordersTable.id),
+              eq(commentsTable.orgId, ordersTable.orgId),
             ),
           )
           .innerJoin(
-            papercutAccounts,
+            papercutAccountsTable,
             and(
-              eq(orders.papercutAccountId, papercutAccounts.id),
-              eq(orders.orgId, papercutAccounts.orgId),
+              eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
+              eq(ordersTable.orgId, papercutAccountsTable.orgId),
             ),
           )
           .innerJoin(
-            papercutAccountManagerAuthorizations,
+            papercutAccountManagerAuthorizationsTable,
             and(
               eq(
-                papercutAccounts.id,
-                papercutAccountManagerAuthorizations.papercutAccountId,
+                papercutAccountsTable.id,
+                papercutAccountManagerAuthorizationsTable.papercutAccountId,
               ),
               eq(
-                papercutAccounts.orgId,
-                papercutAccountManagerAuthorizations.orgId,
+                papercutAccountsTable.orgId,
+                papercutAccountManagerAuthorizationsTable.orgId,
               ),
             ),
           )
           .where(
             and(
-              arrayOverlaps(comments.visibleTo, ["manager", "customer"]),
-              isNull(comments.deletedAt),
+              arrayOverlaps(commentsTable.visibleTo, ["manager", "customer"]),
+              isNull(commentsTable.deletedAt),
             ),
           );
       case "customer":
         return baseQuery
           .innerJoin(
-            orders,
+            ordersTable,
             and(
-              eq(comments.orderId, orders.id),
-              eq(comments.orgId, orders.orgId),
+              eq(commentsTable.orderId, ordersTable.id),
+              eq(commentsTable.orgId, ordersTable.orgId),
             ),
           )
           .where(
             and(
-              eq(orders.customerId, user.id),
-              arrayOverlaps(comments.visibleTo, ["customer"]),
-              isNull(comments.deletedAt),
+              eq(ordersTable.customerId, user.id),
+              arrayOverlaps(commentsTable.visibleTo, ["customer"]),
+              isNull(commentsTable.deletedAt),
             ),
           );
       default:
@@ -131,8 +131,10 @@ export async function fromIds(ids: Array<Comment["id"]>) {
   return useTransaction((tx) =>
     tx
       .select()
-      .from(comments)
-      .where(and(inArray(comments.id, ids), eq(comments.orgId, org.id))),
+      .from(commentsTable)
+      .where(
+        and(inArray(commentsTable.id, ids), eq(commentsTable.orgId, org.id)),
+      ),
   );
 }
 
@@ -149,9 +151,9 @@ export const update = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(comments)
+        .update(commentsTable)
         .set(values)
-        .where(and(eq(comments.id, id), eq(comments.orgId, org.id)));
+        .where(and(eq(commentsTable.id, id), eq(commentsTable.orgId, org.id)));
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
@@ -173,9 +175,9 @@ export const delete_ = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(comments)
+        .update(commentsTable)
         .set(values)
-        .where(and(eq(comments.id, id), eq(comments.orgId, org.id)));
+        .where(and(eq(commentsTable.id, id), eq(commentsTable.orgId, org.id)));
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),

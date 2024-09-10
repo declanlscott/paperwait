@@ -14,7 +14,7 @@ import {
   deleteProductMutationArgsSchema,
   updateProductMutationArgsSchema,
 } from "./shared";
-import { products } from "./sql";
+import { productsTable } from "./sql";
 
 import type { Product } from "./sql";
 
@@ -24,7 +24,7 @@ export const create = fn(createProductMutationArgsSchema, async (values) => {
   enforceRbac(user, mutationRbac.createProduct, ForbiddenError);
 
   return useTransaction(async (tx) => {
-    await tx.insert(products).values(values);
+    await tx.insert(productsTable).values(values);
 
     await afterTransaction(() =>
       Replicache.poke([Realtime.formatChannel("org", org.id)]),
@@ -38,25 +38,31 @@ export async function metadata() {
   return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
-        id: products.id,
-        rowVersion: sql<number>`"${products._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: productsTable.id,
+        rowVersion: sql<number>`"${productsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(products)
-      .where(eq(products.orgId, org.id))
+      .from(productsTable)
+      .where(eq(productsTable.orgId, org.id))
       .$dynamic();
 
     switch (user.role) {
       case "administrator":
         return baseQuery;
       case "operator":
-        return baseQuery.where(isNull(products.deletedAt));
+        return baseQuery.where(isNull(productsTable.deletedAt));
       case "manager":
         return baseQuery.where(
-          and(eq(products.status, "published"), isNull(products.deletedAt)),
+          and(
+            eq(productsTable.status, "published"),
+            isNull(productsTable.deletedAt),
+          ),
         );
       case "customer":
         return baseQuery.where(
-          and(eq(products.status, "published"), isNull(products.deletedAt)),
+          and(
+            eq(productsTable.status, "published"),
+            isNull(productsTable.deletedAt),
+          ),
         );
       default:
         throw new NonExhaustiveValueError(user.role);
@@ -70,8 +76,10 @@ export async function fromIds(ids: Array<Product["id"]>) {
   return useTransaction((tx) =>
     tx
       .select()
-      .from(products)
-      .where(and(inArray(products.id, ids), eq(products.orgId, org.id))),
+      .from(productsTable)
+      .where(
+        and(inArray(productsTable.id, ids), eq(productsTable.orgId, org.id)),
+      ),
   );
 }
 
@@ -84,9 +92,9 @@ export const update = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(products)
+        .update(productsTable)
         .set(values)
-        .where(and(eq(products.id, id), eq(products.orgId, org.id)));
+        .where(and(eq(productsTable.id, id), eq(productsTable.orgId, org.id)));
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),
@@ -104,9 +112,9 @@ export const delete_ = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(products)
+        .update(productsTable)
         .set(values)
-        .where(and(eq(products.id, id), eq(products.orgId, org.id)));
+        .where(and(eq(productsTable.id, id), eq(productsTable.orgId, org.id)));
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),

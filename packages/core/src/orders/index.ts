@@ -7,8 +7,8 @@ import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
 import {
-  papercutAccountManagerAuthorizations,
-  papercutAccounts,
+  papercutAccountManagerAuthorizationsTable,
+  papercutAccountsTable,
 } from "../papercut/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
@@ -19,7 +19,7 @@ import {
   deleteOrderMutationArgsSchema,
   updateOrderMutationArgsSchema,
 } from "./shared";
-import { orders } from "./sql";
+import { ordersTable } from "./sql";
 
 import type { Order } from "./sql";
 
@@ -30,9 +30,9 @@ export const create = fn(createOrderMutationArgsSchema, async (values) => {
 
   return useTransaction(async (tx) => {
     const order = await tx
-      .insert(orders)
+      .insert(ordersTable)
       .values(values)
-      .returning({ id: orders.id })
+      .returning({ id: ordersTable.id })
       .then((rows) => rows.at(0));
     if (!order) throw new Error("Failed to insert order");
 
@@ -51,45 +51,47 @@ export async function metadata() {
   return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
-        id: orders.id,
-        rowVersion: sql<number>`"${orders._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: ordersTable.id,
+        rowVersion: sql<number>`"${ordersTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(orders)
-      .where(eq(orders.orgId, org.id))
+      .from(ordersTable)
+      .where(eq(ordersTable.orgId, org.id))
       .$dynamic();
 
-    const customerOrdersQuery = baseQuery.where(eq(orders.customerId, user.id));
+    const customerOrdersQuery = baseQuery.where(
+      eq(ordersTable.customerId, user.id),
+    );
 
     switch (user.role) {
       case "administrator":
         return baseQuery;
       case "operator":
-        return baseQuery.where(isNull(orders.deletedAt));
+        return baseQuery.where(isNull(ordersTable.deletedAt));
       case "manager": {
         const [customerOrders, managerOrders] = await Promise.all([
           customerOrdersQuery,
           baseQuery
             .innerJoin(
-              papercutAccounts,
+              papercutAccountsTable,
               and(
-                eq(orders.papercutAccountId, papercutAccounts.id),
-                eq(orders.orgId, papercutAccounts.orgId),
+                eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
+                eq(ordersTable.orgId, papercutAccountsTable.orgId),
               ),
             )
             .innerJoin(
-              papercutAccountManagerAuthorizations,
+              papercutAccountManagerAuthorizationsTable,
               and(
                 eq(
-                  papercutAccounts.id,
-                  papercutAccountManagerAuthorizations.papercutAccountId,
+                  papercutAccountsTable.id,
+                  papercutAccountManagerAuthorizationsTable.papercutAccountId,
                 ),
                 eq(
-                  papercutAccounts.orgId,
-                  papercutAccountManagerAuthorizations.orgId,
+                  papercutAccountsTable.orgId,
+                  papercutAccountManagerAuthorizationsTable.orgId,
                 ),
               ),
             )
-            .where(isNull(orders.deletedAt)),
+            .where(isNull(ordersTable.deletedAt)),
         ]);
 
         return [...customerOrders, ...managerOrders];
@@ -108,8 +110,8 @@ export async function fromIds(ids: Array<Order["id"]>) {
   return useTransaction((tx) =>
     tx
       .select()
-      .from(orders)
-      .where(and(inArray(orders.id, ids), eq(orders.orgId, org.id))),
+      .from(ordersTable)
+      .where(and(inArray(ordersTable.id, ids), eq(ordersTable.orgId, org.id))),
   );
 }
 
@@ -126,9 +128,9 @@ export const update = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(orders)
+        .update(ordersTable)
         .set(values)
-        .where(and(eq(orders.id, id), eq(orders.orgId, org.id)));
+        .where(and(eq(ordersTable.id, id), eq(ordersTable.orgId, org.id)));
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
@@ -150,9 +152,9 @@ export const delete_ = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(orders)
+        .update(ordersTable)
         .set(values)
-        .where(and(eq(orders.id, id), eq(orders.orgId, org.id)));
+        .where(and(eq(ordersTable.id, id), eq(ordersTable.orgId, org.id)));
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),

@@ -7,5 +7,6 @@ const client = postgres(Resource.Db.postgres.url, {
 });
 
 export const db = drizzle(client, { logger: true });
+export type Db = typeof db;
 
 export * from "drizzle-orm";

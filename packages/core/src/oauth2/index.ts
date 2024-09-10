@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 
-import { sessionsTokens } from "../auth/sql";
+import { sessionTokensTable } from "../auth/sql";
 import { useTransaction } from "../drizzle/transaction";
 import {
   InternalServerError,
@@ -10,7 +10,7 @@ import {
 import * as EntraId from "./entra-id";
 import * as Google from "./google";
 import { ENTRA_ID, GOOGLE } from "./shared";
-import { oauth2Providers } from "./sql";
+import { oauth2ProvidersTable } from "./sql";
 
 import type { Authenticated } from "../auth";
 import type { SessionTokens } from "../auth/sql";
@@ -23,19 +23,19 @@ export const fromSessionId = async (
   useTransaction(async (tx) => {
     const provider = await tx
       .select({
-        variant: oauth2Providers.variant,
-        id: oauth2Providers.id,
-        idToken: sessionsTokens.idToken,
-        accessToken: sessionsTokens.accessToken,
-        accessTokenExpiresAt: sessionsTokens.accessTokenExpiresAt,
-        refreshToken: sessionsTokens.refreshToken,
+        variant: oauth2ProvidersTable.variant,
+        id: oauth2ProvidersTable.id,
+        idToken: sessionTokensTable.idToken,
+        accessToken: sessionTokensTable.accessToken,
+        accessTokenExpiresAt: sessionTokensTable.accessTokenExpiresAt,
+        refreshToken: sessionTokensTable.refreshToken,
       })
-      .from(sessionsTokens)
+      .from(sessionTokensTable)
       .innerJoin(
-        oauth2Providers,
-        eq(sessionsTokens.orgId, oauth2Providers.orgId),
+        oauth2ProvidersTable,
+        eq(sessionTokensTable.orgId, oauth2ProvidersTable.orgId),
       )
-      .where(eq(sessionsTokens.sessionId, sessionId))
+      .where(eq(sessionTokensTable.sessionId, sessionId))
       .then((rows) => rows.at(0));
     if (!provider) throw new NotFoundError("Provider tokens not found");
 
@@ -81,9 +81,9 @@ export const fromSessionId = async (
     >;
 
     await tx
-      .update(sessionsTokens)
+      .update(sessionTokensTable)
       .set(sessionTokens)
-      .where(eq(sessionsTokens.sessionId, sessionId));
+      .where(eq(sessionTokensTable.sessionId, sessionId));
 
     return {
       variant: provider.variant,

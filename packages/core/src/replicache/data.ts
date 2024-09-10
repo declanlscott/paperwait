@@ -1,42 +1,42 @@
 import { clientMetadataFromGroupId } from ".";
 import * as Announcements from "../announcements";
-import { announcements } from "../announcements/sql";
+import { announcementsTable } from "../announcements/sql";
 import * as Comments from "../comments";
-import { comments } from "../comments/sql";
+import { commentsTable } from "../comments/sql";
 import * as Orders from "../orders";
-import { orders } from "../orders/sql";
+import { ordersTable } from "../orders/sql";
 import * as Organizations from "../organizations";
-import { organizations } from "../organizations/sql";
+import { organizationsTable } from "../organizations/sql";
 import * as Papercut from "../papercut";
 import {
-  papercutAccountCustomerAuthorizations,
-  papercutAccountManagerAuthorizations,
-  papercutAccounts,
+  papercutAccountCustomerAuthorizationsTable,
+  papercutAccountManagerAuthorizationsTable,
+  papercutAccountsTable,
 } from "../papercut/sql";
 import * as Products from "../products";
-import { products } from "../products/sql";
+import { productsTable } from "../products/sql";
 import * as Rooms from "../rooms";
-import { rooms } from "../rooms/sql";
+import { roomsTable } from "../rooms/sql";
 import * as Users from "../users";
-import { users } from "../users/sql";
-import { replicacheClients } from "./sql";
+import { usersTable } from "../users/sql";
+import { replicacheClientsTable } from "./sql";
 
 import type * as v from "valibot";
 import type { MutationName } from "./shared";
 
 export const syncedTables = [
-  announcements,
-  comments,
-  orders,
-  organizations,
-  papercutAccounts,
-  papercutAccountCustomerAuthorizations,
-  papercutAccountManagerAuthorizations,
-  products,
-  rooms,
-  users,
+  announcementsTable,
+  commentsTable,
+  ordersTable,
+  organizationsTable,
+  papercutAccountsTable,
+  papercutAccountCustomerAuthorizationsTable,
+  papercutAccountManagerAuthorizationsTable,
+  productsTable,
+  roomsTable,
+  usersTable,
 ];
-export const nonSyncedTables = [replicacheClients];
+export const nonSyncedTables = [replicacheClientsTable];
 export const tables = [...syncedTables, ...nonSyncedTables];
 
 export type SyncedTable = (typeof syncedTables)[number];

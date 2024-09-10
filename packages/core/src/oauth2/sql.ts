@@ -4,7 +4,9 @@ import { id, timestamps } from "../drizzle/columns";
 import { oauth2ProviderVariant } from "../drizzle/enums.sql";
 import { oauth2ProvidersTableName } from "./shared";
 
-export const oauth2Providers = pgTable(
+import type { InferSelectModel } from "drizzle-orm";
+
+export const oauth2ProvidersTable = pgTable(
   oauth2ProvidersTableName,
   {
     id: text("id").notNull(),
@@ -16,4 +18,7 @@ export const oauth2Providers = pgTable(
     primary: primaryKey({ columns: [table.id, table.orgId] }),
   }),
 );
-export type Oauth2Provider = typeof oauth2Providers.$inferSelect;
+
+export type Oauth2ProvidersTable = typeof oauth2ProvidersTable;
+
+export type Oauth2Provider = InferSelectModel<Oauth2ProvidersTable>;

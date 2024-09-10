@@ -3,10 +3,12 @@ import { foreignKey, index, text } from "drizzle-orm/pg-core";
 import { id } from "../drizzle/columns";
 import { userRole } from "../drizzle/enums.sql";
 import { orgTable } from "../drizzle/tables";
-import { orders } from "../orders/sql";
+import { ordersTable } from "../orders/sql";
 import { commentsTableName } from "./shared";
 
-export const comments = orgTable(
+import type { InferSelectModel } from "drizzle-orm";
+
+export const commentsTable = orgTable(
   commentsTableName,
   {
     orderId: id("order_id").notNull(),
@@ -17,7 +19,7 @@ export const comments = orgTable(
   (table) => ({
     orderReference: foreignKey({
       columns: [table.orderId, table.orgId],
-      foreignColumns: [orders.id, orders.orgId],
+      foreignColumns: [ordersTable.id, ordersTable.orgId],
       name: "order_fk",
     }),
     orderIdIndex: index("order_id_idx").on(table.orderId),
@@ -25,4 +27,6 @@ export const comments = orgTable(
   }),
 );
 
-export type Comment = typeof comments.$inferSelect;
+export type CommentsTable = typeof commentsTable;
+
+export type Comment = InferSelectModel<CommentsTable>;

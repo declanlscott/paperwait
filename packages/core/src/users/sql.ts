@@ -4,7 +4,9 @@ import { userRole } from "../drizzle/enums.sql";
 import { orgTable } from "../drizzle/tables";
 import { usersTableName } from "./shared";
 
-export const users = orgTable(
+import type { InferSelectModel } from "drizzle-orm";
+
+export const usersTable = orgTable(
   usersTableName,
   {
     oauth2UserId: text("oauth2_user_id").notNull(),
@@ -24,4 +26,6 @@ export const users = orgTable(
   }),
 );
 
-export type User = typeof users.$inferSelect;
+export type UsersTable = typeof usersTable;
+
+export type User = InferSelectModel<UsersTable>;

@@ -23,9 +23,9 @@ import {
   pushRequestSchema,
 } from "./shared";
 import {
-  replicacheClientGroups,
-  replicacheClients,
-  replicacheClientViews,
+  replicacheClientGroupsTable,
+  replicacheClientsTable,
+  replicacheClientViewsTable,
 } from "./sql";
 
 import type {
@@ -50,16 +50,16 @@ export const clientGroupFromId = async (id: ClientGroupID) =>
 
     return tx
       .select({
-        id: replicacheClientGroups.id,
-        orgId: replicacheClientGroups.orgId,
-        cvrVersion: replicacheClientGroups.cvrVersion,
-        userId: replicacheClientGroups.userId,
+        id: replicacheClientGroupsTable.id,
+        orgId: replicacheClientGroupsTable.orgId,
+        cvrVersion: replicacheClientGroupsTable.cvrVersion,
+        userId: replicacheClientGroupsTable.userId,
       })
-      .from(replicacheClientGroups)
+      .from(replicacheClientGroupsTable)
       .where(
         and(
-          eq(replicacheClientGroups.id, id),
-          eq(replicacheClientGroups.orgId, org.id),
+          eq(replicacheClientGroupsTable.id, id),
+          eq(replicacheClientGroupsTable.orgId, org.id),
         ),
       )
       .then((rows) => rows.at(0));
@@ -71,24 +71,24 @@ export const clientMetadataFromGroupId = async (
   useTransaction((tx) =>
     tx
       .select({
-        id: replicacheClients.id,
-        rowVersion: replicacheClients.lastMutationId,
+        id: replicacheClientsTable.id,
+        rowVersion: replicacheClientsTable.lastMutationId,
       })
-      .from(replicacheClients)
-      .where(eq(replicacheClients.clientGroupId, groupId)),
+      .from(replicacheClientsTable)
+      .where(eq(replicacheClientsTable.clientGroupId, groupId)),
   );
 
 export const clientFromId = async (id: ReplicacheClient["id"]) =>
   useTransaction((tx) =>
     tx
       .select({
-        id: replicacheClients.id,
-        orgId: replicacheClients.orgId,
-        clientGroupId: replicacheClients.clientGroupId,
-        lastMutationId: replicacheClients.lastMutationId,
+        id: replicacheClientsTable.id,
+        orgId: replicacheClientsTable.orgId,
+        clientGroupId: replicacheClientsTable.clientGroupId,
+        lastMutationId: replicacheClientsTable.lastMutationId,
       })
-      .from(replicacheClients)
-      .where(eq(replicacheClients.id, id))
+      .from(replicacheClientsTable)
+      .where(eq(replicacheClientsTable.id, id))
       .then((rows) => rows.at(0)),
   );
 
@@ -97,10 +97,13 @@ export const putClientGroup = async (
 ) =>
   useTransaction((tx) =>
     tx
-      .insert(replicacheClientGroups)
+      .insert(replicacheClientGroupsTable)
       .values(clientGroup)
       .onConflictDoUpdate({
-        target: [replicacheClientGroups.id, replicacheClientGroups.orgId],
+        target: [
+          replicacheClientGroupsTable.id,
+          replicacheClientGroupsTable.orgId,
+        ],
         set: { ...clientGroup, updatedAt: sql`now()` },
       }),
   );
@@ -108,10 +111,10 @@ export const putClientGroup = async (
 export const putClient = async (client: OmitTimestamps<ReplicacheClient>) =>
   useTransaction((tx) =>
     tx
-      .insert(replicacheClients)
+      .insert(replicacheClientsTable)
       .values(client)
       .onConflictDoUpdate({
-        target: [replicacheClients.id, replicacheClients.orgId],
+        target: [replicacheClientsTable.id, replicacheClientsTable.orgId],
         set: { ...client, updatedAt: sql`now()` },
       }),
   );
@@ -141,7 +144,7 @@ export async function poke(channels: Array<Channel>) {
 
 type PullTransactionResult = {
   data: Array<TableData>;
-  clients: ClientViewRecordEntries<typeof replicacheClients>;
+  clients: ClientViewRecordEntries<typeof replicacheClientsTable>;
   cvr: {
     prev: {
       value?: ClientViewRecord;
@@ -187,16 +190,16 @@ export const pull = fn(
       // 1: Fetch previous client view record
       const prevClientView = pullRequest.cookie
         ? await tx
-            .select({ record: replicacheClientViews.record })
-            .from(replicacheClientViews)
+            .select({ record: replicacheClientViewsTable.record })
+            .from(replicacheClientViewsTable)
             .where(
               and(
                 eq(
-                  replicacheClientViews.clientGroupId,
+                  replicacheClientViewsTable.clientGroupId,
                   pullRequest.clientGroupID,
                 ),
-                eq(replicacheClientViews.version, cookieOrder),
-                eq(replicacheClientViews.orgId, user.orgId),
+                eq(replicacheClientViewsTable.version, cookieOrder),
+                eq(replicacheClientViewsTable.orgId, user.orgId),
               ),
             )
             .then((rows) => rows.at(0))
@@ -269,12 +272,12 @@ export const pull = fn(
 
       // 12: Changed clients - no need to re-read clients from database,
       // we already have their versions.
-      const clients = diff[replicacheClients._.name].puts.reduce(
+      const clients = diff[replicacheClientsTable._.name].puts.reduce(
         (clients, clientId) => {
-          clients[clientId] = nextCvr[replicacheClients._.name][clientId];
+          clients[clientId] = nextCvr[replicacheClientsTable._.name][clientId];
           return clients;
         },
-        {} as ClientViewRecordEntries<typeof replicacheClients>,
+        {} as ClientViewRecordEntries<typeof replicacheClientsTable>,
       );
 
       // 13: new client view record version
@@ -289,10 +292,13 @@ export const pull = fn(
       await Promise.all([
         // 14: Write client group record
         tx
-          .insert(replicacheClientGroups)
+          .insert(replicacheClientGroupsTable)
           .values(nextClientGroup)
           .onConflictDoUpdate({
-            target: [replicacheClientGroups.id, replicacheClientGroups.orgId],
+            target: [
+              replicacheClientGroupsTable.id,
+              replicacheClientGroupsTable.orgId,
+            ],
             set: {
               orgId: nextClientGroup.orgId,
               userId: nextClientGroup.userId,
@@ -301,7 +307,7 @@ export const pull = fn(
             },
           }),
         // 16-17: Generate client view record id, store client view record
-        tx.insert(replicacheClientViews).values({
+        tx.insert(replicacheClientViewsTable).values({
           clientGroupId: baseClientGroup.id,
           orgId: user.orgId,
           version: nextCvrVersion,
@@ -309,12 +315,12 @@ export const pull = fn(
         }),
         // Delete old client view records
         tx
-          .delete(replicacheClientViews)
+          .delete(replicacheClientViewsTable)
           .where(
             and(
-              eq(replicacheClientViews.clientGroupId, baseClientGroup.id),
-              eq(replicacheClientViews.orgId, user.orgId),
-              lt(replicacheClientViews.version, nextCvrVersion - 10),
+              eq(replicacheClientViewsTable.clientGroupId, baseClientGroup.id),
+              eq(replicacheClientViewsTable.orgId, user.orgId),
+              lt(replicacheClientViewsTable.version, nextCvrVersion - 10),
             ),
           ),
       ]);

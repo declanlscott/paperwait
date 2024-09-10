@@ -12,7 +12,7 @@ import {
 
 import { id, timestamps } from "../drizzle/columns";
 import { orgIdColumns } from "../drizzle/tables";
-import { users } from "../users/sql";
+import { usersTable } from "../users/sql";
 import {
   replicacheClientGroupsTableName,
   replicacheClientsTableName,
@@ -20,14 +20,17 @@ import {
   replicacheMetaTableName,
 } from "./shared";
 
+import type { InferSelectModel } from "drizzle-orm";
 import type { ClientViewRecord } from "./client-view-record";
 
-export const replicacheMeta = pgTable(replicacheMetaTableName, {
+export const replicacheMetaTable = pgTable(replicacheMetaTableName, {
   key: text("key").primaryKey(),
   value: jsonb("value").notNull(),
 });
+export type ReplicacheMetaTable = typeof replicacheMetaTable;
+export type ReplicacheMeta = InferSelectModel<ReplicacheMetaTable>;
 
-export const replicacheClientGroups = pgTable(
+export const replicacheClientGroupsTable = pgTable(
   replicacheClientGroupsTableName,
   {
     id: uuid("id").notNull(),
@@ -40,14 +43,16 @@ export const replicacheClientGroups = pgTable(
     primary: primaryKey({ columns: [table.id, table.orgId] }),
     userReference: foreignKey({
       columns: [table.userId, table.orgId],
-      foreignColumns: [users.id, users.orgId],
+      foreignColumns: [usersTable.id, usersTable.orgId],
       name: "user_fk",
     }),
   }),
 );
-export type ReplicacheClientGroup = typeof replicacheClientGroups.$inferSelect;
+export type ReplicacheClientGroupsTable = typeof replicacheClientGroupsTable;
+export type ReplicacheClientGroup =
+  InferSelectModel<ReplicacheClientGroupsTable>;
 
-export const replicacheClients = pgTable(
+export const replicacheClientsTable = pgTable(
   replicacheClientsTableName,
   {
     id: uuid("id").notNull(),
@@ -62,15 +67,19 @@ export const replicacheClients = pgTable(
     primary: primaryKey({ columns: [table.id, table.orgId] }),
     clientGroupReference: foreignKey({
       columns: [table.clientGroupId, table.orgId],
-      foreignColumns: [replicacheClientGroups.id, replicacheClientGroups.orgId],
+      foreignColumns: [
+        replicacheClientGroupsTable.id,
+        replicacheClientGroupsTable.orgId,
+      ],
       name: "client_group_fk",
     }),
     clientGroupIdIndex: index("client_group_id_idx").on(table.clientGroupId),
   }),
 );
-export type ReplicacheClient = typeof replicacheClients.$inferSelect;
+export type ReplicacheClientsTable = typeof replicacheClientsTable;
+export type ReplicacheClient = InferSelectModel<ReplicacheClientsTable>;
 
-export const replicacheClientViews = pgTable(
+export const replicacheClientViewsTable = pgTable(
   replicacheClientViewsTableName,
   {
     orgId: orgIdColumns.orgId,
@@ -85,9 +94,13 @@ export const replicacheClientViews = pgTable(
     }),
     clientGroupReference: foreignKey({
       columns: [table.clientGroupId, table.orgId],
-      foreignColumns: [replicacheClientGroups.id, replicacheClientGroups.orgId],
+      foreignColumns: [
+        replicacheClientGroupsTable.id,
+        replicacheClientGroupsTable.orgId,
+      ],
       name: "client_group_fk",
     }),
   }),
 );
-export type ReplicacheClientView = typeof replicacheClientViews.$inferSelect;
+export type ReplicacheClientViewsTable = typeof replicacheClientViewsTable;
+export type ReplicacheClientView = InferSelectModel<ReplicacheClientViewsTable>;

@@ -4,12 +4,13 @@ import { VARCHAR_LENGTH } from "../constants";
 import { id } from "../drizzle/columns";
 import { productStatus } from "../drizzle/enums.sql";
 import { orgTable } from "../drizzle/tables";
-import { rooms } from "../rooms/sql";
+import { roomsTable } from "../rooms/sql";
 import { productsTableName } from "./shared";
 
+import type { InferSelectModel } from "drizzle-orm";
 import type { ProductConfiguration } from "./shared";
 
-export const products = orgTable(
+export const productsTable = orgTable(
   productsTableName,
   {
     name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
@@ -20,7 +21,7 @@ export const products = orgTable(
   (table) => ({
     roomReference: foreignKey({
       columns: [table.roomId, table.orgId],
-      foreignColumns: [rooms.id, rooms.orgId],
+      foreignColumns: [roomsTable.id, roomsTable.orgId],
       name: "room_fk",
     }),
     statusIndex: index("status_idx").on(table.status),
@@ -28,4 +29,6 @@ export const products = orgTable(
   }),
 );
 
-export type Product = typeof products.$inferSelect;
+export type ProductsTable = typeof productsTable;
+
+export type Product = InferSelectModel<ProductsTable>;

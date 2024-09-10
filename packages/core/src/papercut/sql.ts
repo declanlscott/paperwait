@@ -9,14 +9,16 @@ import {
 
 import { bigintString, id, timestamps } from "../drizzle/columns";
 import { orgIdColumns, orgTable } from "../drizzle/tables";
-import { users } from "../users/sql";
+import { usersTable } from "../users/sql";
 import {
   papercutAccountCustomerAuthorizationsTableName,
   papercutAccountManagerAuthorizationsTableName,
   papercutAccountsTableName,
 } from "./shared";
 
-export const papercutAccounts = pgTable(
+import type { InferSelectModel } from "drizzle-orm";
+
+export const papercutAccountsTable = pgTable(
   papercutAccountsTableName,
   {
     id: bigintString("id").notNull(),
@@ -29,9 +31,10 @@ export const papercutAccounts = pgTable(
     uniqueName: unique("unique_name").on(table.name, table.orgId),
   }),
 );
-export type PapercutAccount = typeof papercutAccounts.$inferSelect;
+export type PapercutAccountsTable = typeof papercutAccountsTable;
+export type PapercutAccount = InferSelectModel<PapercutAccountsTable>;
 
-export const papercutAccountCustomerAuthorizations = orgTable(
+export const papercutAccountCustomerAuthorizationsTable = orgTable(
   papercutAccountCustomerAuthorizationsTableName,
   {
     customerId: id("customer_id").notNull(),
@@ -40,12 +43,12 @@ export const papercutAccountCustomerAuthorizations = orgTable(
   (table) => ({
     customerReference: foreignKey({
       columns: [table.customerId, table.orgId],
-      foreignColumns: [users.id, users.orgId],
+      foreignColumns: [usersTable.id, usersTable.orgId],
       name: "user_fk",
     }),
     papercutAccountReference: foreignKey({
       columns: [table.papercutAccountId, table.orgId],
-      foreignColumns: [papercutAccounts.id, papercutAccounts.orgId],
+      foreignColumns: [papercutAccountsTable.id, papercutAccountsTable.orgId],
       name: "papercut_account_fk",
     }),
     uniquePapercutAccountCustomer: unique(
@@ -57,10 +60,12 @@ export const papercutAccountCustomerAuthorizations = orgTable(
     ),
   }),
 );
+export type PapercutAccountCustomerAuthorizationsTable =
+  typeof papercutAccountCustomerAuthorizationsTable;
 export type PapercutAccountCustomerAuthorization =
-  typeof papercutAccountCustomerAuthorizations.$inferSelect;
+  InferSelectModel<PapercutAccountCustomerAuthorizationsTable>;
 
-export const papercutAccountManagerAuthorizations = orgTable(
+export const papercutAccountManagerAuthorizationsTable = orgTable(
   papercutAccountManagerAuthorizationsTableName,
   {
     managerId: id("manager_id").notNull(),
@@ -69,12 +74,12 @@ export const papercutAccountManagerAuthorizations = orgTable(
   (table) => ({
     managerReference: foreignKey({
       columns: [table.managerId, table.orgId],
-      foreignColumns: [users.id, users.orgId],
+      foreignColumns: [usersTable.id, usersTable.orgId],
       name: "manager_fk",
     }),
     papercutAccountReference: foreignKey({
       columns: [table.papercutAccountId, table.orgId],
-      foreignColumns: [papercutAccounts.id, papercutAccounts.orgId],
+      foreignColumns: [papercutAccountsTable.id, papercutAccountsTable.orgId],
       name: "papercut_account_fk",
     }),
     uniquePapercutAccountManager: unique("unique_papercut_account_manager").on(
@@ -87,5 +92,7 @@ export const papercutAccountManagerAuthorizations = orgTable(
     ),
   }),
 );
+export type PapercutAccountManagerAuthorizationsTable =
+  typeof papercutAccountManagerAuthorizationsTable;
 export type PapercutAccountManagerAuthorization =
-  typeof papercutAccountManagerAuthorizations.$inferSelect;
+  InferSelectModel<PapercutAccountManagerAuthorizationsTable>;

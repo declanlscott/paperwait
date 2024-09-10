@@ -10,17 +10,20 @@ import {
 import { VARCHAR_LENGTH } from "../constants";
 import { id, idPrimaryKey, timestamps } from "../drizzle/columns";
 import { licenseStatus, orgStatus } from "../drizzle/enums.sql";
-import { oauth2Providers } from "../oauth2/sql";
+import { oauth2ProvidersTable } from "../oauth2/sql";
 import { licensesTableName, organizationsTableName } from "./shared";
 
-export const licenses = pgTable(licensesTableName, {
+import type { InferSelectModel } from "drizzle-orm";
+
+export const licensesTable = pgTable(licensesTableName, {
   key: uuid("key").defaultRandom().primaryKey(),
   orgId: id("org_id"),
   status: licenseStatus("status").notNull().default("active"),
 });
-export type License = typeof licenses.$inferSelect;
+export type LicensesTable = typeof licensesTable;
+export type License = InferSelectModel<LicensesTable>;
 
-export const organizations = pgTable(
+export const organizationsTable = pgTable(
   organizationsTableName,
   {
     ...idPrimaryKey,
@@ -36,9 +39,10 @@ export const organizations = pgTable(
     nameIndex: index("name_idx").on(table.name),
     oauth2ProviderReference: foreignKey({
       columns: [table.oauth2ProviderId, table.id],
-      foreignColumns: [oauth2Providers.id, oauth2Providers.orgId],
+      foreignColumns: [oauth2ProvidersTable.id, oauth2ProvidersTable.orgId],
       name: "oauth2_provider_fk",
     }),
   }),
 );
-export type Organization = typeof organizations.$inferSelect;
+export type OrganizationsTable = typeof organizationsTable;
+export type Organization = InferSelectModel<OrganizationsTable>;

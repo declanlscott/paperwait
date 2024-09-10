@@ -2,9 +2,11 @@ import { foreignKey, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { orgIdColumns } from "../drizzle/tables";
-import { users } from "../users/sql";
+import { usersTable } from "../users/sql";
 
-export const sessions = pgTable(
+import type { InferSelectModel } from "drizzle-orm";
+
+export const sessionsTable = pgTable(
   "sessions",
   {
     id: id("id").primaryKey(),
@@ -15,17 +17,18 @@ export const sessions = pgTable(
   (table) => ({
     userReference: foreignKey({
       columns: [table.userId, table.orgId],
-      foreignColumns: [users.id, users.orgId],
+      foreignColumns: [usersTable.id, usersTable.orgId],
       name: "user_fk",
     }),
   }),
 );
-export type Session = typeof sessions.$inferSelect;
+export type SessionsTable = typeof sessionsTable;
+export type Session = InferSelectModel<SessionsTable>;
 
-export const sessionsTokens = pgTable("session_tokens", {
+export const sessionTokensTable = pgTable("session_tokens", {
   sessionId: id("session_id")
     .primaryKey()
-    .references(() => sessions.id, { onDelete: "cascade" }),
+    .references(() => sessionsTable.id, { onDelete: "cascade" }),
   userId: id("user_id").notNull(),
   orgId: orgIdColumns.orgId,
   idToken: text("id_token").notNull(),
@@ -33,4 +36,5 @@ export const sessionsTokens = pgTable("session_tokens", {
   accessTokenExpiresAt: timestamp("access_token_expires_at").notNull(),
   refreshToken: text("refresh_token"),
 });
-export type SessionTokens = typeof sessionsTokens.$inferSelect;
+export type SessionTokensTable = typeof sessionTokensTable;
+export type SessionTokens = InferSelectModel<SessionTokensTable>;

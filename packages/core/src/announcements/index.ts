@@ -13,7 +13,7 @@ import {
   deleteAnnouncementMutationArgsSchema,
   updateAnnouncementMutationArgsSchema,
 } from "./shared";
-import { announcements } from "./sql";
+import { announcementsTable } from "./sql";
 
 import type { Announcement } from "./sql";
 
@@ -25,7 +25,7 @@ export const create = fn(
     enforceRbac(user, mutationRbac.createAnnouncement, ForbiddenError);
 
     return useTransaction(async (tx) => {
-      await tx.insert(announcements).values(values);
+      await tx.insert(announcementsTable).values(values);
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),
@@ -40,11 +40,11 @@ export async function metadata() {
   return useTransaction((tx) =>
     tx
       .select({
-        id: announcements.id,
-        rowVersion: sql<number>`"${announcements._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: announcementsTable.id,
+        rowVersion: sql<number>`"${announcementsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(announcements)
-      .where(eq(announcements.orgId, org.id)),
+      .from(announcementsTable)
+      .where(eq(announcementsTable.orgId, org.id)),
   );
 }
 
@@ -54,9 +54,12 @@ export async function fromIds(ids: Array<Announcement["id"]>) {
   return useTransaction((tx) =>
     tx
       .select()
-      .from(announcements)
+      .from(announcementsTable)
       .where(
-        and(inArray(announcements.id, ids), eq(announcements.orgId, org.id)),
+        and(
+          inArray(announcementsTable.id, ids),
+          eq(announcementsTable.orgId, org.id),
+        ),
       ),
   );
 }
@@ -70,9 +73,14 @@ export const update = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(announcements)
+        .update(announcementsTable)
         .set(values)
-        .where(and(eq(announcements.id, id), eq(announcements.orgId, org.id)));
+        .where(
+          and(
+            eq(announcementsTable.id, id),
+            eq(announcementsTable.orgId, org.id),
+          ),
+        );
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),
@@ -90,9 +98,14 @@ export const delete_ = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(announcements)
+        .update(announcementsTable)
         .set(values)
-        .where(and(eq(announcements.id, id), eq(announcements.orgId, org.id)));
+        .where(
+          and(
+            eq(announcementsTable.id, id),
+            eq(announcementsTable.orgId, org.id),
+          ),
+        );
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),

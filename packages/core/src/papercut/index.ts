@@ -16,9 +16,9 @@ import {
   deletePapercutAccountMutationArgsSchema,
 } from "./shared";
 import {
-  papercutAccountCustomerAuthorizations,
-  papercutAccountManagerAuthorizations,
-  papercutAccounts,
+  papercutAccountCustomerAuthorizationsTable,
+  papercutAccountManagerAuthorizationsTable,
+  papercutAccountsTable,
 } from "./sql";
 
 import type {
@@ -40,7 +40,7 @@ export const createAccountManagerAuthorization = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .insert(papercutAccountManagerAuthorizations)
+        .insert(papercutAccountManagerAuthorizationsTable)
         .values(values)
         .onConflictDoNothing();
 
@@ -57,22 +57,22 @@ export async function accountsMetadata() {
   return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
-        id: papercutAccounts.id,
-        rowVersion: sql<number>`"${papercutAccounts._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: papercutAccountsTable.id,
+        rowVersion: sql<number>`"${papercutAccountsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(papercutAccounts)
-      .where(eq(papercutAccounts.orgId, org.id))
+      .from(papercutAccountsTable)
+      .where(eq(papercutAccountsTable.orgId, org.id))
       .$dynamic();
 
     switch (user.role) {
       case "administrator":
         return baseQuery;
       case "manager":
-        return baseQuery.where(isNull(papercutAccounts.deletedAt));
+        return baseQuery.where(isNull(papercutAccountsTable.deletedAt));
       case "operator":
-        return baseQuery.where(isNull(papercutAccounts.deletedAt));
+        return baseQuery.where(isNull(papercutAccountsTable.deletedAt));
       case "customer":
-        return baseQuery.where(isNull(papercutAccounts.deletedAt));
+        return baseQuery.where(isNull(papercutAccountsTable.deletedAt));
       default:
         throw new NonExhaustiveValueError(user.role);
     }
@@ -85,11 +85,11 @@ export async function accountCustomerAuthorizationsMetadata() {
   return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
-        id: papercutAccountCustomerAuthorizations.id,
-        rowVersion: sql<number>`"${papercutAccountCustomerAuthorizations._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: papercutAccountCustomerAuthorizationsTable.id,
+        rowVersion: sql<number>`"${papercutAccountCustomerAuthorizationsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(papercutAccountCustomerAuthorizations)
-      .where(eq(papercutAccountCustomerAuthorizations.orgId, org.id))
+      .from(papercutAccountCustomerAuthorizationsTable)
+      .where(eq(papercutAccountCustomerAuthorizationsTable.orgId, org.id))
       .$dynamic();
 
     switch (user.role) {
@@ -97,15 +97,15 @@ export async function accountCustomerAuthorizationsMetadata() {
         return baseQuery;
       case "manager":
         return baseQuery.where(
-          isNull(papercutAccountCustomerAuthorizations.deletedAt),
+          isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
         );
       case "operator":
         return baseQuery.where(
-          isNull(papercutAccountCustomerAuthorizations.deletedAt),
+          isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
         );
       case "customer":
         return baseQuery.where(
-          isNull(papercutAccountCustomerAuthorizations.deletedAt),
+          isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
         );
       default:
         throw new NonExhaustiveValueError(user.role);
@@ -119,11 +119,11 @@ export const accountManagerAuthorizationsMetadata = async () =>
 
     const baseQuery = tx
       .select({
-        id: papercutAccountManagerAuthorizations.id,
-        rowVersion: sql<number>`"${papercutAccountManagerAuthorizations._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: papercutAccountManagerAuthorizationsTable.id,
+        rowVersion: sql<number>`"${papercutAccountManagerAuthorizationsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(papercutAccountManagerAuthorizations)
-      .where(eq(papercutAccountManagerAuthorizations.orgId, org.id))
+      .from(papercutAccountManagerAuthorizationsTable)
+      .where(eq(papercutAccountManagerAuthorizationsTable.orgId, org.id))
       .$dynamic();
 
     switch (user.role) {
@@ -131,15 +131,15 @@ export const accountManagerAuthorizationsMetadata = async () =>
         return baseQuery;
       case "manager":
         return baseQuery.where(
-          isNull(papercutAccountManagerAuthorizations.deletedAt),
+          isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
         );
       case "operator":
         return baseQuery.where(
-          isNull(papercutAccountManagerAuthorizations.deletedAt),
+          isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
         );
       case "customer":
         return baseQuery.where(
-          isNull(papercutAccountManagerAuthorizations.deletedAt),
+          isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
         );
       default:
         throw new NonExhaustiveValueError(user.role);
@@ -152,11 +152,11 @@ export async function accountsFromIds(ids: Array<PapercutAccount["id"]>) {
   return useTransaction((tx) =>
     tx
       .select()
-      .from(papercutAccounts)
+      .from(papercutAccountsTable)
       .where(
         and(
-          inArray(papercutAccounts.id, ids),
-          eq(papercutAccounts.orgId, org.id),
+          inArray(papercutAccountsTable.id, ids),
+          eq(papercutAccountsTable.orgId, org.id),
         ),
       ),
   );
@@ -170,11 +170,11 @@ export const accountCustomerAuthorizationsFromIds = async (
 
     return tx
       .select()
-      .from(papercutAccountCustomerAuthorizations)
+      .from(papercutAccountCustomerAuthorizationsTable)
       .where(
         and(
-          inArray(papercutAccountCustomerAuthorizations.id, ids),
-          eq(papercutAccountCustomerAuthorizations.orgId, org.id),
+          inArray(papercutAccountCustomerAuthorizationsTable.id, ids),
+          eq(papercutAccountCustomerAuthorizationsTable.orgId, org.id),
         ),
       );
   });
@@ -187,11 +187,11 @@ export const accountManagerAuthorizationsFromIds = async (
 
     return tx
       .select()
-      .from(papercutAccountManagerAuthorizations)
+      .from(papercutAccountManagerAuthorizationsTable)
       .where(
         and(
-          inArray(papercutAccountManagerAuthorizations.id, ids),
-          eq(papercutAccountManagerAuthorizations.orgId, org.id),
+          inArray(papercutAccountManagerAuthorizationsTable.id, ids),
+          eq(papercutAccountManagerAuthorizationsTable.orgId, org.id),
         ),
       );
   });
@@ -208,33 +208,39 @@ export const deleteAccount = fn(
         Users.fromRoles(["administrator", "operator"]),
         tx
           .select({
-            managerId: papercutAccountManagerAuthorizations.managerId,
+            managerId: papercutAccountManagerAuthorizationsTable.managerId,
           })
-          .from(papercutAccountManagerAuthorizations)
+          .from(papercutAccountManagerAuthorizationsTable)
           .where(
             and(
-              eq(papercutAccountManagerAuthorizations.papercutAccountId, id),
-              eq(papercutAccountManagerAuthorizations.orgId, org.id),
+              eq(
+                papercutAccountManagerAuthorizationsTable.papercutAccountId,
+                id,
+              ),
+              eq(papercutAccountManagerAuthorizationsTable.orgId, org.id),
             ),
           ),
         tx
           .select({
-            customerId: papercutAccountCustomerAuthorizations.customerId,
+            customerId: papercutAccountCustomerAuthorizationsTable.customerId,
           })
-          .from(papercutAccountCustomerAuthorizations)
+          .from(papercutAccountCustomerAuthorizationsTable)
           .where(
             and(
-              eq(papercutAccountCustomerAuthorizations.papercutAccountId, id),
-              eq(papercutAccountCustomerAuthorizations.orgId, org.id),
+              eq(
+                papercutAccountCustomerAuthorizationsTable.papercutAccountId,
+                id,
+              ),
+              eq(papercutAccountCustomerAuthorizationsTable.orgId, org.id),
             ),
           ),
         tx
-          .update(papercutAccounts)
+          .update(papercutAccountsTable)
           .set(values)
           .where(
             and(
-              eq(papercutAccounts.id, id),
-              eq(papercutAccounts.orgId, org.id),
+              eq(papercutAccountsTable.id, id),
+              eq(papercutAccountsTable.orgId, org.id),
             ),
           ),
       ]);
@@ -267,12 +273,12 @@ export const deleteAccountManagerAuthorization = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(papercutAccountManagerAuthorizations)
+        .update(papercutAccountManagerAuthorizationsTable)
         .set(values)
         .where(
           and(
-            eq(papercutAccountManagerAuthorizations.id, id),
-            eq(papercutAccountManagerAuthorizations.orgId, org.id),
+            eq(papercutAccountManagerAuthorizationsTable.id, id),
+            eq(papercutAccountManagerAuthorizationsTable.orgId, org.id),
           ),
         );
 

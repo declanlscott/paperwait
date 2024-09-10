@@ -5,9 +5,10 @@ import { roomStatus } from "../drizzle/enums.sql";
 import { orgTable } from "../drizzle/tables";
 import { roomsTableName } from "./shared";
 
+import type { InferSelectModel } from "drizzle-orm";
 import type { RoomConfiguration } from "./shared";
 
-export const rooms = orgTable(
+export const roomsTable = orgTable(
   roomsTableName,
   {
     name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
@@ -21,4 +22,6 @@ export const rooms = orgTable(
   }),
 );
 
-export type Room = typeof rooms.$inferSelect;
+export type RoomsTable = typeof roomsTable;
+
+export type Room = InferSelectModel<RoomsTable>;

@@ -6,7 +6,7 @@ import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { ForbiddenError } from "../errors/http";
 import { NonExhaustiveValueError } from "../errors/misc";
-import { products } from "../products/sql";
+import { productsTable } from "../products/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
 import { fn } from "../utils/helpers";
@@ -16,7 +16,7 @@ import {
   restoreRoomMutationArgsSchema,
   updateRoomMutationArgsSchema,
 } from "./shared";
-import { rooms } from "./sql";
+import { roomsTable } from "./sql";
 
 import type { Room } from "./sql";
 
@@ -26,7 +26,7 @@ export const create = fn(createRoomMutationArgsSchema, async (values) => {
   enforceRbac(user, mutationRbac.createRoom, ForbiddenError);
 
   return useTransaction(async (tx) => {
-    await tx.insert(rooms).values(values);
+    await tx.insert(roomsTable).values(values);
 
     await afterTransaction(() =>
       Replicache.poke([Realtime.formatChannel("org", org.id)]),
@@ -40,25 +40,25 @@ export async function metadata() {
   return useTransaction(async (tx) => {
     const baseQuery = tx
       .select({
-        id: rooms.id,
-        rowVersion: sql<number>`"${rooms._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        id: roomsTable.id,
+        rowVersion: sql<number>`"${roomsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
-      .from(rooms)
-      .where(eq(rooms.orgId, org.id))
+      .from(roomsTable)
+      .where(eq(roomsTable.orgId, org.id))
       .$dynamic();
 
     switch (user.role) {
       case "administrator":
         return baseQuery;
       case "operator":
-        return baseQuery.where(isNull(rooms.deletedAt));
+        return baseQuery.where(isNull(roomsTable.deletedAt));
       case "manager":
         return baseQuery.where(
-          and(eq(rooms.status, "published"), isNull(rooms.deletedAt)),
+          and(eq(roomsTable.status, "published"), isNull(roomsTable.deletedAt)),
         );
       case "customer":
         return baseQuery.where(
-          and(eq(rooms.status, "published"), isNull(rooms.deletedAt)),
+          and(eq(roomsTable.status, "published"), isNull(roomsTable.deletedAt)),
         );
       default:
         throw new NonExhaustiveValueError(user.role);
@@ -72,8 +72,8 @@ export async function fromIds(ids: Array<Room["id"]>) {
   return useTransaction((tx) =>
     tx
       .select()
-      .from(rooms)
-      .where(and(inArray(rooms.id, ids), eq(rooms.orgId, org.id))),
+      .from(roomsTable)
+      .where(and(inArray(roomsTable.id, ids), eq(roomsTable.orgId, org.id))),
   );
 }
 
@@ -86,9 +86,9 @@ export const update = fn(
 
     return useTransaction(async (tx) => {
       await tx
-        .update(rooms)
+        .update(roomsTable)
         .set(values)
-        .where(and(eq(rooms.id, id), eq(rooms.orgId, org.id)));
+        .where(and(eq(roomsTable.id, id), eq(roomsTable.orgId, org.id)));
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("org", org.id)]),
@@ -107,14 +107,16 @@ export const delete_ = fn(
     return useTransaction(async (tx) => {
       await Promise.all([
         tx
-          .update(rooms)
+          .update(roomsTable)
           .set({ ...values, status: "draft" })
-          .where(and(eq(rooms.id, id), eq(rooms.orgId, org.id))),
+          .where(and(eq(roomsTable.id, id), eq(roomsTable.orgId, org.id))),
         // Set all products in the room to draft
         tx
-          .update(products)
+          .update(productsTable)
           .set({ status: "draft" })
-          .where(and(eq(products.roomId, id), eq(products.orgId, org.id))),
+          .where(
+            and(eq(productsTable.roomId, id), eq(productsTable.orgId, org.id)),
+          ),
       ]);
 
       await afterTransaction(() =>
@@ -131,9 +133,9 @@ export const restore = fn(restoreRoomMutationArgsSchema, async ({ id }) => {
 
   return useTransaction(async (tx) => {
     await tx
-      .update(rooms)
+      .update(roomsTable)
       .set({ deletedAt: null })
-      .where(and(eq(rooms.id, id), eq(rooms.orgId, org.id)));
+      .where(and(eq(roomsTable.id, id), eq(roomsTable.orgId, org.id)));
 
     await afterTransaction(() =>
       Replicache.poke([Realtime.formatChannel("org", org.id)]),
