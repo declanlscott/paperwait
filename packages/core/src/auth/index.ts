@@ -1,13 +1,11 @@
-import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import { Lucia } from "lucia";
 import { Resource } from "sst";
 
 import { AUTH_SESSION_COOKIE_NAME } from "../constants";
-import { db } from "../drizzle";
 import { useTransaction } from "../drizzle/transaction";
-import { users } from "../users/sql";
 import { generateId } from "../utils/helpers";
-import { sessions, sessionsTokens } from "./sql";
+import { DbAdapter } from "./adapter";
+import { sessionTokensTable } from "./sql";
 
 import type {
   Session as LuciaSession,
@@ -21,8 +19,8 @@ import type { Session, SessionTokens } from "./sql";
 
 export type Auth = {
   session: LuciaSession | null;
-  user: LuciaUser | null;
-  org: Pick<Organization, "id" | "slug" | "status"> | null;
+  user: LuciaUser["data"] | null;
+  org: LuciaUser["org"] | null;
 };
 
 export type Authenticated = {
@@ -33,20 +31,26 @@ export interface Unauthenticated extends Record<keyof Auth, null> {
   isAuthed: false;
 }
 
-export const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users);
-
-export const lucia = new Lucia(adapter, {
+export const lucia = new Lucia(new DbAdapter(), {
   sessionCookie: {
     attributes: { secure: Resource.Meta.app.stage === "production" },
     name: AUTH_SESSION_COOKIE_NAME,
   },
-  getUserAttributes: (attributes) => ({
-    oauth2UserId: attributes.oauth2UserId,
-    orgId: attributes.orgId,
-    name: attributes.name,
-    role: attributes.role,
-    email: attributes.email,
-    username: attributes.username,
+  getUserAttributes: ({ user, org }) => ({
+    data: {
+      id: user.id,
+      oauth2UserId: user.oauth2UserId,
+      orgId: user.orgId,
+      name: user.name,
+      role: user.role,
+      email: user.email,
+      username: user.username,
+    },
+    org: {
+      id: org.id,
+      slug: org.slug,
+      status: org.status,
+    },
   }),
   getSessionAttributes: (attributes) => ({
     orgId: attributes.orgId,
@@ -56,7 +60,7 @@ export const lucia = new Lucia(adapter, {
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
-    DatabaseUserAttributes: Omit<User, "id">;
+    DatabaseUserAttributes: { user: User; org: Organization };
     DatabaseSessionAttributes: Pick<Session, "orgId">;
   }
 }
@@ -88,7 +92,7 @@ export async function createSession(
     >;
 
     await tx
-      .insert(sessionsTokens)
+      .insert(sessionTokensTable)
       .values({
         sessionId: session.id,
         userId,
@@ -96,7 +100,7 @@ export async function createSession(
         ...sessionTokens,
       })
       .onConflictDoUpdate({
-        target: [sessionsTokens.sessionId],
+        target: [sessionTokensTable.sessionId],
         set: sessionTokens,
       });
 
