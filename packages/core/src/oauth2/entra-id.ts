@@ -8,7 +8,7 @@ import { useAuthenticated } from "../auth/context";
 import { AUTH_CALLBACK_PATH } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { HttpError, InternalServerError, NotFoundError } from "../errors/http";
-import { users } from "../users/sql";
+import { usersTable } from "../users/sql";
 import { useOauth2 } from "./context";
 
 import type { SessionTokens } from "../auth/sql";
@@ -95,9 +95,9 @@ export async function photo(userId: User["id"]): Promise<Response> {
 
   const user = await useTransaction((tx) =>
     tx
-      .select({ id: users.oauth2UserId })
-      .from(users)
-      .where(and(eq(users.id, userId), eq(users.orgId, org.id)))
+      .select({ id: usersTable.oauth2UserId })
+      .from(usersTable)
+      .where(and(eq(usersTable.id, userId), eq(usersTable.orgId, org.id)))
       .then((rows) => rows.at(0)),
   );
   if (!user) throw new NotFoundError("User not found");

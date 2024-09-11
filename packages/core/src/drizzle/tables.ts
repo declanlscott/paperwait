@@ -1,6 +1,6 @@
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 
-import { organizations } from "../organizations/sql";
+import { organizationsTable } from "../organizations/sql";
 import { generateId } from "../utils/helpers";
 import { id, timestamps } from "./columns";
 
@@ -20,7 +20,7 @@ export const orgIdColumns = {
   get orgId() {
     return id("org_id")
       .notNull()
-      .references(() => organizations.id);
+      .references(() => organizationsTable.id);
   },
 };
 

@@ -1,264 +1,282 @@
 import { relations } from "drizzle-orm";
 
-import { announcements } from "../announcements/sql";
-import { sessions } from "../auth/sql";
-import { comments } from "../comments/sql";
-import { orders } from "../orders/sql";
-import { organizations } from "../organizations/sql";
+import { announcementsTable } from "../announcements/sql";
+import { sessionsTable } from "../auth/sql";
+import { commentsTable } from "../comments/sql";
+import { ordersTable } from "../orders/sql";
+import { organizationsTable } from "../organizations/sql";
 import {
-  papercutAccountCustomerAuthorizations,
-  papercutAccountManagerAuthorizations,
-  papercutAccounts,
+  papercutAccountCustomerAuthorizationsTable,
+  papercutAccountManagerAuthorizationsTable,
+  papercutAccountsTable,
 } from "../papercut/sql";
-import { products } from "../products/sql";
+import { productsTable } from "../products/sql";
 import {
-  replicacheClientGroups,
-  replicacheClients,
-  replicacheClientViews,
+  replicacheClientGroupsTable,
+  replicacheClientsTable,
+  replicacheClientViewsTable,
 } from "../replicache/sql";
-import { rooms } from "../rooms/sql";
-import { users } from "../users/sql";
+import { roomsTable } from "../rooms/sql";
+import { usersTable } from "../users/sql";
 
-export const organizationRelations = relations(organizations, ({ many }) => ({
-  user: many(users, { relationName: "userOrg" }),
-  papercutAccount: many(papercutAccounts, {
-    relationName: "papercutAccountOrg",
+export const organizationRelations = relations(
+  organizationsTable,
+  ({ many }) => ({
+    user: many(usersTable, { relationName: "userOrg" }),
+    papercutAccount: many(papercutAccountsTable, {
+      relationName: "papercutAccountOrg",
+    }),
+    papercutAccountCustomerAuthorization: many(
+      papercutAccountCustomerAuthorizationsTable,
+      { relationName: "papercutAccountCustomerAuthorizationOrg" },
+    ),
+    papercutAccountManagerAuthorization: many(
+      papercutAccountManagerAuthorizationsTable,
+      { relationName: "papercutAccountManagerAuthorizationOrg" },
+    ),
+    room: many(roomsTable, { relationName: "roomOrg" }),
+    announcement: many(announcementsTable, { relationName: "announcementOrg" }),
+    product: many(productsTable, { relationName: "productOrg" }),
+    order: many(ordersTable, { relationName: "orderOrg" }),
+    comment: many(commentsTable, { relationName: "commentOrg" }),
   }),
-  papercutAccountCustomerAuthorization: many(
-    papercutAccountCustomerAuthorizations,
-    { relationName: "papercutAccountCustomerAuthorizationOrg" },
-  ),
-  papercutAccountManagerAuthorization: many(
-    papercutAccountManagerAuthorizations,
-    { relationName: "papercutAccountManagerAuthorizationOrg" },
-  ),
-  room: many(rooms, { relationName: "roomOrg" }),
-  announcement: many(announcements, { relationName: "announcementOrg" }),
-  product: many(products, { relationName: "productOrg" }),
-  order: many(orders, { relationName: "orderOrg" }),
-  comment: many(comments, { relationName: "commentOrg" }),
-}));
+);
 
-export const sessionRelations = relations(sessions, ({ one }) => ({
-  user: one(users, {
-    fields: [sessions.userId, sessions.orgId],
-    references: [users.id, users.orgId],
+export const sessionRelations = relations(sessionsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [sessionsTable.userId, sessionsTable.orgId],
+    references: [usersTable.id, usersTable.orgId],
     relationName: "sessionUser",
   }),
 }));
 
-export const userRelations = relations(users, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [users.orgId],
-    references: [organizations.id],
+export const userRelations = relations(usersTable, ({ one, many }) => ({
+  organization: one(organizationsTable, {
+    fields: [usersTable.orgId],
+    references: [organizationsTable.id],
     relationName: "userOrg",
   }),
-  session: many(sessions, { relationName: "sessionUser" }),
+  session: many(sessionsTable, { relationName: "sessionUser" }),
   papercutAccountCustomerAuthorization: many(
-    papercutAccountCustomerAuthorizations,
+    papercutAccountCustomerAuthorizationsTable,
     { relationName: "papercutAccountCustomerAuthorizationCustomer" },
   ),
   papercutAccountManagerAuthorization: many(
-    papercutAccountManagerAuthorizations,
+    papercutAccountManagerAuthorizationsTable,
     { relationName: "papercutAccountManagerAuthorizationManager" },
   ),
-  orderCustomer: many(orders, { relationName: "orderCustomer" }),
-  orderManager: many(orders, { relationName: "orderManager" }),
-  orderOperator: many(orders, { relationName: "orderOperator" }),
-  comment: many(comments, { relationName: "commentAuthor" }),
-  replicacheClientGroup: many(replicacheClientGroups, {
+  orderCustomer: many(ordersTable, { relationName: "orderCustomer" }),
+  orderManager: many(ordersTable, { relationName: "orderManager" }),
+  orderOperator: many(ordersTable, { relationName: "orderOperator" }),
+  comment: many(commentsTable, { relationName: "commentAuthor" }),
+  replicacheClientGroup: many(replicacheClientGroupsTable, {
     relationName: "userReplicacheClientGroup",
   }),
 }));
 
 export const papercutAccountRelations = relations(
-  papercutAccounts,
+  papercutAccountsTable,
   ({ one, many }) => ({
-    organization: one(organizations, {
-      fields: [papercutAccounts.orgId],
-      references: [organizations.id],
+    organization: one(organizationsTable, {
+      fields: [papercutAccountsTable.orgId],
+      references: [organizationsTable.id],
       relationName: "papercutAccountOrg",
     }),
     papercutAccountCustomerAuthorization: many(
-      papercutAccountCustomerAuthorizations,
+      papercutAccountCustomerAuthorizationsTable,
       { relationName: "papercutAccountCustomerAuthorizationPapercutAccount" },
     ),
     papercutAccountManagerAuthorization: many(
-      papercutAccountManagerAuthorizations,
+      papercutAccountManagerAuthorizationsTable,
       { relationName: "papercutAccountManagerAuthorizationPapercutAccount" },
     ),
-    order: many(orders, { relationName: "orderPapercutAccount" }),
+    order: many(ordersTable, { relationName: "orderPapercutAccount" }),
   }),
 );
 
 export const papercutAccountCustomerAuthorizationRelations = relations(
-  papercutAccountCustomerAuthorizations,
+  papercutAccountCustomerAuthorizationsTable,
   ({ one }) => ({
-    organization: one(organizations, {
-      fields: [papercutAccountCustomerAuthorizations.orgId],
-      references: [organizations.id],
+    organization: one(organizationsTable, {
+      fields: [papercutAccountCustomerAuthorizationsTable.orgId],
+      references: [organizationsTable.id],
       relationName: "papercutAccountCustomerAuthorizationOrg",
     }),
-    customer: one(users, {
-      fields: [papercutAccountCustomerAuthorizations.customerId],
-      references: [users.id],
+    customer: one(usersTable, {
+      fields: [papercutAccountCustomerAuthorizationsTable.customerId],
+      references: [usersTable.id],
       relationName: "papercutAccountCustomerAuthorizationCustomer",
     }),
-    papercutAccount: one(papercutAccounts, {
-      fields: [papercutAccountCustomerAuthorizations.papercutAccountId],
-      references: [papercutAccounts.id],
+    papercutAccount: one(papercutAccountsTable, {
+      fields: [papercutAccountCustomerAuthorizationsTable.papercutAccountId],
+      references: [papercutAccountsTable.id],
       relationName: "papercutAccountCustomerAuthorizationPapercutAccount",
     }),
   }),
 );
 
 export const papercutAccountManagerAuthorizationRelations = relations(
-  papercutAccountManagerAuthorizations,
+  papercutAccountManagerAuthorizationsTable,
   ({ one }) => ({
-    organization: one(organizations, {
-      fields: [papercutAccountManagerAuthorizations.orgId],
-      references: [organizations.id],
+    organization: one(organizationsTable, {
+      fields: [papercutAccountManagerAuthorizationsTable.orgId],
+      references: [organizationsTable.id],
       relationName: "papercutAccountManagerAuthorizationOrg",
     }),
-    manager: one(users, {
-      fields: [papercutAccountManagerAuthorizations.managerId],
-      references: [users.id],
+    manager: one(usersTable, {
+      fields: [papercutAccountManagerAuthorizationsTable.managerId],
+      references: [usersTable.id],
       relationName: "papercutAccountManagerAuthorizationManager",
     }),
-    papercutAccount: one(papercutAccounts, {
-      fields: [papercutAccountManagerAuthorizations.papercutAccountId],
-      references: [papercutAccounts.id],
+    papercutAccount: one(papercutAccountsTable, {
+      fields: [papercutAccountManagerAuthorizationsTable.papercutAccountId],
+      references: [papercutAccountsTable.id],
       relationName: "papercutAccountManagerAuthorizationPapercutAccount",
     }),
   }),
 );
 
-export const roomRelations = relations(rooms, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [rooms.orgId],
-    references: [organizations.id],
+export const roomRelations = relations(roomsTable, ({ one, many }) => ({
+  organization: one(organizationsTable, {
+    fields: [roomsTable.orgId],
+    references: [organizationsTable.id],
     relationName: "roomOrg",
   }),
-  announcement: many(announcements, { relationName: "announcementRoom" }),
-  product: many(products, { relationName: "productRoom" }),
+  announcement: many(announcementsTable, { relationName: "announcementRoom" }),
+  product: many(productsTable, { relationName: "productRoom" }),
 }));
 
-export const announcementRelations = relations(announcements, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [announcements.orgId],
-    references: [organizations.id],
-    relationName: "announcementOrg",
+export const announcementRelations = relations(
+  announcementsTable,
+  ({ one }) => ({
+    organization: one(organizationsTable, {
+      fields: [announcementsTable.orgId],
+      references: [organizationsTable.id],
+      relationName: "announcementOrg",
+    }),
+    room: one(roomsTable, {
+      fields: [announcementsTable.roomId],
+      references: [roomsTable.id],
+      relationName: "announcementRoom",
+    }),
   }),
-  room: one(rooms, {
-    fields: [announcements.roomId],
-    references: [rooms.id],
-    relationName: "announcementRoom",
-  }),
-}));
+);
 
-export const productRelations = relations(products, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [products.orgId],
-    references: [organizations.id],
+export const productRelations = relations(productsTable, ({ one, many }) => ({
+  organization: one(organizationsTable, {
+    fields: [productsTable.orgId],
+    references: [organizationsTable.id],
     relationName: "productOrg",
   }),
-  room: one(rooms, {
-    fields: [products.roomId],
-    references: [rooms.id],
+  room: one(roomsTable, {
+    fields: [productsTable.roomId],
+    references: [roomsTable.id],
     relationName: "productRoom",
   }),
-  order: many(orders, { relationName: "orderProduct" }),
+  order: many(ordersTable, { relationName: "orderProduct" }),
 }));
 
-export const orderRelations = relations(orders, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [orders.orgId],
-    references: [organizations.id],
+export const orderRelations = relations(ordersTable, ({ one, many }) => ({
+  organization: one(organizationsTable, {
+    fields: [ordersTable.orgId],
+    references: [organizationsTable.id],
     relationName: "orderOrg",
   }),
-  customer: one(users, {
-    fields: [orders.customerId, orders.orgId],
-    references: [users.id, users.orgId],
+  customer: one(usersTable, {
+    fields: [ordersTable.customerId, ordersTable.orgId],
+    references: [usersTable.id, usersTable.orgId],
     relationName: "orderCustomer",
   }),
-  manager: one(users, {
-    fields: [orders.managerId],
-    references: [users.id],
+  manager: one(usersTable, {
+    fields: [ordersTable.managerId],
+    references: [usersTable.id],
     relationName: "orderManager",
   }),
-  operator: one(users, {
-    fields: [orders.operatorId],
-    references: [users.id],
+  operator: one(usersTable, {
+    fields: [ordersTable.operatorId],
+    references: [usersTable.id],
     relationName: "orderOperator",
   }),
-  product: one(products, {
-    fields: [orders.productId],
-    references: [products.id],
+  product: one(productsTable, {
+    fields: [ordersTable.productId],
+    references: [productsTable.id],
     relationName: "orderProduct",
   }),
-  papercutAccount: one(papercutAccounts, {
-    fields: [orders.papercutAccountId],
-    references: [papercutAccounts.id],
+  papercutAccount: one(papercutAccountsTable, {
+    fields: [ordersTable.papercutAccountId],
+    references: [papercutAccountsTable.id],
     relationName: "orderPapercutAccount",
   }),
-  comment: many(comments, { relationName: "commentOrder" }),
+  comment: many(commentsTable, { relationName: "commentOrder" }),
 }));
 
-export const commentRelations = relations(comments, ({ one }) => ({
-  organization: one(organizations, {
-    fields: [comments.orgId],
-    references: [organizations.id],
+export const commentRelations = relations(commentsTable, ({ one }) => ({
+  organization: one(organizationsTable, {
+    fields: [commentsTable.orgId],
+    references: [organizationsTable.id],
     relationName: "commentOrg",
   }),
-  order: one(orders, {
-    fields: [comments.orderId],
-    references: [orders.id],
+  order: one(ordersTable, {
+    fields: [commentsTable.orderId],
+    references: [ordersTable.id],
     relationName: "commentOrder",
   }),
-  author: one(users, {
-    fields: [comments.authorId],
-    references: [users.id],
+  author: one(usersTable, {
+    fields: [commentsTable.authorId],
+    references: [usersTable.id],
     relationName: "commentAuthor",
   }),
 }));
 
 export const replicacheClientGroupRelations = relations(
-  replicacheClientGroups,
+  replicacheClientGroupsTable,
   ({ one, many }) => ({
-    user: one(users, {
-      fields: [replicacheClientGroups.userId, replicacheClientGroups.orgId],
-      references: [users.id, users.orgId],
+    user: one(usersTable, {
+      fields: [
+        replicacheClientGroupsTable.userId,
+        replicacheClientGroupsTable.orgId,
+      ],
+      references: [usersTable.id, usersTable.orgId],
       relationName: "userReplicacheClientGroup",
     }),
-    replicacheClient: many(replicacheClients, {
+    replicacheClient: many(replicacheClientsTable, {
       relationName: "replicacheClientGroup",
     }),
-    replicacheClientView: many(replicacheClientViews, {
+    replicacheClientView: many(replicacheClientViewsTable, {
       relationName: "replicacheCvrGroup",
     }),
   }),
 );
 
 export const replicacheClientRelations = relations(
-  replicacheClients,
+  replicacheClientsTable,
   ({ one }) => ({
-    replicacheClientGroup: one(replicacheClientGroups, {
-      fields: [replicacheClients.clientGroupId, replicacheClients.orgId],
-      references: [replicacheClientGroups.id, replicacheClientGroups.orgId],
+    replicacheClientGroup: one(replicacheClientGroupsTable, {
+      fields: [
+        replicacheClientsTable.clientGroupId,
+        replicacheClientsTable.orgId,
+      ],
+      references: [
+        replicacheClientGroupsTable.id,
+        replicacheClientGroupsTable.orgId,
+      ],
       relationName: "replicacheClientGroup",
     }),
   }),
 );
 
 export const replicacheClientViewRecordRelations = relations(
-  replicacheClientViews,
+  replicacheClientViewsTable,
   ({ one }) => ({
-    replicacheClientGroup: one(replicacheClientGroups, {
+    replicacheClientGroup: one(replicacheClientGroupsTable, {
       fields: [
-        replicacheClientViews.clientGroupId,
-        replicacheClientViews.orgId,
+        replicacheClientViewsTable.clientGroupId,
+        replicacheClientViewsTable.orgId,
       ],
-      references: [replicacheClientGroups.id, replicacheClientGroups.orgId],
+      references: [
+        replicacheClientGroupsTable.id,
+        replicacheClientGroupsTable.orgId,
+      ],
       relationName: "replicacheCvrGroup",
     }),
   }),
