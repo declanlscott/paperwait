@@ -2,10 +2,10 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 
 import * as Auth from "../auth";
 import { useAuthenticated } from "../auth/context";
-import { enforceRbac, mutationRbac } from "../auth/rbac";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { ForbiddenError } from "../errors/http";
+import { AccessDenied } from "../errors/application";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
 import * as Users from "../users";
@@ -45,7 +45,10 @@ export const update = fn(
   async (values) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.updateOrganization, ForbiddenError);
+    enforceRbac(user, mutationRbac.updateOrganization, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "update organization mutator")],
+    });
 
     const usersToLogout: Awaited<ReturnType<typeof Users.fromRoles>> = [];
     if (values.status === "suspended") {

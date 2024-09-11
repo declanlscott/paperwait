@@ -1,4 +1,4 @@
-import { UnauthorizedError } from "../errors/http";
+import { Unauthenticated as UnauthenticatedError } from "../errors/application";
 import { createContext } from "../utils/context";
 
 import type { Authenticated, Unauthenticated } from ".";
@@ -25,7 +25,7 @@ export const withAuth = <
 export function assertAuth() {
   const auth = useAuth();
 
-  if (!auth.isAuthed) throw new UnauthorizedError();
+  if (!auth.isAuthed) throw new UnauthenticatedError();
 
   return auth;
 }

@@ -2,11 +2,6 @@ import { eq } from "drizzle-orm";
 
 import { sessionTokensTable } from "../auth/sql";
 import { useTransaction } from "../drizzle/transaction";
-import {
-  InternalServerError,
-  NotFoundError,
-  NotImplementedError,
-} from "../errors/http";
 import * as EntraId from "./entra-id";
 import * as Google from "./google";
 import { ENTRA_ID, GOOGLE } from "./shared";
@@ -37,7 +32,7 @@ export const fromSessionId = async (
       )
       .where(eq(sessionTokensTable.sessionId, sessionId))
       .then((rows) => rows.at(0));
-    if (!provider) throw new NotFoundError("Provider tokens not found");
+    if (!provider) throw new Error("Provider tokens not found");
 
     const expired =
       Date.now() > provider.accessTokenExpiresAt.getTime() - 10_000;
@@ -50,7 +45,7 @@ export const fromSessionId = async (
       };
 
     if (!provider.refreshToken)
-      throw new InternalServerError("Access token expired, no refresh token");
+      throw new Error("Access token expired, no refresh token");
 
     let refreshed: Oauth2Tokens;
     switch (provider.variant) {
@@ -63,7 +58,7 @@ export const fromSessionId = async (
       default: {
         provider.variant satisfies never;
 
-        throw new NotImplementedError(
+        throw new Error(
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
           `Provider variant "${provider.variant}" not implemented`,
         );

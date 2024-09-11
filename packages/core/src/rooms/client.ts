@@ -1,8 +1,5 @@
-import { enforceRbac, mutationRbac } from "../auth/rbac";
-import {
-  EntityNotFoundError,
-  InvalidUserRoleError,
-} from "../errors/application";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
+import { AccessDenied, EntityNotFound } from "../errors/application";
 import { productsTableName } from "../products/shared";
 import { optimisticMutator } from "../utils/helpers";
 import {
@@ -19,17 +16,25 @@ import type { Room } from "./sql";
 
 export const create = optimisticMutator(
   createRoomMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.createRoom, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.createRoom, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "create room mutator")],
+    }),
   () => async (tx, values) => tx.set(`${roomsTableName}/${values.id}`, values),
 );
 
 export const update = optimisticMutator(
   updateRoomMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.updateRoom, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.updateRoom, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "update room mutator")],
+    }),
   () =>
     async (tx, { id, ...values }) => {
       const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
-      if (!prev) throw new EntityNotFoundError(roomsTableName, id);
+      if (!prev) throw new EntityNotFound(roomsTableName, id);
 
       const next = {
         ...prev,
@@ -42,7 +47,11 @@ export const update = optimisticMutator(
 
 export const delete_ = optimisticMutator(
   deleteRoomMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.deleteRoom, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.deleteRoom, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "delete room mutator")],
+    }),
   ({ user }) =>
     async (tx, { id, ...values }) => {
       // Set all products in the room to draft
@@ -53,7 +62,7 @@ export const delete_ = optimisticMutator(
       await Promise.all(
         products.map(async (p) => {
           const prev = await tx.get<Product>(`${productsTableName}/${p.id}`);
-          if (!prev) throw new EntityNotFoundError(productsTableName, p.id);
+          if (!prev) throw new EntityNotFound(productsTableName, p.id);
 
           const next = {
             ...prev,
@@ -66,7 +75,7 @@ export const delete_ = optimisticMutator(
 
       if (enforceRbac(user, ["administrator"])) {
         const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
-        if (!prev) throw new EntityNotFoundError(roomsTableName, id);
+        if (!prev) throw new EntityNotFound(roomsTableName, id);
 
         const next = {
           ...prev,
@@ -77,16 +86,20 @@ export const delete_ = optimisticMutator(
       }
 
       const success = await tx.del(`${roomsTableName}/${id}`);
-      if (!success) throw new EntityNotFoundError(roomsTableName, id);
+      if (!success) throw new EntityNotFound(roomsTableName, id);
     },
 );
 
 export const restore = optimisticMutator(
   restoreRoomMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.restoreRoom, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.restoreRoom, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "restore room mutator")],
+    }),
   () => async (tx, values) => {
     const prev = await tx.get<Room>(`${roomsTableName}/${values.id}`);
-    if (!prev) throw new EntityNotFoundError(roomsTableName, values.id);
+    if (!prev) throw new EntityNotFound(roomsTableName, values.id);
 
     const next = {
       ...prev,

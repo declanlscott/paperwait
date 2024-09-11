@@ -1,10 +1,10 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
-import { enforceRbac, mutationRbac } from "../auth/rbac";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { ForbiddenError } from "../errors/http";
+import { AccessDenied } from "../errors/application";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
 import { fn } from "../utils/helpers";
@@ -22,7 +22,10 @@ export const create = fn(
   async (values) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.createAnnouncement, ForbiddenError);
+    enforceRbac(user, mutationRbac.createAnnouncement, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "create announcement mutator")],
+    });
 
     return useTransaction(async (tx) => {
       await tx.insert(announcementsTable).values(values);
@@ -69,7 +72,10 @@ export const update = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.updateAnnouncement, ForbiddenError);
+    enforceRbac(user, mutationRbac.updateAnnouncement, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "update announcement mutator")],
+    });
 
     return useTransaction(async (tx) => {
       await tx
@@ -94,7 +100,10 @@ export const delete_ = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.deleteAnnouncement, ForbiddenError);
+    enforceRbac(user, mutationRbac.deleteAnnouncement, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "delete announcement mutator")],
+    });
 
     return useTransaction(async (tx) => {
       await tx

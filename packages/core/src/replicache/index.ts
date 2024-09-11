@@ -5,7 +5,13 @@ import * as v from "valibot";
 
 import { useAuthenticated } from "../auth/context";
 import { serializable, useTransaction } from "../drizzle/transaction";
-import { BadRequestError, HttpError, UnauthorizedError } from "../errors/http";
+import { HttpError } from "../errors/http";
+import {
+  BadRequest,
+  ClientStateNotFound,
+  MutationConflict,
+  Unauthorized,
+} from "../errors/replicache";
 import { createContext } from "../utils/context";
 import { fn } from "../utils/helpers";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
@@ -30,10 +36,9 @@ import {
 
 import type {
   ClientGroupID,
-  ClientStateNotFoundResponse,
   PatchOperation,
-  PullResponseOKV1,
-  VersionNotSupportedResponse,
+  PullResponseV1,
+  PushResponse,
 } from "replicache";
 import type { OmitTimestamps } from "../drizzle/columns";
 import type { Channel } from "../realtime";
@@ -156,31 +161,18 @@ type PullTransactionResult = {
   };
 } | null;
 
-export type PullResult =
-  | {
-      variant: "success";
-      response: PullResponseOKV1;
-    }
-  | {
-      variant: "error";
-      response: ClientStateNotFoundResponse | VersionNotSupportedResponse;
-    };
-
 /**
- * Implements pull algorithm from [Replicache docs](https://doc.replicache.dev/strategies/row-version#pull).
+ * Implements the row version strategy pull algorithm from the [Replicache docs](https://doc.replicache.dev/strategies/row-version#pull).
  */
 export const pull = fn(
   pullRequestSchema,
-  async (pullRequest): Promise<PullResult> => {
+  async (pullRequest): Promise<PullResponseV1> => {
     const { user } = useAuthenticated();
 
     if (pullRequest.pullVersion !== 1)
       return {
-        variant: "error",
-        response: {
-          error: "VersionNotSupported",
-          versionType: "pull",
-        },
+        error: "VersionNotSupported",
+        versionType: "pull",
       };
 
     const cookieOrder = pullRequest.cookie?.order ?? 0;
@@ -223,7 +215,9 @@ export const pull = fn(
 
       // 5: Verify requesting client group owns requested client
       if (baseClientGroup.userId !== user.id)
-        throw new UnauthorizedError("User does not own client group");
+        throw new Unauthorized(
+          `User "${user.id}" does not own client group "${baseClientGroup.id}"`,
+        );
 
       // 6: Read all id/version pairs from the database that should be in the client view
       // 7: Read all clients in the client group
@@ -291,21 +285,7 @@ export const pull = fn(
 
       await Promise.all([
         // 14: Write client group record
-        tx
-          .insert(replicacheClientGroupsTable)
-          .values(nextClientGroup)
-          .onConflictDoUpdate({
-            target: [
-              replicacheClientGroupsTable.id,
-              replicacheClientGroupsTable.orgId,
-            ],
-            set: {
-              orgId: nextClientGroup.orgId,
-              userId: nextClientGroup.userId,
-              cvrVersion: nextClientGroup.cvrVersion,
-              updatedAt: sql`now()`,
-            },
-          }),
+        putClientGroup(nextClientGroup),
         // 16-17: Generate client view record id, store client view record
         tx.insert(replicacheClientViewsTable).values({
           clientGroupId: baseClientGroup.id,
@@ -344,12 +324,9 @@ export const pull = fn(
     // 10: If transaction result returns empty diff, return no-op
     if (!result)
       return {
-        variant: "success",
-        response: {
-          patch: [],
-          cookie: pullRequest.cookie,
-          lastMutationIDChanges: {},
-        },
+        patch: [],
+        cookie: pullRequest.cookie,
+        lastMutationIDChanges: {},
       };
 
     // 18(i): Build patch
@@ -374,35 +351,21 @@ export const pull = fn(
     const lastMutationIDChanges = result.clients;
 
     return {
-      variant: "success",
-      response: {
-        patch,
-        cookie,
-        lastMutationIDChanges,
-      },
+      patch,
+      cookie,
+      lastMutationIDChanges,
     };
   },
-  { Error: BadRequestError, message: "Failed to parse pull request" },
+  { Error: BadRequest, args: ["Failed to parse pull request"] },
 );
-
-export type PushResult =
-  | { variant: "success" }
-  | {
-      variant: "error";
-      response: ClientStateNotFoundResponse | VersionNotSupportedResponse;
-    };
-
 /**
- * Implements push algorithm from [Replicache docs](https://doc.replicache.dev/strategies/row-version#push).
+ * Implements the row version strategy push algorithm from the [Replicache docs](https://doc.replicache.dev/strategies/row-version#push).
  */
 export const push = fn(
   pushRequestSchema,
-  async (pushRequest): Promise<PushResult> => {
+  async (pushRequest): Promise<PushResponse | null> => {
     if (pushRequest.pushVersion !== 1)
-      return {
-        variant: "error",
-        response: { error: "VersionNotSupported", versionType: "push" },
-      };
+      return { error: "VersionNotSupported", versionType: "push" };
 
     const context = createContext<{ errorMode: boolean }>();
 
@@ -412,11 +375,16 @@ export const push = fn(
         await context.with({ errorMode: false }, async () =>
           processMutation(mutation),
         );
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
+
         console.log(
-          `Encountered error during push on mutation "${mutation.id}" - retrying in error mode`,
+          `Encountered error during push on mutation "${mutation.id}"`,
         );
+
+        if (error instanceof ClientStateNotFound) return { error: error.name };
+
+        console.log(`Retrying mutation "${mutation.id}" in error mode`);
 
         // retry in error mode
         await context.with({ errorMode: true }, async () =>
@@ -448,8 +416,8 @@ export const push = fn(
 
           // 4: Verify requesting user owns the client group
           if (clientGroup.userId !== user.id)
-            throw new Error(
-              `User ${user.id} does not own client group ${clientGroupId}`,
+            throw new Unauthorized(
+              `User "${user.id}" does not own client group "${clientGroupId}"`,
             );
 
           // 5: Get client
@@ -464,9 +432,12 @@ export const push = fn(
 
           // 6: Verify requesting client group owns the client
           if (client.clientGroupId !== clientGroupId)
-            throw new Error(
+            throw new Unauthorized(
               `Client ${mutation.clientID} does not belong to client group ${clientGroupId}`,
             );
+
+          if (client.lastMutationId === 0 && mutation.id > 1)
+            throw new ClientStateNotFound();
 
           // 7: Next mutation ID
           const nextMutationId = client.lastMutationId + 1;
@@ -479,7 +450,7 @@ export const push = fn(
 
           // 9: Rollback and throw if mutation is from the future
           if (mutation.id > nextMutationId)
-            throw new Error(
+            throw new MutationConflict(
               `Mutation "${mutation.id}" is from the future - aborting`,
             );
 
@@ -521,9 +492,9 @@ export const push = fn(
         }),
     );
 
-    return { variant: "success" };
+    return null;
   },
-  { Error: BadRequestError, message: "Failed to parse push request" },
+  { Error: BadRequest, args: ["Failed to parse push request"] },
 );
 
 export * from "./shared";

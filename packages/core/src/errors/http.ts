@@ -1,5 +1,19 @@
+export type HttpErrorName =
+  | "HttpError"
+  | "BadRequest"
+  | "Unauthorized"
+  | "Forbidden"
+  | "NotFound"
+  | "MethodNotAllowed"
+  | "RequestTimeout"
+  | "Conflict"
+  | "TooManyRequests"
+  | "InternalServerError"
+  | "NotImplemented";
+
 export class HttpError extends Error {
-  readonly statusCode: number;
+  public name: HttpErrorName;
+  public readonly statusCode: number;
 
   constructor(message: string, statusCode: number) {
     super(message);
@@ -8,72 +22,92 @@ export class HttpError extends Error {
   }
 }
 
-export class BadRequestError extends HttpError {
+export class BadRequest extends HttpError {
+  public name: Extract<HttpErrorName, "BadRequest">;
+
   constructor(message = "Bad request") {
     super(message, 400);
-    this.name = "BadRequestError";
+    this.name = "BadRequest";
   }
 }
 
-export class UnauthorizedError extends HttpError {
+export class Unauthorized extends HttpError {
+  public name: Extract<HttpErrorName, "Unauthorized">;
+
   constructor(message = "Unauthorized") {
     super(message, 401);
-    this.name = "UnauthorizedError";
+    this.name = "Unauthorized";
   }
 }
 
-export class ForbiddenError extends HttpError {
+export class Forbidden extends HttpError {
+  public name: Extract<HttpErrorName, "Forbidden">;
+
   constructor(message = "Forbidden") {
     super(message, 403);
-    this.name = "ForbiddenError";
+    this.name = "Forbidden";
   }
 }
 
-export class NotFoundError extends HttpError {
+export class NotFound extends HttpError {
+  public name: Extract<HttpErrorName, "NotFound">;
+
   constructor(message = "Not found") {
     super(message, 404);
-    this.name = "NotFoundError";
+    this.name = "NotFound";
   }
 }
 
-export class MethodNotAllowedError extends HttpError {
+export class MethodNotAllowed extends HttpError {
+  public name: Extract<HttpErrorName, "MethodNotAllowed">;
+
   constructor(message = "Method not allowed") {
     super(message, 405);
-    this.name = "MethodNotAllowedError";
+    this.name = "MethodNotAllowed";
   }
 }
 
-export class RequestTimeoutError extends HttpError {
+export class RequestTimeout extends HttpError {
+  public name: Extract<HttpErrorName, "RequestTimeout">;
+
   constructor(message = "Request timeout") {
     super(message, 408);
-    this.name = "RequestTimeoutError";
+    this.name = "RequestTimeout";
   }
 }
 
-export class ConflictError extends HttpError {
+export class Conflict extends HttpError {
+  public name: Extract<HttpErrorName, "Conflict">;
+
   constructor(message = "Conflict") {
     super(message, 409);
-    this.name = "ConflictError";
+    this.name = "Conflict";
   }
 }
 
-export class TooManyRequestsError extends HttpError {
+export class TooManyRequests extends HttpError {
+  public name: Extract<HttpErrorName, "TooManyRequests">;
+
   constructor(message = "Too many requests") {
     super(message, 429);
-    this.name = "TooManyRequestsError";
+    this.name = "TooManyRequests";
   }
 }
 
 export class InternalServerError extends HttpError {
+  public name: Extract<HttpErrorName, "InternalServerError">;
+
   constructor(message = "Internal server error") {
     super(message, 500);
     this.name = "InternalServerError";
   }
 }
 
-export class NotImplementedError extends HttpError {
+export class NotImplemented extends HttpError {
+  public name: Extract<HttpErrorName, "NotImplemented">;
+
   constructor(message = "Not implemented") {
     super(message, 501);
-    this.name = "NotImplementedError";
+    this.name = "NotImplemented";
   }
 }

@@ -3,11 +3,11 @@ import * as R from "remeda";
 
 import * as Auth from "../auth";
 import { useAuthenticated } from "../auth/context";
-import { enforceRbac, mutationRbac } from "../auth/rbac";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { ForbiddenError } from "../errors/http";
-import { NonExhaustiveValueError } from "../errors/misc";
+import { AccessDenied } from "../errors/application";
+import { NonExhaustiveValue } from "../errors/misc";
 import { ordersTable } from "../orders/sql";
 import {
   papercutAccountManagerAuthorizationsTable,
@@ -60,7 +60,7 @@ export async function metadata() {
       case "customer":
         return baseQuery.where(isNull(usersTable.deletedAt));
       default:
-        throw new NonExhaustiveValueError(user.role);
+        throw new NonExhaustiveValue(user.role);
     }
   });
 }
@@ -153,7 +153,10 @@ export const updateRole = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.updateUserRole, ForbiddenError);
+    enforceRbac(user, mutationRbac.updateUserRole, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "update user role mutator")],
+    });
 
     return useTransaction(async (tx) => {
       await tx
@@ -173,22 +176,27 @@ export const delete_ = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    const isRoleAuthorized = enforceRbac(user, mutationRbac.deleteUser);
-    if (!isRoleAuthorized && user.id !== id) throw new ForbiddenError();
+    if (
+      id === user.id ||
+      enforceRbac(user, mutationRbac.deleteUser, {
+        Error: AccessDenied,
+        args: [rbacErrorMessage(user, "delete user mutator")],
+      })
+    ) {
+      return useTransaction(async (tx) => {
+        await tx
+          .update(usersTable)
+          .set(values)
+          .where(and(eq(usersTable.id, id), eq(usersTable.orgId, org.id)));
 
-    return useTransaction(async (tx) => {
-      await tx
-        .update(usersTable)
-        .set(values)
-        .where(and(eq(usersTable.id, id), eq(usersTable.orgId, org.id)));
-
-      await afterTransaction(() =>
-        Promise.all([
-          Auth.invalidateUserSessions(id),
-          Replicache.poke([Realtime.formatChannel("org", org.id)]),
-        ]),
-      );
-    });
+        await afterTransaction(() =>
+          Promise.all([
+            Auth.invalidateUserSessions(id),
+            Replicache.poke([Realtime.formatChannel("org", org.id)]),
+          ]),
+        );
+      });
+    }
   },
 );
 

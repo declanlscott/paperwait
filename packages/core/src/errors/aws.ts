@@ -1,14 +1,15 @@
 import * as v from "valibot";
 
-import { HttpError } from "./http";
-
 export { NoSuchKey } from "@aws-sdk/client-s3";
 export { ParameterNotFound, ParameterAlreadyExists } from "@aws-sdk/client-ssm";
 
-export class ParametersSecretsExtensionHttpError extends HttpError {
-  constructor(...args: ConstructorParameters<typeof HttpError>) {
-    super(...args);
+export class ParametersSecretsExtensionHttpError extends Error {
+  public readonly statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
     this.name = "ParametersSecretsExtensionHttpError";
+    this.statusCode = statusCode;
   }
 }
 

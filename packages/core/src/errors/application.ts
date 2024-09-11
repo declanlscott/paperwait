@@ -1,51 +1,54 @@
+export type ApplicationErrorName =
+  | "ApplicationError"
+  | "Unauthenticated"
+  | "EntityNotFound"
+  | "AccessDenied"
+  | "MissingContextProvider";
+
 export class ApplicationError extends Error {
+  public name: ApplicationErrorName;
+
   constructor(message: string) {
     super(message);
     this.name = "ApplicationError";
   }
 }
 
-export class UnauthenticatedError extends ApplicationError {
-  constructor(message = "Unauthenticated.") {
+export class Unauthenticated extends ApplicationError {
+  public name: Extract<ApplicationErrorName, "Unauthenticated">;
+
+  constructor(message = "Unauthenticated") {
     super(message);
-    this.name = "UnauthenticatedError";
+    this.name = "Unauthenticated";
   }
 }
 
-export class InvalidMutationError extends ApplicationError {
-  constructor(message = "Invalid mutation.") {
-    super(message);
-    this.name = "InvalidMutationError";
-  }
-}
+export class EntityNotFound extends ApplicationError {
+  public name: Extract<ApplicationErrorName, "EntityNotFound">;
 
-export class EntityNotFoundError extends InvalidMutationError {
   constructor(domain?: string, id?: string | number) {
     super(`Entity "${id}" not found in "${domain}".`);
-    this.name = "EntityNotFoundError";
+    this.name = "EntityNotFound";
   }
 }
 
-export class InvalidUserRoleError extends InvalidMutationError {
-  constructor() {
-    super("Invalid user role, access denied.");
-    this.name = "InvalidUserRoleError";
+export class AccessDenied extends ApplicationError {
+  public name: Extract<ApplicationErrorName, "AccessDenied">;
+
+  constructor(message = "Access denied") {
+    super(message);
+    this.name = "AccessDenied";
   }
 }
 
-export class AccessDeniedError extends InvalidMutationError {
-  constructor() {
-    super("Access denied.");
-    this.name = "AccessDeniedError";
-  }
-}
+export class MissingContextProvider extends ApplicationError {
+  public name: Extract<ApplicationErrorName, "MissingContextProvider">;
 
-export class MissingContextProviderError extends ApplicationError {
   constructor(context?: string) {
     const message = context
       ? `"use${context}" must be used within a "${context}Provider."`
       : "This hook must be used within a corresponding context provider.";
     super(message);
-    this.name = "MissingContextProviderError";
+    this.name = "MissingContextProvider";
   }
 }

@@ -1,8 +1,5 @@
-import { enforceRbac, mutationRbac } from "../auth/rbac";
-import {
-  EntityNotFoundError,
-  InvalidUserRoleError,
-} from "../errors/application";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
+import { AccessDenied, EntityNotFound } from "../errors/application";
 import { optimisticMutator } from "../utils/helpers";
 import {
   createProductMutationArgsSchema,
@@ -16,18 +13,26 @@ import type { Product } from "./sql";
 
 export const create = optimisticMutator(
   createProductMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.createProduct, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.createProduct, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "create product mutator")],
+    }),
   () => async (tx, values) =>
     tx.set(`${productsTableName}/${values.id}`, values),
 );
 
 export const update = optimisticMutator(
   updateProductMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.updateProduct, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.updateProduct, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "update product mutator")],
+    }),
   () =>
     async (tx, { id, ...values }) => {
       const prev = await tx.get<Product>(`${productsTableName}/${id}`);
-      if (!prev) throw new EntityNotFoundError(productsTableName, id);
+      if (!prev) throw new EntityNotFound(productsTableName, id);
 
       const next = {
         ...prev,
@@ -40,12 +45,16 @@ export const update = optimisticMutator(
 
 export const delete_ = optimisticMutator(
   deleteProductMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.deleteProduct, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.deleteProduct, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "delete product mutator")],
+    }),
   ({ user }) =>
     async (tx, values) => {
       if (enforceRbac(user, ["administrator"])) {
         const prev = await tx.get<Product>(`${productsTableName}/${values.id}`);
-        if (!prev) throw new EntityNotFoundError(productsTableName, values.id);
+        if (!prev) throw new EntityNotFound(productsTableName, values.id);
 
         const next = {
           ...prev,
@@ -56,7 +65,7 @@ export const delete_ = optimisticMutator(
       }
 
       const success = await tx.del(`${productsTableName}/${values.id}`);
-      if (!success) throw new EntityNotFoundError(productsTableName, values.id);
+      if (!success) throw new EntityNotFound(productsTableName, values.id);
     },
 );
 

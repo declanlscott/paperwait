@@ -1,8 +1,5 @@
-import { enforceRbac, mutationRbac } from "../auth/rbac";
-import {
-  EntityNotFoundError,
-  InvalidUserRoleError,
-} from "../errors/application";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
+import { AccessDenied, EntityNotFound } from "../errors/application";
 import { optimisticMutator } from "../utils/helpers";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
@@ -21,11 +18,15 @@ import type {
 export const createAccountManagerAuthorization = optimisticMutator(
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
   (user) =>
-    enforceRbac(
-      user,
-      mutationRbac.createPapercutAccountManagerAuthorization,
-      InvalidUserRoleError,
-    ),
+    enforceRbac(user, mutationRbac.createPapercutAccountManagerAuthorization, {
+      Error: AccessDenied,
+      args: [
+        rbacErrorMessage(
+          user,
+          "create papercut account manager authorization mutator",
+        ),
+      ],
+    }),
   () => async (tx, values) =>
     tx.set(
       `${papercutAccountManagerAuthorizationsTableName}/${values.id}`,
@@ -36,14 +37,17 @@ export const createAccountManagerAuthorization = optimisticMutator(
 export const deleteAccount = optimisticMutator(
   deletePapercutAccountMutationArgsSchema,
   (user) =>
-    enforceRbac(user, mutationRbac.deletePapercutAccount, InvalidUserRoleError),
+    enforceRbac(user, mutationRbac.deletePapercutAccount, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "delete papercut account mutator")],
+    }),
   ({ user }) =>
     async (tx, { id, ...values }) => {
       if (enforceRbac(user, ["administrator"])) {
         const prev = await tx.get<PapercutAccount>(
           `${papercutAccountsTableName}/${id}`,
         );
-        if (!prev) throw new EntityNotFoundError(papercutAccountsTableName, id);
+        if (!prev) throw new EntityNotFound(papercutAccountsTableName, id);
 
         const next = {
           ...prev,
@@ -54,19 +58,22 @@ export const deleteAccount = optimisticMutator(
       }
 
       const success = await tx.del(`${papercutAccountsTableName}/${id}`);
-      if (!success)
-        throw new EntityNotFoundError(papercutAccountsTableName, id);
+      if (!success) throw new EntityNotFound(papercutAccountsTableName, id);
     },
 );
 
 export const deleteAccountManagerAuthorization = optimisticMutator(
   deletePapercutAccountManagerAuthorizationMutationArgsSchema,
   (user) =>
-    enforceRbac(
-      user,
-      mutationRbac.deletePapercutAccountManagerAuthorization,
-      InvalidUserRoleError,
-    ),
+    enforceRbac(user, mutationRbac.deletePapercutAccountManagerAuthorization, {
+      Error: AccessDenied,
+      args: [
+        rbacErrorMessage(
+          user,
+          "delete papercut account manager authorization mutator",
+        ),
+      ],
+    }),
   ({ user }) =>
     async (tx, { id, ...values }) => {
       if (enforceRbac(user, ["administrator"])) {
@@ -74,7 +81,7 @@ export const deleteAccountManagerAuthorization = optimisticMutator(
           `${papercutAccountManagerAuthorizationsTableName}/${id}`,
         );
         if (!prev)
-          throw new EntityNotFoundError(
+          throw new EntityNotFound(
             papercutAccountManagerAuthorizationsTableName,
             id,
           );
@@ -94,7 +101,7 @@ export const deleteAccountManagerAuthorization = optimisticMutator(
         `${papercutAccountManagerAuthorizationsTableName}/${id}`,
       );
       if (!success)
-        throw new EntityNotFoundError(
+        throw new EntityNotFound(
           papercutAccountManagerAuthorizationsTableName,
           id,
         );

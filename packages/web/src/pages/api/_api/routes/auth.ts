@@ -7,10 +7,16 @@ import {
   withTransaction,
 } from "@paperwait/core/drizzle/transaction";
 import {
-  NotFoundError,
-  NotImplementedError,
-  UnauthorizedError,
+  BadRequest,
+  InternalServerError,
+  NotFound,
+  NotImplemented,
+  Unauthorized,
 } from "@paperwait/core/errors/http";
+import {
+  ArcticFetchError,
+  Oauth2RequestError,
+} from "@paperwait/core/errors/oauth2";
 import * as EntraId from "@paperwait/core/oauth2/entra-id";
 import * as Google from "@paperwait/core/oauth2/google";
 import {
@@ -18,13 +24,13 @@ import {
   GOOGLE,
   oauth2ProviderVariants,
 } from "@paperwait/core/oauth2/shared";
-import { oauth2Providers } from "@paperwait/core/oauth2/sql";
-import { organizations } from "@paperwait/core/organizations/sql";
+import { oauth2ProvidersTable } from "@paperwait/core/oauth2/sql";
+import { organizationsTable } from "@paperwait/core/organizations/sql";
 import * as PapercutApi from "@paperwait/core/papercut/api";
 import * as Realtime from "@paperwait/core/realtime";
 import * as Replicache from "@paperwait/core/replicache";
 import * as Users from "@paperwait/core/users";
-import { users } from "@paperwait/core/users/sql";
+import { usersTable } from "@paperwait/core/users/sql";
 import { nanoIdSchema } from "@paperwait/core/utils/schemas";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
@@ -50,32 +56,32 @@ export default new Hono()
 
       const org = await db
         .select({
-          id: organizations.id,
-          oauth2ProviderId: oauth2Providers.id,
-          oauth2ProviderVariant: oauth2Providers.variant,
+          id: organizationsTable.id,
+          oauth2ProviderId: oauth2ProvidersTable.id,
+          oauth2ProviderVariant: oauth2ProvidersTable.variant,
         })
-        .from(organizations)
+        .from(organizationsTable)
         .where(
           or(
             eq(
-              sql`TRIM(LOWER(${organizations.name}))`,
+              sql`TRIM(LOWER(${organizationsTable.name}))`,
               sql`TRIM(LOWER(${orgParam}))`,
             ),
             eq(
-              sql`TRIM(LOWER(${organizations.slug}))`,
+              sql`TRIM(LOWER(${organizationsTable.slug}))`,
               sql`TRIM(LOWER(${orgParam}))`,
             ),
           ),
         )
         .innerJoin(
-          oauth2Providers,
+          oauth2ProvidersTable,
           and(
-            eq(organizations.oauth2ProviderId, oauth2Providers.id),
-            eq(organizations.id, oauth2Providers.orgId),
+            eq(organizationsTable.oauth2ProviderId, oauth2ProvidersTable.id),
+            eq(organizationsTable.id, oauth2ProvidersTable.orgId),
           ),
         )
         .then((rows) => rows.at(0));
-      if (!org) throw new NotFoundError("Organization not found");
+      if (!org) throw new NotFound("Organization not found");
 
       let state: string;
       let codeVerifier: string;
@@ -98,7 +104,7 @@ export default new Hono()
         default: {
           org.oauth2ProviderVariant satisfies never;
 
-          throw new NotImplementedError(
+          throw new NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Provider "${org.oauth2ProviderVariant}" not implemented`,
           );
@@ -150,19 +156,25 @@ export default new Hono()
       let idToken: IdToken;
       switch (provider) {
         case ENTRA_ID: {
-          tokens = await EntraId.validateAuthorizationCode(code, code_verifier);
+          tokens = await EntraId.validateAuthorizationCode(
+            code,
+            code_verifier,
+          ).catch(rethrowHttpError);
           idToken = EntraId.parseIdToken(tokens.idToken());
           break;
         }
         case GOOGLE: {
-          tokens = await Google.validateAuthorizationCode(code, code_verifier);
+          tokens = await Google.validateAuthorizationCode(
+            code,
+            code_verifier,
+          ).catch(rethrowHttpError);
           idToken = Google.parseIdToken(tokens.idToken());
           break;
         }
         default: {
           provider satisfies never;
 
-          throw new NotImplementedError(
+          throw new NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Provider "${provider}" not implemented`,
           );
@@ -170,23 +182,23 @@ export default new Hono()
       }
 
       const org = await db
-        .select({ status: organizations.status })
-        .from(organizations)
+        .select({ status: organizationsTable.status })
+        .from(organizationsTable)
         .where(
           and(
-            eq(organizations.oauth2ProviderId, idToken.providerId),
-            eq(organizations.id, orgId),
+            eq(organizationsTable.oauth2ProviderId, idToken.providerId),
+            eq(organizationsTable.id, orgId),
           ),
         )
         .then((rows) => rows.at(0));
       if (!org)
-        throw new NotFoundError(
+        throw new NotFound(
           `Organization "${orgId}" not found with oauth2 provider "${idToken.providerId}"`,
         );
 
       const userExists = await PapercutApi.isUserExists(idToken.username);
       if (!userExists)
-        throw new UnauthorizedError("User does not exist in PaperCut");
+        throw new Unauthorized("User does not exist in PaperCut");
 
       let userInfo: UserInfo;
       switch (provider) {
@@ -199,7 +211,7 @@ export default new Hono()
         default: {
           provider satisfies never;
 
-          throw new NotImplementedError(
+          throw new NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Provider "${provider}" not implemented`,
           );
@@ -209,22 +221,25 @@ export default new Hono()
       const { cookie } = await withTransaction(async (tx) => {
         const existingUser = await tx
           .select({
-            id: users.id,
-            name: users.name,
-            email: users.email,
-            username: users.username,
-            role: users.role,
-            deletedAt: users.deletedAt,
+            id: usersTable.id,
+            name: usersTable.name,
+            email: usersTable.email,
+            username: usersTable.username,
+            role: usersTable.role,
+            deletedAt: usersTable.deletedAt,
           })
-          .from(users)
+          .from(usersTable)
           .where(
-            and(eq(users.oauth2UserId, idToken.userId), eq(users.orgId, orgId)),
+            and(
+              eq(usersTable.oauth2UserId, idToken.userId),
+              eq(usersTable.orgId, orgId),
+            ),
           )
           .then((rows) => rows.at(0));
 
         if (!existingUser) {
           if (org.status === "suspended")
-            throw new UnauthorizedError("Organization is suspended");
+            throw new Unauthorized("Organization is suspended");
 
           const newUser = await Users.create({
             orgId,
@@ -242,8 +257,7 @@ export default new Hono()
           return Auth.createSession(newUser.id, { orgId }, tokens);
         }
 
-        if (existingUser.deletedAt)
-          throw new UnauthorizedError("User is deleted");
+        if (existingUser.deletedAt) throw new Unauthorized("User is deleted");
 
         const existingUserInfo = {
           name: existingUser.name,
@@ -258,9 +272,14 @@ export default new Hono()
 
         if (!R.isDeepEqual(existingUserInfo, freshUserInfo)) {
           await tx
-            .update(users)
+            .update(usersTable)
             .set(freshUserInfo)
-            .where(and(eq(users.id, existingUser.id), eq(users.orgId, orgId)));
+            .where(
+              and(
+                eq(usersTable.id, existingUser.id),
+                eq(usersTable.orgId, orgId),
+              ),
+            );
 
           await afterTransaction(() =>
             Replicache.poke([Realtime.formatChannel("org", orgId)]),
@@ -294,10 +313,21 @@ export default new Hono()
       const { userId } = c.req.valid("param");
 
       const userExists = await Users.exists(userId);
-      if (!userExists) throw new NotFoundError(`User "${userId}" not found`);
+      if (!userExists) throw new NotFound(`User "${userId}" not found`);
 
       await Auth.invalidateUserSessions(userId);
 
       return c.body(null, 204);
     },
   );
+
+function rethrowHttpError(error: Error): never {
+  console.error(error);
+
+  if (error instanceof Oauth2RequestError) throw new BadRequest(error.message);
+  if (error instanceof ArcticFetchError)
+    throw new InternalServerError(error.message);
+  if (error instanceof Error) throw new InternalServerError(error.message);
+
+  throw new InternalServerError("An unexpected error occurred");
+}

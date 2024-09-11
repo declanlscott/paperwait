@@ -3,8 +3,8 @@ import { and, arrayOverlaps, eq, inArray, isNull, sql } from "drizzle-orm";
 import { useAuthenticated } from "../auth/context";
 import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { ForbiddenError } from "../errors/http";
-import { NonExhaustiveValueError } from "../errors/misc";
+import { AccessDenied } from "../errors/application";
+import { NonExhaustiveValue } from "../errors/misc";
 import { ordersTable } from "../orders/sql";
 import {
   papercutAccountManagerAuthorizationsTable,
@@ -28,8 +28,8 @@ export const create = fn(createCommentMutationArgsSchema, async (values) => {
 
   const users = await Users.withOrderAccess(values.orderId);
   if (!users.some((u) => u.id === user.id))
-    throw new ForbiddenError(
-      `User "${user.id}" cannot create a comment on order "${values.orderId}", order access forbidden.`,
+    throw new AccessDenied(
+      `User "${user.id}" cannot create a comment on order "${values.orderId}", order access denied.`,
     );
 
   return useTransaction(async (tx) => {
@@ -120,7 +120,7 @@ export async function metadata() {
             ),
           );
       default:
-        throw new NonExhaustiveValueError(user.role);
+        throw new NonExhaustiveValue(user.role);
     }
   });
 }
@@ -145,8 +145,8 @@ export const update = fn(
 
     const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
-      throw new ForbiddenError(
-        `User "${user.id}" cannot update comment "${id}" on order "${values.orderId}", order access forbidden.`,
+      throw new AccessDenied(
+        `User "${user.id}" cannot update comment "${id}" on order "${values.orderId}", order access denied.`,
       );
 
     return useTransaction(async (tx) => {
@@ -169,8 +169,8 @@ export const delete_ = fn(
 
     const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
-      throw new ForbiddenError(
-        `User "${user.id}" cannot delete comment "${id}" on order "${values.orderId}", order access forbidden.`,
+      throw new AccessDenied(
+        `User "${user.id}" cannot delete comment "${id}" on order "${values.orderId}", order access denied.`,
       );
 
     return useTransaction(async (tx) => {

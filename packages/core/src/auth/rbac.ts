@@ -1,23 +1,34 @@
 import type { Authenticated } from ".";
-import type { ApplicationError } from "../errors/application";
-import type { HttpError } from "../errors/http";
 import type { MutationName } from "../replicache";
 import type { UserRole } from "../users/shared";
+import type { AnyError, CustomError, InferCustomError } from "../utils/types";
 
-export function enforceRbac<TCustomError extends HttpError | ApplicationError>(
+export const rbacErrorMessage = (
+  user: Authenticated["user"],
+  resourceName?: string,
+) =>
+  `User "${user.id}" does not have the required role to access ${resourceName ? `"${resourceName}"` : "this resource"}.`;
+
+export type EnforceRbacResult<TMaybeError extends AnyError | undefined> =
+  TMaybeError extends AnyError ? true : boolean;
+
+export function enforceRbac<TMaybeError extends AnyError | undefined>(
   user: Authenticated["user"],
   roles: Array<UserRole>,
-  CustomError?: new () => TCustomError,
-) {
+  customError?: TMaybeError extends AnyError
+    ? InferCustomError<CustomError<TMaybeError>>
+    : never,
+): EnforceRbacResult<TMaybeError> {
   const hasAccess = roles.includes(user.role);
 
   if (!hasAccess) {
-    console.log(`Role-based access control failed for user id "${user.id}".`);
+    console.log(rbacErrorMessage(user));
 
-    if (CustomError) throw new CustomError();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    if (customError) throw new customError.Error(...customError.args);
   }
 
-  return hasAccess;
+  return hasAccess as EnforceRbacResult<TMaybeError>;
 }
 
 /**

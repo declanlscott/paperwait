@@ -1,9 +1,5 @@
-import { enforceRbac, mutationRbac } from "../auth/rbac";
-import {
-  AccessDeniedError,
-  EntityNotFoundError,
-  InvalidUserRoleError,
-} from "../errors/application";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
+import { AccessDenied, EntityNotFound } from "../errors/application";
 import * as Users from "../users/client";
 import { optimisticMutator } from "../utils/helpers";
 import {
@@ -23,11 +19,14 @@ export const create = optimisticMutator(
 
     if (
       users.some((u) => u.id === user.id) ||
-      enforceRbac(user, mutationRbac.createComment, InvalidUserRoleError)
+      enforceRbac(user, mutationRbac.createComment, {
+        Error: AccessDenied,
+        args: [rbacErrorMessage(user, "create comment mutator")],
+      })
     )
       return true;
 
-    throw new AccessDeniedError();
+    throw new AccessDenied();
   },
   () => async (tx, values) =>
     tx.set(`${commentsTableName}/${values.id}`, values),
@@ -40,15 +39,18 @@ export const update = optimisticMutator(
 
     if (
       users.some((u) => u.id === user.id) ||
-      enforceRbac(user, mutationRbac.updateComment, InvalidUserRoleError)
+      enforceRbac(user, mutationRbac.updateComment, {
+        Error: AccessDenied,
+        args: [rbacErrorMessage(user, "update comment mutator")],
+      })
     )
       return true;
 
-    throw new AccessDeniedError();
+    throw new AccessDenied();
   },
   () => async (tx, values) => {
     const prev = await tx.get<Comment>(`${commentsTableName}/${values.id}`);
-    if (!prev) throw new EntityNotFoundError(commentsTableName, values.id);
+    if (!prev) throw new EntityNotFound(commentsTableName, values.id);
 
     const next = {
       ...prev,
@@ -66,17 +68,20 @@ export const delete_ = optimisticMutator(
 
     if (
       users.some((u) => u.id === user.id) ||
-      enforceRbac(user, mutationRbac.deleteComment, InvalidUserRoleError)
+      enforceRbac(user, mutationRbac.deleteComment, {
+        Error: AccessDenied,
+        args: [rbacErrorMessage(user, "delete comment mutator")],
+      })
     )
       return true;
 
-    throw new AccessDeniedError();
+    throw new AccessDenied();
   },
   ({ user }) =>
     async (tx, values) => {
       if (enforceRbac(user, ["administrator"])) {
         const prev = await tx.get<Comment>(`${commentsTableName}/${values.id}`);
-        if (!prev) throw new EntityNotFoundError(commentsTableName, values.id);
+        if (!prev) throw new EntityNotFound(commentsTableName, values.id);
 
         const next = {
           ...prev,
@@ -87,7 +92,7 @@ export const delete_ = optimisticMutator(
       }
 
       const success = await tx.del(`${commentsTableName}/${values.id}`);
-      if (!success) throw new EntityNotFoundError(commentsTableName, values.id);
+      if (!success) throw new EntityNotFound(commentsTableName, values.id);
     },
 );
 

@@ -7,7 +7,7 @@ import * as v from "valibot";
 import { useAuthenticated } from "../auth/context";
 import { AUTH_CALLBACK_PATH } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
-import { HttpError, InternalServerError, NotFoundError } from "../errors/http";
+import { HttpError, InternalServerError, NotFound } from "../errors/http";
 import { usersTable } from "../users/sql";
 import { useOauth2 } from "./context";
 
@@ -100,7 +100,7 @@ export async function photo(userId: User["id"]): Promise<Response> {
       .where(and(eq(usersTable.id, userId), eq(usersTable.orgId, org.id)))
       .then((rows) => rows.at(0)),
   );
-  if (!user) throw new NotFoundError("User not found");
+  if (!user) throw new NotFound("User not found");
 
   const res = await fetch(
     `https://graph.microsoft.com/v1.0/users/${user.id}/photo/$value`,

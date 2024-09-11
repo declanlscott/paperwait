@@ -5,8 +5,8 @@ import { NANOID_CUSTOM_ALPHABET, NANOID_LENGTH } from "../constants";
 
 import type { WriteTransaction } from "replicache";
 import type { Authenticated } from "../auth";
-import type { HttpError } from "../errors/http";
 import type { OptimisticMutator } from "../replicache/client";
+import type { AnyError, CustomError, InferCustomError } from "./types";
 
 export const generateId = customAlphabet(NANOID_CUSTOM_ALPHABET, NANOID_LENGTH);
 
@@ -14,22 +14,22 @@ export const fn =
   <
     TSchema extends v.GenericSchema,
     TCallback extends (output: v.InferOutput<TSchema>) => ReturnType<TCallback>,
-    TError extends HttpError,
+    TMaybeError extends AnyError | undefined,
   >(
     schema: TSchema,
     callback: TCallback,
-    customHttpError?: {
-      Error: new (message?: string, statusCode?: number) => TError;
-      message?: string;
-    },
+    customError?: TMaybeError extends AnyError
+      ? InferCustomError<CustomError<TMaybeError>>
+      : never,
   ) =>
   (input: unknown) => {
     let output: v.InferOutput<TSchema>;
     try {
       output = v.parse(schema, input);
     } catch (e) {
-      if (v.isValiError(e) && customHttpError)
-        throw new customHttpError.Error(customHttpError.message ?? e.message);
+      if (v.isValiError<TSchema>(e) && customError)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        throw new customError.Error(...customError.args);
 
       throw e;
     }

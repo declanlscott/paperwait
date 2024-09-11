@@ -4,11 +4,7 @@ import { Resource } from "sst";
 import * as v from "valibot";
 
 import { AUTH_CALLBACK_PATH } from "../constants";
-import {
-  HttpError,
-  InternalServerError,
-  NotImplementedError,
-} from "../errors/http";
+import { HttpError, InternalServerError, NotImplemented } from "../errors/http";
 import { GOOGLE } from "./shared";
 
 import type { SessionTokens } from "../auth/sql";
@@ -86,5 +82,5 @@ export const refreshAccessToken = async (
 
 // TODO: Implement this function
 export async function photo(_userId: User["id"]): Promise<Response> {
-  throw new NotImplementedError(`Provider variant "${GOOGLE}" not implemented`);
+  throw new NotImplemented(`Provider variant "${GOOGLE}" not implemented`);
 }

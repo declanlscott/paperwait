@@ -1,11 +1,7 @@
 import * as R from "remeda";
 
-import { enforceRbac, mutationRbac } from "../auth/rbac";
-import {
-  AccessDeniedError,
-  EntityNotFoundError,
-  InvalidUserRoleError,
-} from "../errors/application";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
+import { AccessDenied, EntityNotFound } from "../errors/application";
 import { ordersTableName } from "../orders/shared";
 import { optimisticMutator } from "../utils/helpers";
 import {
@@ -35,7 +31,7 @@ export const withOrderAccess = async (
   orderId: Order["id"],
 ) => {
   const order = await tx.get<Order>(`${ordersTableName}/${orderId}`);
-  if (!order) throw new EntityNotFoundError(ordersTableName, orderId);
+  if (!order) throw new EntityNotFound(ordersTableName, orderId);
 
   const [adminsOps, managers, customer] = await Promise.all([
     fromRoles(tx, ["administrator", "operator"]),
@@ -69,11 +65,14 @@ export const withOrderAccess = async (
 export const updateRole = optimisticMutator(
   updateUserRoleMutationArgsSchema,
   (user) =>
-    enforceRbac(user, mutationRbac.updateUserRole, InvalidUserRoleError),
+    enforceRbac(user, mutationRbac.updateUserRole, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "update user role mutator")],
+    }),
   () =>
     async (tx, { id, ...values }) => {
       const prev = await tx.get<User>(`${usersTableName}/${id}`);
-      if (!prev) throw new EntityNotFoundError(usersTableName, id);
+      if (!prev) throw new EntityNotFound(usersTableName, id);
 
       const next = {
         ...prev,
@@ -86,20 +85,18 @@ export const updateRole = optimisticMutator(
 
 export const delete_ = optimisticMutator(
   deleteUserMutationArgsSchema,
-  (user, _tx, { id }) => {
-    if (
-      id === user.id ||
-      enforceRbac(user, mutationRbac.deleteUser, InvalidUserRoleError)
-    )
-      return true;
-
-    throw new AccessDeniedError();
-  },
+  (user, _tx, { id }) =>
+    id === user.id ||
+    enforceRbac(user, mutationRbac.deleteUser, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "delete user mutator")],
+    }),
   ({ user }) =>
     async (tx, { id, ...values }) => {
+      // Soft delete for administrators
       if (enforceRbac(user, ["administrator"])) {
         const prev = await tx.get<User>(`${usersTableName}/${id}`);
-        if (!prev) throw new EntityNotFoundError(usersTableName, id);
+        if (!prev) throw new EntityNotFound(usersTableName, id);
 
         const next = {
           ...prev,
@@ -110,17 +107,21 @@ export const delete_ = optimisticMutator(
       }
 
       const success = await tx.del(`${usersTableName}/${id}`);
-      if (!success) throw new EntityNotFoundError(usersTableName, id);
+      if (!success) throw new EntityNotFound(usersTableName, id);
     },
 );
 
 export const restore = optimisticMutator(
   restoreUserMutationArgsSchema,
-  (user) => enforceRbac(user, mutationRbac.restoreUser, InvalidUserRoleError),
+  (user) =>
+    enforceRbac(user, mutationRbac.restoreUser, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "restore user mutator")],
+    }),
   () =>
     async (tx, { id }) => {
       const prev = await tx.get<User>(`${usersTableName}/${id}`);
-      if (!prev) throw new EntityNotFoundError(usersTableName, id);
+      if (!prev) throw new EntityNotFound(usersTableName, id);
 
       const next = {
         ...prev,

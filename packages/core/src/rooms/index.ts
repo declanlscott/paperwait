@@ -1,11 +1,11 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
-import { enforceRbac, mutationRbac } from "../auth/rbac";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { ForbiddenError } from "../errors/http";
-import { NonExhaustiveValueError } from "../errors/misc";
+import { AccessDenied } from "../errors/application";
+import { NonExhaustiveValue } from "../errors/misc";
 import { productsTable } from "../products/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
@@ -23,7 +23,10 @@ import type { Room } from "./sql";
 export const create = fn(createRoomMutationArgsSchema, async (values) => {
   const { user, org } = useAuthenticated();
 
-  enforceRbac(user, mutationRbac.createRoom, ForbiddenError);
+  enforceRbac(user, mutationRbac.createRoom, {
+    Error: AccessDenied,
+    args: [rbacErrorMessage(user, "create room mutator")],
+  });
 
   return useTransaction(async (tx) => {
     await tx.insert(roomsTable).values(values);
@@ -61,7 +64,7 @@ export async function metadata() {
           and(eq(roomsTable.status, "published"), isNull(roomsTable.deletedAt)),
         );
       default:
-        throw new NonExhaustiveValueError(user.role);
+        throw new NonExhaustiveValue(user.role);
     }
   });
 }
@@ -82,7 +85,10 @@ export const update = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.updateRoom, ForbiddenError);
+    enforceRbac(user, mutationRbac.updateRoom, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "update room mutator")],
+    });
 
     return useTransaction(async (tx) => {
       await tx
@@ -102,7 +108,10 @@ export const delete_ = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.deleteRoom, ForbiddenError);
+    enforceRbac(user, mutationRbac.deleteRoom, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "delete room mutator")],
+    });
 
     return useTransaction(async (tx) => {
       await Promise.all([
@@ -129,7 +138,10 @@ export const delete_ = fn(
 export const restore = fn(restoreRoomMutationArgsSchema, async ({ id }) => {
   const { user, org } = useAuthenticated();
 
-  enforceRbac(user, mutationRbac.restoreRoom, ForbiddenError);
+  enforceRbac(user, mutationRbac.restoreRoom, {
+    Error: AccessDenied,
+    args: [rbacErrorMessage(user, "restore room mutator")],
+  });
 
   return useTransaction(async (tx) => {
     await tx

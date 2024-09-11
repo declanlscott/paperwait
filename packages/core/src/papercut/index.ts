@@ -1,11 +1,11 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
-import { enforceRbac, mutationRbac } from "../auth/rbac";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { ForbiddenError } from "../errors/http";
-import { NonExhaustiveValueError } from "../errors/misc";
+import { AccessDenied } from "../errors/application";
+import { NonExhaustiveValue } from "../errors/misc";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
 import * as Users from "../users";
@@ -32,11 +32,15 @@ export const createAccountManagerAuthorization = fn(
   async (values) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(
-      user,
-      mutationRbac.createPapercutAccountManagerAuthorization,
-      ForbiddenError,
-    );
+    enforceRbac(user, mutationRbac.createPapercutAccountManagerAuthorization, {
+      Error: AccessDenied,
+      args: [
+        rbacErrorMessage(
+          user,
+          "create papercut account manager authorization mutator",
+        ),
+      ],
+    });
 
     return useTransaction(async (tx) => {
       await tx
@@ -74,7 +78,7 @@ export async function accountsMetadata() {
       case "customer":
         return baseQuery.where(isNull(papercutAccountsTable.deletedAt));
       default:
-        throw new NonExhaustiveValueError(user.role);
+        throw new NonExhaustiveValue(user.role);
     }
   });
 }
@@ -108,7 +112,7 @@ export async function accountCustomerAuthorizationsMetadata() {
           isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
         );
       default:
-        throw new NonExhaustiveValueError(user.role);
+        throw new NonExhaustiveValue(user.role);
     }
   });
 }
@@ -142,7 +146,7 @@ export const accountManagerAuthorizationsMetadata = async () =>
           isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
         );
       default:
-        throw new NonExhaustiveValueError(user.role);
+        throw new NonExhaustiveValue(user.role);
     }
   });
 
@@ -201,7 +205,10 @@ export const deleteAccount = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.deletePapercutAccount, ForbiddenError);
+    enforceRbac(user, mutationRbac.deletePapercutAccount, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "delete papercut account mutator")],
+    });
 
     return useTransaction(async (tx) => {
       const [adminsOps, managers, customers] = await Promise.all([
@@ -265,11 +272,15 @@ export const deleteAccountManagerAuthorization = fn(
   async ({ id, ...values }) => {
     const { user, org } = useAuthenticated();
 
-    enforceRbac(
-      user,
-      mutationRbac.deletePapercutAccountManagerAuthorization,
-      ForbiddenError,
-    );
+    enforceRbac(user, mutationRbac.deletePapercutAccountManagerAuthorization, {
+      Error: AccessDenied,
+      args: [
+        rbacErrorMessage(
+          user,
+          "delete papercut account manager authorization mutator",
+        ),
+      ],
+    });
 
     return useTransaction(async (tx) => {
       await tx

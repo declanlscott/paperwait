@@ -1,6 +1,6 @@
 import * as R from "remeda";
 
-import { NonExhaustiveValueError } from "../errors/misc";
+import { NonExhaustiveValue } from "../errors/misc";
 import { syncedTables } from "./data";
 import { replicacheClientsTable } from "./sql";
 
@@ -64,7 +64,7 @@ export function buildCvr(
         return nextCvr;
       }, {} as ClientViewRecord);
     default:
-      throw new NonExhaustiveValueError(variant);
+      throw new NonExhaustiveValue(variant);
   }
 }
 

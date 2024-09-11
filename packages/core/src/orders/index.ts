@@ -1,11 +1,11 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useAuthenticated } from "../auth/context";
-import { enforceRbac, mutationRbac } from "../auth/rbac";
+import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { ROW_VERSION_COLUMN_NAME } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { ForbiddenError } from "../errors/http";
-import { NonExhaustiveValueError } from "../errors/misc";
+import { AccessDenied } from "../errors/application";
+import { NonExhaustiveValue } from "../errors/misc";
 import {
   papercutAccountManagerAuthorizationsTable,
   papercutAccountsTable,
@@ -26,7 +26,10 @@ import type { Order } from "./sql";
 export const create = fn(createOrderMutationArgsSchema, async (values) => {
   const { user } = useAuthenticated();
 
-  enforceRbac(user, mutationRbac.createOrder, ForbiddenError);
+  enforceRbac(user, mutationRbac.createOrder, {
+    Error: AccessDenied,
+    args: [rbacErrorMessage(user, "create order mutator")],
+  });
 
   return useTransaction(async (tx) => {
     const order = await tx
@@ -99,7 +102,7 @@ export async function metadata() {
       case "customer":
         return customerOrdersQuery;
       default:
-        throw new NonExhaustiveValueError(user.role);
+        throw new NonExhaustiveValue(user.role);
     }
   });
 }
@@ -122,8 +125,8 @@ export const update = fn(
 
     const users = await Users.withOrderAccess(id);
     if (!users.some((u) => u.id === user.id))
-      throw new ForbiddenError(
-        `User "${user.id}" cannot update order "${id}" because they do not have access to that order.`,
+      throw new AccessDenied(
+        `User "${user.id}" cannot update order "${id}", order access denied.`,
       );
 
     return useTransaction(async (tx) => {
@@ -146,8 +149,8 @@ export const delete_ = fn(
 
     const users = await Users.withOrderAccess(id);
     if (!users.some((u) => u.id === user.id))
-      throw new ForbiddenError(
-        `User "${user.id}" cannot delete order "${id}", order access forbidden.`,
+      throw new AccessDenied(
+        `User "${user.id}" cannot delete order "${id}", order access denied.`,
       );
 
     return useTransaction(async (tx) => {
