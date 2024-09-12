@@ -24,6 +24,15 @@ export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
   },
 });
 
+const username = new sst.Secret("Username");
+const password = new sst.Secret("Password");
+const basicAuth = $output([username.value, password.value]).apply(
+  ([username, password]) =>
+    Buffer.from(`${username}:${password}`).toString("base64"),
+);
+
+const architecture = "arm64";
+
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
@@ -46,15 +55,32 @@ export const web = new sst.aws.Astro("Web", {
     name: domain,
     dns: sst.cloudflare.dns(),
   },
+  server: {
+    edge:
+      $app.stage === "production"
+        ? {
+            viewerRequest: {
+              injection: $interpolate`
+                if (
+                  !event.request.headers.authorization ||
+                  event.request.headers.authorization.value !== "Basic ${basicAuth}"
+                ) {
+                  return {
+                    statusCode: 401,
+                    headers: {
+                      "www-authenticate": { value: "Basic" }
+                    }
+                  };
+                }
+              `,
+            },
+          }
+        : undefined,
+    architecture,
+    install: ["sharp"],
+  },
   transform: {
     server: {
-      architecture: "arm64",
-      layers: [
-        "arn:aws:lambda:us-east-2:590474943231:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:11",
-      ],
-      nodejs: {
-        install: ["sharp"],
-      },
     },
   },
 });

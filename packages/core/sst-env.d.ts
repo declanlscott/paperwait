@@ -63,6 +63,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Password": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "Realtime": {
       "apiKey": string
       "type": "sst.sst.Linkable"
@@ -94,6 +98,10 @@ declare module "sst" {
         "bucket": string
       }
       "type": "sst.sst.Linkable"
+    }
+    "Username": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "Web": {
       "type": "sst.aws.Astro"
