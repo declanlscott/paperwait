@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
-import { OrgStatus } from "@paperwait/core/organization";
+import { orgStatuses } from "@paperwait/core/organizations/shared";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 
@@ -35,6 +35,8 @@ import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
+
+import type { OrgStatus } from "@paperwait/core/organizations/shared";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   component: Component,
@@ -232,7 +234,7 @@ function OrgStatusSelect() {
       <Select
         aria-label="status"
         selectedKey={org?.status}
-        onSelectionChange={onSelectionChange(OrgStatus.enumValues, (status) => {
+        onSelectionChange={onSelectionChange(orgStatuses, (status) => {
           if (status === "active") return mutate("active");
 
           if (status === "suspended" && org?.status !== "suspended")
@@ -246,7 +248,7 @@ function OrgStatusSelect() {
 
         <SelectPopover>
           <SelectListBox
-            items={OrgStatus.enumValues
+            items={orgStatuses
               .filter((status) => status !== "initializing")
               .map(collectionItem)}
           >

@@ -13,7 +13,7 @@ import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/text-field";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 
-import type { Room } from "@paperwait/core/room";
+import type { Room } from "@paperwait/core/rooms/sql";
 import type { DialogOverlayProps } from "~/app/components/ui/primitives/dialog";
 
 export interface DeleteRoomDialogProps {

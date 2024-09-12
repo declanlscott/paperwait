@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { enforceRbac } from "@paperwait/core/auth/rbac";
-import { InvalidUserRoleError } from "@paperwait/core/errors/application";
+import { enforceRbac, rbacErrorMessage } from "@paperwait/core/auth/rbac";
+import { AccessDenied } from "@paperwait/core/errors/application";
 import { HttpError } from "@paperwait/core/errors/http";
 import { redirect } from "@tanstack/react-router";
 import { createStore } from "zustand";
@@ -53,7 +53,10 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
           return { user, session, org };
         },
         authorizeRoute: (user, roles) =>
-          enforceRbac(user, roles, InvalidUserRoleError),
+          enforceRbac(user, roles, {
+            Error: AccessDenied,
+            args: [rbacErrorMessage(user)],
+          }),
       },
     })),
   );

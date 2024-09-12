@@ -10,8 +10,8 @@ import {
   Wrench,
 } from "lucide-react";
 
-import type { Product } from "@paperwait/core/product";
-import type { Room } from "@paperwait/core/room";
+import type { Product } from "@paperwait/core/products/sql";
+import type { Room } from "@paperwait/core/rooms/sql";
 import type { AppLink, AppLinksFactory } from "~/app/types";
 
 const dashboardLink = {

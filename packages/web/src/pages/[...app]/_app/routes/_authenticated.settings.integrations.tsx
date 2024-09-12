@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ApplicationError } from "@paperwait/core/errors";
-import { PapercutParameter } from "@paperwait/core/schemas";
+import { ApplicationError } from "@paperwait/core/errors/application";
 import { useForm } from "@tanstack/react-form";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";

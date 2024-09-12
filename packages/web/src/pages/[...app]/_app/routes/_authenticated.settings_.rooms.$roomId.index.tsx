@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
-import { RoomStatus } from "@paperwait/core/room";
+import { roomStatuses } from "@paperwait/core/rooms/shared";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Delete, HousePlus, Lock, LockOpen, Pencil, Save } from "lucide-react";
 
@@ -28,6 +28,8 @@ import { Toggle } from "~/app/components/ui/primitives/toggle";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
+
+import type { RoomStatus } from "@paperwait/core/rooms/shared";
 
 export const Route = createFileRoute("/_authenticated/settings/rooms/$roomId/")(
   {
@@ -156,7 +158,7 @@ function RoomStatusSelect() {
       <Select
         aria-label="status"
         selectedKey={room?.status}
-        onSelectionChange={onSelectionChange(RoomStatus.enumValues, mutate)}
+        onSelectionChange={onSelectionChange(roomStatuses, mutate)}
         isDisabled={!!room?.deletedAt}
       >
         <Button>
@@ -165,7 +167,7 @@ function RoomStatusSelect() {
         </Button>
 
         <SelectPopover>
-          <SelectListBox items={RoomStatus.enumValues.map(collectionItem)}>
+          <SelectListBox items={roomStatuses.map(collectionItem)}>
             {(item) => (
               <SelectItem
                 id={item.name}

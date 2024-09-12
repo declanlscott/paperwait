@@ -4,15 +4,15 @@ import { useApi } from "~/app/lib/hooks/api";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useSubscribe } from "~/app/lib/hooks/replicache";
 
-import type { Organization } from "@paperwait/core/organization/sql";
+import type { Organization } from "@paperwait/core/organizations/sql";
 import type {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
   PapercutAccountManagerAuthorization,
 } from "@paperwait/core/papercut/sql";
-import type { Product } from "@paperwait/core/product/sql";
-import type { Room } from "@paperwait/core/room/sql";
-import type { User } from "@paperwait/core/user/sql";
+import type { Product } from "@paperwait/core/products/sql";
+import type { Room } from "@paperwait/core/rooms/sql";
+import type { User } from "@paperwait/core/users/sql";
 import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
 
 export const useQuery = <TData, TDefaultData = undefined>(

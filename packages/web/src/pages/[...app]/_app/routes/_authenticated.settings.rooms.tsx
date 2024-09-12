@@ -179,6 +179,8 @@ function RoomsCard() {
           cell: ({ row }) => <RoomActionsMenu room={row.original} />,
         },
       ] satisfies Array<ColumnDef<DeepReadonlyObject<Room>>>,
+    // This is NOT useQuery from tanstack query, even though it looks like it
+    // eslint-disable-next-line @tanstack/query/no-unstable-deps
     [products],
   );
 

@@ -1,7 +1,7 @@
 import { useCallback, useContext } from "react";
 import {
   ApplicationError,
-  MissingContextProviderError,
+  MissingContextProvider,
 } from "@paperwait/core/errors/application";
 import { useRouter } from "@tanstack/react-router";
 import { useStore } from "zustand";
@@ -21,7 +21,7 @@ import type { AuthStore } from "~/app/lib/contexts";
 export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
   const store = useContext(AuthContext);
 
-  if (!store) throw new MissingContextProviderError("AuthStore");
+  if (!store) throw new MissingContextProvider("AuthStore");
 
   return useStore(store, selector);
 }
@@ -53,8 +53,8 @@ export function useAuthenticated() {
   const auth = useContext(AuthenticatedContext);
   const replicache = useContext(ReplicacheContext);
 
-  if (!auth) throw new MissingContextProviderError("Authenticated");
-  if (!replicache) throw new MissingContextProviderError("Replicache");
+  if (!auth) throw new MissingContextProvider("Authenticated");
+  if (!replicache) throw new MissingContextProvider("Replicache");
   if (replicache.status !== "ready")
     throw new ApplicationError("Replicache is not in ready state");
 

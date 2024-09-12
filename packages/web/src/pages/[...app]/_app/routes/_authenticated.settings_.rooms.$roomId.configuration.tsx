@@ -1,10 +1,9 @@
 import { FileTrigger } from "react-aria-components";
 import {
-  DeliveryOptionsConfiguration,
-  WorkflowConfiguration,
-  workflowStatusTypes,
-} from "@paperwait/core/schemas";
-import { formatPascalCase } from "@paperwait/core/utils";
+  deliveryOptionAttributesSchema,
+  workflowConfigurationSchema,
+} from "@paperwait/core/rooms/shared";
+import { formatPascalCase } from "@paperwait/core/utils/misc";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { valibotValidator } from "@tanstack/valibot-form-adapter";
@@ -55,9 +54,10 @@ import { collectionItem } from "~/app/lib/ui";
 import { cardStyles } from "~/styles/components/primitives/card";
 
 import type {
+  DeliveryOptionsConfiguration,
   RoomConfiguration,
-  WorkflowStatusType,
-} from "@paperwait/core/schemas";
+  WorkflowConfiguration,
+} from "@paperwait/core/rooms/shared";
 
 export const Route = createFileRoute(
   "/_authenticated/settings/rooms/$roomId/configuration",
@@ -100,11 +100,11 @@ function WorkflowCard() {
 
   const form = useForm({
     defaultValues: {
-      workflow: v.parse(WorkflowConfiguration, room?.config.workflow),
+      workflow: v.parse(workflowConfigurationSchema, room?.config.workflow),
     },
     validatorAdapter: valibotValidator(),
     validators: {
-      onBlur: v.object({ workflow: WorkflowConfiguration }),
+      onBlur: v.object({ workflow: workflowConfigurationSchema }),
     },
     onSubmit: async ({ value: { workflow } }) => {
       if (room) {
@@ -398,7 +398,10 @@ function WorkflowCard() {
                           return toast.error("Invalid JSON syntax.");
                         }
 
-                        const result = v.safeParse(WorkflowConfiguration, data);
+                        const result = v.safeParse(
+                          workflowConfigurationSchema,
+                          data,
+                        );
 
                         if (!result.success) {
                           console.error(result.issues);
@@ -456,13 +459,13 @@ function DeliveryOptionsCard() {
   const form = useForm({
     defaultValues: {
       deliveryOptions: v.parse(
-        DeliveryOptionsConfiguration,
+        deliveryOptionAttributesSchema,
         room?.config.deliveryOptions,
       ),
     },
     validatorAdapter: valibotValidator(),
     validators: {
-      onBlur: v.object({ deliveryOptions: DeliveryOptionsConfiguration }),
+      onBlur: v.object({ deliveryOptions: deliveryOptionAttributesSchema }),
     },
     onSubmit: async ({ value: { deliveryOptions } }) => {
       if (room) {

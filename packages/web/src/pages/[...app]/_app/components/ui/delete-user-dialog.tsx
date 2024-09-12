@@ -15,7 +15,7 @@ import { Input } from "~/app/components/ui/primitives/text-field";
 import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 
-import type { User } from "@paperwait/core/user";
+import type { User } from "@paperwait/core/users/sql";
 import type { DialogOverlayProps } from "~/app/components/ui/primitives/dialog";
 
 export interface DeleteUserDialogProps {

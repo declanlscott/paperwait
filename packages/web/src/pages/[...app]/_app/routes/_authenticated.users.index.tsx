@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { enforceRbac } from "@paperwait/core/auth/rbac";
+import { enforceRbac, mutationRbac } from "@paperwait/core/auth/rbac";
 import { userRoles } from "@paperwait/core/users/shared";
 import { getUserInitials } from "@paperwait/core/utils/misc";
 import { createFileRoute } from "@tanstack/react-router";
@@ -68,6 +68,7 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { useManager } from "~/app/lib/hooks/manager";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
+import type { UserRole } from "@paperwait/core/users/shared";
 import type { User } from "@paperwait/core/users/sql";
 import type {
   ColumnDef,
@@ -365,14 +366,14 @@ function UserRoleCell(props: UserRoleCellProps) {
           <Select
             aria-label="role"
             selectedKey={role}
-            onSelectionChange={onSelectionChange(UserRole.enumValues, mutate)}
+            onSelectionChange={onSelectionChange(userRoles, mutate)}
           >
             <SelectTrigger className="w-fit gap-2">
               <Badge variant={role}>{role}</Badge>
             </SelectTrigger>
 
             <SelectPopover className="w-fit">
-              <SelectListBox items={UserRole.enumValues.map(collectionItem)}>
+              <SelectListBox items={userRoles.map(collectionItem)}>
                 {(item) => (
                   <SelectItem id={item.name} textValue={item.name}>
                     <Badge variant={item.name as UserRole}>{item.name}</Badge>
@@ -428,7 +429,7 @@ function UserActionsMenu(props: UserActionsMenuProps) {
           </MenuSection>
 
           {props.user.deletedAt ? (
-            <EnforceRbac roles={mutatorRbac.restoreUser}>
+            <EnforceRbac roles={mutationRbac.restoreUser}>
               <MenuSeparator />
 
               <MenuSection>
@@ -442,7 +443,7 @@ function UserActionsMenu(props: UserActionsMenuProps) {
               </MenuSection>
             </EnforceRbac>
           ) : (
-            <EnforceRbac roles={mutatorRbac.deleteUser}>
+            <EnforceRbac roles={mutationRbac.deleteUser}>
               <MenuSeparator />
 
               <MenuSection>

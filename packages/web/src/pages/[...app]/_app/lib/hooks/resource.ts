@@ -1,12 +1,12 @@
 import { useContext } from "react";
-import { MissingContextProviderError } from "@paperwait/core/errors/application";
+import { MissingContextProvider } from "@paperwait/core/errors/application";
 
 import { ResourceContext } from "~/app/lib/contexts";
 
 export function useResource() {
   const context = useContext(ResourceContext);
 
-  if (!context) throw new MissingContextProviderError("Resource");
+  if (!context) throw new MissingContextProvider("Resource");
 
   return context;
 }

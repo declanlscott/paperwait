@@ -1,7 +1,7 @@
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 
-import type { User } from "@paperwait/core/user";
+import type { User } from "@paperwait/core/users/sql";
 
 export function useCustomer(customerId: User["id"]) {
   const { user } = useAuthenticated();
