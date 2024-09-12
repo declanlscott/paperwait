@@ -41,6 +41,6 @@ export const ORG_SLUG_PATTERN = new RegExp(/^[a-zA-Z0-9-]+$/);
 
 export const AUTH_SESSION_COOKIE_NAME = "auth_session";
 
-export const REPLICACHE_CLIENT_DELETE_DURATION = {
+export const REPLICACHE_DELETE_DURATION = {
   weeks: 2,
 } as const satisfies Duration;
