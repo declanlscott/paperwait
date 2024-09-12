@@ -4,6 +4,7 @@ import { client, meta } from "./meta";
 import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
 import { storage } from "./storage";
+import { getLambdaLayerArn } from "./utils";
 
 export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
   handler: "packages/workers/src/reverse-proxy.ts",
@@ -77,10 +78,17 @@ export const web = new sst.aws.Astro("Web", {
           }
         : undefined,
     architecture,
+    layers: [
+      await getLambdaLayerArn(
+        "AWS-Parameters-and-Secrets-Lambda-Extension",
+        architecture,
+      ),
+    ],
     install: ["sharp"],
   },
   transform: {
     server: {
+      copyFiles: [{ from: "infra/aws-layer-names.json" }],
     },
   },
 });
