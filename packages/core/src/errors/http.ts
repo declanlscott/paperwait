@@ -12,90 +12,90 @@ export type HttpErrorName =
   | "NotImplemented";
 
 export class HttpError extends Error {
-  public name: HttpErrorName;
+  public declare readonly name: HttpErrorName;
   public readonly statusCode: number;
 
   constructor(message: string, statusCode: number) {
     super(message);
-    this.name = "HttpError";
     this.statusCode = statusCode;
   }
 }
 
 export class BadRequest extends HttpError {
-  public name: Extract<HttpErrorName, "BadRequest">;
+  public readonly name = "BadRequest";
+  public readonly statusCode = 400;
 
   constructor(message = "Bad request") {
     super(message, 400);
-    this.name = "BadRequest";
   }
 }
 
 export class Unauthorized extends HttpError {
-  public name: Extract<HttpErrorName, "Unauthorized">;
+  public readonly name = "Unauthorized";
+  public readonly statusCode = 401;
 
   constructor(message = "Unauthorized") {
     super(message, 401);
-    this.name = "Unauthorized";
   }
 }
 
 export class Forbidden extends HttpError {
-  public name: Extract<HttpErrorName, "Forbidden">;
+  public readonly name = "Forbidden";
+  public readonly statusCode = 403;
 
   constructor(message = "Forbidden") {
     super(message, 403);
-    this.name = "Forbidden";
   }
 }
 
 export class NotFound extends HttpError {
-  public name: Extract<HttpErrorName, "NotFound">;
+  public readonly name = "NotFound";
+  public readonly statusCode = 404;
 
   constructor(message = "Not found") {
     super(message, 404);
-    this.name = "NotFound";
   }
 }
 
 export class MethodNotAllowed extends HttpError {
-  public name: Extract<HttpErrorName, "MethodNotAllowed">;
+  public readonly name = "MethodNotAllowed";
+  public readonly statusCode = 405;
 
   constructor(message = "Method not allowed") {
     super(message, 405);
-    this.name = "MethodNotAllowed";
   }
 }
 
 export class RequestTimeout extends HttpError {
-  public name: Extract<HttpErrorName, "RequestTimeout">;
+  public readonly name = "RequestTimeout";
+  public readonly statusCode = 408;
 
   constructor(message = "Request timeout") {
     super(message, 408);
-    this.name = "RequestTimeout";
   }
 }
 
 export class Conflict extends HttpError {
-  public name: Extract<HttpErrorName, "Conflict">;
+  public readonly name = "Conflict";
+  public readonly statusCode = 409;
 
   constructor(message = "Conflict") {
     super(message, 409);
-    this.name = "Conflict";
   }
 }
 
 export class TooManyRequests extends HttpError {
-  public name: Extract<HttpErrorName, "TooManyRequests">;
+  public readonly name = "TooManyRequests";
+  public readonly statusCode = 429;
 
   constructor(message = "Too many requests") {
     super(message, 429);
-    this.name = "TooManyRequests";
   }
 }
 
 export class InternalServerError extends HttpError {
-  public name: Extract<HttpErrorName, "InternalServerError">;
+  public readonly name = "InternalServerError";
+  public readonly statusCode = 500;
 
   constructor(message = "Internal server error") {
     super(message, 500);
@@ -104,10 +104,10 @@ export class InternalServerError extends HttpError {
 }
 
 export class NotImplemented extends HttpError {
-  public name: Extract<HttpErrorName, "NotImplemented">;
+  public readonly name = "NotImplemented";
+  public readonly statusCode = 501;
 
   constructor(message = "Not implemented") {
     super(message, 501);
-    this.name = "NotImplemented";
   }
 }

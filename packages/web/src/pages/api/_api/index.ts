@@ -11,6 +11,8 @@ import organizations from "~/api/routes/organizations";
 import replicache from "~/api/routes/replicache";
 import users from "~/api/routes/users";
 
+import type { StatusCode } from "hono/utils/http-status";
+
 const api = new Hono()
   .basePath("/api/")
   .use(logger())
@@ -24,7 +26,7 @@ const api = new Hono()
     console.error(e);
 
     if (e instanceof HttpError)
-      return c.json(e.message, { status: e.statusCode });
+      return c.json(e.message, e.statusCode as StatusCode);
     if (e instanceof ArcticFetchError) return c.json(e.message, 500);
     if (e instanceof HTTPException) return e.getResponse();
 

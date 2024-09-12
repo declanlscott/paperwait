@@ -1,8 +1,8 @@
 import { POKE } from "@paperwait/core/constants";
 import {
   HttpError,
-  MethodNotAllowedError,
-  UnauthorizedError,
+  MethodNotAllowed,
+  Unauthorized,
 } from "@paperwait/core/errors/http";
 
 import type * as Party from "partykit/server";
@@ -20,7 +20,7 @@ export default class Server implements Party.Server {
         new URL(request.url).searchParams.get("replicacheLicenseKey") !==
         lobby.env.REPLICACHE_LICENSE_KEY
       )
-        throw new UnauthorizedError();
+        throw new Unauthorized();
 
       return request;
     } catch (e) {
@@ -35,10 +35,10 @@ export default class Server implements Party.Server {
 
   static onBeforeRequest(request: Party.Request, lobby: Party.Lobby) {
     try {
-      if (request.method !== "POST") throw new MethodNotAllowedError();
+      if (request.method !== "POST") throw new MethodNotAllowed();
 
       if (request.headers.get("x-api-key") !== lobby.env.API_KEY)
-        throw new UnauthorizedError();
+        throw new Unauthorized();
 
       return request;
     } catch (e) {

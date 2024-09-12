@@ -49,8 +49,6 @@ function rethrowHttpError(error: Error): never {
   }
   if (error instanceof ApplicationError) {
     switch (error.name) {
-      case "ApplicationError":
-        throw new InternalServerError(error.message);
       case "Unauthenticated":
         throw new Unauthorized(error.message);
       case "AccessDenied":

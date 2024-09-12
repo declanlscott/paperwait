@@ -1,12 +1,14 @@
-export type ReplicacheErrorName =
-  | "ReplicacheError"
+export type UnrecoverableErrorName =
   | "BadRequest"
   | "Unauthorized"
-  | "MutationConflict"
-  | "ClientStateNotFound";
+  | "MutationConflict";
+
+export type RecoverableErrorName = "ClientStateNotFound";
+
+export type ReplicacheErrorName = UnrecoverableErrorName | RecoverableErrorName;
 
 export abstract class ReplicacheError extends Error {
-  public declare name: ReplicacheErrorName;
+  public declare readonly name: ReplicacheErrorName;
 
   constructor(message: string) {
     super(message);
@@ -14,10 +16,7 @@ export abstract class ReplicacheError extends Error {
 }
 
 export abstract class UnrecoverableError extends ReplicacheError {
-  public declare name: Exclude<
-    ReplicacheErrorName,
-    "ReplicacheError" | "ClientStateNotFound"
-  >;
+  public declare readonly name: UnrecoverableErrorName;
 
   constructor(message: string) {
     super(message);
@@ -25,7 +24,7 @@ export abstract class UnrecoverableError extends ReplicacheError {
 }
 
 export abstract class RecoverableError extends ReplicacheError {
-  public declare name: Extract<ReplicacheErrorName, "ClientStateNotFound">;
+  public declare readonly name: RecoverableErrorName;
 
   constructor(message: string) {
     super(message);
@@ -33,37 +32,33 @@ export abstract class RecoverableError extends ReplicacheError {
 }
 
 export class BadRequest extends UnrecoverableError {
-  public name: Extract<ReplicacheErrorName, "BadRequest">;
+  public readonly name = "BadRequest";
 
   constructor(message = "Bad request") {
     super(message);
-    this.name = "BadRequest";
   }
 }
 
 export class Unauthorized extends UnrecoverableError {
-  public name: Extract<ReplicacheErrorName, "Unauthorized">;
+  public readonly name = "Unauthorized";
 
   constructor(message = "Unauthorized") {
     super(message);
-    this.name = "Unauthorized";
   }
 }
 
 export class MutationConflict extends UnrecoverableError {
-  public name: Extract<ReplicacheErrorName, "MutationConflict">;
+  public readonly name = "MutationConflict";
 
   constructor(message = "Mutation conflict") {
     super(message);
-    this.name = "MutationConflict";
   }
 }
 
 export class ClientStateNotFound extends ReplicacheError {
-  public name: Extract<ReplicacheErrorName, "ClientStateNotFound">;
+  public readonly name = "ClientStateNotFound";
 
   constructor(message = "Client state not found") {
     super(message);
-    this.name = "ClientStateNotFound";
   }
 }

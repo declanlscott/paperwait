@@ -1,9 +1,11 @@
 import { AUTH_SESSION_COOKIE_NAME } from "@paperwait/core/constants";
-import { HttpError, TooManyRequestsError } from "@paperwait/core/errors/http";
+import { HttpError, TooManyRequests } from "@paperwait/core/errors/http";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/cloudflare-workers";
 import { getCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
+
+import type { StatusCode } from "hono/utils/http-status";
 
 export default new Hono<{
   Bindings: {
@@ -22,7 +24,7 @@ export default new Hono<{
 
       success = await c.env.IP_RATE_LIMITER.limit(ip);
     }
-    if (!success) throw new TooManyRequestsError();
+    if (!success) throw new TooManyRequests();
 
     await next();
   })
@@ -31,7 +33,7 @@ export default new Hono<{
     if (!ip) throw new Error("Missing remote address");
 
     const success = await c.env.IP_RATE_LIMITER.limit(ip);
-    if (!success) throw new TooManyRequestsError();
+    if (!success) throw new TooManyRequests();
 
     await next();
   })
@@ -40,8 +42,8 @@ export default new Hono<{
     console.error(e);
 
     if (e instanceof HttpError)
-      return c.json(e.message, { status: e.statusCode });
+      return c.json(e.message, e.statusCode as StatusCode);
     if (e instanceof HTTPException) return e.getResponse();
 
-    return c.json("Internal server error", { status: 500 });
+    return c.json("Internal server error", 500);
   });
