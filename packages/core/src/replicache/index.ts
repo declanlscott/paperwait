@@ -326,7 +326,13 @@ export const pull = fn(
             and(
               eq(replicacheClientViewsTable.clientGroupId, baseClientGroup.id),
               eq(replicacheClientViewsTable.orgId, user.orgId),
-              lt(replicacheClientViewsTable.version, nextCvrVersion - 10),
+              lt(
+                replicacheClientViewsTable.updatedAt,
+                sub(
+                  new Date(),
+                  REPLICACHE_CLIENT_DELETE_DURATION,
+                ).toISOString(),
+              ),
             ),
           ),
       ]);

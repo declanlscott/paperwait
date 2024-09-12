@@ -46,6 +46,7 @@ export const replicacheClientGroupsTable = pgTable(
       foreignColumns: [usersTable.id, usersTable.orgId],
       name: "user_fk",
     }),
+    updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
 );
 export type ReplicacheClientGroupsTable = typeof replicacheClientGroupsTable;
@@ -74,6 +75,7 @@ export const replicacheClientsTable = pgTable(
       name: "client_group_fk",
     }),
     clientGroupIdIndex: index("client_group_id_idx").on(table.clientGroupId),
+    updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
 );
 export type ReplicacheClientsTable = typeof replicacheClientsTable;
@@ -100,6 +102,7 @@ export const replicacheClientViewsTable = pgTable(
       ],
       name: "client_group_fk",
     }),
+    updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
 );
 export type ReplicacheClientViewsTable = typeof replicacheClientViewsTable;
