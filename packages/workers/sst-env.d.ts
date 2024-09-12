@@ -44,6 +44,7 @@ declare module "sst" {
         "name": string
         "stage": string
       }
+      "awsRegion": string
       "domain": string
       "isDev": boolean
       "type": "sst.sst.Linkable"

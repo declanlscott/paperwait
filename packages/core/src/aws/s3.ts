@@ -6,8 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
-import { AWS_REGION } from "../constants";
+import { Resource } from "sst";
 
 import type {
   DeleteObjectCommandInput,
@@ -22,7 +21,7 @@ export const buildObjectKey = (orgId: NanoId, ...segments: Array<string>) =>
   `${orgId}/${segments.join("/")}`;
 
 export const client = new S3Client({
-  region: AWS_REGION,
+  region: Resource.Meta.awsRegion,
   credentials: fromNodeProviderChain(),
 });
 

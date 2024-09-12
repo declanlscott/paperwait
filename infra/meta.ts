@@ -22,5 +22,6 @@ export const meta = new sst.Linkable("Meta", {
     },
     isDev,
     domain,
+    awsRegion: aws.getRegionOutput({}).name,
   },
 });

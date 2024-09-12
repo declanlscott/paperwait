@@ -1,8 +1,7 @@
 import { Sha256 } from "@aws-crypto/sha256-js";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { SignatureV4 } from "@smithy/signature-v4";
-
-import { AWS_REGION } from "../constants";
+import { Resource } from "sst";
 
 import type { SignatureV4Init } from "@smithy/signature-v4";
 
@@ -13,7 +12,7 @@ interface BuildSignerProps
 
 export const buildSigner = ({
   credentials = fromNodeProviderChain(),
-  region = AWS_REGION,
+  region = Resource.Meta.awsRegion,
   sha256 = Sha256,
   service,
 }: BuildSignerProps) =>

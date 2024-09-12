@@ -13,8 +13,6 @@ import {
 import { Resource } from "sst";
 import * as v from "valibot";
 
-import { AWS_REGION } from "../constants";
-
 import type {
   DeleteParameterCommandInput,
   GetParameterCommandInput,
@@ -24,7 +22,7 @@ import type {
 import type { NanoId } from "../utils/schemas";
 
 export const client = new SSMClient({
-  region: AWS_REGION,
+  region: Resource.Meta.awsRegion,
   credentials: fromNodeProviderChain(),
 });
 

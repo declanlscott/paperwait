@@ -9,8 +9,6 @@ export const ROW_VERSION_COLUMN_NAME = "xmin";
 
 export const VARCHAR_LENGTH = 40;
 
-export const AWS_REGION = "us-east-2";
-
 export const AUTH_CALLBACK_PATH = "/api/auth/callback";
 
 export const PAPERCUT_API_PAGINATION_LIMIT = 1000;
