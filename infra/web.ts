@@ -52,6 +52,9 @@ export const web = new sst.aws.Astro("Web", {
       layers: [
         "arn:aws:lambda:us-east-2:590474943231:layer:AWS-Parameters-and-Secrets-Lambda-Extension-Arm64:11",
       ],
+      nodejs: {
+        install: ["sharp"],
+      },
     },
   },
 });
