@@ -25,6 +25,7 @@
     "@pulumi/pulumi": "^3.131.0",
     "@smithy/signature-v4": "^4.1.1",
     "arctic": "next",
+    "date-fns": "^3.6.0",
     "drizzle-orm": "^0.33.0",
     "lucia": "^3.2.0",
     "nanoid": "^5.0.7",

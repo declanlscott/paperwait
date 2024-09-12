@@ -1,3 +1,5 @@
+import type { Duration } from "date-fns";
+
 export const DB_SCHEMA_VERSION = 1;
 export const DB_TRANSACTION_MAX_RETRIES = 10;
 export const POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE = "40001";
@@ -38,3 +40,7 @@ export const NANOID_PATTERN = new RegExp(
 export const ORG_SLUG_PATTERN = new RegExp(/^[a-zA-Z0-9-]+$/);
 
 export const AUTH_SESSION_COOKIE_NAME = "auth_session";
+
+export const REPLICACHE_CLIENT_DELETE_DURATION = {
+  weeks: 2,
+} as const satisfies Duration;

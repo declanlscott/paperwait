@@ -1,9 +1,11 @@
+import { sub } from "date-fns";
 import { and, eq, lt, sql } from "drizzle-orm";
 import * as R from "remeda";
 import { Resource } from "sst";
 import * as v from "valibot";
 
 import { useAuthenticated } from "../auth/context";
+import { REPLICACHE_CLIENT_DELETE_DURATION } from "../constants";
 import { serializable, useTransaction } from "../drizzle/transaction";
 import { HttpError } from "../errors/http";
 import {
@@ -113,6 +115,18 @@ export const putClientGroup = async (
       }),
   );
 
+export const deleteOldClientGroups = async () =>
+  useTransaction((tx) =>
+    tx
+      .delete(replicacheClientGroupsTable)
+      .where(
+        lt(
+          replicacheClientGroupsTable.updatedAt,
+          sub(new Date(), REPLICACHE_CLIENT_DELETE_DURATION).toISOString(),
+        ),
+      ),
+  );
+
 export const putClient = async (client: OmitTimestamps<ReplicacheClient>) =>
   useTransaction((tx) =>
     tx
@@ -122,6 +136,18 @@ export const putClient = async (client: OmitTimestamps<ReplicacheClient>) =>
         target: [replicacheClientsTable.id, replicacheClientsTable.orgId],
         set: { ...client, updatedAt: sql`now()` },
       }),
+  );
+
+export const deleteOldClients = async () =>
+  useTransaction((tx) =>
+    tx
+      .delete(replicacheClientsTable)
+      .where(
+        lt(
+          replicacheClientsTable.updatedAt,
+          sub(new Date(), REPLICACHE_CLIENT_DELETE_DURATION).toISOString(),
+        ),
+      ),
   );
 
 export async function poke(channels: Array<Channel>) {

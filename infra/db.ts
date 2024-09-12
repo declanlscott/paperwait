@@ -1,3 +1,5 @@
+import { meta } from "./meta";
+
 const AWS_REGION = process.env.AWS_REGION;
 if (!AWS_REGION) throw new Error("AWS_REGION is not set");
 
@@ -18,4 +20,13 @@ export const db = new sst.Linkable("Db", {
       url: $interpolate`postgresql://postgres.${postgres.id}:${postgres.databasePassword}@aws-0-${postgres.region}.pooler.supabase.com:6543/postgres`,
     },
   },
+});
+
+export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
+  job: {
+    handler: "packages/functions/ts/src/db-garbage-collection.handler",
+    timeout: "10 seconds",
+    link: [db, meta],
+  },
+  schedule: "rate(1 day)",
 });
