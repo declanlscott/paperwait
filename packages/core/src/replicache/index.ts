@@ -384,6 +384,7 @@ export const pull = fn(
   },
   { Error: BadRequest, args: ["Failed to parse pull request"] },
 );
+
 /**
  * Implements the row version strategy push algorithm from the [Replicache docs](https://doc.replicache.dev/strategies/row-version#push).
  */
