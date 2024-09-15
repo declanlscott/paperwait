@@ -98,6 +98,7 @@ export async function getParameter(input: {
   if (!sessionToken) throw new Error("Missing session token");
 
   const res = await fetch(url, {
+    method: "GET",
     headers: {
       "X-AWS-Parameters-Secrets-Token": sessionToken,
     },
