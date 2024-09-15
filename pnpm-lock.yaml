@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  valibot@0.41.0:
-    hash: 7amnrcqend3ybnlanxv6gf7rjm
-    path: patches/valibot@0.41.0.patch
-
 importers:
 
   .:
@@ -99,8 +94,8 @@ importers:
         specifier: ^15.0.1
         version: 15.0.1
       valibot:
-        specifier: ^0.41.0
-        version: 0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2)
+        specifier: ^0.42.0
+        version: 0.42.0(typescript@5.6.2)
     devDependencies:
       '@paperwait/eslint-config':
         specifier: workspace:*
@@ -194,7 +189,7 @@ importers:
         version: 5.1.0(astro@4.15.6(@types/node@22.5.5)(rollup@4.21.3)(typescript@5.6.2))(tailwindcss@3.4.11)
       '@hono/valibot-validator':
         specifier: ^0.3.0
-        version: 0.3.0(hono@4.6.1)(valibot@0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2))
+        version: 0.3.0(hono@4.6.1)(valibot@0.42.0(typescript@5.6.2))
       '@iconify-json/lucide':
         specifier: ^1.2.4
         version: 1.2.4
@@ -236,7 +231,7 @@ importers:
         version: 1.57.15(vite@5.4.5(@types/node@22.5.5))(webpack-sources@3.2.3)
       '@tanstack/valibot-form-adapter':
         specifier: ^0.31.0
-        version: 0.31.0(valibot@0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2))
+        version: 0.31.0(valibot@0.42.0(typescript@5.6.2))
       astro:
         specifier: ^4.15.6
         version: 4.15.6(@types/node@22.5.5)(rollup@4.21.3)(typescript@5.6.2)
@@ -304,8 +299,8 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.11)
       valibot:
-        specifier: ^0.41.0
-        version: 0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2)
+        specifier: ^0.42.0
+        version: 0.42.0(typescript@5.6.2)
       zustand:
         specifier: ^4.5.5
         version: 4.5.5(@types/react@18.3.5)(react@18.3.1)
@@ -7324,8 +7319,8 @@ packages:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
-  valibot@0.41.0:
-    resolution: {integrity: sha512-igDBb8CTYr8YTQlOKgaN9nSS0Be7z+WRuaeYqGf3Cjz3aKmSnqEmYnkfVjzIuumGqfHpa3fLIvMEAfhrpqN8ng==}
+  valibot@0.42.0:
+    resolution: {integrity: sha512-igMdmHXxDiQY714ssh9bGisMqJ2yg7sko1KOmv/omnrIacGtP6mGrbvVT1IuV1bDrHyG9ybgpHwG1UElDiDCLg==}
     peerDependencies:
       typescript: '>=5'
     peerDependenciesMeta:
@@ -9569,10 +9564,10 @@ snapshots:
       protobufjs: 7.4.0
       yargs: 17.7.2
 
-  '@hono/valibot-validator@0.3.0(hono@4.6.1)(valibot@0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2))':
+  '@hono/valibot-validator@0.3.0(hono@4.6.1)(valibot@0.42.0(typescript@5.6.2))':
     dependencies:
       hono: 4.6.1
-      valibot: 0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2)
+      valibot: 0.42.0(typescript@5.6.2)
 
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
@@ -12327,10 +12322,10 @@ snapshots:
 
   '@tanstack/table-core@8.20.5': {}
 
-  '@tanstack/valibot-form-adapter@0.31.0(valibot@0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2))':
+  '@tanstack/valibot-form-adapter@0.31.0(valibot@0.42.0(typescript@5.6.2))':
     dependencies:
       '@tanstack/form-core': 0.30.0
-      valibot: 0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2)
+      valibot: 0.42.0(typescript@5.6.2)
 
   '@tanstack/virtual-file-routes@1.56.0': {}
 
@@ -16688,7 +16683,7 @@ snapshots:
 
   uuid@9.0.1: {}
 
-  valibot@0.41.0(patch_hash=7amnrcqend3ybnlanxv6gf7rjm)(typescript@5.6.2):
+  valibot@0.42.0(typescript@5.6.2):
     optionalDependencies:
       typescript: 5.6.2
 
