@@ -3,43 +3,43 @@
 DISTRO_NAME="$(grep -oP '(?<=^NAME=).+' < /etc/os-release | tr -d '"')"
 DISTRO_VERSION="$(grep -oP '(?<=^VERSION=).+' < /etc/os-release | tr -d '"')"
 DISTRO_TITLE="${DISTRO_NAME} ${DISTRO_VERSION}"
-JQ_RPM_PATH="${DIST_LAYER_PATH}/tmp_extracts/usr/bin/jq"
-TAILSCALE_RPM_PATH="/tmp/tailscale.rpm"
 PWD_PATH="$(pwd)"
 START_PATH="${WORKDIR:=$PWD_PATH}"
 DIST_LAYER_PATH="${START_PATH}/dist/layer"
 DIST_LAYER_ZIP_NAME="tailscale-layer.zip"
 DIST_LAYER_ASSET_PATH="${START_PATH}/dist/${DIST_LAYER_ZIP_NAME}"
+JQ_RPM_PATH="${DIST_LAYER_PATH}/tmp_extracts/usr/bin/jq"
+TAILSCALE_RPM_PATH="/tmp/tailscale.rpm"
 
-function get_dependency_locations {
-  if [[ ! -x ./dependency-version.lock.sh ]]; then
-    echo "Couldn't use the dependency location lock file as it doesn't exist"
+function resolve_packages {
+  if [[ ! -x ./package.lock.sh ]]; then
+    echo "Couldn't use the RPM URL lock file as it doesn't exist"
     echo "or it is not executable."
     echo ""
     echo "Please note: Do not use the latest versions in a build pipeline, "
     echo "as this might lead to issues that are hard to reproduce."
     echo ""
-    echo "Determining dependency locations on the fly, using latest:"
-    source ./determine-dependency-locations.sh
+    echo "Determining RPM URLs on the fly, using latest:"
+    source ./resolve-packages.sh
   else
-    source ./dependency-version.lock.sh
+    source ./package.lock.sh
   fi
 
   if [[ "Z${TAILSCALE_RPM_URL}" == "Z" ]]; then
-    echo "Something went wrong, dependency locations could not be determined."
+    echo "Something went wrong, RPM URLs could not be determined."
     exit 1
   fi
+}
+
+function download_jq {
+  echo "Downloading latest jq image for ${DISTRO_TITLE}"
+  curl -L -s "${JQ_URL}" -o "${JQ_RPM_PATH}" > /dev/null 2>&1
+  chmod +x "${JQ_RPM_PATH}"
 }
 
 function download_tailscale {
   echo "Downloading latest Tailscale image for ${DISTRO_TITLE}"
   curl -L -s "${TAILSCALE_RPM_URL}" -o "${TAILSCALE_RPM_PATH}" > /dev/null 2>&1
-}
-
-function download_jq {
-  echo "Downloading latest jq image for ${DISTRO_TITLE}"
-  curl -L -s "${JQ_RPM_URL}" -o "${JQ_RPM_PATH}" > /dev/null 2>&1
-  chmod +x "${JQ_RPM_PATH}"
 }
 
 function create_dist_dirs {
@@ -83,9 +83,7 @@ function build_layer_asset {
 }
 
 function main {
-  echo $(yum list installed gnupg2)
-
-  get_dependency_locations
+  resolve_packages
 
   create_dist_dirs
 
