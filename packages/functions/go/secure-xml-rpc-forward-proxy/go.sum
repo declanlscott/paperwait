@@ -1,0 +1,6 @@
+alexejk.io/go-xmlrpc v0.5.3 h1:7YxuXykECLg2O1eornJ1oQrJja1jerC9lVdKGcq02dE=
+alexejk.io/go-xmlrpc v0.5.3/go.mod h1:zyrQOfw7lOE6HFTDjsiTLUaMqMGXraHJqjfzxfH9cHM=
+github.com/aws/aws-lambda-go v1.47.0 h1:0H8s0vumYx/YKs4sE7YM0ktwL2eWse+kfopsRI1sXVI=
+github.com/aws/aws-lambda-go v1.47.0/go.mod h1:dpMpZgvWx5vuQJfBt0zqBha60q7Dd7RfgJv23DymV8A=
+golang.org/x/net v0.29.0 h1:5ORfpBpCs4HzDYoodCDBbwHzdR5UrLBZ3sOnUJmFoHo=
+golang.org/x/net v0.29.0/go.mod h1:gLkgy8jTGERgjzMic6DS9+SP0ajcu6Xu3Orq/SpETg0=
