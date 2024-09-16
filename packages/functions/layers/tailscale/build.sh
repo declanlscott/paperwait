@@ -13,20 +13,20 @@ TAILSCALE_RPM_PATH="/tmp/tailscale.rpm"
 
 function resolve_packages {
   if [[ ! -x ./package.lock.sh ]]; then
-    echo "Couldn't use the RPM URL lock file as it doesn't exist"
+    echo "Couldn't use the package lock file as it doesn't exist"
     echo "or it is not executable."
     echo ""
     echo "Please note: Do not use the latest versions in a build pipeline, "
     echo "as this might lead to issues that are hard to reproduce."
     echo ""
-    echo "Determining RPM URLs on the fly, using latest:"
+    echo "Determining package versions on the fly, using latest:"
     source ./resolve-packages.sh
   else
     source ./package.lock.sh
   fi
 
   if [[ "Z${TAILSCALE_RPM_URL}" == "Z" ]]; then
-    echo "Something went wrong, RPM URLs could not be determined."
+    echo "Something went wrong, package versions could not be determined."
     exit 1
   fi
 }

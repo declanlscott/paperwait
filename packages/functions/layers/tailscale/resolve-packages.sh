@@ -53,8 +53,8 @@ function query_repo {
 
 function resolve_jq_url {
   echo "Get jq URL to download"
-  LATEST_JS_VERSION_TAG="$(curl -L -s https://api.github.com/repos/stedolan/jq/releases/latest | jq -r ".tag_name")"
-  export JQ_URL="https://github.com/stedolan/jq/releases/download/${LATEST_JS_VERSION_TAG}/jq-linux-arm64"
+  LATEST_JQ_VERSION_TAG="$(curl -L -s https://api.github.com/repos/stedolan/jq/releases/latest | jq -r ".tag_name")"
+  export JQ_URL="https://github.com/stedolan/jq/releases/download/${LATEST_JQ_VERSION_TAG}/jq-linux-arm64"
   write_to_lock_file "export JQ_URL=\"${JQ_URL}\""
   echo "Resolved it to: ${JQ_URL}"
 }
@@ -74,7 +74,7 @@ function main {
 
   create_new_lock_file
 
-  echo "Determining latest RPM URLs to use..."
+  echo "Determining latest packages to use..."
   resolve_tailscale_rpm_url
   resolve_jq_url
   echo  "Done."
