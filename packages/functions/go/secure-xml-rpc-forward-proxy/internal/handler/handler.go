@@ -1,70 +1,59 @@
 package handler
 
 import (
-	"alexejk.io/go-xmlrpc"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/aws/aws-lambda-go/events"
-	"log"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 	"net/http"
-	"secure-xml-rpc-forward-proxy/internal/socks5"
+	"secure-xml-rpc-forward-proxy/internal/papercut"
+	"secure-xml-rpc-forward-proxy/internal/xmlrpc"
 )
 
-func Handler(ctx context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
-	proxyHttpClient, err := socks5.HttpClient()
+type PapercutCredentials struct {
+	Target    string `json:"target"`
+	Port      string `json:"port"`
+	AuthToken string `json:"authToken"`
+}
+
+func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
+	credentials, err := papercut.GetCredentials()
 	if err != nil {
-		log.Printf("Error creating proxy http client: %v", err)
-		return events.APIGatewayV2HTTPResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}
+		return InternalServerErrorResponse(err, "failed to get papercut credentials")
 	}
 
-	xmlrpcClient, err := xmlrpc.NewClient("/rpc/api/xmlrpc", xmlrpc.HttpClient(proxyHttpClient))
+	client, err := xmlrpc.Client(credentials)
 	if err != nil {
-		log.Printf("Error creating xml-rpc client: %v", err)
-		return events.APIGatewayV2HTTPResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}
+		return InternalServerErrorResponse(err, "failed to create xml-rpc client")
 	}
-	defer xmlrpcClient.Close()
+	defer client.Close()
 
-	// TODO: get papercut auth token from ssm and add it to the args
-
-	var args map[string]interface{}
+	args := orderedmap.New[string, string]()
+	args.Set("authToken", credentials.AuthToken)
 	err = json.Unmarshal([]byte(req.Body), &args)
 	if err != nil {
-		log.Printf("Error unmarshalling request body: %v", err)
-		return events.APIGatewayV2HTTPResponse{
-			StatusCode: http.StatusBadRequest,
-			Body:       "Bad request",
-		}
+		return InternalServerErrorResponse(err, "failed to unmarshal request body")
 	}
 
-	// TODO: get service method
 	var reply map[string]interface{}
-	err = xmlrpcClient.Call("", args, &reply)
+	err = client.Call(
+		fmt.Sprintf("api.%s", req.PathParameters["serviceMethod"]),
+		args,
+		&reply,
+	)
 	if err != nil {
-		log.Printf("Error calling xml-rpc client: %v", err)
-		return events.APIGatewayV2HTTPResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}
+		return InternalServerErrorResponse(err, "failed to call xml-rpc method")
 	}
 
-	resBody, err := json.Marshal(reply)
+	body, err := json.Marshal(reply)
 	if err != nil {
-		log.Printf("Error marshalling response body: %v", err)
-		return events.APIGatewayV2HTTPResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}
+		return InternalServerErrorResponse(err, "failed to marshal response body")
 	}
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
-		Body:       string(resBody),
+		Body:       string(body),
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
