@@ -5,17 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
-	orderedmap "github.com/wk8/go-ordered-map/v2"
+	orderedMap "github.com/wk8/go-ordered-map/v2"
 	"net/http"
 	"secure-xml-rpc-forward-proxy/internal/papercut"
 	"secure-xml-rpc-forward-proxy/internal/xmlrpc"
 )
-
-type PapercutCredentials struct {
-	Target    string `json:"target"`
-	Port      string `json:"port"`
-	AuthToken string `json:"authToken"`
-}
 
 func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
 	credentials, err := papercut.GetCredentials()
@@ -29,7 +23,7 @@ func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGa
 	}
 	defer client.Close()
 
-	args := orderedmap.New[string, string]()
+	args := orderedMap.New[string, string]()
 	args.Set("authToken", credentials.AuthToken)
 	err = json.Unmarshal([]byte(req.Body), &args)
 	if err != nil {

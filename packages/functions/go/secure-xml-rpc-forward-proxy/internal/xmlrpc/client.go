@@ -8,18 +8,18 @@ import (
 )
 
 func Client(credentials *papercut.Credentials) (*xmlrpc.Client, error) {
-	proxyHttpClient, err := socks5.HttpClient()
+	httpClient, err := socks5.HttpClient()
 	if err != nil {
 		return nil, err
 	}
 
-	xmlrpcClient, err := xmlrpc.NewClient(
+	client, err := xmlrpc.NewClient(
 		fmt.Sprintf("%s:%s/rpc/api/xmlrpc", credentials.Target, credentials.Port),
-		xmlrpc.HttpClient(proxyHttpClient),
+		xmlrpc.HttpClient(httpClient),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return xmlrpcClient, nil
+	return client, nil
 }
