@@ -32,7 +32,7 @@
     "astro-sst": "^2.43.5",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "hono": "^4.6.1",
+    "hono": "^4.6.2",
     "jotai": "^2.9.3",
     "lucide-react": "^0.438.0",
     "partysocket": "^1.0.2",
@@ -55,7 +55,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.3",
     "@paperwait/eslint-config": "workspace:*",
-    "@types/react": "^18.3.5",
+    "@types/react": "^18.3.6",
     "@types/react-dom": "^18.3.0",
     "tailwindcss-react-aria-components": "^1.1.5",
     "typescript": "^5.6.2"

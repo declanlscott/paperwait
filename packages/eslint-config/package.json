@@ -2,9 +2,9 @@
   "name": "@paperwait/eslint-config",
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^5.56.1",
-    "@typescript-eslint/eslint-plugin": "^8.5.0",
-    "@typescript-eslint/parser": "^8.5.0",
-    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^8.6.0",
+    "@typescript-eslint/parser": "^8.6.0",
+    "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-astro": "^1.2.4",
     "eslint-plugin-drizzle": "^0.2.3",
