@@ -23,7 +23,7 @@ func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGa
 	}
 	defer client.Close()
 
-	args := orderedMap.New[string, string]()
+	args := orderedMap.New[string, any]()
 	args.Set("authToken", credentials.AuthToken)
 	err = json.Unmarshal([]byte(req.Body), &args)
 	if err != nil {
