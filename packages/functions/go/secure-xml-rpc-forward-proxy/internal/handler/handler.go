@@ -11,15 +11,15 @@ import (
 	"secure-xml-rpc-forward-proxy/internal/xmlrpc"
 )
 
-func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGatewayV2HTTPResponse {
+func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	credentials, err := papercut.GetCredentials()
 	if err != nil {
-		return InternalServerErrorResponse(err, "failed to get papercut credentials")
+		return InternalServerErrorResponse(err, "failed to get papercut credentials"), nil
 	}
 
 	client, err := xmlrpc.Client(credentials)
 	if err != nil {
-		return InternalServerErrorResponse(err, "failed to create xml-rpc client")
+		return InternalServerErrorResponse(err, "failed to create xml-rpc client"), nil
 	}
 	defer client.Close()
 
@@ -27,7 +27,7 @@ func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGa
 	args.Set("authToken", credentials.AuthToken)
 	err = json.Unmarshal([]byte(req.Body), &args)
 	if err != nil {
-		return InternalServerErrorResponse(err, "failed to unmarshal request body")
+		return InternalServerErrorResponse(err, "failed to unmarshal request body"), nil
 	}
 
 	var reply map[string]interface{}
@@ -37,12 +37,12 @@ func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGa
 		&reply,
 	)
 	if err != nil {
-		return InternalServerErrorResponse(err, "failed to call xml-rpc method")
+		return InternalServerErrorResponse(err, "failed to call xml-rpc method"), nil
 	}
 
 	body, err := json.Marshal(reply)
 	if err != nil {
-		return InternalServerErrorResponse(err, "failed to marshal response body")
+		return InternalServerErrorResponse(err, "failed to marshal response body"), nil
 	}
 
 	return events.APIGatewayV2HTTPResponse{
@@ -51,5 +51,5 @@ func Handler(_ context.Context, req events.APIGatewayV2HTTPRequest) events.APIGa
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
-	}
+	}, nil
 }
