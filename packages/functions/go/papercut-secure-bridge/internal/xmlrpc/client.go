@@ -32,15 +32,13 @@ func Call(
 	args any,
 	reply any,
 ) ([]byte, error) {
-	err := client.Call(serviceMethod, args, reply)
-	if err != nil {
+	if err := client.Call(serviceMethod, args, reply); err != nil {
 		return nil, err
 	}
 
-	data, err := json.Marshal(reply)
-	if err != nil {
+	if data, err := json.Marshal(reply); err != nil {
 		return nil, err
+	} else {
+		return data, nil
 	}
-
-	return data, nil
 }
