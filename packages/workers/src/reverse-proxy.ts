@@ -5,26 +5,28 @@ import { getConnInfo } from "hono/cloudflare-workers";
 import { getCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 
+import type { RateLimit } from "@cloudflare/workers-types";
 import type { StatusCode } from "hono/utils/http-status";
 
 export default new Hono<{
   Bindings: {
-    SESSION_RATE_LIMITER: { limit: (sessionId: string) => Promise<boolean> };
-    IP_RATE_LIMITER: { limit: (ip: string) => Promise<boolean> };
+    SESSION_RATE_LIMITER: RateLimit;
+    IP_RATE_LIMITER: RateLimit;
   };
 }>()
   .use("/api/*", async (c, next) => {
     const sessionId = getCookie(c, AUTH_SESSION_COOKIE_NAME);
 
-    let success: boolean;
-    if (sessionId) success = await c.env.SESSION_RATE_LIMITER.limit(sessionId);
+    let outcome: RateLimitOutcome;
+    if (sessionId)
+      outcome = await c.env.SESSION_RATE_LIMITER.limit({ key: sessionId });
     else {
       const ip = getConnInfo(c).remote.address;
       if (!ip) throw new Error("Missing remote address");
 
-      success = await c.env.IP_RATE_LIMITER.limit(ip);
+      outcome = await c.env.IP_RATE_LIMITER.limit({ key: ip });
     }
-    if (!success) throw new TooManyRequests();
+    if (!outcome.success) throw new TooManyRequests();
 
     await next();
   })
@@ -32,8 +34,8 @@ export default new Hono<{
     const ip = getConnInfo(c).remote.address;
     if (!ip) throw new Error("Missing remote address");
 
-    const success = await c.env.IP_RATE_LIMITER.limit(ip);
-    if (!success) throw new TooManyRequests();
+    const outcome = await c.env.IP_RATE_LIMITER.limit({ key: ip });
+    if (!outcome.success) throw new TooManyRequests();
 
     await next();
   })
