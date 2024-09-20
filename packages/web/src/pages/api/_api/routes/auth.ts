@@ -160,7 +160,7 @@ export default new Hono()
             code,
             code_verifier,
           ).catch(rethrowHttpError);
-          idToken = EntraId.parseIdToken(tokens.idToken());
+          idToken = await EntraId.parseIdToken(tokens.idToken());
           break;
         }
         case GOOGLE: {
@@ -168,7 +168,7 @@ export default new Hono()
             code,
             code_verifier,
           ).catch(rethrowHttpError);
-          idToken = Google.parseIdToken(tokens.idToken());
+          idToken = await Google.parseIdToken(tokens.idToken());
           break;
         }
         default: {

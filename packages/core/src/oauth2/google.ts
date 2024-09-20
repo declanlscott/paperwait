@@ -1,10 +1,10 @@
 import { generateCodeVerifier, generateState, Google } from "arctic";
-import { parseJWT } from "oslo/jwt";
 import { Resource } from "sst";
 import * as v from "valibot";
 
 import { AUTH_CALLBACK_PATH } from "../constants";
 import { HttpError, InternalServerError, NotImplemented } from "../errors/http";
+import { parseJwt } from "../utils/helpers";
 import { GOOGLE } from "./shared";
 
 import type { SessionTokens } from "../auth/sql";
@@ -60,13 +60,15 @@ export async function getUserInfo(accessToken: string) {
   );
 }
 
-export function parseIdToken(idToken: SessionTokens["idToken"]): IdToken {
-  const jwt = parseJWT(idToken);
-  if (!jwt?.payload) throw new InternalServerError("Empty id token payload");
+export async function parseIdToken(
+  idToken: SessionTokens["idToken"],
+): Promise<IdToken> {
+  const payload = await parseJwt(idToken);
+  if (!payload) throw new InternalServerError("Empty id token payload");
 
   const { hd, sub, name } = v.parse(
     v.object({ hd: v.string(), sub: v.string(), name: v.string() }),
-    jwt.payload,
+    payload,
   );
 
   return {

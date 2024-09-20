@@ -1,6 +1,5 @@
 import { generateCodeVerifier, generateState, MicrosoftEntraId } from "arctic";
 import { and, eq } from "drizzle-orm";
-import { parseJWT } from "oslo/jwt";
 import { Resource } from "sst";
 import * as v from "valibot";
 
@@ -9,6 +8,7 @@ import { AUTH_CALLBACK_PATH } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { HttpError, InternalServerError, NotFound } from "../errors/http";
 import { usersTable } from "../users/sql";
+import { parseJwt } from "../utils/helpers";
 import { useOauth2 } from "./context";
 
 import type { SessionTokens } from "../auth/sql";
@@ -65,9 +65,11 @@ export async function getUserInfo(accessToken: string) {
   );
 }
 
-export function parseIdToken(idToken: SessionTokens["idToken"]): IdToken {
-  const jwt = parseJWT(idToken);
-  if (!jwt?.payload) throw new InternalServerError("Empty id token payload");
+export async function parseIdToken(
+  idToken: SessionTokens["idToken"],
+): Promise<IdToken> {
+  const payload = await parseJwt(idToken);
+  if (!payload) throw new InternalServerError("Empty id token payload");
 
   const { tid, oid, preferred_username } = v.parse(
     v.object({
@@ -75,7 +77,7 @@ export function parseIdToken(idToken: SessionTokens["idToken"]): IdToken {
       oid: v.pipe(v.string(), v.uuid()),
       preferred_username: v.string(),
     }),
-    jwt.payload,
+    payload,
   );
 
   return {
