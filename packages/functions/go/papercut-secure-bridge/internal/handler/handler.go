@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,10 +12,7 @@ import (
 	"strings"
 )
 
-func Handler(
-	_ context.Context,
-	req events.APIGatewayV2HTTPRequest,
-) (events.APIGatewayV2HTTPResponse, error) {
+func Handler(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	if httpClient, err := proxy.HttpClient(); err != nil {
 		return InternalServerErrorResponse(err), nil
 	} else {

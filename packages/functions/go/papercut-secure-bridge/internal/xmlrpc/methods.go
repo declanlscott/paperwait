@@ -34,7 +34,18 @@ type GetSharedAccountPropertiesArgs struct {
 	Properties        []string
 }
 type GetSharedAccountPropertiesReply struct {
-	Properties []any
+	Properties []any `json:"properties"`
+}
+
+type IsUserExistsRequestBody struct {
+	Username string `json:"username"`
+}
+type IsUserExistsArgs struct {
+	AuthToken string
+	Username  string
+}
+type IsUserExistsReply struct {
+	Exists bool `json:"exists"`
 }
 
 type ListSharedAccountsRequestBody struct {
@@ -65,15 +76,4 @@ type ListUserSharedAccountsArgs struct {
 }
 type ListUserSharedAccountsReply struct {
 	UserSharedAccounts []any `json:"userSharedAccounts"`
-}
-
-type IsUserExistsRequestBody struct {
-	Username string `json:"username"`
-}
-type IsUserExistsArgs struct {
-	AuthToken string
-	Username  string
-}
-type IsUserExistsReply struct {
-	Exists bool `json:"exists"`
 }

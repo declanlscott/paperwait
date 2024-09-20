@@ -12,7 +12,7 @@ func UnauthorizedResponse(err error) events.APIGatewayV2HTTPResponse {
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusUnauthorized,
-		Body:       fmt.Sprintf("{\"message\": \"%s\"}", err.Error()),
+		Body:       fmt.Sprintf(`{"message":"%s"}`, err.Error()),
 	}
 }
 
@@ -21,7 +21,7 @@ func InternalServerErrorResponse(err error) events.APIGatewayV2HTTPResponse {
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       fmt.Sprintf("{\"message\": \"%s\"}", err.Error()),
+		Body:       fmt.Sprintf(`{"message":"%s"}`, err.Error()),
 	}
 }
 
@@ -30,6 +30,6 @@ func NotImplementedResponse(err error) events.APIGatewayV2HTTPResponse {
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusNotImplemented,
-		Body:       fmt.Sprintf("{\"message\": \"%s\"}", err.Error()),
+		Body:       fmt.Sprintf(`{"message":"%s"}`, err.Error()),
 	}
 }
