@@ -3,7 +3,7 @@ import {
   deliveryOptionAttributesSchema,
   workflowConfigurationSchema,
 } from "@paperwait/core/rooms/shared";
-import { formatPascalCase } from "@paperwait/core/utils/misc";
+import { formatPascalCase } from "@paperwait/core/utils/helpers";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { valibotValidator } from "@tanstack/valibot-form-adapter";

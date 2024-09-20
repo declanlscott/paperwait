@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import { VARCHAR_LENGTH } from "../constants";
-import { isUniqueByName } from "../utils/misc";
+import { isUniqueByName } from "../utils/helpers";
 import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
 
 export const costSchema = v.pipe(

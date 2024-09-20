@@ -2,7 +2,7 @@ import {
   Button as AriaButton,
   composeRenderProps,
 } from "react-aria-components";
-import { getUserInitials } from "@paperwait/core/utils/misc";
+import { getUserInitials } from "@paperwait/core/utils/helpers";
 import { Building2, LogOut } from "lucide-react";
 
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
