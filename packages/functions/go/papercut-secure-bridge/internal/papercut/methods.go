@@ -1,4 +1,4 @@
-package xmlrpc
+package papercut
 
 const (
 	AdjustSharedAccountAccountBalance = "adjustSharedAccountAccountBalance"
@@ -57,6 +57,7 @@ type ListUserSharedAccountsRequestBody struct {
 }
 type ListUserSharedAccountsArgs struct {
 	AuthToken                        string
+	Username                         string
 	Offset                           int
 	Limit                            int
 	IgnoreUserAccountSelectionConfig bool
