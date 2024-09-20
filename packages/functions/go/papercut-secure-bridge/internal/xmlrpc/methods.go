@@ -1,6 +1,7 @@
-package papercut
+package xmlrpc
 
 const (
+	MethodPrefix                      = "api."
 	AdjustSharedAccountAccountBalance = "adjustSharedAccountAccountBalance"
 	GetSharedAccountProperties        = "getSharedAccountProperties"
 	IsUserExists                      = "isUserExists"
