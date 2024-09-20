@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"alexejk.io/go-xmlrpc"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,8 +8,8 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"net/http"
 	"os"
-	"papercut-secure-bridge/internal/papercut"
-	"papercut-secure-bridge/internal/socks5"
+	"papercut-secure-bridge/internal/proxy"
+	"papercut-secure-bridge/internal/xmlrpc"
 	"strings"
 )
 
@@ -18,160 +17,131 @@ func Handler(
 	_ context.Context,
 	req events.APIGatewayV2HTTPRequest,
 ) (events.APIGatewayV2HTTPResponse, error) {
-	c, err := socks5.HttpClient()
+	httpClient, err := proxy.HttpClient()
 	if err != nil {
-		return InternalServerErrorResponse(err, "failed to create proxy http client"), nil
+		return InternalServerErrorResponse(err), nil
 	}
 
-	return Bridge(c, req), nil
+	return Bridge(httpClient, req), nil
 }
 
 func Bridge(
-	c *http.Client,
+	httpClient *http.Client,
 	req events.APIGatewayV2HTTPRequest,
 ) events.APIGatewayV2HTTPResponse {
-	endpoint := os.Getenv("WEB_SERVICES_ENDPOINT")
-	if endpoint == "" {
-		message := "WEB_SERVICES_ENDPOINT environment variable is not set"
-		return InternalServerErrorResponse(errors.New(message), message)
-	}
-
-	client, err := xmlrpc.NewClient(
-		endpoint,
-		xmlrpc.HttpClient(c),
-		xmlrpc.SkipUnknownFields(true),
-	)
+	client, err := xmlrpc.Client(httpClient)
 	if err != nil {
-		return InternalServerErrorResponse(err, "failed to create xml-rpc client")
+		return InternalServerErrorResponse(err)
 	}
 	defer client.Close()
 
-	authToken := os.Getenv("AUTH_TOKEN")
-	if authToken == "" {
-		message := "AUTH_TOKEN environment variable is not set"
-		return InternalServerErrorResponse(errors.New(message), message)
+	authToken, ok := os.LookupEnv("AUTH_TOKEN")
+	if !ok {
+		return InternalServerErrorResponse(errors.New("AUTH_TOKEN environment variable is not set"))
 	}
 
 	method := req.PathParameters["method"]
 	var data []byte
 	var rpcErr error
 	switch method {
-	case papercut.AdjustSharedAccountAccountBalance:
-		var reqBody papercut.AdjustSharedAccountAccountBalanceRequestBody
+	case xmlrpc.AdjustSharedAccountAccountBalance:
+		var reqBody xmlrpc.AdjustSharedAccountAccountBalanceRequestBody
 		err := json.Unmarshal([]byte(req.Body), &reqBody)
 		if err != nil {
-			return InternalServerErrorResponse(
-				err,
-				fmt.Sprintf(`failed to unmarhsal "%s" request body`, method),
-			)
+			return InternalServerErrorResponse(err)
 		}
 
-		data, rpcErr = papercut.Call(
+		data, rpcErr = xmlrpc.Call(
 			client,
-			fmt.Sprintf("api.%s", method),
-			&papercut.AdjustSharedAccountAccountBalanceArgs{
+			fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
+			&xmlrpc.AdjustSharedAccountAccountBalanceArgs{
 				AuthToken:         authToken,
 				SharedAccountName: reqBody.SharedAccountName,
 				Adjustment:        reqBody.Adjustment,
 				Comment:           reqBody.Comment,
 			},
-			&papercut.AdjustSharedAccountAccountBalanceReply{},
+			&xmlrpc.AdjustSharedAccountAccountBalanceReply{},
 		)
-	case papercut.GetSharedAccountProperties:
-		var reqBody papercut.GetSharedAccountPropertiesRequestBody
+	case xmlrpc.GetSharedAccountProperties:
+		var reqBody xmlrpc.GetSharedAccountPropertiesRequestBody
 		err := json.Unmarshal([]byte(req.Body), &reqBody)
 		if err != nil {
-			return InternalServerErrorResponse(
-				err,
-				fmt.Sprintf(`failed to unmarhsal "%s" request body`, method),
-			)
+			return InternalServerErrorResponse(err)
 		}
 
-		data, rpcErr = papercut.Call(
+		data, rpcErr = xmlrpc.Call(
 			client,
-			fmt.Sprintf("api.%s", method),
-			&papercut.GetSharedAccountPropertiesArgs{
+			fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
+			&xmlrpc.GetSharedAccountPropertiesArgs{
 				AuthToken:         authToken,
 				SharedAccountName: reqBody.SharedAccountName,
 				Properties:        reqBody.Properties,
 			},
-			&papercut.GetSharedAccountPropertiesReply{},
+			&xmlrpc.GetSharedAccountPropertiesReply{},
 		)
-	case papercut.IsUserExists:
-		var reqBody papercut.IsUserExistsRequestBody
+	case xmlrpc.IsUserExists:
+		var reqBody xmlrpc.IsUserExistsRequestBody
 		err := json.Unmarshal([]byte(req.Body), &reqBody)
 		if err != nil {
-			return InternalServerErrorResponse(
-				err,
-				fmt.Sprintf(`failed to unmarhsal "%s" request body`, method),
-			)
+			return InternalServerErrorResponse(err)
 		}
 
-		data, rpcErr = papercut.Call(
+		data, rpcErr = xmlrpc.Call(
 			client,
-			fmt.Sprintf("api.%s", method),
-			&papercut.IsUserExistsArgs{
+			fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
+			&xmlrpc.IsUserExistsArgs{
 				AuthToken: authToken,
 				Username:  reqBody.Username,
 			},
-			&papercut.IsUserExistsReply{},
+			&xmlrpc.IsUserExistsReply{},
 		)
-	case papercut.ListSharedAccounts:
-		var reqBody papercut.ListSharedAccountsRequestBody
+	case xmlrpc.ListSharedAccounts:
+		var reqBody xmlrpc.ListSharedAccountsRequestBody
 		err := json.Unmarshal([]byte(req.Body), &reqBody)
 		if err != nil {
-			return InternalServerErrorResponse(
-				err,
-				fmt.Sprintf(`failed to unmarhsal "%s" request body`, method),
-			)
+			return InternalServerErrorResponse(err)
 		}
 
-		data, rpcErr = papercut.Call(
+		data, rpcErr = xmlrpc.Call(
 			client,
-			fmt.Sprintf("api.%s", method),
-			&papercut.ListSharedAccountsArgs{
+			fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
+			&xmlrpc.ListSharedAccountsArgs{
 				AuthToken: authToken,
 				Offset:    reqBody.Offset,
 				Limit:     reqBody.Limit,
 			},
-			&papercut.ListSharedAccountsReply{},
+			&xmlrpc.ListSharedAccountsReply{},
 		)
-	case papercut.ListUserSharedAccounts:
-		var reqBody papercut.ListUserSharedAccountsRequestBody
+	case xmlrpc.ListUserSharedAccounts:
+		var reqBody xmlrpc.ListUserSharedAccountsRequestBody
 		err := json.Unmarshal([]byte(req.Body), &reqBody)
 		if err != nil {
-			return InternalServerErrorResponse(
-				err,
-				fmt.Sprintf(`failed to unmarhsal "%s" request body`, method),
-			)
+			return InternalServerErrorResponse(err)
 		}
 
-		data, rpcErr = papercut.Call(
+		data, rpcErr = xmlrpc.Call(
 			client,
-			fmt.Sprintf("api.%s", method),
-			&papercut.ListUserSharedAccountsArgs{
+			fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
+			&xmlrpc.ListUserSharedAccountsArgs{
 				AuthToken:                        authToken,
 				Username:                         reqBody.Username,
 				Offset:                           reqBody.Offset,
 				Limit:                            reqBody.Limit,
 				IgnoreUserAccountSelectionConfig: reqBody.IgnoreUserAccountSelectionConfig,
 			},
-			&papercut.ListUserSharedAccountsReply{},
+			&xmlrpc.ListUserSharedAccountsReply{},
 		)
 	default:
 		return NotImplementedResponse(
-			fmt.Sprintf(`"%s" method not implemented`, method),
+			errors.New(fmt.Sprintf(`"%s" method not implemented`, method)),
 		)
 	}
 	if rpcErr != nil {
-		if strings.HasPrefix(rpcErr.Error(), papercut.UnauthorizedFaultCode) {
-			return UnauthorizedResponse("Invalid authentication token")
+		if strings.HasPrefix(rpcErr.Error(), xmlrpc.UnauthorizedFaultCode) {
+			return UnauthorizedResponse(errors.New("invalid authentication token"))
 		}
 
-		return InternalServerErrorResponse(
-			rpcErr,
-			fmt.Sprintf(`"%s" method call failed`, method),
-		)
+		return InternalServerErrorResponse(rpcErr)
 	}
 
 	body := string(data)
