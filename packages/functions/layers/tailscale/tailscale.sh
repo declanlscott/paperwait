@@ -7,8 +7,6 @@ LAMBDA_EXTENSION_NAME="$OWN_FILENAME" # (external) extension name has to match t
 TMPOWN_FILENAME="$(basename -s .sh "$0")"
 TMPFILE="/tmp/${TMPOWN_FILENAME}.dat"
 touch "${TMPFILE}"
-TAILSCALE_AUTH_KEY=""
-TS_STATUS_FILE="/tmp/tsup"
 
 # We now define some functions to be called later in the extension code
 
@@ -71,12 +69,12 @@ SLEEP=0.1
 # Check if Tailscale is running
 while [[ $(tailscale status) == *"stopped"* && $ATTEMPT -lt $MAX_ATTEMPTS ]]; do
   sleep "$SLEEP"
-  extecho "Tailscale not up, waiting for $SLEEP seconds"
+  extecho "Tailscale not up, waiting for $SLEEP seconds..."
   ((ATTEMPT++))
 done
 
 if [[ $ATTEMPT -eq $MAX_ATTEMPTS ]]; then
-  extecho "Warning: Tailscale did not reach a running state within the allowed attempts.  Continuing anyway"
+  extecho "Warning: Tailscale did not reach a running state within the allowed attempts. Continuing anyway..."
 else
   extecho "Tailscale has started. Continuing with the script..."
 fi
@@ -114,9 +112,10 @@ while true; do
 
   EVENT_DATA="$(<$TMPFILE)"
   if [[ $EVENT_DATA == *"SHUTDOWN"* ]]; then
+    extecho "Received SHUTDOWN event, disconnecting from Tailscale...";
     /opt/bin/tailscale logout
-    extecho "Received SHUTDOWN event. Exiting." 1>&2;
-    exit 0 # Exit if we receive a SHUTDOWN event
+    extecho "Exiting...";
+    exit 0
   fi
 
   extecho "Received event: ${EVENT_DATA}"

@@ -59,8 +59,8 @@ function extract_package {
 
 function copy_layer_prereqs {
   echo "Copying Lambda Layer prereqs"
-  cp -r "${START_PATH}/extension.sh" "${DIST_LAYER_PATH}/extensions"
-  chmod 555 "${DIST_LAYER_PATH}/extensions/extension.sh"
+  cp -r "${START_PATH}/tailscale.sh" "${DIST_LAYER_PATH}/extensions"
+  chmod 555 "${DIST_LAYER_PATH}/extensions/tailscale.sh"
 }
 
 function copy_bins_to_layer {

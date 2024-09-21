@@ -60,8 +60,7 @@ function resolve_jq_url {
 }
 
 function resolve_tailscale_rpm_url {
-  echo "Retrieve the latest version of Tailscale to use and determine the"
-  echo "RPM location..."
+  echo "Retrieve the latest version of Tailscale to use and determine the RPM location..."
   export TAILSCALE_RPM_URL="$(query_repo tailscale)"
   write_to_lock_file "export TAILSCALE_RPM_URL=\"${TAILSCALE_RPM_URL}\""
   echo "Resolved it to: ${TAILSCALE_RPM_URL}"

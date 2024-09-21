@@ -22,7 +22,7 @@ ENV WORKDIR=${WORKDIR}
 
 COPY ./build.sh /bin
 COPY ./resolve-packages.sh .
-COPY ./extension.sh .
+COPY ./tailscale.sh .
 
 RUN chown -R builder:builder ${WORKDIR}
 

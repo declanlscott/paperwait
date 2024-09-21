@@ -31,6 +31,8 @@ if [[ "${REBUILD_PACKAGE_LOCK}" == "YES" ]]; then
 fi
 
 echo "Build layer with docker..."
+sleep 1
+
 docker run --rm \
   -v "${CURRENT_DIR}/package.lock.sh:/tmp/layer/package.lock.sh" \
   -v "${DIST_DIR}:/tmp/layer/dist" \
@@ -38,8 +40,10 @@ docker run --rm \
 
 if [[ "${REBUILD_PACKAGE_LOCK}" == "YES" ]]; then
   echo "Result of rebuilding package lock file as requested."
-  echo "File: ./lib/layer/package.lock.sh"
+  echo "File: ./package.lock.sh"
   echo "------- BEGIN FILE CONTENT -------"
   cat ./package.lock.sh
   echo "------- END FILE CONTENT ---------"
+  rm -f ./package-old.lock.sh
+  echo "Removed old package lock file"
 fi
