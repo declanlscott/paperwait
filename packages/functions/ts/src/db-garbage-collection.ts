@@ -4,6 +4,6 @@ import * as Replicache from "@paperwait/core/replicache";
 export const handler = async () =>
   Promise.all([
     Auth.deleteExpiredSessions(),
-    Replicache.deleteOldClientGroups(),
-    Replicache.deleteOldClients(),
+    Replicache.deleteExpiredClientGroups(),
+    Replicache.deleteExpiredClients(),
   ]);

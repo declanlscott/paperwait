@@ -5,7 +5,7 @@ import { Resource } from "sst";
 import * as v from "valibot";
 
 import { useAuthenticated } from "../auth/context";
-import { REPLICACHE_DELETE_DURATION } from "../constants";
+import { REPLICACHE_EXPIRATION_DURATION } from "../constants";
 import { serializable, useTransaction } from "../drizzle/transaction";
 import { HttpError } from "../errors/http";
 import {
@@ -115,14 +115,14 @@ export const putClientGroup = async (
       }),
   );
 
-export const deleteOldClientGroups = async () =>
+export const deleteExpiredClientGroups = async () =>
   useTransaction((tx) =>
     tx
       .delete(replicacheClientGroupsTable)
       .where(
         lt(
           replicacheClientGroupsTable.updatedAt,
-          sub(new Date(), REPLICACHE_DELETE_DURATION).toISOString(),
+          sub(new Date(), REPLICACHE_EXPIRATION_DURATION).toISOString(),
         ),
       ),
   );
@@ -138,14 +138,14 @@ export const putClient = async (client: OmitTimestamps<ReplicacheClient>) =>
       }),
   );
 
-export const deleteOldClients = async () =>
+export const deleteExpiredClients = async () =>
   useTransaction((tx) =>
     tx
       .delete(replicacheClientsTable)
       .where(
         lt(
           replicacheClientsTable.updatedAt,
-          sub(new Date(), REPLICACHE_DELETE_DURATION).toISOString(),
+          sub(new Date(), REPLICACHE_EXPIRATION_DURATION).toISOString(),
         ),
       ),
   );
@@ -328,7 +328,7 @@ export const pull = fn(
               eq(replicacheClientViewsTable.orgId, user.orgId),
               lt(
                 replicacheClientViewsTable.updatedAt,
-                sub(new Date(), REPLICACHE_DELETE_DURATION).toISOString(),
+                sub(new Date(), REPLICACHE_EXPIRATION_DURATION).toISOString(),
               ),
             ),
           ),
