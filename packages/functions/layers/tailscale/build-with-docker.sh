@@ -7,8 +7,16 @@ echo "Building container..."
 docker build -t lambda-layer-builder .
 echo "Container is ready."
 
+CURRENT_DIR=$(pwd)
+DIST_DIR="${CURRENT_DIR}/dist"
+
+if [ -d "$DIST_DIR" ]; then
+  rm -rf "$DIST_DIR"
+  echo "Removed existing dist directory"
+fi
+
 echo "Creating target dist directory"
-mkdir -p dist
+mkdir -p "$DIST_DIR"
 
 if [[ ! -e ./package.lock.sh ]]; then
   echo "Package lock file does not exist yet"
@@ -22,11 +30,10 @@ if [[ "${REBUILD_PACKAGE_LOCK}" == "YES" ]]; then
   touch ./package.lock.sh
 fi
 
-CURRENT_DIR=$(pwd)
 echo "Build layer with docker..."
 docker run --rm \
   -v "${CURRENT_DIR}/package.lock.sh:/tmp/layer/package.lock.sh" \
-  -v "${CURRENT_DIR}/dist:/tmp/layer/dist" \
+  -v "${DIST_DIR}:/tmp/layer/dist" \
   lambda-layer-builder
 
 if [[ "${REBUILD_PACKAGE_LOCK}" == "YES" ]]; then
