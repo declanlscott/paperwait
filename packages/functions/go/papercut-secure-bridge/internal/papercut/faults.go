@@ -1,4 +1,4 @@
-package xmlrpc
+package papercut
 
 const (
 	UnauthorizedFaultCode = "319"

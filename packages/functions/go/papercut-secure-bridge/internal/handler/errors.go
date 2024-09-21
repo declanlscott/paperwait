@@ -2,9 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"github.com/aws/aws-lambda-go/events"
 	"log"
 	"net/http"
+
+	"github.com/aws/aws-lambda-go/events"
 )
 
 func UnauthorizedResponse(err error) events.APIGatewayV2HTTPResponse {

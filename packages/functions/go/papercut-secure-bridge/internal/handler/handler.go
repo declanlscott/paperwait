@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-lambda-go/events"
 	"net/http"
 	"os"
+	"papercut-secure-bridge/internal/aws"
+	"papercut-secure-bridge/internal/papercut"
 	"papercut-secure-bridge/internal/proxy"
-	"papercut-secure-bridge/internal/xmlrpc"
 	"strings"
+
+	"github.com/aws/aws-lambda-go/events"
 )
 
 func Handler(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
@@ -24,100 +26,113 @@ func Bridge(
 	httpClient *http.Client,
 	req events.APIGatewayV2HTTPRequest,
 ) events.APIGatewayV2HTTPResponse {
-	if client, err := xmlrpc.Client(httpClient); err != nil {
+	orgId, ok := os.LookupEnv("ORG_ID")
+	if !ok {
+		return InternalServerErrorResponse(errors.New("ORG_ID environment variable is not set"))
+	}
+
+	output, err := aws.GetParameter(
+		fmt.Sprintf("/paperwait/org/%s/papercut/web-services/credentials", orgId),
+		true,
+	)
+	if err != nil {
+		return InternalServerErrorResponse(err)
+	}
+
+	var credentials papercut.Credentials
+	if err := json.Unmarshal([]byte(*output.Parameter.Value), &credentials); err != nil {
+		return InternalServerErrorResponse(err)
+	}
+
+	if client, err := papercut.Client(httpClient, credentials.Endpoint); err != nil {
 		return InternalServerErrorResponse(err)
 	} else {
 		defer client.Close()
 
-		authToken, ok := os.LookupEnv("AUTH_TOKEN")
-		if !ok {
-			return InternalServerErrorResponse(errors.New("AUTH_TOKEN environment variable is not set"))
-		}
-
 		var data []byte
 		var err error
 		switch method := req.PathParameters["method"]; method {
-		case xmlrpc.AdjustSharedAccountAccountBalance:
-			var reqBody xmlrpc.AdjustSharedAccountAccountBalanceRequestBody
+		case papercut.AdjustSharedAccountAccountBalance:
+			var reqBody papercut.AdjustSharedAccountAccountBalanceRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
 				return InternalServerErrorResponse(err)
 			}
 
-			data, err = xmlrpc.Call(
+			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
-				&xmlrpc.AdjustSharedAccountAccountBalanceArgs{
-					AuthToken:         authToken,
+				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				&papercut.AdjustSharedAccountAccountBalanceArgs{
+					AuthToken:         credentials.AuthToken,
 					SharedAccountName: reqBody.SharedAccountName,
 					Adjustment:        reqBody.Adjustment,
 					Comment:           reqBody.Comment,
 				},
-				&xmlrpc.AdjustSharedAccountAccountBalanceReply{},
+				&papercut.AdjustSharedAccountAccountBalanceReply{},
 			)
-		case xmlrpc.GetSharedAccountProperties:
-			var reqBody xmlrpc.GetSharedAccountPropertiesRequestBody
+		case papercut.GetSharedAccountProperties:
+			var reqBody papercut.GetSharedAccountPropertiesRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
 				return InternalServerErrorResponse(err)
 			}
 
-			data, err = xmlrpc.Call(
+			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
-				&xmlrpc.GetSharedAccountPropertiesArgs{
-					AuthToken:         authToken,
+				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				&papercut.GetSharedAccountPropertiesArgs{
+					AuthToken:         credentials.AuthToken,
 					SharedAccountName: reqBody.SharedAccountName,
 					Properties:        reqBody.Properties,
 				},
-				&xmlrpc.GetSharedAccountPropertiesReply{},
+				&papercut.GetSharedAccountPropertiesReply{},
 			)
-		case xmlrpc.IsUserExists:
-			var reqBody xmlrpc.IsUserExistsRequestBody
+		case papercut.IsUserExists:
+			var reqBody papercut.IsUserExistsRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
 				return InternalServerErrorResponse(err)
 			}
 
-			data, err = xmlrpc.Call(
+			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
-				&xmlrpc.IsUserExistsArgs{
-					AuthToken: authToken,
+				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				&papercut.IsUserExistsArgs{
+					AuthToken: credentials.AuthToken,
 					Username:  reqBody.Username,
 				},
-				&xmlrpc.IsUserExistsReply{},
+				&papercut.IsUserExistsReply{},
 			)
-		case xmlrpc.ListSharedAccounts:
-			var reqBody xmlrpc.ListSharedAccountsRequestBody
+		case papercut.ListSharedAccounts:
+			var reqBody papercut.ListSharedAccountsRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
 				return InternalServerErrorResponse(err)
 			}
 
-			data, err = xmlrpc.Call(
+			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
-				&xmlrpc.ListSharedAccountsArgs{
-					AuthToken: authToken,
+				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				&papercut.ListSharedAccountsArgs{
+					AuthToken: credentials.AuthToken,
 					Offset:    reqBody.Offset,
 					Limit:     reqBody.Limit,
 				},
-				&xmlrpc.ListSharedAccountsReply{},
+				&papercut.ListSharedAccountsReply{},
 			)
-		case xmlrpc.ListUserSharedAccounts:
-			var reqBody xmlrpc.ListUserSharedAccountsRequestBody
+		case papercut.ListUserSharedAccounts:
+			var reqBody papercut.ListUserSharedAccountsRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
 				return InternalServerErrorResponse(err)
 			}
 
-			data, err = xmlrpc.Call(
+			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", xmlrpc.MethodPrefix, method),
-				&xmlrpc.ListUserSharedAccountsArgs{
-					AuthToken:                        authToken,
+				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				&papercut.ListUserSharedAccountsArgs{
+					AuthToken:                        credentials.AuthToken,
 					Username:                         reqBody.Username,
 					Offset:                           reqBody.Offset,
 					Limit:                            reqBody.Limit,
 					IgnoreUserAccountSelectionConfig: reqBody.IgnoreUserAccountSelectionConfig,
 				},
-				&xmlrpc.ListUserSharedAccountsReply{},
+				&papercut.ListUserSharedAccountsReply{},
 			)
 		default:
 			return NotImplementedResponse(
@@ -125,7 +140,7 @@ func Bridge(
 			)
 		}
 		if err != nil {
-			if strings.HasPrefix(err.Error(), xmlrpc.UnauthorizedFaultCode) {
+			if strings.HasPrefix(err.Error(), papercut.UnauthorizedFaultCode) {
 				return UnauthorizedResponse(errors.New("invalid authentication token"))
 			}
 

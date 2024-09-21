@@ -1,19 +1,13 @@
-package xmlrpc
+package papercut
 
 import (
-	"alexejk.io/go-xmlrpc"
 	"encoding/json"
-	"errors"
 	"net/http"
-	"os"
+
+	"alexejk.io/go-xmlrpc"
 )
 
-func Client(httpClient *http.Client) (*xmlrpc.Client, error) {
-	endpoint, ok := os.LookupEnv("WEB_SERVICES_ENDPOINT")
-	if !ok {
-		return nil, errors.New("WEB_SERVICES_ENDPOINT environment variable is not set")
-	}
-
+func Client(httpClient *http.Client, endpoint string) (*xmlrpc.Client, error) {
 	client, err := xmlrpc.NewClient(
 		endpoint,
 		xmlrpc.HttpClient(httpClient),

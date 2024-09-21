@@ -2,13 +2,14 @@ package proxy
 
 import (
 	"context"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
+
+	"golang.org/x/net/proxy"
 )
 
 func HttpClient() (*http.Client, error) {
-	if dialer, err := proxy.SOCKS5("tcp", "localhost:1055", nil, proxy.Direct); err != nil {
+	if dialer, err := proxy.SOCKS5("tcp", "127.0.0.1:1055", nil, proxy.Direct); err != nil {
 		return nil, err
 	} else {
 		return &http.Client{
