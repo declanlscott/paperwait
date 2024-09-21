@@ -36,34 +36,19 @@ forward_sigterm_and_wait() {
 # initializes, run them before the /register
 extecho "Initialization"
 
-# Run a while loop to check the AWS Parameters and Secrets Lambda Extension and wait for it to be ready before continuing with the script.
-MAX_ATTEMPTS=20
-ATTEMPT=1
-SLEEP=0.1
-
-DEFAULT_PARAMETERS_SECRETS_EXTENSION_HTTP_PORT=2773
-if [ "Z$PARAMETERS_SECRETS_EXTENSION_HTTP_PORT" == "Z" ]; then
-  PARAMETERS_SECRETS_EXTENSION_HTTP_PORT=$DEFAULT_PARAMETERS_SECRETS_EXTENSION_HTTP_PORT
-fi
-
-# Check if AWS Parameters and Secrets Lambda Extension is running
-while ! curl --silent --head --fail "http://localhost:$PARAMETERS_SECRETS_EXTENSION_HTTP_PORT" >/dev/null 2>&1 && [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-  sleep "$SLEEP"
-  echo "AWS Parameters and Secrets Lambda Extension not ready, waiting for $SLEEP seconds"
-  ((ATTEMPT++))
-done
-
-if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-  echo "Warning: AWS Parameters and Secrets Lambda Extension did not reach a running state within the allowed attempts. Continuing anyway"
-else
-  echo "AWS Parameters and Secrets Lambda Extension has started. Continuing with the script..."
-fi
-
-SSM_RESPONSE=$(curl \
-  -H "X-AWS-Parameters-Secrets-Token:$AWS_SESSION_TOKEN" \
-  "http://localhost:$PARAMETERS_SECRETS_EXTENSION_HTTP_PORT/systemsmanager/parameters/get?name=/paperwait/org/$ORG_ID/tailscale/authkey"
+function get_parameter {
+  echo $(curl -X POST "https://ssm.${AWS_REGION}.amazonaws.com/" \
+    --aws-sigv4 "aws:amz:${AWS_REGION}:ssm" \
+    --user "${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}" \
+    --header "X-Amz-Security-Token: ${AWS_SESSION_TOKEN}" \
+    --header "X-Amz-Target: AmazonSSM.GetParameter" \
+    --header "Content-Type: application/x-amz-json-1.1" \
+    --data "{\"Name\":\"$1\",\"WithDecryption\":$2}"
   )
+}
 
+# Get the Tailscale auth key from SSM
+SSM_RESPONSE=$(get_parameter "/paperwait/org/$ORG_ID/tailscale/auth-key" true)
 TAILSCALE_AUTH_KEY=$(echo "$SSM_RESPONSE" | jq -r '.Parameter.Value')
 
 # Start Tailscale - we use the bash script modified for the extension directory
@@ -72,15 +57,17 @@ TAILSCALE_AUTH_KEY=$(echo "$SSM_RESPONSE" | jq -r '.Parameter.Value')
 # is a flag for Tailscale, not of the 'up' sub-command
 # https://tailscale.com/kb/1112/userspace-networking/ and https://tailscale.com/kb/1113/aws-lambda/
 extecho "Starting Tailscale init process"
-/opt/bin/tailscaled --tun=userspace-networking --socks5-server=localhost:1055 --socket=/tmp/tailscale.sock --state /tmp/tailscale &
-/opt/bin/tailscale --socket=/tmp/tailscale.sock up --authkey="$TAILSCALE_AUTH_KEY" --shields-up --hostname=paperwait-secure-xml-rpc-forward-proxy
+/opt/bin/tailscaled --tun=userspace-networking --socks5-server=127.0.0.1:1055 --socket=/tmp/tailscale.sock --state /tmp/tailscale &
+/opt/bin/tailscale --socket=/tmp/tailscale.sock up --authkey="$TAILSCALE_AUTH_KEY" --shields-up --hostname=paperwait-papercut-secure-bridge
 extecho "Tailscale started"
-ALL_PROXY=socks5://localhost:1055/
+ALL_PROXY=socks5://127.0.0.1:1055/
 NO_PROXY=$AWS_LAMBDA_RUNTIME_API
 extecho "Setup Tailscale as SOCKS5 server on port 1055 in the background"
 
 # Run a while loop to check tailscale status and wait for it to be 'up' before continuing with the script.
+MAX_ATTEMPTS=20
 ATTEMPT=1
+SLEEP=0.1
 # Check if Tailscale is running
 while [[ $(tailscale status) == *"stopped"* && $ATTEMPT -lt $MAX_ATTEMPTS ]]; do
   sleep "$SLEEP"
@@ -99,7 +86,7 @@ fi
 # the runtime.  Note, once initialised, we only do anything on a shutdown event with this extension.
 HEADERS="$(mktemp)"
 extecho "Registering at http://${AWS_LAMBDA_RUNTIME_API}/2020-01-01/extension/register"
-/opt/bin/curl -sS -LD "$HEADERS" \
+curl -sS -LD "$HEADERS" \
   -X POST "http://${AWS_LAMBDA_RUNTIME_API}/2020-01-01/extension/register" \
   -H "Lambda-Extension-Name: ${LAMBDA_EXTENSION_NAME}" \
   -d "{ \"events\": [\"SHUTDOWN\"] }" \
