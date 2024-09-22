@@ -1,8 +1,9 @@
 import { domain } from "./dns";
 
-const wellKnownOutput = azuread.getApplicationPublishedAppIdsOutput({});
-
-const microsoftGraphAppId = wellKnownOutput.result?.MicrosoftGraph;
+const wellKnown = azuread.getApplicationPublishedAppIds({});
+const microsoftGraphAppId = await wellKnown.then(
+  ({ result }) => result?.MicrosoftGraph,
+);
 
 const { oauth2PermissionScopeIds } = new azuread.ServicePrincipal(
   "MicrosoftGraphServicePrincipal",

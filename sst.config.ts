@@ -55,8 +55,6 @@ export default $config({
       },
     });
 
-    return {
-      url: infra.reverseProxy.url,
-    };
+    return {};
   },
 });
