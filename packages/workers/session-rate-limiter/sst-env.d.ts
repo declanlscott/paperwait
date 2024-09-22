@@ -6,10 +6,6 @@ export {}
 import "sst"
 declare module "sst" {
   export interface Resource {
-    "AssetsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
     "Client": {
       "domain": string
       "isDev": boolean
@@ -23,10 +19,6 @@ declare module "sst" {
       }
       "type": "sst.sst.Linkable"
     }
-    "DocumentsBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
     "GoogleClientId": {
       "type": "sst.sst.Secret"
       "value": string
@@ -34,10 +26,6 @@ declare module "sst" {
     "GoogleClientSecret": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "InfraBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
     }
     "Meta": {
       "app": {
@@ -48,6 +36,10 @@ declare module "sst" {
       "domain": string
       "isDev": boolean
       "type": "sst.sst.Linkable"
+    }
+    "NewAccountQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
     }
     "Oauth2": {
       "entraId": {
@@ -68,6 +60,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "PulumiBackendBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "Realtime": {
       "apiKey": string
       "type": "sst.sst.Linkable"
@@ -78,20 +74,8 @@ declare module "sst" {
       "value": string
     }
     "Storage": {
-      "assets": {
-        "bucket": string
-        "distribution": {
-          "domain": string
-          "privateKey": string
-          "publicKey": {
-            "id": string
-          }
-        }
-      }
-      "documents": {
-        "bucket": string
-      }
-      "infra": {
+      "newAccountQueue": string
+      "pulumiBackend": {
         "bucket": string
       }
       "type": "sst.sst.Linkable"

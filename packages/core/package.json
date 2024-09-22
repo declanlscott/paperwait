@@ -17,7 +17,9 @@
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/client-s3": "^3.654.0",
+    "@aws-sdk/client-sqs": "^3.654.0",
     "@aws-sdk/client-ssm": "^3.654.0",
+    "@aws-sdk/client-sts": "^3.654.0",
     "@aws-sdk/cloudfront-signer": "^3.654.0",
     "@aws-sdk/credential-providers": "^3.654.0",
     "@aws-sdk/s3-request-presigner": "^3.654.0",
@@ -37,7 +39,6 @@
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
-    "@types/ws": "^8.5.12",
     "drizzle-kit": "^0.24.2"
   }
 }

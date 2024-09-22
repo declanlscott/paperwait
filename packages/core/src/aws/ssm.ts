@@ -3,9 +3,7 @@ import {
   GetParameterCommand,
   ParameterNotFound,
   PutParameterCommand,
-  SSMClient,
 } from "@aws-sdk/client-ssm";
-import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import {
   ParametersSecretsExtensionHttpError,
   ParametersSecretsExtensionJsonParseError,
@@ -18,22 +16,23 @@ import type {
   GetParameterCommandInput,
   GetParameterCommandOutput,
   PutParameterCommandInput,
+  SSMClient,
 } from "@aws-sdk/client-ssm";
 import type { NanoId } from "../utils/schemas";
 
-export const client = new SSMClient({
-  region: Resource.Meta.awsRegion,
-  credentials: fromNodeProviderChain(),
-});
+export { SSMClient as Client } from "@aws-sdk/client-ssm";
 
 export const buildParameterPath = (orgId: NanoId, ...segments: Array<string>) =>
   `/paperwait/org/${orgId}/${segments.join("/")}`;
 
-export async function putParameter(input: {
-  [TKey in keyof PutParameterCommandInput]: NonNullable<
-    PutParameterCommandInput[TKey]
-  >;
-}) {
+export async function putParameter(
+  client: SSMClient,
+  input: {
+    [TKey in keyof PutParameterCommandInput]: NonNullable<
+      PutParameterCommandInput[TKey]
+    >;
+  },
+) {
   await client.send(new PutParameterCommand(input));
 }
 
@@ -68,11 +67,14 @@ export type GetParameterJsonResponse = v.InferOutput<
   typeof getParameterJsonResponseSchema
 >;
 
-export async function getParameter(input: {
-  [TKey in keyof GetParameterCommandInput]: NonNullable<
-    GetParameterCommandInput[TKey]
-  >;
-}) {
+export async function getParameter(
+  client: SSMClient,
+  input: {
+    [TKey in keyof GetParameterCommandInput]: NonNullable<
+      GetParameterCommandInput[TKey]
+    >;
+  },
+) {
   if (Resource.Meta.isDev) {
     const { Parameter, $metadata } = (await client.send(
       new GetParameterCommand(input),
@@ -120,10 +122,13 @@ export async function getParameter(input: {
   return Parameter.Value;
 }
 
-export async function deleteParameter(input: {
-  [TKey in keyof DeleteParameterCommandInput]: NonNullable<
-    DeleteParameterCommandInput[TKey]
-  >;
-}) {
+export async function deleteParameter(
+  client: SSMClient,
+  input: {
+    [TKey in keyof DeleteParameterCommandInput]: NonNullable<
+      DeleteParameterCommandInput[TKey]
+    >;
+  },
+) {
   await client.send(new DeleteParameterCommand(input));
 }

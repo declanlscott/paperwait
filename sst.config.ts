@@ -1,5 +1,7 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
+import { readdirSync } from "fs";
+
 const AWS_ORG_NAME = process.env.AWS_ORG_NAME;
 if (!AWS_ORG_NAME) throw new Error("AWS_ORG_NAME is not set");
 
@@ -26,7 +28,7 @@ export default $config({
         cloudflare: true,
         azuread: true,
         supabase: {
-          accessToken: process.env.SUPABASE_ACCESS_TOKEN,
+          accessToken: SUPABASE_ACCESS_TOKEN,
         },
         "@pulumiverse/time": true,
         tls: true,
@@ -36,25 +38,14 @@ export default $config({
     };
   },
   async run() {
-    const infra = await import("./infra");
+    const outputs = {};
 
-    new sst.x.DevCommand("Studio", {
-      link: [infra.db],
-      dev: {
-        command: "pnpm db:studio",
-        directory: "packages/core",
-        autostart: true,
-      },
-    });
+    for (const dir of readdirSync("./infra")) {
+      const infra = await import(`./infra/${dir}`);
 
-    new sst.x.DevCommand("PartyKit", {
-      dev: {
-        command: $interpolate`npx partykit dev --var API_KEY=${infra.partyKitApiKey.result} --var REPLICACHE_LICENSE_KEY=${infra.replicacheLicenseKey.value}`,
-        directory: "packages/realtime",
-        autostart: true,
-      },
-    });
+      if (infra.outputs) Object.assign(outputs, infra.outputs);
+    }
 
-    return {};
+    return outputs;
   },
 });
