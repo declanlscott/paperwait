@@ -5,7 +5,7 @@ import { Resource } from "sst";
 import * as v from "valibot";
 
 import { useAuthenticated } from "../auth/context";
-import { REPLICACHE_EXPIRATION_DURATION } from "../constants";
+import { POKE, REPLICACHE_EXPIRATION_DURATION } from "../constants";
 import { serializable, useTransaction } from "../drizzle/transaction";
 import { HttpError } from "../errors/http";
 import {
@@ -159,6 +159,7 @@ export async function poke(channels: Array<Channel>) {
       const res = await fetch(`${Resource.Realtime.url}/party/${channel}`, {
         method: "POST",
         headers: { "x-api-key": Resource.Realtime.apiKey },
+        body: POKE,
       });
 
       if (!res.ok) {

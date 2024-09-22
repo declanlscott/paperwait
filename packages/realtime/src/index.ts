@@ -1,4 +1,3 @@
-import { POKE } from "@paperwait/core/constants";
 import {
   HttpError,
   MethodNotAllowed,
@@ -51,8 +50,10 @@ export default class Server implements Party.Server {
     }
   }
 
-  onRequest() {
-    this.room.broadcast(POKE);
+  async onRequest(request: Party.Request) {
+    const message = await request.text();
+
+    this.room.broadcast(message);
 
     return new Response(null, { status: 204 });
   }
