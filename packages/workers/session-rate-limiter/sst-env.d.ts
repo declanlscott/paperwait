@@ -3,6 +3,7 @@
 /* eslint-disable */
 import "sst"
 export {}
+import "sst"
 declare module "sst" {
   export interface Resource {
     "AssetsBucket": {
@@ -76,10 +77,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "ReverseProxy": {
-      "type": "sst.cloudflare.Worker"
-      "url": string
-    }
     "Storage": {
       "assets": {
         "bucket": string
@@ -107,5 +104,12 @@ declare module "sst" {
       "type": "sst.aws.Astro"
       "url": string
     }
+  }
+}
+// cloudflare 
+import * as cloudflare from "@cloudflare/workers-types";
+declare module "sst" {
+  export interface Resource {
+    "ReverseProxy": cloudflare.Service
   }
 }
