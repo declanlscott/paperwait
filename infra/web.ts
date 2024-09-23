@@ -86,9 +86,4 @@ export const web = new sst.aws.Astro("Web", {
     ],
     install: ["sharp"],
   },
-  transform: {
-    server: {
-      copyFiles: [{ from: "infra/aws-layer-names.json" }],
-    },
-  },
 });

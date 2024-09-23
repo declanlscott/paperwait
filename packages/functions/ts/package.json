@@ -4,7 +4,8 @@
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@paperwait/core": "workspace:*"
+    "@paperwait/core": "workspace:*",
+    "valibot": "^0.42.1"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",

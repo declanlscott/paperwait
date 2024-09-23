@@ -145,6 +145,9 @@ importers:
       '@paperwait/core':
         specifier: workspace:*
         version: link:../../core
+      valibot:
+        specifier: ^0.42.1
+        version: 0.42.1(typescript@5.6.2)
     devDependencies:
       '@paperwait/eslint-config':
         specifier: workspace:*

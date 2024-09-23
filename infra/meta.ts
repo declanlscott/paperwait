@@ -23,5 +23,10 @@ export const meta = new sst.Linkable("Meta", {
     isDev,
     domain,
     awsRegion: aws.getRegionOutput({}).name,
+    tenantsOrganizationalUnitId: new sst.Secret("TenantsOrganizationalUnitId")
+      .value,
+    awsOrgRootEmail: new sst.Secret("AwsOrgRootEmail").value,
+    createTenantAccountRoleArn: new sst.Secret("CreateTenantAccountRoleArn")
+      .value,
   },
 });

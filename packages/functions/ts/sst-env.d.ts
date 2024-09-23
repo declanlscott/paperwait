@@ -5,12 +5,28 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
+    "AwsOrgRootEmail": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "Client": {
       "domain": string
       "isDev": boolean
       "realtimeUrl": string
       "replicacheLicenseKey": string
       "type": "sst.sst.Linkable"
+    }
+    "CreateAwsAccountDlq": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "CreateAwsAccountQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "CreateTenantAccountRoleArn": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "Db": {
       "postgres": {
@@ -31,14 +47,13 @@ declare module "sst" {
         "name": string
         "stage": string
       }
+      "awsOrgRootEmail": string
       "awsRegion": string
+      "createTenantAccountRoleArn": string
       "domain": string
       "isDev": boolean
+      "tenantsOrganizationalUnitId": string
       "type": "sst.sst.Linkable"
-    }
-    "NewAccountQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
     }
     "Oauth2": {
       "entraId": {
@@ -77,11 +92,15 @@ declare module "sst" {
       "url": string
     }
     "Storage": {
-      "newAccountQueue": string
+      "createAwsAccountQueue": string
       "pulumiBackend": {
         "bucket": string
       }
       "type": "sst.sst.Linkable"
+    }
+    "TenantsOrganizationalUnitId": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "Username": {
       "type": "sst.sst.Secret"
