@@ -7,11 +7,11 @@ import { getProgram } from "@paperwait/core/pulumi/aws-account";
 import { Resource } from "sst";
 import * as v from "valibot";
 
-import type { SQSEvent, SQSRecord } from "aws-lambda";
+import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
 
 const projectName = `${Resource.Meta.app.name}-${Resource.Meta.app.stage}-tenants`;
 
-export async function handler(event: SQSEvent) {
+export const handler: SQSHandler = async (event) => {
   const workspace = await Pulumi.Automation.LocalWorkspace.create({
     projectSettings: {
       name: projectName,
@@ -39,12 +39,20 @@ export async function handler(event: SQSEvent) {
   )
     throw new Error("Missing credentials");
 
-  for (const record of event.Records)
-    await processRecord(
-      record,
-      output.Credentials as Sts.NonNullableCredentials,
-    );
-}
+  const batchItemFailures: Array<SQSBatchItemFailure> = [];
+  for (const record of event.Records) {
+    try {
+      await processRecord(
+        record,
+        output.Credentials as Sts.NonNullableCredentials,
+      );
+    } catch {
+      batchItemFailures.push({ itemIdentifier: record.messageId });
+    }
+  }
+
+  return { batchItemFailures };
+};
 
 async function processRecord(
   record: SQSRecord,
