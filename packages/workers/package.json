@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "@paperwait/core": "workspace:*",
-    "hono": "^4.6.2"
+    "hono": "^4.6.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240919.0",
+    "@cloudflare/workers-types": "^4.20240924.0",
     "@paperwait/eslint-config": "workspace:*"
   }
 }
