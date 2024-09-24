@@ -1,4 +1,5 @@
 import { domain } from "./dns";
+import { googleClientId, googleClientSecret } from "./secrets";
 
 const wellKnown = azuread.getApplicationPublishedAppIds({});
 const microsoftGraphAppId = await wellKnown.then(
@@ -79,10 +80,6 @@ export const servicePrincipal = new azuread.ServicePrincipal(
   "EntraIdServicePrincipal",
   { clientId: entraIdApplication.clientId },
 );
-
-export const googleClientId = new sst.Secret("GoogleClientId");
-
-export const googleClientSecret = new sst.Secret("GoogleClientSecret");
 
 export const oauth2 = new sst.Linkable("Oauth2", {
   properties: {

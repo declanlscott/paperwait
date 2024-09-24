@@ -1,8 +1,9 @@
 import { db } from "./db";
 import { domain } from "./dns";
-import { client, meta } from "./meta";
+import { aws_, client, meta } from "./misc";
 import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
+import { webPassword, webUsername } from "./secrets";
 import { storage } from "./storage";
 import { getLambdaLayerArn } from "./utils";
 
@@ -25,9 +26,7 @@ export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
   },
 });
 
-const username = new sst.Secret("Username");
-const password = new sst.Secret("Password");
-const basicAuth = $output([username.value, password.value]).apply(
+const basicAuth = $output([webUsername.value, webPassword.value]).apply(
   ([username, password]) =>
     Buffer.from(`${username}:${password}`).toString("base64"),
 );
@@ -42,13 +41,13 @@ export const web = new sst.aws.Astro("Web", {
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${meta.properties.awsRegion}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/max-file-sizes`,
+        $interpolate`arn:aws:ssm:${aws_.properties.region}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/max-file-sizes`,
       ],
     },
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${meta.properties.awsRegion}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/documents-mime-types`,
+        $interpolate`arn:aws:ssm:${aws_.properties.region}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/documents-mime-types`,
       ],
     },
   ],

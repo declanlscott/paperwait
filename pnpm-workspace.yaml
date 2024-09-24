@@ -1,5 +1,5 @@
 packages:
   - "packages/*"
-  - "packages/functions/ts"
+  - "packages/functions/handlers/node"
   - "packages/workers/session-rate-limiter"
   - "packages/workers/ip-rate-limiter"

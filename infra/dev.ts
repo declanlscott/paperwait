@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { replicacheLicenseKey } from "./meta";
 import { partyKitApiKey } from "./realtime";
+import { replicacheLicenseKey } from "./secrets";
 
 new sst.x.DevCommand("Studio", {
   link: [db],

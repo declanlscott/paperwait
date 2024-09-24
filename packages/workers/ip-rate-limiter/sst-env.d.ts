@@ -6,6 +6,13 @@ export {}
 import "sst"
 declare module "sst" {
   export interface Resource {
+    "Aws": {
+      "manageTenantInfraRoleArn": string
+      "orgRootEmail": string
+      "region": string
+      "tenantsOrganizationalUnitId": string
+      "type": "sst.sst.Linkable"
+    }
     "AwsOrgRootEmail": {
       "type": "sst.sst.Secret"
       "value": string
@@ -16,18 +23,6 @@ declare module "sst" {
       "realtimeUrl": string
       "replicacheLicenseKey": string
       "type": "sst.sst.Linkable"
-    }
-    "CreateAwsAccountDlq": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "CreateAwsAccountQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
-    "CreateTenantAccountRoleArn": {
-      "type": "sst.sst.Secret"
-      "value": string
     }
     "Db": {
       "postgres": {
@@ -43,17 +38,17 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "ManageTenantInfraRoleArn": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "Meta": {
       "app": {
         "name": string
         "stage": string
       }
-      "awsOrgRootEmail": string
-      "awsRegion": string
-      "createTenantAccountRoleArn": string
       "domain": string
       "isDev": boolean
-      "tenantsOrganizationalUnitId": string
       "type": "sst.sst.Linkable"
     }
     "Oauth2": {
@@ -71,10 +66,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Password": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "PulumiBackendBucket": {
       "name": string
       "type": "sst.aws.Bucket"
@@ -89,23 +80,35 @@ declare module "sst" {
       "value": string
     }
     "Storage": {
-      "createAwsAccountQueue": string
       "pulumiBackend": {
         "bucket": string
       }
+      "tenantInfraQueue": string
       "type": "sst.sst.Linkable"
     }
-    "TenantsOrganizationalUnitId": {
-      "type": "sst.sst.Secret"
-      "value": string
+    "TenantInfraDlq": {
+      "type": "sst.aws.Queue"
+      "url": string
     }
-    "Username": {
+    "TenantInfraQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
+    "TenantsOrganizationalUnitId": {
       "type": "sst.sst.Secret"
       "value": string
     }
     "Web": {
       "type": "sst.aws.Astro"
       "url": string
+    }
+    "WebPassword": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "WebUsername": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
   }
 }
