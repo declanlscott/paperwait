@@ -1,88 +1,54 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"papercut-secure-bridge/internal/aws"
 	"papercut-secure-bridge/internal/papercut"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 )
 
-type MockServers struct {
-	papercut  *httptest.Server
-	extension *httptest.Server
-}
-
-func mock(res string) (*MockServers, func() error, error) {
-	papercutServer := httptest.NewServer(
+func mock(res string) (*httptest.Server, func() error, error) {
+	server := httptest.NewServer(
 		http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 			_, _ = fmt.Fprintf(writer, res)
 		}),
 	)
 
-	extensionServer := httptest.NewServer(
-		http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
-			credentials, _ := json.Marshal(papercut.Credentials{
-				Endpoint:  papercutServer.URL,
-				AuthToken: "auth-token",
-			})
-
-			value := string(credentials)
-
-			output, _ := json.Marshal(
-				ssm.GetParameterOutput{
-					Parameter: &types.Parameter{
-						Value: &value,
-					},
-				},
-			)
-
-			_, _ = fmt.Fprintf(writer, string(output))
-		}),
-	)
-
-	segments := strings.Split(extensionServer.URL, ":")
-	if err := os.Setenv(
-		aws.ExtensionHttpPortEnvVarName,
-		segments[len(segments)-1],
-	); err != nil {
-		return nil, nil, err
-	}
-
 	if err := os.Setenv("ORG_ID", "test-org"); err != nil {
 		return nil, nil, err
 	}
 
-	if err := os.Setenv("AWS_SESSION_TOKEN", "test-token"); err != nil {
-		return nil, nil, err
-	}
-
-	return &MockServers{papercutServer, extensionServer}, func() error {
-		papercutServer.Close()
-		extensionServer.Close()
-
-		if err := os.Unsetenv(aws.ExtensionHttpPortEnvVarName); err != nil {
-			return err
-		}
+	return server, func() error {
+		server.Close()
 
 		if err := os.Unsetenv("ORG_ID"); err != nil {
 			return err
 		}
 
-		if err := os.Unsetenv("AWS_SESSION_TOKEN"); err != nil {
-			return err
-		}
-
 		return nil
 	}, nil
+}
+
+type mockGetParameterApi func(ctx context.Context,
+	params *ssm.GetParameterInput,
+	optFns ...func(*ssm.Options),
+) (*ssm.GetParameterOutput, error)
+
+func (api mockGetParameterApi) GetParameter(
+	ctx context.Context,
+	params *ssm.GetParameterInput,
+	optFns ...func(*ssm.Options),
+) (*ssm.GetParameterOutput, error) {
+	return api(ctx, params, optFns...)
 }
 
 func TestBridge(t *testing.T) {
@@ -286,7 +252,7 @@ func TestBridge(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			servers, cleanup, err := mock(tt.res)
+			server, cleanup, err := mock(tt.res)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -296,7 +262,30 @@ func TestBridge(t *testing.T) {
 				}
 			}()
 
-			res := Bridge(servers.papercut.Client(), tt.request)
+			res := Bridge(
+				context.TODO(),
+				server.Client(),
+				mockGetParameterApi(
+					func(
+						ctx context.Context,
+						params *ssm.GetParameterInput,
+						optFns ...func(*ssm.Options),
+					) (*ssm.GetParameterOutput, error) {
+						t.Helper()
+
+						credentials, _ := json.Marshal(papercut.Credentials{
+							Endpoint:  server.URL,
+							AuthToken: "auth-token",
+						})
+
+						return &ssm.GetParameterOutput{
+							Parameter: &types.Parameter{
+								Value: aws.String(string(credentials)),
+							},
+						}, nil
+					}),
+				tt.request,
+			)
 
 			if res.StatusCode != tt.expected.StatusCode {
 				t.Errorf(

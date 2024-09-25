@@ -1,29 +1,66 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"papercut-secure-bridge/internal/aws"
 	"papercut-secure-bridge/internal/papercut"
 	"papercut-secure-bridge/internal/proxy"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
-func Handler(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	if httpClient, err := proxy.HttpClient(); err != nil {
+func Handler(
+	ctx context.Context,
+	req events.APIGatewayV2HTTPRequest,
+) (events.APIGatewayV2HTTPResponse, error) {
+	httpClient, err := proxy.HttpClient()
+	if err != nil {
 		return InternalServerErrorResponse(err), nil
-	} else {
-		return Bridge(httpClient, req), nil
 	}
+
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return InternalServerErrorResponse(err), nil
+	}
+
+	ssmClient := ssm.NewFromConfig(cfg)
+
+	return Bridge(ctx, httpClient, ssmClient, req), nil
+}
+
+type GetParameterApi interface {
+	GetParameter(
+		ctx context.Context,
+		params *ssm.GetParameterInput,
+		optFns ...func(*ssm.Options),
+	) (*ssm.GetParameterOutput, error)
+}
+
+func GetParameter(
+	ctx context.Context,
+	api GetParameterApi,
+	input *ssm.GetParameterInput,
+) (*ssm.GetParameterOutput, error) {
+	output, err := api.GetParameter(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func Bridge(
+	ctx context.Context,
 	httpClient *http.Client,
+	getParameterApi GetParameterApi,
 	req events.APIGatewayV2HTTPRequest,
 ) events.APIGatewayV2HTTPResponse {
 	orgId, ok := os.LookupEnv("ORG_ID")
@@ -31,10 +68,12 @@ func Bridge(
 		return InternalServerErrorResponse(errors.New("ORG_ID environment variable is not set"))
 	}
 
-	output, err := aws.GetParameter(
-		fmt.Sprintf("/paperwait/org/%s/papercut/web-services/credentials", orgId),
-		true,
-	)
+	output, err := GetParameter(ctx, getParameterApi, &ssm.GetParameterInput{
+		Name: aws.String(
+			fmt.Sprintf("/paperwait/org/%s/papercut/web-services/credentials", orgId),
+		),
+		WithDecryption: aws.Bool(true),
+	})
 	if err != nil {
 		return InternalServerErrorResponse(err)
 	}
