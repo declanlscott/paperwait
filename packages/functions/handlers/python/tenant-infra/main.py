@@ -6,6 +6,7 @@ from sst import Resource
 
 import boto3
 import importlib.metadata
+import infra
 import logging
 import requests
 
@@ -37,18 +38,18 @@ def handler(event: SQSEvent):
 
             batch_item_failures.append(record.message_id)
 
-    return {'batchItemFailures': batch_item_failures}
-
-# TODO: pulumi program for creating tenant aws account
-# TODO: assume role in tenant account
-# TODO: pulumi program for infra in tenant's account
+    return {"batchItemFailures": batch_item_failures}
 
 def process_record(record: SQSRecord, credentials: CredentialsTypeDef):
-    tenant_id = record.json_body["orgId"]
+    tenant_id: str = record.json_body["orgId"]
+
+    def program():
+        infra.program(tenant_id)
 
     stack = auto.create_or_select_stack(
         project_name=project_name,
-        stack_name=f"{Resource.Meta.app.name}-{Resource.Meta.app.stage}-tenant-{tenant_id}"
+        stack_name=f"{Resource.Meta.app.name}-{Resource.Meta.app.stage}-tenant-{tenant_id}",
+        program=program
     )
 
     stack.set_config(key="aws:region", value=auto.ConfigValue(value=Resource.Aws.region))
@@ -62,7 +63,7 @@ def process_record(record: SQSRecord, credentials: CredentialsTypeDef):
         raise Exception(result)
 
     requests.post(
-        url=f"{Resource.Realtime.url}/party/{tenant_id}",
+        url=f"{Resource.Realtime.url}/party/org_{tenant_id}",
         headers={
             "x-api-key": Resource.Realtime.apiKey
         },

@@ -4,6 +4,7 @@ from typing import Any
 
 class Resource:
     class Aws:
+        accountId: str
         manageTenantInfraRoleArn: str
         orgRootEmail: str
         region: str

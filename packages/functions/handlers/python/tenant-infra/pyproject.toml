@@ -8,6 +8,7 @@ dependencies = [
     "boto3-stubs[sts]>=1.35.26",
     "boto3>=1.35.26",
     "pulumi-aws>=6.52.0",
+    "pulumi-cloudflare>=5.39.1",
     "pulumi>=3.133.0",
     "requests>=2.32.3",
 ]

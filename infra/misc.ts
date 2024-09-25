@@ -31,6 +31,7 @@ export const meta = new sst.Linkable("Meta", {
 
 export const aws_ = new sst.Linkable("Aws", {
   properties: {
+    accountId: aws.getCallerIdentityOutput({}).accountId,
     region: aws.getRegionOutput({}).name,
     tenantsOrganizationalUnitId: tenantsOrganizationalUnitId.value,
     orgRootEmail: awsOrgRootEmail.value,

@@ -6,6 +6,7 @@ export {}
 declare module "sst" {
   export interface Resource {
     "Aws": {
+      "accountId": string
       "manageTenantInfraRoleArn": string
       "orgRootEmail": string
       "region": string

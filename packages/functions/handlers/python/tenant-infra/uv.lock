@@ -280,6 +280,20 @@ wheels = [
 ]
 
 [[package]]
+name = "pulumi-cloudflare"
+version = "5.39.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "parver" },
+    { name = "pulumi" },
+    { name = "semver" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/33/ed/9e5eb62a82aff5192ad5ec768ecddc50bbc6a7fd111521c1d849c3d60ef3/pulumi_cloudflare-5.39.1.tar.gz", hash = "sha256:864efdd0a59de114854ce7832675ae086eaaef2dc50f6cf25388cbe83f30ac3e", size = 529987 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/fa/7e9b020fbfe722f8719ff860781d09887ca1a783ed873a319cc3c2b3de77/pulumi_cloudflare-5.39.1-py3-none-any.whl", hash = "sha256:790b4ce73ff52a2b45b52c1fd282fa869921226dcda1791ccff664a1a545c3e6", size = 771448 },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -381,6 +395,7 @@ dependencies = [
     { name = "boto3-stubs", extra = ["sts"] },
     { name = "pulumi" },
     { name = "pulumi-aws" },
+    { name = "pulumi-cloudflare" },
     { name = "requests" },
 ]
 
@@ -391,6 +406,7 @@ requires-dist = [
     { name = "boto3-stubs", extras = ["sts"], specifier = ">=1.35.26" },
     { name = "pulumi", specifier = ">=3.133.0" },
     { name = "pulumi-aws", specifier = ">=6.52.0" },
+    { name = "pulumi-cloudflare", specifier = ">=5.39.1" },
     { name = "requests", specifier = ">=2.32.3" },
 ]
 
