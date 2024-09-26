@@ -5,14 +5,6 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
-    "Aws": {
-      "accountId": string
-      "manageTenantInfraRoleArn": string
-      "orgRootEmail": string
-      "region": string
-      "tenantsOrganizationalUnitId": string
-      "type": "sst.sst.Linkable"
-    }
     "AwsOrgRootEmail": {
       "type": "sst.sst.Secret"
       "value": string
@@ -22,6 +14,24 @@ declare module "sst" {
       "isDev": boolean
       "realtimeUrl": string
       "replicacheLicenseKey": string
+      "type": "sst.sst.Linkable"
+    }
+    "Cloud": {
+      "aws": {
+        "identity": {
+          "accountId": string
+          "arn": string
+          "id": string
+          "userId": string
+        }
+        "manageTenantInfraRoleArn": string
+        "orgRootEmail": string
+        "region": string
+        "tenantsOrganizationalUnitId": string
+      }
+      "cloudflare": {
+        "apiToken": string
+      }
       "type": "sst.sst.Linkable"
     }
     "Db": {

@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { domain } from "./dns";
-import { aws_, client, meta } from "./misc";
+import { client, cloud, meta } from "./misc";
 import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
 import { webPassword, webUsername } from "./secrets";
@@ -41,13 +41,13 @@ export const web = new sst.aws.Astro("Web", {
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${aws_.properties.region}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/max-file-sizes`,
+        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/org/*/max-file-sizes`,
       ],
     },
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${aws_.properties.region}:${aws.getCallerIdentityOutput().accountId}:parameter/paperwait/org/*/documents-mime-types`,
+        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/org/*/documents-mime-types`,
       ],
     },
   ],

@@ -29,12 +29,17 @@ export const meta = new sst.Linkable("Meta", {
   },
 });
 
-export const aws_ = new sst.Linkable("Aws", {
+export const cloud = new sst.Linkable("Cloud", {
   properties: {
-    accountId: aws.getCallerIdentityOutput({}).accountId,
-    region: aws.getRegionOutput({}).name,
-    tenantsOrganizationalUnitId: tenantsOrganizationalUnitId.value,
-    orgRootEmail: awsOrgRootEmail.value,
-    manageTenantInfraRoleArn: manageTenantInfraRoleArn.value,
+    aws: {
+      identity: aws.getCallerIdentityOutput({}),
+      region: aws.getRegionOutput({}).name,
+      tenantsOrganizationalUnitId: tenantsOrganizationalUnitId.value,
+      orgRootEmail: awsOrgRootEmail.value,
+      manageTenantInfraRoleArn: manageTenantInfraRoleArn.value,
+    },
+    cloudflare: {
+      apiToken: process.env.CLOUDFLARE_API_TOKEN,
+    },
   },
 });

@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { aws_, meta } from "./misc";
+import { cloud, meta } from "./misc";
 import { realtime } from "./realtime";
 import {
   pulumiBackendBucket,
@@ -25,5 +25,5 @@ tenantInfraQueue.subscribe({
   handler: "packages/functions/handlers/python/tenant-infra/main.handler",
   timeout: tenantInfraTimeout,
   architecture: "arm64",
-  link: [aws_, db, meta, pulumiBackendBucket, realtime],
+  link: [cloud, meta, pulumiBackendBucket, realtime],
 });

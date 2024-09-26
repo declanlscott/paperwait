@@ -3,13 +3,6 @@
 from typing import Any
 
 class Resource:
-    class Aws:
-        accountId: str
-        manageTenantInfraRoleArn: str
-        orgRootEmail: str
-        region: str
-        tenantsOrganizationalUnitId: str
-        type: str
     class AwsOrgRootEmail:
         type: str
         value: str
@@ -18,6 +11,20 @@ class Resource:
         isDev: bool
         realtimeUrl: str
         replicacheLicenseKey: str
+        type: str
+    class Cloud:
+        class aws:
+            class identity:
+                accountId: str
+                arn: str
+                id: str
+                userId: str
+            manageTenantInfraRoleArn: str
+            orgRootEmail: str
+            region: str
+            tenantsOrganizationalUnitId: str
+        class cloudflare:
+            apiToken: str
         type: str
     class Db:
         class postgres:
