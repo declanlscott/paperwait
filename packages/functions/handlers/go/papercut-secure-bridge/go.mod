@@ -5,13 +5,13 @@ go 1.23.1
 require (
 	alexejk.io/go-xmlrpc v0.5.3
 	github.com/aws/aws-lambda-go v1.47.0
+	github.com/aws/aws-sdk-go-v2 v1.31.0
+	github.com/aws/aws-sdk-go-v2/config v1.27.38
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.54.0
 	golang.org/x/net v0.29.0
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.31.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.27.38 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.36 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.14 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.18 // indirect
