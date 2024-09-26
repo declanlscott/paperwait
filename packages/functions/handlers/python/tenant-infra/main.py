@@ -1,14 +1,14 @@
-from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
-from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
-from mypy_boto3_sts.type_defs import CredentialsTypeDef
-from pulumi import automation as auto
-from sst import Resource
-
 import boto3
 import importlib.metadata
 import infra
 import logging
 import requests
+
+from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
+from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
+from mypy_boto3_sts.type_defs import CredentialsTypeDef
+from pulumi import automation as auto
+from sst import Resource
 
 project_name = f"{Resource.Meta.app.name}-{Resource.Meta.app.stage}-tenants"
 
