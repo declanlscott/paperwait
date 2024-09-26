@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -11,44 +10,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 )
 
-func mock(res string) (*httptest.Server, func() error, error) {
+func mockPapercut(res string) (*httptest.Server, papercut.GetCredentialsFunc, func()) {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
 			_, _ = fmt.Fprintf(writer, res)
 		}),
 	)
 
-	if err := os.Setenv("ORG_ID", "test-org"); err != nil {
-		return nil, nil, err
-	}
-
-	return server, func() error {
-		server.Close()
-
-		if err := os.Unsetenv("ORG_ID"); err != nil {
-			return err
-		}
-
-		return nil
-	}, nil
-}
-
-type mockGetParameterApi func(ctx context.Context,
-	params *ssm.GetParameterInput,
-	optFns ...func(*ssm.Options),
-) (*ssm.GetParameterOutput, error)
-
-func (api mockGetParameterApi) GetParameter(
-	ctx context.Context,
-	params *ssm.GetParameterInput,
-	optFns ...func(*ssm.Options),
-) (*ssm.GetParameterOutput, error) {
-	return api(ctx, params, optFns...)
+	return server, func(context.Context, string) (*papercut.Credentials, error) {
+		return &papercut.Credentials{
+			Endpoint:  server.URL,
+			AuthToken: "auth-token",
+		}, nil
+	}, server.Close
 }
 
 func TestBridge(t *testing.T) {
@@ -250,41 +226,20 @@ func TestBridge(t *testing.T) {
 		},
 	}
 
+	if err := os.Setenv("ORG_ID", "test-org"); err != nil {
+		t.Fatal(err)
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server, cleanup, err := mock(tt.res)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer func() {
-				if err := cleanup(); err != nil {
-					t.Fatal(err)
-				}
-			}()
+			server, getCredentials, cleanup := mockPapercut(tt.res)
+			defer cleanup()
 
 			res := Bridge(
 				context.TODO(),
-				server.Client(),
-				mockGetParameterApi(
-					func(
-						ctx context.Context,
-						params *ssm.GetParameterInput,
-						optFns ...func(*ssm.Options),
-					) (*ssm.GetParameterOutput, error) {
-						t.Helper()
-
-						credentials, _ := json.Marshal(papercut.Credentials{
-							Endpoint:  server.URL,
-							AuthToken: "auth-token",
-						})
-
-						return &ssm.GetParameterOutput{
-							Parameter: &types.Parameter{
-								Value: aws.String(string(credentials)),
-							},
-						}, nil
-					}),
 				tt.request,
+				server.Client(),
+				getCredentials,
 			)
 
 			if res.StatusCode != tt.expected.StatusCode {

@@ -10,6 +10,7 @@ import (
 	"papercut-secure-bridge/internal/papercut"
 	"papercut-secure-bridge/internal/proxy"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,69 +18,75 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 )
 
+var (
+	credentials struct {
+		value *papercut.Credentials
+		err   error
+	}
+	once sync.Once
+)
+
 func Handler(
 	ctx context.Context,
 	req events.APIGatewayV2HTTPRequest,
 ) (events.APIGatewayV2HTTPResponse, error) {
-	httpClient, err := proxy.HttpClient()
-	if err != nil {
+	if httpClient, err := proxy.HttpClient(); err != nil {
 		return InternalServerErrorResponse(err), nil
+	} else {
+		return Bridge(
+			ctx,
+			req,
+			httpClient,
+			func(
+				ctx context.Context,
+				orgId string,
+			) (*papercut.Credentials, error) {
+				once.Do(func() {
+					cfg, err := config.LoadDefaultConfig(ctx)
+					if err != nil {
+						credentials.err = err
+						return
+					}
+
+					client := ssm.NewFromConfig(cfg)
+
+					output, err := client.GetParameter(ctx, &ssm.GetParameterInput{
+						Name: aws.String(
+							fmt.Sprintf("/paperwait/org/%s/papercut/web-services/credentials", orgId),
+						),
+						WithDecryption: aws.Bool(true),
+					})
+					if err != nil {
+						credentials.err = err
+						return
+					}
+
+					err = json.Unmarshal([]byte(*output.Parameter.Value), &credentials.value)
+					if err != nil {
+						credentials.err = err
+						return
+					}
+				})
+
+				return credentials.value, credentials.err
+			},
+		), nil
 	}
-
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		return InternalServerErrorResponse(err), nil
-	}
-
-	ssmClient := ssm.NewFromConfig(cfg)
-
-	return Bridge(ctx, httpClient, ssmClient, req), nil
-}
-
-type GetParameterApi interface {
-	GetParameter(
-		ctx context.Context,
-		params *ssm.GetParameterInput,
-		optFns ...func(*ssm.Options),
-	) (*ssm.GetParameterOutput, error)
-}
-
-func GetParameter(
-	ctx context.Context,
-	api GetParameterApi,
-	input *ssm.GetParameterInput,
-) (*ssm.GetParameterOutput, error) {
-	output, err := api.GetParameter(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
 }
 
 func Bridge(
 	ctx context.Context,
-	httpClient *http.Client,
-	getParameterApi GetParameterApi,
 	req events.APIGatewayV2HTTPRequest,
+	httpClient *http.Client,
+	getCredentials papercut.GetCredentialsFunc,
 ) events.APIGatewayV2HTTPResponse {
 	orgId, ok := os.LookupEnv("ORG_ID")
 	if !ok {
 		return InternalServerErrorResponse(errors.New("ORG_ID environment variable is not set"))
 	}
 
-	output, err := GetParameter(ctx, getParameterApi, &ssm.GetParameterInput{
-		Name: aws.String(
-			fmt.Sprintf("/paperwait/org/%s/papercut/web-services/credentials", orgId),
-		),
-		WithDecryption: aws.Bool(true),
-	})
+	credentials, err := getCredentials(ctx, orgId)
 	if err != nil {
-		return InternalServerErrorResponse(err)
-	}
-
-	var credentials papercut.Credentials
-	if err := json.Unmarshal([]byte(*output.Parameter.Value), &credentials); err != nil {
 		return InternalServerErrorResponse(err)
 	}
 
