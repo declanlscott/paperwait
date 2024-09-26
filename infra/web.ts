@@ -86,3 +86,7 @@ export const web = new sst.aws.Astro("Web", {
     install: ["sharp"],
   },
 });
+
+export const outputs = {
+  url: reverseProxy.url,
+};
