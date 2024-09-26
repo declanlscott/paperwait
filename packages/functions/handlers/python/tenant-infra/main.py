@@ -23,10 +23,11 @@ def handler(event: SQSEvent):
     )
 
     workspace.install_plugin(name="aws", version=f"v{importlib.metadata.version('pulumi_aws')}")
+    workspace.install_plugin(name="cloudflare", version=f"v{importlib.metadata.version('pulumi_cloudflare')}")
 
     sts_client = boto3.client("sts")
 
-    output = sts_client.assume_role(RoleArn=Resource.Aws.manageTenantInfraRoleArn,
+    output = sts_client.assume_role(RoleArn=Resource.Cloud.aws.manageTenantInfraRoleArn,
                                     RoleSessionName="ManageTenantInfraSession")
 
     batch_item_failures = []
@@ -41,7 +42,7 @@ def handler(event: SQSEvent):
     return {"batchItemFailures": batch_item_failures}
 
 def process_record(record: SQSRecord, credentials: CredentialsTypeDef):
-    tenant_id: str = record.json_body["orgId"]
+    tenant_id: str = record.json_body["tenantId"]
 
     def program():
         infra.program(tenant_id)
@@ -52,12 +53,16 @@ def process_record(record: SQSRecord, credentials: CredentialsTypeDef):
         program=program
     )
 
-    stack.set_config(key="aws:region", value=auto.ConfigValue(value=Resource.Aws.region))
+    stack.set_config(key="aws:region", value=auto.ConfigValue(value=Resource.Cloud.aws.region))
     stack.set_config(key="aws:accessKey", value=auto.ConfigValue(value=credentials.get("AccessKeyId")))
-    stack.set_config(key="aws:secretKey", value=auto.ConfigValue(value=credentials.get("SecretAccessKey")))
-    stack.set_config(key="aws:sessionToken", value=auto.ConfigValue(value=credentials.get("SessionToken")))
+    stack.set_config(key="aws:secretKey", value=auto.ConfigValue(value=credentials.get("SecretAccessKey"),
+                                                                 secret=True))
+    stack.set_config(key="aws:sessionToken", value=auto.ConfigValue(value=credentials.get("SessionToken"),
+                                                                    secret=True))
+    stack.set_config(key="cloudflare:apiToken", value=auto.ConfigValue(value=Resource.Cloud.cloudflare.apiToken,
+                                                                       secret=True))
 
-    result = stack.up(on_output=print)
+    result = stack.up(on_event=print, on_output=print)
 
     if result.summary.result == "failed":
         raise Exception(result)
