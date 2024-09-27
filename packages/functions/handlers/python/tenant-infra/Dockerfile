@@ -17,7 +17,7 @@ ENV PATH="/opt/pulumi/bin:${PATH}"
 RUN mkdir /tmp/pulumi_home
 ENV PULUMI_HOME=/tmp/pulumi_home
 
-RUN PYPROJECT_DIR=$(find ${LAMBDA_TASK_ROOT} -name "pyproject.toml" -exec dirname {} \;) && \
+RUN PYPROJECT_DIR=$(for dir in $(ls -R ${LAMBDA_TASK_ROOT} | grep ":$" | sed 's/:$//'); do if [ -f "${dir}/pyproject.toml" ]; then echo "${dir}"; break; fi; done) && \
     if [ -n "$PYPROJECT_DIR" ]; then \
     cd "$PYPROJECT_DIR" && uv export && pip install -t ${LAMBDA_TASK_ROOT} .; \
     else \
