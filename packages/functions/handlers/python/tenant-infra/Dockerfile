@@ -1,4 +1,5 @@
-FROM public.ecr.aws/lambda/python:3.11
+ARG PYTHON_VERSION=3.12
+FROM public.ecr.aws/lambda/python:${PYTHON_VERSION}
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
@@ -7,6 +8,7 @@ ARG UV_LOCK_PATH
 
 COPY . ${LAMBDA_TASK_ROOT}
 
+RUN dnf install -y tar
 RUN curl -fsSL https://get.pulumi.com | sh
 RUN mv /root/.pulumi /opt/pulumi
 

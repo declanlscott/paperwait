@@ -21,8 +21,8 @@ tenantInfraQueue.subscribe({
   python: {
     container: true,
   },
-  runtime: "python3.11",
-  handler: "packages/functions/handlers/python/tenant-infra/main.handler",
+  runtime: "python3.12",
+  handler: "packages/functions/handlers/python/tenant-infra/src/main.handler",
   timeout: tenantInfraTimeout,
   architecture: "arm64",
   link: [cloud, meta, pulumiBackendBucket, realtime],
