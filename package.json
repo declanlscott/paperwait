@@ -8,7 +8,7 @@
     "format:write": "prettier --write ."
   },
   "dependencies": {
-    "sst": "^3.1.39"
+    "sst": "^3.1.47"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
