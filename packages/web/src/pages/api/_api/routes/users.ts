@@ -4,9 +4,9 @@ import { useOauth2 } from "@paperwait/core/oauth2/context";
 import * as EntraId from "@paperwait/core/oauth2/entra-id";
 import * as Google from "@paperwait/core/oauth2/google";
 import { ENTRA_ID, GOOGLE } from "@paperwait/core/oauth2/shared";
+import { valibot as v } from "@paperwait/core/utils/libs";
 import { nanoIdSchema } from "@paperwait/core/utils/schemas";
 import { Hono } from "hono";
-import * as v from "valibot";
 
 import { authorization, provider } from "~/api/middleware";
 

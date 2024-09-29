@@ -1,5 +1,5 @@
 import { fn } from "@paperwait/core/utils/helpers";
-import * as v from "valibot";
+import { valibot as v } from "@paperwait/core/utils/libs";
 
 export const collectionItem = (name: string) => ({ name });
 

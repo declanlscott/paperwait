@@ -1,4 +1,4 @@
-import * as v from "valibot";
+import { valibot as v } from "@paperwait/core/utils/libs";
 
 export const BaseSearchParams = v.object({
   redirect: v.optional(v.string()),

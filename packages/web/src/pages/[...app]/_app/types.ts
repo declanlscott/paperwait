@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
+import type { ReadTransaction } from "@paperwait/core/replicache/client";
 import type { Room } from "@paperwait/core/rooms/sql";
 import type { UserRole } from "@paperwait/core/users/shared";
 import type { StartsWith } from "@paperwait/core/utils/types";
@@ -11,7 +12,6 @@ import type {
   ToOptions,
 } from "@tanstack/react-router";
 import type { FilterFn } from "@tanstack/react-table";
-import type { ReadTransaction } from "replicache";
 import type { routeTree } from "~/app/routeTree.gen";
 
 declare module "@tanstack/react-router" {

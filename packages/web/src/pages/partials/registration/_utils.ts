@@ -1,6 +1,5 @@
 import { registrationSchema } from "@paperwait/core/organizations/shared";
-import * as R from "remeda";
-import * as v from "valibot";
+import { remeda as R, valibot as v } from "@paperwait/core/utils/libs";
 
 import type { Registration } from "@paperwait/core/organizations/shared";
 

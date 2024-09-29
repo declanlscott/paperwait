@@ -59,13 +59,13 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { Product } from "@paperwait/core/products/sql";
+import type { DeepReadonlyObject } from "@paperwait/core/replicache/client";
 import type { Room } from "@paperwait/core/rooms/sql";
 import type {
   ColumnDef,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
-import type { DeepReadonlyObject } from "replicache";
 
 export const Route = createFileRoute("/_authenticated/settings/rooms")({
   beforeLoad: ({ context }) =>

@@ -1,6 +1,6 @@
+import { valibot as v } from "@paperwait/core/utils/libs";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
-import * as v from "valibot";
 
 import { Button } from "~/app/components/ui/primitives/button";
 import { Label } from "~/app/components/ui/primitives/field";

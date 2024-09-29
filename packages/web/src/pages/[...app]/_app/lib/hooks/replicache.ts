@@ -9,12 +9,10 @@ import type { Authenticated } from "@paperwait/core/auth";
 import type {
   OptimisticMutatorFactory,
   OptimisticMutatorWithUser,
-} from "@paperwait/core/replicache/client";
-import type {
   ReadTransaction,
   SubscribeOptions,
   WriteTransaction,
-} from "replicache";
+} from "@paperwait/core/replicache/client";
 
 export function useReplicache() {
   const replicache = useContext(ReplicacheContext);
