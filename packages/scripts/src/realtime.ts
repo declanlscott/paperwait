@@ -1,37 +1,11 @@
 import { spawn } from "child_process";
 import { resolve } from "path";
 
+import { parseResource } from "@paperwait/core/utils/helpers";
+
 import type { Resource } from "sst";
 
-const rawResource = (() => {
-  const prefix = "SST_RESOURCE_";
-
-  const raw = Object.entries(process.env).reduce(
-    (raw, [key, value]) => {
-      if (key.startsWith(prefix) && value)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        raw[key.slice(prefix.length)] = JSON.parse(value);
-
-      return raw;
-    },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    {} as Record<string, any>,
-  );
-
-  if (Object.keys(raw).length === 0)
-    throw new Error(`No resources found. Did you forget to run in sst shell?`);
-
-  return raw;
-})();
-
-const resource = new Proxy(rawResource, {
-  get(target, prop: string) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    if (prop in target) return target[prop];
-
-    throw new Error(`Resource "${prop}" not found.`);
-  },
-}) as Resource;
+const resource = parseResource<Resource>();
 
 function buildCommand(customArgs: Array<string> = []) {
   const mode = process.argv[2];

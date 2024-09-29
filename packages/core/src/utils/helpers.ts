@@ -137,3 +137,31 @@ export async function parseJwt(jwt: string) {
 
   return payload;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseResource<TResource extends Record<string, any>>(
+  prefix = "SST_RESOURCE_",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: Record<string, any> = process.env,
+) {
+  const raw = Object.entries(input).reduce(
+    (raw, [key, value]) => {
+      if (key.startsWith(prefix) && value)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
+        raw[key.slice(prefix.length)] = JSON.parse(value);
+
+      return raw;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    {} as Record<string, any>,
+  );
+
+  return new Proxy(raw, {
+    get(target, prop: string) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      if (prop in target) return target[prop];
+
+      throw new Error(`Resource "${prop}" not linked.`);
+    },
+  }) as TResource;
+}
