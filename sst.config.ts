@@ -25,6 +25,7 @@ export default $config({
               : `${AWS_ORG_NAME}-dev`,
           region: AWS_REGION as aws.Region,
         },
+        awsx: true,
         cloudflare: true,
         azuread: true,
         supabase: {
@@ -33,6 +34,7 @@ export default $config({
         "@pulumiverse/time": true,
         tls: true,
         random: true,
+        command: true,
       },
       version: ">= 3.0.1",
     };
