@@ -2,6 +2,7 @@
 import { registrationSchema } from "@paperwait/core/organizations/shared";
 import * as v from "valibot";
 
+import RegistrationConfirm from "~/components/registration/confirm.astro";
 import RegistrationStep3 from "~/components/registration/step-3.astro";
 import { getFormErrors, getFormInput } from "./_utils";
 
@@ -38,6 +39,6 @@ const props = (
   props.variant === "step-3" ? (
     <RegistrationStep3 {...props.data} />
   ) : (
-    <RegistrationStep3 {...props.data} />
+    <RegistrationConfirm {...props.data} />
   )
 }

@@ -47,32 +47,32 @@ export const provider = createMiddleware(async (_, next) =>
   ),
 );
 
-export const maxContentLength = (
-  variant: keyof MaxFileSizes,
-  contentLength: number,
-) =>
-  createMiddleware(async (c, next) => {
-    const { org } = useAuthenticated();
+// export const maxContentLength = (
+//   variant: keyof MaxFileSizes,
+//   contentLength: number,
+// ) =>
+//   createMiddleware(async (c, next) => {
+//     const { org } = useAuthenticated();
 
-    const maxFileSizes = validate(
-      MaxFileSizes,
-      await getSsmParameter({
-        Name: buildSsmParameterPath(org.id, MAX_FILE_SIZES_PARAMETER_NAME),
-      }),
-      {
-        Error: InternalServerError,
-        message: "Failed to parse max file sizes",
-      },
-    );
+//     const maxFileSizes = validate(
+//       MaxFileSizes,
+//       await getSsmParameter({
+//         Name: buildSsmParameterPath(org.id, MAX_FILE_SIZES_PARAMETER_NAME),
+//       }),
+//       {
+//         Error: InternalServerError,
+//         message: "Failed to parse max file sizes",
+//       },
+//     );
 
-    validate(
-      v.pipe(v.number(), v.minValue(0), v.maxValue(maxFileSizes[variant])),
-      contentLength,
-      {
-        Error: BadRequestError,
-        message: "Content length exceeds maximum file size",
-      },
-    );
+//     validate(
+//       v.pipe(v.number(), v.minValue(0), v.maxValue(maxFileSizes[variant])),
+//       contentLength,
+//       {
+//         Error: BadRequestError,
+//         message: "Content length exceeds maximum file size",
+//       },
+//     );
 
-    await next();
-  });
+//     await next();
+//   });

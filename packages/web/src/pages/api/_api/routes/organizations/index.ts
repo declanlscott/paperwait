@@ -1,116 +1,48 @@
 import { vValidator } from "@hono/valibot-validator";
+import { and, eq } from "@paperwait/core/drizzle";
+import { transact } from "@paperwait/core/drizzle/transaction";
+import { registrationSchema } from "@paperwait/core/organizations/shared";
 import {
-  buildSsmParameterPath,
-  deleteSsmParameter,
-  putSsmParameter,
-} from "@paperwait/core/aws";
-import {
-  DEFAULT_DOCUMENTS_MIME_TYPES,
-  defaultMaxFileSizes,
-  DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
-  MAX_FILE_SIZES_PARAMETER_NAME,
-} from "@paperwait/core/constants";
-import { License, Organization } from "@paperwait/core/organization";
-import { transact } from "@paperwait/core/orm";
-import { Room } from "@paperwait/core/room";
-import { OrgSlug, Registration } from "@paperwait/core/schemas";
-import { eq } from "drizzle-orm";
+  licensesTable,
+  organizationsTable,
+} from "@paperwait/core/organizations/sql";
 import { Hono } from "hono";
-import * as v from "valibot";
 
-import { isOrgSlugValid } from "~/api/lib/organization";
+export default new Hono().post(
+  "/",
+  vValidator("form", registrationSchema),
+  async (c) => {
+    const registration = c.req.valid("form");
 
-export default new Hono()
-  .post("/", vValidator("form", Registration), async (c) => {
-    const values = c.req.valid("form");
+    const result = await transact(async (tx) => {
+      const org = await tx
+        .insert(organizationsTable)
+        .values({
+          slug: registration.orgSlug,
+          name: registration.orgName,
+          oauth2ProviderId: registration.oauth2ProviderId,
+        })
+        .returning()
+        .then((rows) => rows.at(0));
+      if (!org) throw new Error("Failed to create organization");
 
-    let org: Pick<Organization, "id" | "slug"> | undefined;
+      const { columns } = await tx
+        .update(licensesTable)
+        .set({ orgId: org.id })
+        .where(
+          and(
+            eq(licensesTable.key, registration.licenseKey),
+            eq(licensesTable.status, "active"),
+          ),
+        );
+      if (columns.length === 0)
+        throw new Error("Invalid or expired license key");
 
-    const result = await transact(
-      async (tx) => {
-        org = await tx
-          .insert(Organization)
-          .values(values)
-          .returning({ id: Organization.id, slug: Organization.slug })
-          .execute()
-          .then((rows) => rows.at(0));
-        if (!org) return tx.rollback();
-
-        await Promise.all([
-          // Update the license with the org id
-          tx
-            .update(License)
-            .set({ orgId: org.id })
-            .where(eq(License.key, values.licenseKey)),
-          // Create a default room for the organization
-          tx.insert(Room).values({
-            name: "Default",
-            status: "draft",
-            orgId: org.id,
-            config: {
-              workflow: [],
-              deliveryOptions: [],
-            },
-          }),
-          // Store the documents mime types in SSM
-          putSsmParameter({
-            Name: buildSsmParameterPath(
-              org.id,
-              DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
-            ),
-            Type: "StringList",
-            Value: DEFAULT_DOCUMENTS_MIME_TYPES.join(","),
-            Overwrite: false,
-          }),
-          // Store the max file sizes in SSM
-          putSsmParameter({
-            Name: buildSsmParameterPath(org.id, MAX_FILE_SIZES_PARAMETER_NAME),
-            Type: "String",
-            Value: JSON.stringify(defaultMaxFileSizes),
-            Overwrite: false,
-          }),
-        ]);
-
-        return { org };
-      },
-      {
-        onRollback: async () => {
-          if (org) {
-            console.log("Rolling back ssm parameters for org", org.id);
-
-            // Rollback the parameters if the transaction fails
-            await Promise.all([
-              deleteSsmParameter({
-                Name: buildSsmParameterPath(
-                  org.id,
-                  DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
-                ),
-              }),
-              deleteSsmParameter({
-                Name: buildSsmParameterPath(
-                  org.id,
-                  MAX_FILE_SIZES_PARAMETER_NAME,
-                ),
-              }),
-            ]);
-          }
-
-          return true;
-        },
-      },
-    );
+      return org;
+    });
 
     if (result.status === "error") throw result.error;
 
-    return c.redirect(`/org/${result.output.org.slug}`);
-  })
-  .post(
-    "/:slug",
-    vValidator("param", v.object({ slug: OrgSlug })),
-    async (c) => {
-      const isValid = await isOrgSlugValid(c.req.valid("param").slug);
-
-      return c.json({ isValid });
-    },
-  );
-// .route("/setup", infra);
+    return c.redirect(`/org/${result.output.slug}`);
+  },
+);
