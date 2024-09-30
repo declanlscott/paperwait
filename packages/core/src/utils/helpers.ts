@@ -141,13 +141,11 @@ export async function parseJwt(jwt: string) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseResource<TResource extends Record<string, any>>(
   prefix = "SST_RESOURCE_",
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: Record<string, any> = process.env,
+  input: Record<string, string | undefined> = process.env,
 ) {
   const raw = Object.entries(input).reduce(
     (raw, [key, value]) => {
       if (key.startsWith(prefix) && value)
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
         raw[key.slice(prefix.length)] = JSON.parse(value);
 
       return raw;
