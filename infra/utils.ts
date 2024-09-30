@@ -1,4 +1,5 @@
 import * as fs from "fs/promises";
+import path from "path";
 
 /**
  * There currently isn't an API to get a list of AWS curated lambda layers,
@@ -28,3 +29,6 @@ export async function getLambdaLayerArn(
     return arn;
   });
 }
+
+export const normalizePath = (p: string, r = $cli.paths.root) =>
+  path.join(r, p);

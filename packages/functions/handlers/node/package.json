@@ -1,7 +1,7 @@
 {
   "name": "@paperwait/functions",
   "scripts": {
-    "tenant-infra:build": "esbuild ./src/tenant-infra/index.ts --platform=node --target=es2020 --format=esm --bundle --outfile=./src/tenant-infra/dist/index.js",
+    "tenant-infra:build": "esbuild ./src/tenant-infra/index.ts --platform=node --target=es2020 --format=esm --bundle --outfile=./dist/tenant-infra/index.js",
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

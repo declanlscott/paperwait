@@ -2,6 +2,7 @@ import { db } from "./db";
 import { cloud, meta } from "./misc";
 import { realtime } from "./realtime";
 import { pulumiBackendBucket } from "./storage";
+import { normalizePath } from "./utils";
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
   job: {
@@ -13,27 +14,44 @@ export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
   schedule: "rate(1 day)",
 });
 
+export const tailscaleLayerSrcAsset = $asset(
+  "packages/functions/layers/tailscale/src",
+);
 export const buildTailscaleLayer = new command.local.Command(
   "BuildTailscaleLayer",
   {
+    dir: tailscaleLayerSrcAsset.path,
     create: "./build-with-docker.sh",
-    dir: "packages/functions/layers/tailscale",
+    delete: "rm -rf ../dist",
+    triggers: [tailscaleLayerSrcAsset],
   },
 );
 
+export const secureBridgeHandlerSrcAsset = $asset(
+  "packages/functions/handlers/go/papercut-secure-bridge/src",
+);
 export const buildSecureBridgeHandler = new command.local.Command(
   "BuildSecureBridgeHandler",
   {
-    create: "./build.sh",
-    dir: "packages/functions/handlers/go/papercut-secure-bridge",
+    dir: secureBridgeHandlerSrcAsset.path,
+    create:
+      "GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o ../bin/bootstrap cmd/function/main.go && zip -j ../bin/function.zip ../bin/bootstrap",
+    delete: "rm -rf ../bin",
+    triggers: [secureBridgeHandlerSrcAsset],
   },
 );
 
+const nodeHandlersPath = "packages/functions/handlers/node";
 export const buildTenantInfraHandler = new command.local.Command(
   "BuildTenantInfraHandler",
   {
-    create: "pnpm run build",
-    dir: "packages/functions/handlers/node",
+    dir: normalizePath(nodeHandlersPath),
+    create: "pnpm run tenant-infra:build",
+    delete: "rm -rf dist/tenant-infra",
+    triggers: [
+      $asset(normalizePath("src/tenant-infra", nodeHandlersPath)),
+      $asset(normalizePath("package.json", nodeHandlersPath)),
+    ],
   },
 );
 
@@ -45,7 +63,7 @@ export const tenantInfraImage = new awsx.ecr.Image(
   "Image",
   {
     repositoryUrl: repository.url,
-    context: "packages/functions/handlers/node/src/tenant-infra",
+    context: normalizePath("packages/functions/handlers/node/src/tenant-infra"),
   },
   {
     dependsOn: [
