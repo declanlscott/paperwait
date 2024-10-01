@@ -38,7 +38,7 @@ export const create = async (user: InferInsertModel<UsersTable>) =>
   );
 
 export async function metadata() {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const baseQuery = tx
@@ -47,7 +47,7 @@ export async function metadata() {
         rowVersion: sql<number>`"${usersTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(usersTable)
-      .where(eq(usersTable.orgId, org.id))
+      .where(eq(usersTable.tenantId, tenant.id))
       .$dynamic();
 
     switch (user.role) {
@@ -66,33 +66,38 @@ export async function metadata() {
 }
 
 export async function fromIds(ids: Array<User["id"]>) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
       .select()
       .from(usersTable)
-      .where(and(inArray(usersTable.id, ids), eq(usersTable.orgId, org.id))),
+      .where(
+        and(inArray(usersTable.id, ids), eq(usersTable.tenantId, tenant.id)),
+      ),
   );
 }
 
 export async function fromRoles(
   roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],
 ) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
       .select({ id: usersTable.id, role: usersTable.role })
       .from(usersTable)
       .where(
-        and(inArray(usersTable.role, roles), eq(usersTable.orgId, org.id)),
+        and(
+          inArray(usersTable.role, roles),
+          eq(usersTable.tenantId, tenant.id),
+        ),
       ),
   );
 }
 
 export async function withOrderAccess(orderId: Order["id"]) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const [adminsOps, managers, [customer]] = await Promise.all([
@@ -108,8 +113,8 @@ export async function withOrderAccess(orderId: Order["id"]) {
               papercutAccountManagerAuthorizationsTable.managerId,
             ),
             eq(
-              usersTable.orgId,
-              papercutAccountManagerAuthorizationsTable.orgId,
+              usersTable.tenantId,
+              papercutAccountManagerAuthorizationsTable.tenantId,
             ),
           ),
         )
@@ -120,15 +125,19 @@ export async function withOrderAccess(orderId: Order["id"]) {
               papercutAccountManagerAuthorizationsTable.papercutAccountId,
               ordersTable.papercutAccountId,
             ),
-            eq(papercutAccountsTable.orgId, org.id),
+            eq(papercutAccountsTable.tenantId, tenant.id),
           ),
         )
-        .where(and(eq(ordersTable.id, orderId), eq(ordersTable.orgId, org.id))),
+        .where(
+          and(eq(ordersTable.id, orderId), eq(ordersTable.tenantId, tenant.id)),
+        ),
       tx
         .select({ id: usersTable.id })
         .from(usersTable)
         .innerJoin(ordersTable, eq(usersTable.id, ordersTable.customerId))
-        .where(and(eq(ordersTable.id, orderId), eq(ordersTable.orgId, org.id))),
+        .where(
+          and(eq(ordersTable.id, orderId), eq(ordersTable.tenantId, tenant.id)),
+        ),
     ]);
 
     return R.uniqueBy([...adminsOps, ...managers, customer], ({ id }) => id);
@@ -136,13 +145,15 @@ export async function withOrderAccess(orderId: Order["id"]) {
 }
 
 export async function exists(userId: User["id"]) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const rows = await tx
       .select()
       .from(usersTable)
-      .where(and(eq(usersTable.id, userId), eq(usersTable.orgId, org.id)));
+      .where(
+        and(eq(usersTable.id, userId), eq(usersTable.tenantId, tenant.id)),
+      );
 
     return rows.length > 0;
   });
@@ -151,7 +162,7 @@ export async function exists(userId: User["id"]) {
 export const updateRole = fn(
   updateUserRoleMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.updateUserRole, {
       Error: AccessDenied,
@@ -162,10 +173,10 @@ export const updateRole = fn(
       await tx
         .update(usersTable)
         .set(values)
-        .where(and(eq(usersTable.id, id), eq(usersTable.orgId, org.id)));
+        .where(and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)));
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },
@@ -174,7 +185,7 @@ export const updateRole = fn(
 export const delete_ = fn(
   deleteUserMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     if (
       id === user.id ||
@@ -187,12 +198,14 @@ export const delete_ = fn(
         await tx
           .update(usersTable)
           .set(values)
-          .where(and(eq(usersTable.id, id), eq(usersTable.orgId, org.id)));
+          .where(
+            and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)),
+          );
 
         await afterTransaction(() =>
           Promise.all([
             Auth.invalidateUserSessions(id),
-            Replicache.poke([Realtime.formatChannel("org", org.id)]),
+            Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
           ]),
         );
       });
@@ -201,16 +214,16 @@ export const delete_ = fn(
 );
 
 export const restore = fn(restoreUserMutationArgsSchema, async ({ id }) => {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     await tx
       .update(usersTable)
       .set({ deletedAt: null })
-      .where(and(eq(usersTable.id, id), eq(usersTable.orgId, org.id)));
+      .where(and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)));
 
     await afterTransaction(() =>
-      Replicache.poke([Realtime.formatChannel("org", org.id)]),
+      Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
     );
   });
 });

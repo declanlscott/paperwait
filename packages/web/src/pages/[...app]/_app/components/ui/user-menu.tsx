@@ -27,7 +27,7 @@ import { userMenuTriggerButtonStyles } from "~/styles/components/user-menu";
 export function UserMenu() {
   const { user } = useAuthenticated();
 
-  const org = useQuery(queryFactory.organization());
+  const tenant = useQuery(queryFactory.tenant());
 
   const logout = useLogout();
 
@@ -56,15 +56,15 @@ export function UserMenu() {
 
                 <div className="flex flex-col space-y-1">
                   <span className="text-sm font-medium leading-none">
-                    {org?.name}
+                    {tenant?.name}
                   </span>
 
                   <span className="text-muted-foreground text-xs leading-none">
-                    {org?.slug}
+                    {tenant?.slug}
 
                     <EnforceRbac roles={["administrator"]}>
                       {" "}
-                      ({org?.status})
+                      ({tenant?.status})
                     </EnforceRbac>
                   </span>
                 </div>

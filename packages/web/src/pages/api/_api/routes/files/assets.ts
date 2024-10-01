@@ -45,12 +45,12 @@ export default new Hono();
 //       next,
 //     ),
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 //     const { name, metadata } = c.req.valid("query");
 
 //     const signedUrl = await getS3SignedPutUrl({
 //       Bucket: Resource.Storage.assets.bucket,
-//       Key: buildS3ObjectKey(org.id, name),
+//       Key: buildS3ObjectKey(tenant.id, name),
 //       ContentType: metadata.contentType,
 //       ContentLength: metadata.contentLength,
 //     });
@@ -62,13 +62,13 @@ export default new Hono();
 //   "/signed-get-url",
 //   vValidator("query", v.object({ name: v.string() })),
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 //     const { name } = c.req.valid("query");
 
 //     const signedUrl = getCloudfrontSignedUrl({
 //       url: buildCloudfrontUrl(
 //         Resource.Storage.assets.distribution.domain,
-//         buildS3ObjectKey(org.id, name),
+//         buildS3ObjectKey(tenant.id, name),
 //       ),
 //       keyPairId: Resource.Storage.assets.distribution.publicKey.id,
 //       privateKey: Resource.Storage.assets.distribution.privateKey,
@@ -82,12 +82,12 @@ export default new Hono();
 //   "/",
 //   vValidator("query", v.object({ name: v.string() })),
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 //     const { name } = c.req.valid("query");
 
 //     await deleteS3Object({
 //       Bucket: Resource.AssetsBucket.name,
-//       Key: buildS3ObjectKey(org.id, name),
+//       Key: buildS3ObjectKey(tenant.id, name),
 //     });
 
 //     return c.body(null, 204);

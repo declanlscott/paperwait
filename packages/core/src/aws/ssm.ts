@@ -22,8 +22,10 @@ import type { NanoId } from "../utils/schemas";
 
 export { SSMClient as Client } from "@aws-sdk/client-ssm";
 
-export const buildParameterPath = (orgId: NanoId, ...segments: Array<string>) =>
-  `/paperwait/org/${orgId}/${segments.join("/")}`;
+export const buildParameterPath = (
+  tenantId: NanoId,
+  ...segments: Array<string>
+) => `/paperwait/tenant/${tenantId}/${segments.join("/")}`;
 
 export async function putParameter(
   client: SSMClient,

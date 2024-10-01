@@ -9,4 +9,4 @@ type Credentials struct {
 	AuthToken string `json:"authToken"`
 }
 
-type GetCredentialsFunc func(ctx context.Context, orgId string) (*Credentials, error)
+type GetCredentialsFunc func(ctx context.Context, tenantId string) (*Credentials, error)

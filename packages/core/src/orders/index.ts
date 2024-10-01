@@ -49,7 +49,7 @@ export const create = fn(createOrderMutationArgsSchema, async (values) => {
 });
 
 export async function metadata() {
-  const { org, user } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const baseQuery = tx
@@ -58,7 +58,7 @@ export async function metadata() {
         rowVersion: sql<number>`"${ordersTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(ordersTable)
-      .where(eq(ordersTable.orgId, org.id))
+      .where(eq(ordersTable.tenantId, tenant.id))
       .$dynamic();
 
     const customerOrdersQuery = baseQuery.where(
@@ -78,7 +78,7 @@ export async function metadata() {
               papercutAccountsTable,
               and(
                 eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-                eq(ordersTable.orgId, papercutAccountsTable.orgId),
+                eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
               ),
             )
             .innerJoin(
@@ -89,8 +89,8 @@ export async function metadata() {
                   papercutAccountManagerAuthorizationsTable.papercutAccountId,
                 ),
                 eq(
-                  papercutAccountsTable.orgId,
-                  papercutAccountManagerAuthorizationsTable.orgId,
+                  papercutAccountsTable.tenantId,
+                  papercutAccountManagerAuthorizationsTable.tenantId,
                 ),
               ),
             )
@@ -108,20 +108,22 @@ export async function metadata() {
 }
 
 export async function fromIds(ids: Array<Order["id"]>) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
       .select()
       .from(ordersTable)
-      .where(and(inArray(ordersTable.id, ids), eq(ordersTable.orgId, org.id))),
+      .where(
+        and(inArray(ordersTable.id, ids), eq(ordersTable.tenantId, tenant.id)),
+      ),
   );
 }
 
 export const update = fn(
   updateOrderMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     const users = await Users.withOrderAccess(id);
     if (!users.some((u) => u.id === user.id))
@@ -133,7 +135,9 @@ export const update = fn(
       await tx
         .update(ordersTable)
         .set(values)
-        .where(and(eq(ordersTable.id, id), eq(ordersTable.orgId, org.id)));
+        .where(
+          and(eq(ordersTable.id, id), eq(ordersTable.tenantId, tenant.id)),
+        );
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
@@ -145,7 +149,7 @@ export const update = fn(
 export const delete_ = fn(
   deleteOrderMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     const users = await Users.withOrderAccess(id);
     if (!users.some((u) => u.id === user.id))
@@ -157,7 +161,9 @@ export const delete_ = fn(
       await tx
         .update(ordersTable)
         .set(values)
-        .where(and(eq(ordersTable.id, id), eq(ordersTable.orgId, org.id)));
+        .where(
+          and(eq(ordersTable.id, id), eq(ordersTable.tenantId, tenant.id)),
+        );
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),

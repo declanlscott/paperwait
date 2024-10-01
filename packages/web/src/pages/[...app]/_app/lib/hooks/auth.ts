@@ -28,20 +28,20 @@ export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {
 
 export const useAuth = () =>
   useAuthStore(
-    useShallow(({ user, session, org }) => {
-      if (!user || !session || !org)
+    useShallow(({ user, session, tenant }) => {
+      if (!user || !session || !tenant)
         return {
           isAuthed: false,
           user: null,
           session: null,
-          org: null,
+          tenant: null,
         } satisfies Unauthenticated;
 
       return {
         isAuthed: true,
         user,
         session,
-        org,
+        tenant,
       } satisfies Authenticated;
     }),
   );
@@ -66,7 +66,7 @@ export function useLogout() {
 
   const { invalidate, navigate } = useRouter();
 
-  const org = useQuery(queryFactory.organization());
+  const tenant = useQuery(queryFactory.tenant());
 
   return useCallback(async () => {
     await logout();
@@ -75,10 +75,10 @@ export function useLogout() {
       () =>
         void navigate({
           to: "/login",
-          search: org?.slug
-            ? { ...initialLoginSearchParams, org: org.slug }
+          search: tenant?.slug
+            ? { ...initialLoginSearchParams, tenant: tenant.slug }
             : initialLoginSearchParams,
         }),
     );
-  }, [logout, invalidate, navigate, org?.slug]);
+  }, [logout, invalidate, navigate, tenant?.slug]);
 }

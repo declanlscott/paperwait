@@ -31,7 +31,7 @@ export function AuthenticatedLayout() {
 function Realtime(props: PropsWithChildren) {
   const { user } = useAuthenticated();
 
-  useRealtime({ channel: formatChannel("org", user.orgId) });
+  useRealtime({ channel: formatChannel("tenant", user.tenantId) });
   useRealtime({ channel: formatChannel("user", user.id) });
 
   useQuery(queryFactory.user(user.id), {

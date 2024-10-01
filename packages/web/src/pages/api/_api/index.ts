@@ -7,8 +7,8 @@ import { logger } from "hono/logger";
 import auth from "~/api/routes/auth";
 import files from "~/api/routes/files";
 import integrations from "~/api/routes/integrations";
-import organizations from "~/api/routes/organizations";
 import replicache from "~/api/routes/replicache";
+import tenants from "~/api/routes/tenants";
 import users from "~/api/routes/users";
 
 import type { StatusCode } from "hono/utils/http-status";
@@ -19,7 +19,7 @@ const api = new Hono()
   .route("/auth", auth)
   .route("/files", files)
   .route("/integrations", integrations)
-  .route("/organizations", organizations)
+  .route("/tenants", tenants)
   .route("/replicache", replicache)
   .route("/users", users)
   .onError((e, c) => {

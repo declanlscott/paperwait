@@ -12,7 +12,7 @@ interface BuildSignerProps
 }
 
 export const buildSigner = ({
-  region = Resource.Meta.awsRegion,
+  region = Resource.Cloud.aws.region,
   sha256 = Sha256,
   credentials = Credentials.fromNodeProviderChain(),
   service,

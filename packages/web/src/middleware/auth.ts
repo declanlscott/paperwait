@@ -13,7 +13,7 @@ export const auth = defineMiddleware(async (context, next) => {
 
   if (!sessionId)
     return await withAuth(
-      { isAuthed: false, session: null, user: null, org: null },
+      { isAuthed: false, session: null, user: null, tenant: null },
       next,
     );
 
@@ -25,7 +25,7 @@ export const auth = defineMiddleware(async (context, next) => {
     context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
     return await withAuth(
-      { isAuthed: false, session: null, user: null, org: null },
+      { isAuthed: false, session: null, user: null, tenant: null },
       next,
     );
   }
@@ -37,7 +37,7 @@ export const auth = defineMiddleware(async (context, next) => {
   }
 
   return await withAuth(
-    { isAuthed: true, session, user: user.data, org: user.org },
+    { isAuthed: true, session, user: user.data, tenant: user.tenant },
     next,
   );
 });

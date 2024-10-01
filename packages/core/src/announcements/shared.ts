@@ -1,11 +1,11 @@
 import * as v from "valibot";
 
-import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
+import { nanoIdSchema, tenantTableSchema } from "../utils/schemas";
 
 export const announcementsTableName = "announcements";
 
 export const announcementSchema = v.object({
-  ...orgTableSchema.entries,
+  ...tenantTableSchema.entries,
   content: v.string(),
   roomId: nanoIdSchema,
 });
@@ -27,7 +27,7 @@ export const updateAnnouncementMutationArgsSchema = v.object({
   ...v.partial(
     v.omit(announcementSchema, [
       "id",
-      "orgId",
+      "tenantId",
       "createdAt",
       "updatedAt",
       "deletedAt",

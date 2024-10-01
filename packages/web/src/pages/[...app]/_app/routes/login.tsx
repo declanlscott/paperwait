@@ -63,13 +63,13 @@ function Component() {
 
               <Input
                 id="org"
-                name="org"
-                value={search.org}
+                name="tenant"
+                value={search.tenant}
                 onChange={(e) =>
                   navigate({
                     search: {
                       ...search,
-                      org: e.target.value,
+                      tenant: e.target.value,
                     },
                   })
                 }

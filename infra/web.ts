@@ -41,13 +41,13 @@ export const web = new sst.aws.Astro("Web", {
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/org/*/max-file-sizes`,
+        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/tenant/*/max-file-sizes`,
       ],
     },
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/org/*/documents-mime-types`,
+        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/tenant/*/documents-mime-types`,
       ],
     },
   ],

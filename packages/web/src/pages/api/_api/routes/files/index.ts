@@ -10,12 +10,12 @@ export default new Hono()
   //   "/max-file-sizes",
   //   authorization(["administrator", "operator"]),
   //   async (c) => {
-  //     const { org } = useAuthenticated();
+  //     const { tenant } = useAuthenticated();
 
   //     const maxFileSizes = validate(
   //       MaxFileSizes,
   //       await getSsmParameter({
-  //         Name: buildSsmParameterPath(org.id, MAX_FILE_SIZES_PARAMETER_NAME),
+  //         Name: buildSsmParameterPath(tenant.id, MAX_FILE_SIZES_PARAMETER_NAME),
   //       }),
   //       {
   //         Error: InternalServerError,

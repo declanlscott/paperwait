@@ -10,12 +10,12 @@ export const oauth2ProvidersTable = pgTable(
   oauth2ProvidersTableName,
   {
     id: text("id").notNull(),
-    orgId: id("org_id").notNull(),
+    tenantId: id("tenant_id").notNull(),
     variant: oauth2ProviderVariant("variant").notNull(),
     ...timestamps,
   },
   (table) => ({
-    primary: primaryKey({ columns: [table.id, table.orgId] }),
+    primary: primaryKey({ columns: [table.id, table.tenantId] }),
   }),
 );
 

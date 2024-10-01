@@ -13,14 +13,14 @@ import type {
   RegisteredDatabaseSessionAttributes,
 } from "lucia";
 import type { Oauth2Tokens } from "../oauth2/tokens";
-import type { Organization } from "../organizations/sql";
+import type { Tenant } from "../tenants/sql";
 import type { User } from "../users/sql";
 import type { Session, SessionTokens } from "./sql";
 
 export type Auth = {
   session: LuciaSession | null;
   user: LuciaUser["data"] | null;
-  org: LuciaUser["org"] | null;
+  tenant: LuciaUser["tenant"] | null;
 };
 
 export type Authenticated = {
@@ -36,32 +36,32 @@ export const lucia = new Lucia(new DbAdapter(), {
     attributes: { secure: Resource.Meta.app.stage === "production" },
     name: AUTH_SESSION_COOKIE_NAME,
   },
-  getUserAttributes: ({ user, org }) => ({
+  getUserAttributes: ({ user, tenant }) => ({
     data: {
       id: user.id,
       oauth2UserId: user.oauth2UserId,
-      orgId: user.orgId,
+      tenantId: user.tenantId,
       name: user.name,
       role: user.role,
       email: user.email,
       username: user.username,
     },
-    org: {
-      id: org.id,
-      slug: org.slug,
-      status: org.status,
+    tenant: {
+      id: tenant.id,
+      slug: tenant.slug,
+      status: tenant.status,
     },
   }),
   getSessionAttributes: (attributes) => ({
-    orgId: attributes.orgId,
+    tenantId: attributes.tenantId,
   }),
 });
 
 declare module "lucia" {
   interface Register {
     Lucia: typeof lucia;
-    DatabaseUserAttributes: { user: User; org: Organization };
-    DatabaseSessionAttributes: Pick<Session, "orgId">;
+    DatabaseUserAttributes: { user: User; tenant: Tenant };
+    DatabaseSessionAttributes: Pick<Session, "tenantId">;
   }
 }
 
@@ -96,7 +96,7 @@ export async function createSession(
       .values({
         sessionId: session.id,
         userId,
-        orgId: attributes.orgId,
+        tenantId: attributes.tenantId,
         ...sessionTokens,
       })
       .onConflictDoUpdate({

@@ -25,10 +25,10 @@ import {
   oauth2ProviderVariants,
 } from "@paperwait/core/oauth2/shared";
 import { oauth2ProvidersTable } from "@paperwait/core/oauth2/sql";
-import { organizationsTable } from "@paperwait/core/organizations/sql";
 import * as PapercutApi from "@paperwait/core/papercut/api";
 import * as Realtime from "@paperwait/core/realtime";
 import * as Replicache from "@paperwait/core/replicache";
+import { tenantsTable } from "@paperwait/core/tenants/sql";
 import * as Users from "@paperwait/core/users";
 import { usersTable } from "@paperwait/core/users/sql";
 import { remeda as R, valibot as v } from "@paperwait/core/utils/libs";
@@ -48,44 +48,44 @@ export default new Hono()
     "/login",
     vValidator(
       "query",
-      v.object({ org: v.string(), redirect: v.optional(v.string()) }),
+      v.object({ tenant: v.string(), redirect: v.optional(v.string()) }),
     ),
     async (c) => {
-      const { org: orgParam, redirect } = c.req.valid("query");
+      const { tenant: tenantParam, redirect } = c.req.valid("query");
 
-      const org = await db
+      const tenant = await db
         .select({
-          id: organizationsTable.id,
+          id: tenantsTable.id,
           oauth2ProviderId: oauth2ProvidersTable.id,
           oauth2ProviderVariant: oauth2ProvidersTable.variant,
         })
-        .from(organizationsTable)
+        .from(tenantsTable)
         .where(
           or(
             eq(
-              sql`TRIM(LOWER(${organizationsTable.name}))`,
-              sql`TRIM(LOWER(${orgParam}))`,
+              sql`TRIM(LOWER(${tenantsTable.name}))`,
+              sql`TRIM(LOWER(${tenantParam}))`,
             ),
             eq(
-              sql`TRIM(LOWER(${organizationsTable.slug}))`,
-              sql`TRIM(LOWER(${orgParam}))`,
+              sql`TRIM(LOWER(${tenantsTable.slug}))`,
+              sql`TRIM(LOWER(${tenantParam}))`,
             ),
           ),
         )
         .innerJoin(
           oauth2ProvidersTable,
           and(
-            eq(organizationsTable.oauth2ProviderId, oauth2ProvidersTable.id),
-            eq(organizationsTable.id, oauth2ProvidersTable.orgId),
+            eq(tenantsTable.oauth2ProviderId, oauth2ProvidersTable.id),
+            eq(tenantsTable.id, oauth2ProvidersTable.tenantId),
           ),
         )
         .then((rows) => rows.at(0));
-      if (!org) throw new NotFound("Organization not found");
+      if (!tenant) throw new NotFound("Tenant not found");
 
       let state: string;
       let codeVerifier: string;
       let authorizationUrl: URL;
-      switch (org.oauth2ProviderVariant) {
+      switch (tenant.oauth2ProviderVariant) {
         case ENTRA_ID: {
           const entraId = EntraId.createAuthorizationUrl();
           state = entraId.state;
@@ -94,28 +94,28 @@ export default new Hono()
           break;
         }
         case GOOGLE: {
-          const google = Google.createAuthorizationUrl(org.oauth2ProviderId);
+          const google = Google.createAuthorizationUrl(tenant.oauth2ProviderId);
           state = google.state;
           codeVerifier = google.codeVerifier;
           authorizationUrl = google.authorizationUrl;
           break;
         }
         default: {
-          org.oauth2ProviderVariant satisfies never;
+          tenant.oauth2ProviderVariant satisfies never;
 
           throw new NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            `Provider "${org.oauth2ProviderVariant}" not implemented`,
+            `Provider "${tenant.oauth2ProviderVariant}" not implemented`,
           );
         }
       }
 
       (
         [
-          ["provider", org.oauth2ProviderVariant],
+          ["provider", tenant.oauth2ProviderVariant],
           ["state", state],
           ["code_verifier", codeVerifier],
-          ["orgId", org.id],
+          ["tenantId", tenant.id],
           ["redirect", redirect],
         ] as const
       ).forEach(([name, value]) => {
@@ -142,13 +142,13 @@ export default new Hono()
         provider: v.picklist(oauth2ProviderVariants),
         state: v.string(),
         code_verifier: v.string(),
-        orgId: v.string(),
+        tenantId: v.string(),
         redirect: v.fallback(v.string(), "/dashboard"),
       }),
     ),
     async (c) => {
       const { code } = c.req.valid("query");
-      const { provider, code_verifier, orgId, redirect } =
+      const { provider, code_verifier, tenantId, redirect } =
         c.req.valid("cookie");
 
       let tokens: Oauth2Tokens;
@@ -180,19 +180,19 @@ export default new Hono()
         }
       }
 
-      const org = await db
-        .select({ status: organizationsTable.status })
-        .from(organizationsTable)
+      const tenant = await db
+        .select({ status: tenantsTable.status })
+        .from(tenantsTable)
         .where(
           and(
-            eq(organizationsTable.oauth2ProviderId, idToken.providerId),
-            eq(organizationsTable.id, orgId),
+            eq(tenantsTable.oauth2ProviderId, idToken.providerId),
+            eq(tenantsTable.id, tenantId),
           ),
         )
         .then((rows) => rows.at(0));
-      if (!org)
+      if (!tenant)
         throw new NotFound(
-          `Organization "${orgId}" not found with oauth2 provider "${idToken.providerId}"`,
+          `Tenant "${tenantId}" not found with oauth2 provider "${idToken.providerId}"`,
         );
 
       const userExists = await PapercutApi.isUserExists(idToken.username);
@@ -231,17 +231,17 @@ export default new Hono()
           .where(
             and(
               eq(usersTable.oauth2UserId, idToken.userId),
-              eq(usersTable.orgId, orgId),
+              eq(usersTable.tenantId, tenantId),
             ),
           )
           .then((rows) => rows.at(0));
 
         if (!existingUser) {
-          if (org.status === "suspended")
-            throw new Unauthorized("Organization is suspended");
+          if (tenant.status === "suspended")
+            throw new Unauthorized("tenantanization is suspended");
 
           const newUser = await Users.create({
-            orgId,
+            tenantId,
             oauth2UserId: idToken.userId,
             name: userInfo.name,
             username: idToken.username,
@@ -250,10 +250,10 @@ export default new Hono()
           if (!newUser) throw new Error("Failed to insert new user");
 
           await afterTransaction(() =>
-            Replicache.poke([Realtime.formatChannel("org", orgId)]),
+            Replicache.poke([Realtime.formatChannel("tenant", tenantId)]),
           );
 
-          return Auth.createSession(newUser.id, { orgId }, tokens);
+          return Auth.createSession(newUser.id, { tenantId }, tokens);
         }
 
         if (existingUser.deletedAt) throw new Unauthorized("User is deleted");
@@ -276,16 +276,16 @@ export default new Hono()
             .where(
               and(
                 eq(usersTable.id, existingUser.id),
-                eq(usersTable.orgId, orgId),
+                eq(usersTable.tenantId, tenantId),
               ),
             );
 
           await afterTransaction(() =>
-            Replicache.poke([Realtime.formatChannel("org", orgId)]),
+            Replicache.poke([Realtime.formatChannel("tenant", tenantId)]),
           );
         }
 
-        return Auth.createSession(existingUser.id, { orgId }, tokens);
+        return Auth.createSession(existingUser.id, { tenantId }, tokens);
       });
 
       setCookie(c, cookie.name, cookie.value, cookie.attributes);

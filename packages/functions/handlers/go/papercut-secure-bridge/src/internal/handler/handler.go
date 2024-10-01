@@ -39,7 +39,7 @@ func Handler(
 			httpClient,
 			func(
 				ctx context.Context,
-				orgId string,
+				tenantId string,
 			) (*papercut.Credentials, error) {
 				once.Do(func() {
 					cfg, err := config.LoadDefaultConfig(ctx)
@@ -52,7 +52,7 @@ func Handler(
 
 					output, err := client.GetParameter(ctx, &ssm.GetParameterInput{
 						Name: aws.String(
-							fmt.Sprintf("/paperwait/org/%s/papercut/web-services/credentials", orgId),
+							fmt.Sprintf("/paperwait/tenant/%s/papercut/web-services/credentials", tenantId),
 						),
 						WithDecryption: aws.Bool(true),
 					})
@@ -80,12 +80,12 @@ func Bridge(
 	httpClient *http.Client,
 	getCredentials papercut.GetCredentialsFunc,
 ) events.APIGatewayV2HTTPResponse {
-	orgId, ok := os.LookupEnv("ORG_ID")
+	tenantId, ok := os.LookupEnv("TENANT_ID")
 	if !ok {
-		return InternalServerErrorResponse(errors.New("ORG_ID environment variable is not set"))
+		return InternalServerErrorResponse(errors.New("TENANT_ID environment variable is not set"))
 	}
 
-	credentials, err := getCredentials(ctx, orgId)
+	credentials, err := getCredentials(ctx, tenantId)
 	if err != nil {
 		return InternalServerErrorResponse(err)
 	}

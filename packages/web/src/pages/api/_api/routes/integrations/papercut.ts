@@ -16,11 +16,11 @@ export default new Hono();
 //   "/accounts",
 //   authorization(mutationRbac.syncPapercutAccounts),
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 
 //     await serializable(() => syncPapercutAccounts());
 
-//     await poke([formatChannel("org", org.id)]);
+//     await poke([formatChannel("tenant", tenant.id)]);
 
 //     return c.body(null, 204);
 //   },
@@ -30,10 +30,10 @@ export default new Hono();
 //   authorization(["administrator"]),
 //   vValidator("json", PapercutParameter),
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 
 //     await putSsmParameter({
-//       Name: buildSsmParameterPath(org.id, PAPERCUT_PARAMETER_NAME),
+//       Name: buildSsmParameterPath(tenant.id, PAPERCUT_PARAMETER_NAME),
 //       Value: JSON.stringify(c.req.valid("json")),
 //       Type: "SecureString",
 //       Overwrite: true,
@@ -43,10 +43,10 @@ export default new Hono();
 //   },
 // )
 // .post("/health-check", authorization(["administrator"]), async (c) => {
-//   const { org } = useAuthenticated();
+//   const { tenant } = useAuthenticated();
 
 //   await healthCheck({
-//     orgId: org.id,
+//     tenantId: tenant.id,
 //     input: { authorized: true },
 //   });
 

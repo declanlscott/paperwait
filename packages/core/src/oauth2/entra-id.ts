@@ -92,14 +92,14 @@ export const refreshAccessToken = async (
 ) => provider.refreshAccessToken(refreshToken);
 
 export async function photo(userId: User["id"]): Promise<Response> {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
   const oauth2 = useOauth2();
 
   const user = await useTransaction((tx) =>
     tx
       .select({ id: usersTable.oauth2UserId })
       .from(usersTable)
-      .where(and(eq(usersTable.id, userId), eq(usersTable.orgId, org.id)))
+      .where(and(eq(usersTable.id, userId), eq(usersTable.tenantId, tenant.id)))
       .then((rows) => rows.at(0)),
   );
   if (!user) throw new NotFound("User not found");

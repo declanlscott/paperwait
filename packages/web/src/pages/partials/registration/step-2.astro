@@ -1,6 +1,6 @@
 ---
-import * as Organizations from "@paperwait/core/organizations";
-import { registrationStep2Schema } from "@paperwait/core/organizations/shared";
+import * as Tenants from "@paperwait/core/tenants";
+import { registrationStep2Schema } from "@paperwait/core/tenants/shared";
 import { valibot as v } from "@paperwait/core/utils/libs";
 
 import RegistrationStep1 from "~/components/registration/step-1.astro";
@@ -32,21 +32,19 @@ switch (from) {
         v.partialCheckAsync(
           [["licenseKey"]],
           ({ licenseKey }) =>
-            licenseKey
-              ? Organizations.isLicenseKeyAvailable(licenseKey)
-              : false,
+            licenseKey ? Tenants.isLicenseKeyAvailable(licenseKey) : false,
           "Invalid license key",
         ),
         ["licenseKey"],
       ),
       v.forwardAsync(
         v.partialCheckAsync(
-          [["orgSlug"]],
-          ({ orgSlug }) =>
-            orgSlug ? Organizations.isSlugUnique(orgSlug) : false,
-          "Organization slug is not unique",
+          [["tenantSlug"]],
+          ({ tenantSlug }) =>
+            tenantSlug ? Tenants.isSlugUnique(tenantSlug) : false,
+          "Tenant slug is not unique",
         ),
-        ["orgSlug"],
+        ["tenantSlug"],
       ),
     );
 

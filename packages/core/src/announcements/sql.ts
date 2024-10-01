@@ -1,13 +1,13 @@
 import { foreignKey, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
-import { orgTable } from "../drizzle/tables";
+import { tenantTable } from "../drizzle/tables";
 import { roomsTable } from "../rooms/sql";
 import { announcementsTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm/table";
 
-export const announcementsTable = orgTable(
+export const announcementsTable = tenantTable(
   announcementsTableName,
   {
     content: text("content").notNull(),
@@ -15,8 +15,8 @@ export const announcementsTable = orgTable(
   },
   (table) => ({
     roomReference: foreignKey({
-      columns: [table.roomId, table.orgId],
-      foreignColumns: [roomsTable.id, roomsTable.orgId],
+      columns: [table.roomId, table.tenantId],
+      foreignColumns: [roomsTable.id, roomsTable.tenantId],
       name: "room_fk",
     }),
   }),

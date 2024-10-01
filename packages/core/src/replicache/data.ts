@@ -5,8 +5,6 @@ import * as Comments from "../comments";
 import { commentsTable } from "../comments/sql";
 import * as Orders from "../orders";
 import { ordersTable } from "../orders/sql";
-import * as Organizations from "../organizations";
-import { organizationsTable } from "../organizations/sql";
 import * as Papercut from "../papercut";
 import {
   papercutAccountCustomerAuthorizationsTable,
@@ -17,6 +15,8 @@ import * as Products from "../products";
 import { productsTable } from "../products/sql";
 import * as Rooms from "../rooms";
 import { roomsTable } from "../rooms/sql";
+import * as Tenants from "../tenants";
+import { tenantsTable } from "../tenants/sql";
 import * as Users from "../users";
 import { usersTable } from "../users/sql";
 import { replicacheClientsTable } from "./sql";
@@ -28,12 +28,12 @@ export const syncedTables = [
   announcementsTable,
   commentsTable,
   ordersTable,
-  organizationsTable,
   papercutAccountsTable,
   papercutAccountCustomerAuthorizationsTable,
   papercutAccountManagerAuthorizationsTable,
   productsTable,
   roomsTable,
+  tenantsTable,
   usersTable,
 ];
 export const nonSyncedTables = [replicacheClientsTable];
@@ -78,7 +78,6 @@ export const metadataQueryFactory = {
   announcements: Announcements.metadata,
   comments: Comments.metadata,
   orders: Orders.metadata,
-  organizations: Organizations.metadata,
   papercut_accounts: Papercut.accountsMetadata,
   papercut_account_customer_authorizations:
     Papercut.accountCustomerAuthorizationsMetadata,
@@ -87,6 +86,7 @@ export const metadataQueryFactory = {
   products: Products.metadata,
   replicache_clients: clientMetadataFromGroupId,
   rooms: Rooms.metadata,
+  tenants: Tenants.metadata,
   users: Users.metadata,
 } satisfies MetadataQueryFactory;
 
@@ -106,7 +106,6 @@ export const dataQueryFactory = {
   announcements: Announcements.fromIds,
   comments: Comments.fromIds,
   orders: Orders.fromIds,
-  organizations: Organizations.fromId,
   papercut_accounts: Papercut.accountsFromIds,
   papercut_account_customer_authorizations:
     Papercut.accountCustomerAuthorizationsFromIds,
@@ -114,6 +113,7 @@ export const dataQueryFactory = {
     Papercut.accountManagerAuthorizationsFromIds,
   products: Products.fromIds,
   rooms: Rooms.fromIds,
+  tenants: Tenants.fromId,
   users: Users.fromIds,
 } satisfies DataQueryFactory;
 
@@ -146,7 +146,6 @@ export const authoritativeMutatorFactory = {
   createOrder: Orders.create,
   updateOrder: Orders.update,
   deleteOrder: Orders.delete_,
-  updateOrganization: Organizations.update,
   createPapercutAccountManagerAuthorization:
     Papercut.createAccountManagerAuthorization,
   deletePapercutAccount: Papercut.deleteAccount,
@@ -159,6 +158,7 @@ export const authoritativeMutatorFactory = {
   updateRoom: Rooms.update,
   deleteRoom: Rooms.delete_,
   restoreRoom: Rooms.restore,
+  updateTenant: Tenants.update,
   updateUserRole: Users.updateRole,
   deleteUser: Users.delete_,
   restoreUser: Users.restore,

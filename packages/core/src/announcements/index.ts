@@ -20,7 +20,7 @@ import type { Announcement } from "./sql";
 export const create = fn(
   createAnnouncementMutationArgsSchema,
   async (values) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.createAnnouncement, {
       Error: AccessDenied,
@@ -31,14 +31,14 @@ export const create = fn(
       await tx.insert(announcementsTable).values(values);
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },
 );
 
 export async function metadata() {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
@@ -47,12 +47,12 @@ export async function metadata() {
         rowVersion: sql<number>`"${announcementsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(announcementsTable)
-      .where(eq(announcementsTable.orgId, org.id)),
+      .where(eq(announcementsTable.tenantId, tenant.id)),
   );
 }
 
 export async function fromIds(ids: Array<Announcement["id"]>) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
@@ -61,7 +61,7 @@ export async function fromIds(ids: Array<Announcement["id"]>) {
       .where(
         and(
           inArray(announcementsTable.id, ids),
-          eq(announcementsTable.orgId, org.id),
+          eq(announcementsTable.tenantId, tenant.id),
         ),
       ),
   );
@@ -70,7 +70,7 @@ export async function fromIds(ids: Array<Announcement["id"]>) {
 export const update = fn(
   updateAnnouncementMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.updateAnnouncement, {
       Error: AccessDenied,
@@ -84,12 +84,12 @@ export const update = fn(
         .where(
           and(
             eq(announcementsTable.id, id),
-            eq(announcementsTable.orgId, org.id),
+            eq(announcementsTable.tenantId, tenant.id),
           ),
         );
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },
@@ -98,7 +98,7 @@ export const update = fn(
 export const delete_ = fn(
   deleteAnnouncementMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.deleteAnnouncement, {
       Error: AccessDenied,
@@ -112,12 +112,12 @@ export const delete_ = fn(
         .where(
           and(
             eq(announcementsTable.id, id),
-            eq(announcementsTable.orgId, org.id),
+            eq(announcementsTable.tenantId, tenant.id),
           ),
         );
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },

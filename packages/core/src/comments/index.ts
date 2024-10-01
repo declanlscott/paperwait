@@ -42,7 +42,7 @@ export const create = fn(createCommentMutationArgsSchema, async (values) => {
 });
 
 export async function metadata() {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const baseQuery = tx
@@ -51,7 +51,7 @@ export async function metadata() {
         rowVersion: sql<number>`"${commentsTable._.name}"."${ROW_VERSION_COLUMN_NAME}`,
       })
       .from(commentsTable)
-      .where(eq(commentsTable.orgId, org.id))
+      .where(eq(commentsTable.tenantId, tenant.id))
       .$dynamic();
 
     switch (user.role) {
@@ -74,14 +74,14 @@ export async function metadata() {
             ordersTable,
             and(
               eq(commentsTable.orderId, ordersTable.id),
-              eq(commentsTable.orgId, ordersTable.orgId),
+              eq(commentsTable.tenantId, ordersTable.tenantId),
             ),
           )
           .innerJoin(
             papercutAccountsTable,
             and(
               eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-              eq(ordersTable.orgId, papercutAccountsTable.orgId),
+              eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
             ),
           )
           .innerJoin(
@@ -92,8 +92,8 @@ export async function metadata() {
                 papercutAccountManagerAuthorizationsTable.papercutAccountId,
               ),
               eq(
-                papercutAccountsTable.orgId,
-                papercutAccountManagerAuthorizationsTable.orgId,
+                papercutAccountsTable.tenantId,
+                papercutAccountManagerAuthorizationsTable.tenantId,
               ),
             ),
           )
@@ -109,7 +109,7 @@ export async function metadata() {
             ordersTable,
             and(
               eq(commentsTable.orderId, ordersTable.id),
-              eq(commentsTable.orgId, ordersTable.orgId),
+              eq(commentsTable.tenantId, ordersTable.tenantId),
             ),
           )
           .where(
@@ -126,14 +126,17 @@ export async function metadata() {
 }
 
 export async function fromIds(ids: Array<Comment["id"]>) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
       .select()
       .from(commentsTable)
       .where(
-        and(inArray(commentsTable.id, ids), eq(commentsTable.orgId, org.id)),
+        and(
+          inArray(commentsTable.id, ids),
+          eq(commentsTable.tenantId, tenant.id),
+        ),
       ),
   );
 }
@@ -141,7 +144,7 @@ export async function fromIds(ids: Array<Comment["id"]>) {
 export const update = fn(
   updateCommentMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
@@ -153,7 +156,9 @@ export const update = fn(
       await tx
         .update(commentsTable)
         .set(values)
-        .where(and(eq(commentsTable.id, id), eq(commentsTable.orgId, org.id)));
+        .where(
+          and(eq(commentsTable.id, id), eq(commentsTable.tenantId, tenant.id)),
+        );
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
@@ -165,7 +170,7 @@ export const update = fn(
 export const delete_ = fn(
   deleteCommentMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
@@ -177,7 +182,9 @@ export const delete_ = fn(
       await tx
         .update(commentsTable)
         .set(values)
-        .where(and(eq(commentsTable.id, id), eq(commentsTable.orgId, org.id)));
+        .where(
+          and(eq(commentsTable.id, id), eq(commentsTable.tenantId, tenant.id)),
+        );
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),

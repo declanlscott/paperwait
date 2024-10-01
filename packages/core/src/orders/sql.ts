@@ -1,7 +1,7 @@
 import { foreignKey, index } from "drizzle-orm/pg-core";
 
 import { bigintString, id } from "../drizzle/columns";
-import { orgTable } from "../drizzle/tables";
+import { tenantTable } from "../drizzle/tables";
 import { papercutAccountsTable } from "../papercut/sql";
 import { productsTable } from "../products/sql";
 import { usersTable } from "../users/sql";
@@ -9,7 +9,7 @@ import { ordersTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";
 
-export const ordersTable = orgTable(
+export const ordersTable = tenantTable(
   ordersTableName,
   {
     customerId: id("customer_id").notNull(),
@@ -20,28 +20,31 @@ export const ordersTable = orgTable(
   },
   (table) => ({
     customerReference: foreignKey({
-      columns: [table.customerId, table.orgId],
-      foreignColumns: [usersTable.id, usersTable.orgId],
+      columns: [table.customerId, table.tenantId],
+      foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "customer_fk",
     }),
     managerId: foreignKey({
-      columns: [table.managerId, table.orgId],
-      foreignColumns: [usersTable.id, usersTable.orgId],
+      columns: [table.managerId, table.tenantId],
+      foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "manager_fk",
     }),
     operatorId: foreignKey({
-      columns: [table.operatorId, table.orgId],
-      foreignColumns: [usersTable.id, usersTable.orgId],
+      columns: [table.operatorId, table.tenantId],
+      foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "operator_fk",
     }),
     productReference: foreignKey({
-      columns: [table.productId, table.orgId],
-      foreignColumns: [productsTable.id, productsTable.orgId],
+      columns: [table.productId, table.tenantId],
+      foreignColumns: [productsTable.id, productsTable.tenantId],
       name: "product_fk",
     }),
     papercutAccountReference: foreignKey({
-      columns: [table.papercutAccountId, table.orgId],
-      foreignColumns: [papercutAccountsTable.id, papercutAccountsTable.orgId],
+      columns: [table.papercutAccountId, table.tenantId],
+      foreignColumns: [
+        papercutAccountsTable.id,
+        papercutAccountsTable.tenantId,
+      ],
       name: "papercut_account_fk",
     }),
     customerIdIndex: index("customer_id_idx").on(table.customerId),

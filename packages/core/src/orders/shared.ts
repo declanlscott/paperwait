@@ -2,14 +2,14 @@ import * as v from "valibot";
 
 import {
   nanoIdSchema,
-  orgTableSchema,
   papercutAccountIdSchema,
+  tenantTableSchema,
 } from "../utils/schemas";
 
 export const ordersTableName = "orders";
 
 export const orderSchema = v.object({
-  ...orgTableSchema.entries,
+  ...tenantTableSchema.entries,
   customerId: nanoIdSchema,
   managerId: v.nullable(nanoIdSchema),
   operatorId: v.nullable(nanoIdSchema),
@@ -32,7 +32,13 @@ export const updateOrderMutationArgsSchema = v.object({
   id: nanoIdSchema,
   updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
-    v.omit(orderSchema, ["id", "orgId", "updatedAt", "createdAt", "deletedAt"]),
+    v.omit(orderSchema, [
+      "id",
+      "tenantId",
+      "updatedAt",
+      "createdAt",
+      "deletedAt",
+    ]),
   ).entries,
 });
 export type UpdateOrderMutationArgs = v.InferOutput<

@@ -28,7 +28,7 @@ export const fromSessionId = async (
       .from(sessionTokensTable)
       .innerJoin(
         oauth2ProvidersTable,
-        eq(sessionTokensTable.orgId, oauth2ProvidersTable.orgId),
+        eq(sessionTokensTable.tenantId, oauth2ProvidersTable.tenantId),
       )
       .where(eq(sessionTokensTable.sessionId, sessionId))
       .then((rows) => rows.at(0));

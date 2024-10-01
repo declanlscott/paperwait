@@ -2,8 +2,8 @@ import * as v from "valibot";
 
 import {
   nanoIdSchema,
-  orgTableSchema,
   papercutAccountIdSchema,
+  tenantTableSchema,
   timestampsSchema,
 } from "../utils/schemas";
 
@@ -15,7 +15,7 @@ export const papercutAccountManagerAuthorizationsTableName =
 
 export const papercutAccountSchema = v.object({
   id: papercutAccountIdSchema,
-  orgId: nanoIdSchema,
+  tenantId: nanoIdSchema,
   name: v.string(),
   ...timestampsSchema.entries,
 });
@@ -27,13 +27,13 @@ export const papercutMutationNames = [
 ] as const;
 
 export const papercutAccountCustomerAuthorizationSchema = v.object({
-  ...orgTableSchema.entries,
+  ...tenantTableSchema.entries,
   customerId: nanoIdSchema,
   papercutAccountId: papercutAccountIdSchema,
 });
 
 export const papercutAccountManagerAuthorizationSchema = v.object({
-  ...orgTableSchema.entries,
+  ...tenantTableSchema.entries,
   managerId: nanoIdSchema,
   papercutAccountId: papercutAccountIdSchema,
 });

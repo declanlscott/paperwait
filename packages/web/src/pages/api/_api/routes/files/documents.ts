@@ -16,12 +16,12 @@ export default new Hono();
 //     }),
 //   ),
 //   async (c, next) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 //     const { metadata } = c.req.valid("query");
 
 //     const documentsMimeTypes = await getSsmParameter({
 //       Name: buildSsmParameterPath(
-//         org.id,
+//         tenant.id,
 //         DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
 //       ),
 //     }).then((value) => value.split(","));
@@ -37,12 +37,12 @@ export default new Hono();
 //       c.req.valid("query").metadata.contentLength,
 //     )(c, next),
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 //     const { name, orderId, metadata } = c.req.valid("query");
 
 //     const signedUrl = await getS3SignedPutUrl({
 //       Bucket: Resource.Storage.documents.bucket,
-//       Key: buildS3ObjectKey(org.id, orderId, name),
+//       Key: buildS3ObjectKey(tenant.id, orderId, name),
 //       ContentType: metadata.contentType,
 //       ContentLength: metadata.contentLength,
 //     });
@@ -61,12 +61,12 @@ export default new Hono();
 //     await next();
 //   },
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 //     const { name, orderId } = c.req.valid("query");
 
 //     const signedUrl = await getS3SignedGetUrl({
 //       Bucket: Resource.Storage.documents.bucket,
-//       Key: buildS3ObjectKey(org.id, orderId, name),
+//       Key: buildS3ObjectKey(tenant.id, orderId, name),
 //     });
 
 //     return c.json({ signedUrl });
@@ -83,12 +83,12 @@ export default new Hono();
 //     await next();
 //   },
 //   async (c) => {
-//     const { org } = useAuthenticated();
+//     const { tenant } = useAuthenticated();
 //     const { name, orderId } = c.req.valid("query");
 
 //     await deleteS3Object({
 //       Bucket: Resource.Storage.documents.bucket,
-//       Key: buildS3ObjectKey(org.id, orderId, name),
+//       Key: buildS3ObjectKey(tenant.id, orderId, name),
 //     });
 
 //     return c.body(null, 204);

@@ -3,7 +3,7 @@ import * as v from "valibot";
 
 import { VARCHAR_LENGTH } from "../constants";
 import { isUniqueByName } from "../utils/helpers";
-import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
+import { nanoIdSchema, tenantTableSchema } from "../utils/schemas";
 
 export const deliveryOptionAttributesSchema = v.object({
   name: v.pipe(v.string(), v.trim()),
@@ -94,7 +94,7 @@ export const roomStatuses = ["draft", "published"] as const;
 export type RoomStatus = (typeof roomStatuses)[number];
 
 export const roomSchema = v.object({
-  ...orgTableSchema.entries,
+  ...tenantTableSchema.entries,
   name: v.pipe(v.string(), v.maxLength(VARCHAR_LENGTH)),
   status: v.picklist(roomStatuses),
   details: v.nullable(v.string()),
@@ -117,7 +117,13 @@ export const updateRoomMutationArgsSchema = v.object({
   id: nanoIdSchema,
   updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
-    v.omit(roomSchema, ["id", "orgId", "createdAt", "updatedAt", "deletedAt"]),
+    v.omit(roomSchema, [
+      "id",
+      "tenantId",
+      "createdAt",
+      "updatedAt",
+      "deletedAt",
+    ]),
   ).entries,
 });
 export type UpdateRoomMutationArgs = v.InferOutput<

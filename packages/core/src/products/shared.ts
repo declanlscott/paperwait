@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 import { VARCHAR_LENGTH } from "../constants";
 import { isUniqueByName } from "../utils/helpers";
-import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
+import { nanoIdSchema, tenantTableSchema } from "../utils/schemas";
 
 export const costSchema = v.pipe(
   v.union([v.number(), v.pipe(v.string(), v.decimal())]),
@@ -220,7 +220,7 @@ export type ProductConfiguration = v.InferOutput<
 >;
 
 export const productSchema = v.object({
-  ...orgTableSchema.entries,
+  ...tenantTableSchema.entries,
   name: v.pipe(v.string(), v.maxLength(VARCHAR_LENGTH)),
   status: v.picklist(productStatuses),
   roomId: nanoIdSchema,
@@ -244,7 +244,7 @@ export const updateProductMutationArgsSchema = v.object({
   ...v.partial(
     v.omit(productSchema, [
       "id",
-      "orgId",
+      "tenantId",
       "updatedAt",
       "createdAt",
       "deletedAt",

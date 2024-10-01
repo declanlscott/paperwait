@@ -17,8 +17,8 @@ type RequestPresigningArguments = Parameters<typeof getSignedUrl>[2];
 
 export { S3Client as Client } from "@aws-sdk/client-s3";
 
-export const buildObjectKey = (orgId: NanoId, ...segments: Array<string>) =>
-  `${orgId}/${segments.join("/")}`;
+export const buildObjectKey = (tenantId: NanoId, ...segments: Array<string>) =>
+  `${tenantId}/${segments.join("/")}`;
 
 export const getSignedPutUrl = (
   client: S3Client,

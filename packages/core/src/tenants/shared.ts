@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { ORG_SLUG_PATTERN } from "../constants";
+import { TENANT_SLUG_PATTERN } from "../constants";
 import { oauth2ProvidersSchema } from "../oauth2/shared";
 import { nanoIdSchema, timestampsSchema } from "../utils/schemas";
 
@@ -11,38 +11,38 @@ export type LicenseStatus = (typeof licenseStatuses)[number];
 
 export const licenseSchema = v.object({
   key: v.pipe(v.string(), v.uuid("Invalid license key format")),
-  orgId: nanoIdSchema,
+  tenantId: nanoIdSchema,
   status: v.picklist(licenseStatuses),
 });
 
-export const organizationsTableName = "organizations";
+export const tenantsTableName = "tenants";
 
-export const orgStatuses = ["initializing", "active", "suspended"] as const;
-export type OrgStatus = (typeof orgStatuses)[number];
+export const tenantStatuses = ["initializing", "active", "suspended"] as const;
+export type TenantStatus = (typeof tenantStatuses)[number];
 
-export const organizationSchema = v.object({
+export const tenantSchema = v.object({
   id: nanoIdSchema,
   slug: v.pipe(
     v.string(),
     v.regex(
-      ORG_SLUG_PATTERN,
+      TENANT_SLUG_PATTERN,
       "Invalid format, only alphanumeric characters and hyphens are allowed",
     ),
   ),
   name: v.string(),
-  status: v.picklist(orgStatuses),
+  status: v.picklist(tenantStatuses),
   licenseKey: v.pipe(v.string(), v.uuid()),
   oauth2ProviderId: v.nullable(v.string()),
   ...timestampsSchema.entries,
 });
 
-export const organizationMutationNames = ["updateOrganization"] as const;
+export const tenantMutationNames = ["updateTenant"] as const;
 
-export const updateOrganizationMutationArgsSchema = v.object({
+export const updateTenantMutationArgsSchema = v.object({
   id: nanoIdSchema,
   updatedAt: v.pipe(v.string(), v.isoTimestamp()),
   ...v.partial(
-    v.omit(organizationSchema, [
+    v.omit(tenantSchema, [
       "id",
       "licenseKey",
       "oauth2ProviderId",
@@ -52,15 +52,15 @@ export const updateOrganizationMutationArgsSchema = v.object({
     ]),
   ).entries,
 });
-export type UpdateOrganizationMutationArgs = v.InferOutput<
-  typeof updateOrganizationMutationArgsSchema
+export type UpdateTenantMutationArgs = v.InferOutput<
+  typeof updateTenantMutationArgsSchema
 >;
 
 const registrationStepsSchemas = [
   v.object({
     licenseKey: licenseSchema.entries.key,
-    orgName: organizationSchema.entries.name,
-    orgSlug: organizationSchema.entries.slug,
+    tenantName: tenantSchema.entries.name,
+    tenantSlug: tenantSchema.entries.slug,
   }),
   v.object({
     oauth2ProviderVariant: oauth2ProvidersSchema.entries.variant,

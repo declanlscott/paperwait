@@ -27,13 +27,13 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
     createStore<AuthStore>((set, get) => ({
       user: auth.user,
       session: auth.session,
-      org: auth.org,
+      tenant: auth.tenant,
       actions: {
         reset: () =>
           set(() => ({
             user: null,
             session: null,
-            org: null,
+            tenant: null,
           })),
         logout: async () => {
           const res = await fetch("/api/auth/logout", { method: "POST" });
@@ -42,15 +42,15 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
           get().actions.reset();
         },
         authenticateRoute: (from) => {
-          const { user, session, org } = get();
+          const { user, session, tenant } = get();
 
-          if (!user || !session || !org)
+          if (!user || !session || !tenant)
             throw redirect({
               to: "/login",
               search: { redirect: from, ...initialLoginSearchParams },
             });
 
-          return { user, session, org };
+          return { user, session, tenant };
         },
         authorizeRoute: (user, roles) =>
           enforceRbac(user, roles, {

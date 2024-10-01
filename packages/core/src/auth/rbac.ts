@@ -44,7 +44,7 @@ export const mutationRbac = {
   createOrder: ["administrator", "operator", "manager", "customer"],
   updateOrder: ["administrator", "operator"],
   deleteOrder: ["administrator", "operator"],
-  updateOrganization: ["administrator"],
+  updateTenant: ["administrator"],
   deletePapercutAccount: ["administrator"],
   createPapercutAccountManagerAuthorization: ["administrator"],
   deletePapercutAccountManagerAuthorization: ["administrator"],

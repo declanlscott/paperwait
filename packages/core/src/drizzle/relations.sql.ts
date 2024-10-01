@@ -4,7 +4,6 @@ import { announcementsTable } from "../announcements/sql";
 import { sessionsTable } from "../auth/sql";
 import { commentsTable } from "../comments/sql";
 import { ordersTable } from "../orders/sql";
-import { organizationsTable } from "../organizations/sql";
 import {
   papercutAccountCustomerAuthorizationsTable,
   papercutAccountManagerAuthorizationsTable,
@@ -17,44 +16,44 @@ import {
   replicacheClientViewsTable,
 } from "../replicache/sql";
 import { roomsTable } from "../rooms/sql";
+import { tenantsTable } from "../tenants/sql";
 import { usersTable } from "../users/sql";
 
-export const organizationRelations = relations(
-  organizationsTable,
-  ({ many }) => ({
-    user: many(usersTable, { relationName: "userOrg" }),
-    papercutAccount: many(papercutAccountsTable, {
-      relationName: "papercutAccountOrg",
-    }),
-    papercutAccountCustomerAuthorization: many(
-      papercutAccountCustomerAuthorizationsTable,
-      { relationName: "papercutAccountCustomerAuthorizationOrg" },
-    ),
-    papercutAccountManagerAuthorization: many(
-      papercutAccountManagerAuthorizationsTable,
-      { relationName: "papercutAccountManagerAuthorizationOrg" },
-    ),
-    room: many(roomsTable, { relationName: "roomOrg" }),
-    announcement: many(announcementsTable, { relationName: "announcementOrg" }),
-    product: many(productsTable, { relationName: "productOrg" }),
-    order: many(ordersTable, { relationName: "orderOrg" }),
-    comment: many(commentsTable, { relationName: "commentOrg" }),
+export const tenantRelations = relations(tenantsTable, ({ many }) => ({
+  user: many(usersTable, { relationName: "userTenant" }),
+  papercutAccount: many(papercutAccountsTable, {
+    relationName: "papercutAccountTenant",
   }),
-);
+  papercutAccountCustomerAuthorization: many(
+    papercutAccountCustomerAuthorizationsTable,
+    { relationName: "papercutAccountCustomerAuthorizationTenant" },
+  ),
+  papercutAccountManagerAuthorization: many(
+    papercutAccountManagerAuthorizationsTable,
+    { relationName: "papercutAccountManagerAuthorizationTenant" },
+  ),
+  room: many(roomsTable, { relationName: "roomTenant" }),
+  announcement: many(announcementsTable, {
+    relationName: "announcementTenant",
+  }),
+  product: many(productsTable, { relationName: "productTenant" }),
+  order: many(ordersTable, { relationName: "orderTenant" }),
+  comment: many(commentsTable, { relationName: "commentTenant" }),
+}));
 
 export const sessionRelations = relations(sessionsTable, ({ one }) => ({
   user: one(usersTable, {
-    fields: [sessionsTable.userId, sessionsTable.orgId],
-    references: [usersTable.id, usersTable.orgId],
+    fields: [sessionsTable.userId, sessionsTable.tenantId],
+    references: [usersTable.id, usersTable.tenantId],
     relationName: "sessionUser",
   }),
 }));
 
 export const userRelations = relations(usersTable, ({ one, many }) => ({
-  organization: one(organizationsTable, {
-    fields: [usersTable.orgId],
-    references: [organizationsTable.id],
-    relationName: "userOrg",
+  tenant: one(tenantsTable, {
+    fields: [usersTable.tenantId],
+    references: [tenantsTable.id],
+    relationName: "userTenant",
   }),
   session: many(sessionsTable, { relationName: "sessionUser" }),
   papercutAccountCustomerAuthorization: many(
@@ -77,10 +76,10 @@ export const userRelations = relations(usersTable, ({ one, many }) => ({
 export const papercutAccountRelations = relations(
   papercutAccountsTable,
   ({ one, many }) => ({
-    organization: one(organizationsTable, {
-      fields: [papercutAccountsTable.orgId],
-      references: [organizationsTable.id],
-      relationName: "papercutAccountOrg",
+    tenant: one(tenantsTable, {
+      fields: [papercutAccountsTable.tenantId],
+      references: [tenantsTable.id],
+      relationName: "papercutAccountTenant",
     }),
     papercutAccountCustomerAuthorization: many(
       papercutAccountCustomerAuthorizationsTable,
@@ -97,10 +96,10 @@ export const papercutAccountRelations = relations(
 export const papercutAccountCustomerAuthorizationRelations = relations(
   papercutAccountCustomerAuthorizationsTable,
   ({ one }) => ({
-    organization: one(organizationsTable, {
-      fields: [papercutAccountCustomerAuthorizationsTable.orgId],
-      references: [organizationsTable.id],
-      relationName: "papercutAccountCustomerAuthorizationOrg",
+    tenant: one(tenantsTable, {
+      fields: [papercutAccountCustomerAuthorizationsTable.tenantId],
+      references: [tenantsTable.id],
+      relationName: "papercutAccountCustomerAuthorizationTenant",
     }),
     customer: one(usersTable, {
       fields: [papercutAccountCustomerAuthorizationsTable.customerId],
@@ -118,10 +117,10 @@ export const papercutAccountCustomerAuthorizationRelations = relations(
 export const papercutAccountManagerAuthorizationRelations = relations(
   papercutAccountManagerAuthorizationsTable,
   ({ one }) => ({
-    organization: one(organizationsTable, {
-      fields: [papercutAccountManagerAuthorizationsTable.orgId],
-      references: [organizationsTable.id],
-      relationName: "papercutAccountManagerAuthorizationOrg",
+    tenant: one(tenantsTable, {
+      fields: [papercutAccountManagerAuthorizationsTable.tenantId],
+      references: [tenantsTable.id],
+      relationName: "papercutAccountManagerAuthorizationTenant",
     }),
     manager: one(usersTable, {
       fields: [papercutAccountManagerAuthorizationsTable.managerId],
@@ -137,10 +136,10 @@ export const papercutAccountManagerAuthorizationRelations = relations(
 );
 
 export const roomRelations = relations(roomsTable, ({ one, many }) => ({
-  organization: one(organizationsTable, {
-    fields: [roomsTable.orgId],
-    references: [organizationsTable.id],
-    relationName: "roomOrg",
+  tenant: one(tenantsTable, {
+    fields: [roomsTable.tenantId],
+    references: [tenantsTable.id],
+    relationName: "roomTenant",
   }),
   announcement: many(announcementsTable, { relationName: "announcementRoom" }),
   product: many(productsTable, { relationName: "productRoom" }),
@@ -149,10 +148,10 @@ export const roomRelations = relations(roomsTable, ({ one, many }) => ({
 export const announcementRelations = relations(
   announcementsTable,
   ({ one }) => ({
-    organization: one(organizationsTable, {
-      fields: [announcementsTable.orgId],
-      references: [organizationsTable.id],
-      relationName: "announcementOrg",
+    tenant: one(tenantsTable, {
+      fields: [announcementsTable.tenantId],
+      references: [tenantsTable.id],
+      relationName: "announcementTenant",
     }),
     room: one(roomsTable, {
       fields: [announcementsTable.roomId],
@@ -163,10 +162,10 @@ export const announcementRelations = relations(
 );
 
 export const productRelations = relations(productsTable, ({ one, many }) => ({
-  organization: one(organizationsTable, {
-    fields: [productsTable.orgId],
-    references: [organizationsTable.id],
-    relationName: "productOrg",
+  tenant: one(tenantsTable, {
+    fields: [productsTable.tenantId],
+    references: [tenantsTable.id],
+    relationName: "productTenant",
   }),
   room: one(roomsTable, {
     fields: [productsTable.roomId],
@@ -177,14 +176,14 @@ export const productRelations = relations(productsTable, ({ one, many }) => ({
 }));
 
 export const orderRelations = relations(ordersTable, ({ one, many }) => ({
-  organization: one(organizationsTable, {
-    fields: [ordersTable.orgId],
-    references: [organizationsTable.id],
-    relationName: "orderOrg",
+  tenant: one(tenantsTable, {
+    fields: [ordersTable.tenantId],
+    references: [tenantsTable.id],
+    relationName: "orderTenant",
   }),
   customer: one(usersTable, {
-    fields: [ordersTable.customerId, ordersTable.orgId],
-    references: [usersTable.id, usersTable.orgId],
+    fields: [ordersTable.customerId, ordersTable.tenantId],
+    references: [usersTable.id, usersTable.tenantId],
     relationName: "orderCustomer",
   }),
   manager: one(usersTable, {
@@ -211,10 +210,10 @@ export const orderRelations = relations(ordersTable, ({ one, many }) => ({
 }));
 
 export const commentRelations = relations(commentsTable, ({ one }) => ({
-  organization: one(organizationsTable, {
-    fields: [commentsTable.orgId],
-    references: [organizationsTable.id],
-    relationName: "commentOrg",
+  tenant: one(tenantsTable, {
+    fields: [commentsTable.tenantId],
+    references: [tenantsTable.id],
+    relationName: "commentTenant",
   }),
   order: one(ordersTable, {
     fields: [commentsTable.orderId],
@@ -234,9 +233,9 @@ export const replicacheClientGroupRelations = relations(
     user: one(usersTable, {
       fields: [
         replicacheClientGroupsTable.userId,
-        replicacheClientGroupsTable.orgId,
+        replicacheClientGroupsTable.tenantId,
       ],
-      references: [usersTable.id, usersTable.orgId],
+      references: [usersTable.id, usersTable.tenantId],
       relationName: "userReplicacheClientGroup",
     }),
     replicacheClient: many(replicacheClientsTable, {
@@ -254,11 +253,11 @@ export const replicacheClientRelations = relations(
     replicacheClientGroup: one(replicacheClientGroupsTable, {
       fields: [
         replicacheClientsTable.clientGroupId,
-        replicacheClientsTable.orgId,
+        replicacheClientsTable.tenantId,
       ],
       references: [
         replicacheClientGroupsTable.id,
-        replicacheClientGroupsTable.orgId,
+        replicacheClientGroupsTable.tenantId,
       ],
       relationName: "replicacheClientGroup",
     }),
@@ -271,11 +270,11 @@ export const replicacheClientViewRecordRelations = relations(
     replicacheClientGroup: one(replicacheClientGroupsTable, {
       fields: [
         replicacheClientViewsTable.clientGroupId,
-        replicacheClientViewsTable.orgId,
+        replicacheClientViewsTable.tenantId,
       ],
       references: [
         replicacheClientGroupsTable.id,
-        replicacheClientGroupsTable.orgId,
+        replicacheClientGroupsTable.tenantId,
       ],
       relationName: "replicacheCvrGroup",
     }),

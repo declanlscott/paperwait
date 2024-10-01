@@ -29,10 +29,10 @@ const { input } = Astro.props;
     <label class={labelStyles()} for="org-name">Organization Name</label>
     <input
       id="org-name"
-      name="orgName"
+      name="tenantName"
       class={inputStyles({ isHtml: true })}
       disabled
-      value={input.orgName}
+      value={input.tenantName}
     />
   </div>
 
@@ -40,10 +40,10 @@ const { input } = Astro.props;
     <label class={labelStyles()} for="org-slug">Organization Slug</label>
     <input
       id="org-slug"
-      name="orgSlug"
+      name="tenantSlug"
       class={inputStyles({ isHtml: true })}
       disabled
-      value={input.orgSlug}
+      value={input.tenantSlug}
     />
   </div>
 

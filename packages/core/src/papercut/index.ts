@@ -30,7 +30,7 @@ import type {
 export const createAccountManagerAuthorization = fn(
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
   async (values) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.createPapercutAccountManagerAuthorization, {
       Error: AccessDenied,
@@ -49,14 +49,14 @@ export const createAccountManagerAuthorization = fn(
         .onConflictDoNothing();
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },
 );
 
 export async function accountsMetadata() {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const baseQuery = tx
@@ -65,7 +65,7 @@ export async function accountsMetadata() {
         rowVersion: sql<number>`"${papercutAccountsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(papercutAccountsTable)
-      .where(eq(papercutAccountsTable.orgId, org.id))
+      .where(eq(papercutAccountsTable.tenantId, tenant.id))
       .$dynamic();
 
     switch (user.role) {
@@ -84,7 +84,7 @@ export async function accountsMetadata() {
 }
 
 export async function accountCustomerAuthorizationsMetadata() {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const baseQuery = tx
@@ -93,7 +93,7 @@ export async function accountCustomerAuthorizationsMetadata() {
         rowVersion: sql<number>`"${papercutAccountCustomerAuthorizationsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(papercutAccountCustomerAuthorizationsTable)
-      .where(eq(papercutAccountCustomerAuthorizationsTable.orgId, org.id))
+      .where(eq(papercutAccountCustomerAuthorizationsTable.tenantId, tenant.id))
       .$dynamic();
 
     switch (user.role) {
@@ -119,7 +119,7 @@ export async function accountCustomerAuthorizationsMetadata() {
 
 export const accountManagerAuthorizationsMetadata = async () =>
   useTransaction((tx) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     const baseQuery = tx
       .select({
@@ -127,7 +127,7 @@ export const accountManagerAuthorizationsMetadata = async () =>
         rowVersion: sql<number>`"${papercutAccountManagerAuthorizationsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(papercutAccountManagerAuthorizationsTable)
-      .where(eq(papercutAccountManagerAuthorizationsTable.orgId, org.id))
+      .where(eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id))
       .$dynamic();
 
     switch (user.role) {
@@ -151,7 +151,7 @@ export const accountManagerAuthorizationsMetadata = async () =>
   });
 
 export async function accountsFromIds(ids: Array<PapercutAccount["id"]>) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
@@ -160,7 +160,7 @@ export async function accountsFromIds(ids: Array<PapercutAccount["id"]>) {
       .where(
         and(
           inArray(papercutAccountsTable.id, ids),
-          eq(papercutAccountsTable.orgId, org.id),
+          eq(papercutAccountsTable.tenantId, tenant.id),
         ),
       ),
   );
@@ -170,7 +170,7 @@ export const accountCustomerAuthorizationsFromIds = async (
   ids: Array<PapercutAccountCustomerAuthorization["id"]>,
 ) =>
   useTransaction((tx) => {
-    const { org } = useAuthenticated();
+    const { tenant } = useAuthenticated();
 
     return tx
       .select()
@@ -178,7 +178,7 @@ export const accountCustomerAuthorizationsFromIds = async (
       .where(
         and(
           inArray(papercutAccountCustomerAuthorizationsTable.id, ids),
-          eq(papercutAccountCustomerAuthorizationsTable.orgId, org.id),
+          eq(papercutAccountCustomerAuthorizationsTable.tenantId, tenant.id),
         ),
       );
   });
@@ -187,7 +187,7 @@ export const accountManagerAuthorizationsFromIds = async (
   ids: Array<PapercutAccountManagerAuthorization["id"]>,
 ) =>
   useTransaction((tx) => {
-    const { org } = useAuthenticated();
+    const { tenant } = useAuthenticated();
 
     return tx
       .select()
@@ -195,7 +195,7 @@ export const accountManagerAuthorizationsFromIds = async (
       .where(
         and(
           inArray(papercutAccountManagerAuthorizationsTable.id, ids),
-          eq(papercutAccountManagerAuthorizationsTable.orgId, org.id),
+          eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id),
         ),
       );
   });
@@ -203,7 +203,7 @@ export const accountManagerAuthorizationsFromIds = async (
 export const deleteAccount = fn(
   deletePapercutAccountMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.deletePapercutAccount, {
       Error: AccessDenied,
@@ -224,7 +224,7 @@ export const deleteAccount = fn(
                 papercutAccountManagerAuthorizationsTable.papercutAccountId,
                 id,
               ),
-              eq(papercutAccountManagerAuthorizationsTable.orgId, org.id),
+              eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id),
             ),
           ),
         tx
@@ -238,7 +238,10 @@ export const deleteAccount = fn(
                 papercutAccountCustomerAuthorizationsTable.papercutAccountId,
                 id,
               ),
-              eq(papercutAccountCustomerAuthorizationsTable.orgId, org.id),
+              eq(
+                papercutAccountCustomerAuthorizationsTable.tenantId,
+                tenant.id,
+              ),
             ),
           ),
         tx
@@ -247,7 +250,7 @@ export const deleteAccount = fn(
           .where(
             and(
               eq(papercutAccountsTable.id, id),
-              eq(papercutAccountsTable.orgId, org.id),
+              eq(papercutAccountsTable.tenantId, tenant.id),
             ),
           ),
       ]);
@@ -270,7 +273,7 @@ export const deleteAccount = fn(
 export const deleteAccountManagerAuthorization = fn(
   deletePapercutAccountManagerAuthorizationMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.deletePapercutAccountManagerAuthorization, {
       Error: AccessDenied,
@@ -289,12 +292,12 @@ export const deleteAccountManagerAuthorization = fn(
         .where(
           and(
             eq(papercutAccountManagerAuthorizationsTable.id, id),
-            eq(papercutAccountManagerAuthorizationsTable.orgId, org.id),
+            eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id),
           ),
         );
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },

@@ -21,7 +21,7 @@ import { roomsTable } from "./sql";
 import type { Room } from "./sql";
 
 export const create = fn(createRoomMutationArgsSchema, async (values) => {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   enforceRbac(user, mutationRbac.createRoom, {
     Error: AccessDenied,
@@ -32,13 +32,13 @@ export const create = fn(createRoomMutationArgsSchema, async (values) => {
     await tx.insert(roomsTable).values(values);
 
     await afterTransaction(() =>
-      Replicache.poke([Realtime.formatChannel("org", org.id)]),
+      Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
     );
   });
 });
 
 export async function metadata() {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const baseQuery = tx
@@ -47,7 +47,7 @@ export async function metadata() {
         rowVersion: sql<number>`"${roomsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(roomsTable)
-      .where(eq(roomsTable.orgId, org.id))
+      .where(eq(roomsTable.tenantId, tenant.id))
       .$dynamic();
 
     switch (user.role) {
@@ -70,20 +70,22 @@ export async function metadata() {
 }
 
 export async function fromIds(ids: Array<Room["id"]>) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
       .select()
       .from(roomsTable)
-      .where(and(inArray(roomsTable.id, ids), eq(roomsTable.orgId, org.id))),
+      .where(
+        and(inArray(roomsTable.id, ids), eq(roomsTable.tenantId, tenant.id)),
+      ),
   );
 }
 
 export const update = fn(
   updateRoomMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.updateRoom, {
       Error: AccessDenied,
@@ -94,10 +96,10 @@ export const update = fn(
       await tx
         .update(roomsTable)
         .set(values)
-        .where(and(eq(roomsTable.id, id), eq(roomsTable.orgId, org.id)));
+        .where(and(eq(roomsTable.id, id), eq(roomsTable.tenantId, tenant.id)));
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },
@@ -106,7 +108,7 @@ export const update = fn(
 export const delete_ = fn(
   deleteRoomMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.deleteRoom, {
       Error: AccessDenied,
@@ -118,25 +120,30 @@ export const delete_ = fn(
         tx
           .update(roomsTable)
           .set({ ...values, status: "draft" })
-          .where(and(eq(roomsTable.id, id), eq(roomsTable.orgId, org.id))),
+          .where(
+            and(eq(roomsTable.id, id), eq(roomsTable.tenantId, tenant.id)),
+          ),
         // Set all products in the room to draft
         tx
           .update(productsTable)
           .set({ status: "draft" })
           .where(
-            and(eq(productsTable.roomId, id), eq(productsTable.orgId, org.id)),
+            and(
+              eq(productsTable.roomId, id),
+              eq(productsTable.tenantId, tenant.id),
+            ),
           ),
       ]);
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },
 );
 
 export const restore = fn(restoreRoomMutationArgsSchema, async ({ id }) => {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   enforceRbac(user, mutationRbac.restoreRoom, {
     Error: AccessDenied,
@@ -147,10 +154,10 @@ export const restore = fn(restoreRoomMutationArgsSchema, async ({ id }) => {
     await tx
       .update(roomsTable)
       .set({ deletedAt: null })
-      .where(and(eq(roomsTable.id, id), eq(roomsTable.orgId, org.id)));
+      .where(and(eq(roomsTable.id, id), eq(roomsTable.tenantId, tenant.id)));
 
     await afterTransaction(() =>
-      Replicache.poke([Realtime.formatChannel("org", org.id)]),
+      Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
     );
   });
 });

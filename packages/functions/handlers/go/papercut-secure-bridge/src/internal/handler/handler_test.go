@@ -226,7 +226,7 @@ func TestBridge(t *testing.T) {
 		},
 	}
 
-	if err := os.Setenv("ORG_ID", "test-org"); err != nil {
+	if err := os.Setenv("TENANT_ID", "test-tenant"); err != nil {
 		t.Fatal(err)
 	}
 

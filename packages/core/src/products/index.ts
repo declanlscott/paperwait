@@ -19,7 +19,7 @@ import { productsTable } from "./sql";
 import type { Product } from "./sql";
 
 export const create = fn(createProductMutationArgsSchema, async (values) => {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   enforceRbac(user, mutationRbac.createProduct, {
     Error: AccessDenied,
@@ -30,13 +30,13 @@ export const create = fn(createProductMutationArgsSchema, async (values) => {
     await tx.insert(productsTable).values(values);
 
     await afterTransaction(() =>
-      Replicache.poke([Realtime.formatChannel("org", org.id)]),
+      Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
     );
   });
 });
 
 export async function metadata() {
-  const { user, org } = useAuthenticated();
+  const { user, tenant } = useAuthenticated();
 
   return useTransaction(async (tx) => {
     const baseQuery = tx
@@ -45,7 +45,7 @@ export async function metadata() {
         rowVersion: sql<number>`"${productsTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(productsTable)
-      .where(eq(productsTable.orgId, org.id))
+      .where(eq(productsTable.tenantId, tenant.id))
       .$dynamic();
 
     switch (user.role) {
@@ -74,14 +74,17 @@ export async function metadata() {
 }
 
 export async function fromIds(ids: Array<Product["id"]>) {
-  const { org } = useAuthenticated();
+  const { tenant } = useAuthenticated();
 
   return useTransaction((tx) =>
     tx
       .select()
       .from(productsTable)
       .where(
-        and(inArray(productsTable.id, ids), eq(productsTable.orgId, org.id)),
+        and(
+          inArray(productsTable.id, ids),
+          eq(productsTable.tenantId, tenant.id),
+        ),
       ),
   );
 }
@@ -89,7 +92,7 @@ export async function fromIds(ids: Array<Product["id"]>) {
 export const update = fn(
   updateProductMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.updateProduct, {
       Error: AccessDenied,
@@ -100,10 +103,12 @@ export const update = fn(
       await tx
         .update(productsTable)
         .set(values)
-        .where(and(eq(productsTable.id, id), eq(productsTable.orgId, org.id)));
+        .where(
+          and(eq(productsTable.id, id), eq(productsTable.tenantId, tenant.id)),
+        );
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },
@@ -112,7 +117,7 @@ export const update = fn(
 export const delete_ = fn(
   deleteProductMutationArgsSchema,
   async ({ id, ...values }) => {
-    const { user, org } = useAuthenticated();
+    const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.deleteProduct, {
       Error: AccessDenied,
@@ -123,10 +128,12 @@ export const delete_ = fn(
       await tx
         .update(productsTable)
         .set(values)
-        .where(and(eq(productsTable.id, id), eq(productsTable.orgId, org.id)));
+        .where(
+          and(eq(productsTable.id, id), eq(productsTable.tenantId, tenant.id)),
+        );
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("org", org.id)]),
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
       );
     });
   },

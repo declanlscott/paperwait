@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { id, timestamps } from "../drizzle/columns";
-import { orgIdColumns } from "../drizzle/tables";
+import { tenantIdColumns } from "../drizzle/tables";
 import { usersTable } from "../users/sql";
 import {
   replicacheClientGroupsTableName,
@@ -34,16 +34,16 @@ export const replicacheClientGroupsTable = pgTable(
   replicacheClientGroupsTableName,
   {
     id: uuid("id").notNull(),
-    orgId: orgIdColumns.orgId,
+    tenantId: tenantIdColumns.tenantId,
     userId: id("user_id").notNull(),
     cvrVersion: integer("cvr_version").notNull(),
     ...timestamps,
   },
   (table) => ({
-    primary: primaryKey({ columns: [table.id, table.orgId] }),
+    primary: primaryKey({ columns: [table.id, table.tenantId] }),
     userReference: foreignKey({
-      columns: [table.userId, table.orgId],
-      foreignColumns: [usersTable.id, usersTable.orgId],
+      columns: [table.userId, table.tenantId],
+      foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "user_fk",
     }),
     updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
@@ -57,7 +57,7 @@ export const replicacheClientsTable = pgTable(
   replicacheClientsTableName,
   {
     id: uuid("id").notNull(),
-    orgId: orgIdColumns.orgId,
+    tenantId: tenantIdColumns.tenantId,
     clientGroupId: uuid("client_group_id").notNull(),
     lastMutationId: bigint("last_mutation_id", { mode: "number" })
       .notNull()
@@ -65,12 +65,12 @@ export const replicacheClientsTable = pgTable(
     ...timestamps,
   },
   (table) => ({
-    primary: primaryKey({ columns: [table.id, table.orgId] }),
+    primary: primaryKey({ columns: [table.id, table.tenantId] }),
     clientGroupReference: foreignKey({
-      columns: [table.clientGroupId, table.orgId],
+      columns: [table.clientGroupId, table.tenantId],
       foreignColumns: [
         replicacheClientGroupsTable.id,
-        replicacheClientGroupsTable.orgId,
+        replicacheClientGroupsTable.tenantId,
       ],
       name: "client_group_fk",
     }),
@@ -84,7 +84,7 @@ export type ReplicacheClient = InferSelectModel<ReplicacheClientsTable>;
 export const replicacheClientViewsTable = pgTable(
   replicacheClientViewsTableName,
   {
-    orgId: orgIdColumns.orgId,
+    tenantId: tenantIdColumns.tenantId,
     clientGroupId: uuid("client_group_id").notNull(),
     version: integer("version").notNull(),
     record: jsonb("record").$type<ClientViewRecord>().notNull(),
@@ -92,13 +92,13 @@ export const replicacheClientViewsTable = pgTable(
   },
   (table) => ({
     primary: primaryKey({
-      columns: [table.clientGroupId, table.version, table.orgId],
+      columns: [table.clientGroupId, table.version, table.tenantId],
     }),
     clientGroupReference: foreignKey({
-      columns: [table.clientGroupId, table.orgId],
+      columns: [table.clientGroupId, table.tenantId],
       foreignColumns: [
         replicacheClientGroupsTable.id,
-        replicacheClientGroupsTable.orgId,
+        replicacheClientGroupsTable.tenantId,
       ],
       name: "client_group_fk",
     }),

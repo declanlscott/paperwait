@@ -1,4 +1,4 @@
-import { organizationSchema } from "@paperwait/core/organizations/shared";
+import { tenantSchema } from "@paperwait/core/tenants/shared";
 import { parseResource } from "@paperwait/core/utils/helpers";
 import { valibot as v } from "@paperwait/core/utils/libs";
 import * as aws from "@pulumi/aws";
@@ -6,7 +6,7 @@ import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
 import * as pulumi from "@pulumi/pulumi";
 
-import type { Organization } from "@paperwait/core/organizations/sql";
+import type { Tenant } from "@paperwait/core/tenants/sql";
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
 import type { Resource } from "sst";
 
@@ -47,7 +47,7 @@ export const handler: SQSHandler = async (event) => {
 
 async function processRecord(record: SQSRecord) {
   const { tenantId } = v.parse(
-    v.object({ tenantId: organizationSchema.entries.id }),
+    v.object({ tenantId: tenantSchema.entries.id }),
     record.body,
   );
 
@@ -77,14 +77,14 @@ async function processRecord(record: SQSRecord) {
 
 // TODO: add dns, integrations, functions, buckets, roles, etc
 
-const getProgram = (tenantId: Organization["id"]) => async () => {
+const getProgram = (tenantId: Tenant["id"]) => async () => {
   const accountName = `${resource.Meta.app.name}-${resource.Meta.app.stage}-tenant-${tenantId}`;
   const emailSegments = resource.Cloud.aws.orgRootEmail.split("@");
   const account = new aws.organizations.Account("Account", {
     name: accountName,
     email: `${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
     parentId: resource.Cloud.aws.tenantsOrganizationalUnitId,
-    roleName: "OrganizationAccountAccessRole",
+    roleName: "TenantAccountAccessRole",
     iamUserAccessToBilling: "ALLOW",
   });
 

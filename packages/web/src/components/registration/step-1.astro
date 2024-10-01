@@ -37,17 +37,17 @@ const { input, errors } = Astro.props;
     <label class={labelStyles()} for="org-name">Organization Name</label>
     <input
       id="org-name"
-      name="orgName"
+      name="tenantName"
       class={inputStyles({
         isHtml: true,
-        variant: errors?.orgName ? "destructive" : "default",
+        variant: errors?.tenantName ? "destructive" : "default",
       })}
       required
-      value={input.orgName}
+      value={input.tenantName}
     />
     {
-      errors?.orgName ? (
-        <p class="text-destructive text-sm">{errors.orgName}</p>
+      errors?.tenantName ? (
+        <p class="text-destructive text-sm">{errors.tenantName}</p>
       ) : null
     }
   </div>
@@ -56,17 +56,17 @@ const { input, errors } = Astro.props;
     <label class={labelStyles()} for="org-slug">Organization Slug</label>
     <input
       id="org-slug"
-      name="orgSlug"
+      name="tenantSlug"
       class={inputStyles({
         isHtml: true,
-        variant: errors?.orgSlug ? "destructive" : "default",
+        variant: errors?.tenantSlug ? "destructive" : "default",
       })}
       required
-      value={input.orgSlug}
+      value={input.tenantSlug}
     />
     {
-      errors?.orgSlug ? (
-        <p class="text-destructive text-sm">{errors.orgSlug}</p>
+      errors?.tenantSlug ? (
+        <p class="text-destructive text-sm">{errors.tenantSlug}</p>
       ) : null
     }
   </div>

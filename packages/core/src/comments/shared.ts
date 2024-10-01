@@ -2,12 +2,12 @@ import * as R from "remeda";
 import * as v from "valibot";
 
 import { userRoles } from "../users/shared";
-import { nanoIdSchema, orgTableSchema } from "../utils/schemas";
+import { nanoIdSchema, tenantTableSchema } from "../utils/schemas";
 
 export const commentsTableName = "comments";
 
 export const commentSchema = v.object({
-  ...orgTableSchema.entries,
+  ...tenantTableSchema.entries,
   orderId: nanoIdSchema,
   authorId: nanoIdSchema,
   content: v.string(),
@@ -38,7 +38,7 @@ export const updateCommentMutationArgsSchema = v.object({
   ...v.partial(
     v.omit(commentSchema, [
       "id",
-      "orgId",
+      "tenantId",
       "orderId",
       "createdAt",
       "updatedAt",

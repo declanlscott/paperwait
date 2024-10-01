@@ -1,11 +1,8 @@
 import { vValidator } from "@hono/valibot-validator";
 import { and, eq } from "@paperwait/core/drizzle";
 import { transact } from "@paperwait/core/drizzle/transaction";
-import { registrationSchema } from "@paperwait/core/organizations/shared";
-import {
-  licensesTable,
-  organizationsTable,
-} from "@paperwait/core/organizations/sql";
+import { registrationSchema } from "@paperwait/core/tenants/shared";
+import { licensesTable, tenantsTable } from "@paperwait/core/tenants/sql";
 import { Hono } from "hono";
 
 export default new Hono().post(
@@ -15,20 +12,20 @@ export default new Hono().post(
     const registration = c.req.valid("form");
 
     const result = await transact(async (tx) => {
-      const org = await tx
-        .insert(organizationsTable)
+      const tenant = await tx
+        .insert(tenantsTable)
         .values({
-          slug: registration.orgSlug,
-          name: registration.orgName,
+          slug: registration.tenantSlug,
+          name: registration.tenantName,
           oauth2ProviderId: registration.oauth2ProviderId,
         })
         .returning()
         .then((rows) => rows.at(0));
-      if (!org) throw new Error("Failed to create organization");
+      if (!tenant) throw new Error("Failed to create tenant");
 
       const { columns } = await tx
         .update(licensesTable)
-        .set({ orgId: org.id })
+        .set({ tenantId: tenant.id })
         .where(
           and(
             eq(licensesTable.key, registration.licenseKey),
@@ -38,11 +35,11 @@ export default new Hono().post(
       if (columns.length === 0)
         throw new Error("Invalid or expired license key");
 
-      return org;
+      return tenant;
     });
 
     if (result.status === "error") throw result.error;
 
-    return c.redirect(`/org/${result.output.slug}`);
+    return c.redirect(`/tenant/${result.output.slug}`);
   },
 );

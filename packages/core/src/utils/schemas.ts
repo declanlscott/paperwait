@@ -11,9 +11,9 @@ export const timestampsSchema = v.object({
   deletedAt: v.nullable(v.pipe(v.string(), v.isoTimestamp())),
 });
 
-export const orgTableSchema = v.object({
+export const tenantTableSchema = v.object({
   id: nanoIdSchema,
-  orgId: nanoIdSchema,
+  tenantId: nanoIdSchema,
   ...timestampsSchema.entries,
 });
 

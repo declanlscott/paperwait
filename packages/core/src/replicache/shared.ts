@@ -3,10 +3,10 @@ import * as v from "valibot";
 import { announcementMutationNames } from "../announcements/shared";
 import { commentMutationNames } from "../comments/shared";
 import { orderMutationNames } from "../orders/shared";
-import { organizationMutationNames } from "../organizations/shared";
 import { papercutMutationNames } from "../papercut/shared";
 import { productMutationNames } from "../products/shared";
 import { roomMutationNames } from "../rooms/shared";
+import { tenantMutationNames } from "../tenants/shared";
 import { userMutationNames } from "../users/shared";
 
 export const replicacheMetaTableName = "replicache_meta";
@@ -27,7 +27,7 @@ export const mutationNameSchema = v.picklist([
   ...announcementMutationNames,
   ...commentMutationNames,
   ...orderMutationNames,
-  ...organizationMutationNames,
+  ...tenantMutationNames,
   ...papercutMutationNames,
   ...productMutationNames,
   ...roomMutationNames,

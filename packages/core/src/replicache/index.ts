@@ -53,12 +53,12 @@ import type { ReplicacheClient, ReplicacheClientGroup } from "./sql";
 
 export const clientGroupFromId = async (id: ClientGroupID) =>
   useTransaction(async (tx) => {
-    const { org } = useAuthenticated();
+    const { tenant } = useAuthenticated();
 
     return tx
       .select({
         id: replicacheClientGroupsTable.id,
-        orgId: replicacheClientGroupsTable.orgId,
+        tenantId: replicacheClientGroupsTable.tenantId,
         cvrVersion: replicacheClientGroupsTable.cvrVersion,
         userId: replicacheClientGroupsTable.userId,
       })
@@ -66,7 +66,7 @@ export const clientGroupFromId = async (id: ClientGroupID) =>
       .where(
         and(
           eq(replicacheClientGroupsTable.id, id),
-          eq(replicacheClientGroupsTable.orgId, org.id),
+          eq(replicacheClientGroupsTable.tenantId, tenant.id),
         ),
       )
       .then((rows) => rows.at(0));
@@ -90,7 +90,7 @@ export const clientFromId = async (id: ReplicacheClient["id"]) =>
     tx
       .select({
         id: replicacheClientsTable.id,
-        orgId: replicacheClientsTable.orgId,
+        tenantId: replicacheClientsTable.tenantId,
         clientGroupId: replicacheClientsTable.clientGroupId,
         lastMutationId: replicacheClientsTable.lastMutationId,
       })
@@ -109,7 +109,7 @@ export const putClientGroup = async (
       .onConflictDoUpdate({
         target: [
           replicacheClientGroupsTable.id,
-          replicacheClientGroupsTable.orgId,
+          replicacheClientGroupsTable.tenantId,
         ],
         set: { ...clientGroup, updatedAt: sql`now()` },
       }),
@@ -133,7 +133,7 @@ export const putClient = async (client: OmitTimestamps<ReplicacheClient>) =>
       .insert(replicacheClientsTable)
       .values(client)
       .onConflictDoUpdate({
-        target: [replicacheClientsTable.id, replicacheClientsTable.orgId],
+        target: [replicacheClientsTable.id, replicacheClientsTable.tenantId],
         set: { ...client, updatedAt: sql`now()` },
       }),
   );
@@ -218,7 +218,7 @@ export const pull = fn(
                   pullRequest.clientGroupID,
                 ),
                 eq(replicacheClientViewsTable.version, cookieOrder),
-                eq(replicacheClientViewsTable.orgId, user.orgId),
+                eq(replicacheClientViewsTable.tenantId, user.tenantId),
               ),
             )
             .then((rows) => rows.at(0))
@@ -235,7 +235,7 @@ export const pull = fn(
         (await clientGroupFromId(pullRequest.clientGroupID)) ??
         ({
           id: pullRequest.clientGroupID,
-          orgId: user.orgId,
+          tenantId: user.tenantId,
           cvrVersion: 0,
           userId: user.id,
         } satisfies OmitTimestamps<ReplicacheClientGroup>);
@@ -316,7 +316,7 @@ export const pull = fn(
         // 16-17: Generate client view record id, store client view record
         tx.insert(replicacheClientViewsTable).values({
           clientGroupId: baseClientGroup.id,
-          orgId: user.orgId,
+          tenantId: user.tenantId,
           version: nextCvrVersion,
           record: nextCvr,
         }),
@@ -326,7 +326,7 @@ export const pull = fn(
           .where(
             and(
               eq(replicacheClientViewsTable.clientGroupId, baseClientGroup.id),
-              eq(replicacheClientViewsTable.orgId, user.orgId),
+              eq(replicacheClientViewsTable.tenantId, user.tenantId),
               lt(
                 replicacheClientViewsTable.updatedAt,
                 sub(new Date(), REPLICACHE_EXPIRATION_DURATION).toISOString(),
@@ -440,7 +440,7 @@ export const push = fn(
             (await clientGroupFromId(clientGroupId)) ??
             ({
               id: clientGroupId,
-              orgId: user.orgId,
+              tenantId: user.tenantId,
               cvrVersion: 0,
               userId: user.id,
             } satisfies OmitTimestamps<ReplicacheClientGroup>);
@@ -456,7 +456,7 @@ export const push = fn(
             (await clientFromId(mutation.clientID)) ??
             ({
               id: mutation.clientID,
-              orgId: user.orgId,
+              tenantId: user.tenantId,
               clientGroupId: clientGroupId,
               lastMutationId: 0,
             } satisfies OmitTimestamps<ReplicacheClient>);
@@ -503,7 +503,7 @@ export const push = fn(
 
           const nextClient = {
             id: client.id,
-            orgId: client.orgId,
+            tenantId: client.tenantId,
             clientGroupId,
             lastMutationId: nextMutationId,
           } satisfies OmitTimestamps<ReplicacheClient>;

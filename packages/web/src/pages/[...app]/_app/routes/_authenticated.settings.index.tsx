@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
-import { orgStatuses } from "@paperwait/core/organizations/shared";
+import { tenantStatuses } from "@paperwait/core/tenants/shared";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 
@@ -36,7 +36,7 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
 
-import type { OrgStatus } from "@paperwait/core/organizations/shared";
+import type { TenantStatus } from "@paperwait/core/tenants/shared";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   component: Component,
@@ -57,26 +57,26 @@ function Component() {
 }
 
 function OrganizationCard() {
-  const { initialOrg } = authenticatedRouteApi.useLoaderData();
+  const { initialTenant } = authenticatedRouteApi.useLoaderData();
 
-  const org = useQuery(queryFactory.organization(), {
-    defaultData: initialOrg,
+  const tenant = useQuery(queryFactory.tenant(), {
+    defaultData: initialTenant,
   });
 
   const [isLocked, setIsLocked] = useState(() => true);
 
-  const [fullName, setFullName] = useState(() => org?.name);
-  const [shortName, setShortName] = useState(() => org?.slug);
+  const [fullName, setFullName] = useState(() => tenant?.name);
+  const [shortName, setShortName] = useState(() => tenant?.slug);
 
-  const { updateOrganization } = useMutator();
+  const { updateTenant } = useMutator();
 
   async function mutateName() {
-    if (org && fullName) {
+    if (tenant && fullName) {
       const name = fullName.trim();
-      if (name === org.name) return;
+      if (name === tenant.name) return;
 
-      await updateOrganization({
-        id: org.id,
+      await updateTenant({
+        id: tenant.id,
         name: fullName,
         updatedAt: new Date().toISOString(),
       });
@@ -84,12 +84,12 @@ function OrganizationCard() {
   }
 
   async function mutateSlug() {
-    if (org && shortName) {
+    if (tenant && shortName) {
       const slug = shortName.trim();
-      if (slug === org.slug) return;
+      if (slug === tenant.slug) return;
 
-      await updateOrganization({
-        id: org.id,
+      await updateTenant({
+        id: tenant.id,
         slug,
         updatedAt: new Date().toISOString(),
       });
@@ -163,7 +163,7 @@ function DangerZoneCard() {
         <DeleteAccount />
 
         <EnforceRbac roles={["administrator"]}>
-          <OrgStatusSelect />
+          <TenantStatusSelect />
         </EnforceRbac>
       </CardContent>
     </Card>
@@ -193,14 +193,14 @@ function DeleteAccount() {
   );
 }
 
-function OrgStatusSelect() {
-  const { initialOrg } = authenticatedRouteApi.useLoaderData();
+function TenantStatusSelect() {
+  const { initialTenant } = authenticatedRouteApi.useLoaderData();
 
-  const org = useQuery(queryFactory.organization(), {
-    defaultData: initialOrg,
+  const tenant = useQuery(queryFactory.tenant(), {
+    defaultData: initialTenant,
   });
 
-  const { updateOrganization } = useMutator();
+  const { updateTenant } = useMutator();
 
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(
     () => false,
@@ -208,15 +208,15 @@ function OrgStatusSelect() {
 
   const [confirmationText, setConfirmationText] = useState(() => "");
 
-  const isConfirmed = confirmationText === org?.name;
+  const isConfirmed = confirmationText === tenant?.name;
 
-  async function mutate(status: OrgStatus) {
-    if (org) {
+  async function mutate(status: TenantStatus) {
+    if (tenant) {
       if (status === "initializing") return;
-      if (status === org.status) return;
+      if (status === tenant.status) return;
 
-      await updateOrganization({
-        id: org.id,
+      await updateTenant({
+        id: tenant.id,
         status,
         updatedAt: new Date().toISOString(),
       });
@@ -228,16 +228,16 @@ function OrgStatusSelect() {
       <div>
         <span className={labelStyles()}>Status</span>
 
-        <CardDescription>{`This organization is currently "${org?.status ?? ""}".`}</CardDescription>
+        <CardDescription>{`This organization is currently "${tenant?.status ?? ""}".`}</CardDescription>
       </div>
 
       <Select
         aria-label="status"
-        selectedKey={org?.status}
-        onSelectionChange={onSelectionChange(orgStatuses, (status) => {
+        selectedKey={tenant?.status}
+        onSelectionChange={onSelectionChange(tenantStatuses, (status) => {
           if (status === "active") return mutate("active");
 
-          if (status === "suspended" && org?.status !== "suspended")
+          if (status === "suspended" && tenant?.status !== "suspended")
             return setIsConfirmationDialogOpen(true);
         })}
       >
@@ -248,7 +248,7 @@ function OrgStatusSelect() {
 
         <SelectPopover>
           <SelectListBox
-            items={orgStatuses
+            items={tenantStatuses
               .filter((status) => status !== "initializing")
               .map(collectionItem)}
           >
@@ -274,7 +274,7 @@ function OrgStatusSelect() {
           {({ close }) => (
             <>
               <DialogHeader>
-                <DialogTitle>Suspend "{org?.name}"?</DialogTitle>
+                <DialogTitle>Suspend "{tenant?.name}"?</DialogTitle>
 
                 <p className="text-muted-foreground text-sm">
                   Are you sure you want to continue? This action may be
@@ -292,7 +292,7 @@ function OrgStatusSelect() {
                   <Label>Full Name</Label>
 
                   <Input
-                    placeholder={org?.name}
+                    placeholder={tenant?.name}
                     value={confirmationText}
                     onChange={(e) => setConfirmationText(e.target.value)}
                   />

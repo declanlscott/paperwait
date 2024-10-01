@@ -4,7 +4,6 @@ import { useApi } from "~/app/lib/hooks/api";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useSubscribe } from "~/app/lib/hooks/replicache";
 
-import type { Organization } from "@paperwait/core/organizations/sql";
 import type {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
@@ -12,6 +11,7 @@ import type {
 } from "@paperwait/core/papercut/sql";
 import type { Product } from "@paperwait/core/products/sql";
 import type { Room } from "@paperwait/core/rooms/sql";
+import type { Tenant } from "@paperwait/core/tenants/sql";
 import type { User } from "@paperwait/core/users/sql";
 import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
 
@@ -20,14 +20,10 @@ export const useQuery = <TData, TDefaultData = undefined>(
 ) => useSubscribe(...params);
 
 export const queryFactory = {
-  organization: () => async (tx) => {
-    const orgs = await tx
-      .scan<Organization>({ prefix: "organization/" })
-      .toArray();
+  tenant: () => async (tx) => {
+    const tenants = await tx.scan<Tenant>({ prefix: "tenant/" }).toArray();
 
-    const org = orgs.at(0);
-
-    return org;
+    return tenants.at(0);
   },
   users: () => (tx) => tx.scan<User>({ prefix: "user/" }).toArray(),
   user: (userId: User["id"]) => (tx) => tx.get<User>(`user/${userId}`),

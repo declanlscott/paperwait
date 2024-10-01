@@ -1,6 +1,6 @@
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 
-import { organizationsTable } from "../organizations/sql";
+import { tenantsTable } from "../tenants/sql";
 import { generateId } from "../utils/helpers";
 import { id, timestamps } from "./columns";
 
@@ -11,23 +11,23 @@ import type {
 } from "drizzle-orm/pg-core";
 
 /**
- * IDs for organization owned tables (used as composite primary key)
+ * IDs for tenant owned tables (used as composite primary key)
  */
-export const orgIdColumns = {
+export const tenantIdColumns = {
   get id() {
     return id("id").$defaultFn(generateId).notNull();
   },
-  get orgId() {
-    return id("org_id")
+  get tenantId() {
+    return id("tenant_id")
       .notNull()
-      .references(() => organizationsTable.id);
+      .references(() => tenantsTable.id);
   },
 };
 
 /**
- * Wrapper for organization owned tables with timestamps and default ID
+ * Wrapper for tenant owned tables with timestamps and default ID
  */
-export function orgTable<
+export function tenantTable<
   TTableName extends string,
   TColumnsMap extends Record<string, PgColumnBuilderBase>,
 >(
@@ -36,16 +36,16 @@ export function orgTable<
   extraConfig?: (
     self: BuildColumns<
       TTableName,
-      TColumnsMap & typeof orgIdColumns & typeof timestamps,
+      TColumnsMap & typeof tenantIdColumns & typeof timestamps,
       "pg"
     >,
   ) => PgTableExtraConfig,
 ) {
   return pgTable(
     name,
-    { ...orgIdColumns, ...timestamps, ...columns },
+    { ...tenantIdColumns, ...timestamps, ...columns },
     (table) => ({
-      primary: primaryKey({ columns: [table.id, table.orgId] }),
+      primary: primaryKey({ columns: [table.id, table.tenantId] }),
       ...extraConfig,
     }),
   );

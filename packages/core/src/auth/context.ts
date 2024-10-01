@@ -10,7 +10,7 @@ export function useAuth(): AuthContext {
   try {
     return AuthContext.use();
   } catch {
-    return { isAuthed: false, session: null, user: null, org: null };
+    return { isAuthed: false, session: null, user: null, tenant: null };
   }
 }
 

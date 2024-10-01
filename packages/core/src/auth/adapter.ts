@@ -1,13 +1,13 @@
 import { eq, lte } from "drizzle-orm";
 
 import { db } from "../drizzle";
-import { organizationsTable } from "../organizations/sql";
+import { tenantsTable } from "../tenants/sql";
 import { usersTable } from "../users/sql";
 import { sessionsTable } from "./sql";
 
 import type { Adapter, DatabaseSession, DatabaseUser, UserId } from "lucia";
 import type { Db } from "../drizzle";
-import type { Organization, OrganizationsTable } from "../organizations/sql";
+import type { Tenant, TenantsTable } from "../tenants/sql";
 import type { User, UsersTable } from "../users/sql";
 import type { Session, SessionsTable } from "./sql";
 
@@ -16,13 +16,13 @@ export class DbAdapter implements Adapter {
 
   private sessionsTable: SessionsTable;
   private usersTable: UsersTable;
-  private organizationsTable: OrganizationsTable;
+  private tenantsTable: TenantsTable;
 
   constructor() {
     this.db = db;
     this.sessionsTable = sessionsTable;
     this.usersTable = usersTable;
-    this.organizationsTable = organizationsTable;
+    this.tenantsTable = tenantsTable;
   }
 
   public async deleteSession(sessionId: string): Promise<void> {
@@ -44,7 +44,7 @@ export class DbAdapter implements Adapter {
       .select({
         user: this.usersTable,
         session: this.sessionsTable,
-        org: this.organizationsTable,
+        tenant: this.tenantsTable,
       })
       .from(this.sessionsTable)
       .innerJoin(
@@ -52,8 +52,8 @@ export class DbAdapter implements Adapter {
         eq(this.sessionsTable.userId, this.usersTable.id),
       )
       .innerJoin(
-        this.organizationsTable,
-        eq(this.sessionsTable.orgId, this.organizationsTable.id),
+        this.tenantsTable,
+        eq(this.sessionsTable.tenantId, this.tenantsTable.id),
       )
       .where(eq(this.sessionsTable.id, sessionId))
       .then((rows) => rows.at(0));
@@ -61,7 +61,7 @@ export class DbAdapter implements Adapter {
 
     return [
       transformIntoDatabaseSession(result.session),
-      transformIntoDatabaseUser(result.user, result.org),
+      transformIntoDatabaseUser(result.user, result.tenant),
     ];
   }
 
@@ -114,11 +114,11 @@ const transformIntoDatabaseSession = ({
 
 const transformIntoDatabaseUser = (
   user: User,
-  org: Organization,
+  tenant: Tenant,
 ): DatabaseUser => ({
   id: user.id,
   attributes: {
     user,
-    org,
+    tenant,
   },
 });

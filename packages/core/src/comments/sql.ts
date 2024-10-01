@@ -2,13 +2,13 @@ import { foreignKey, index, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { userRole } from "../drizzle/enums.sql";
-import { orgTable } from "../drizzle/tables";
+import { tenantTable } from "../drizzle/tables";
 import { ordersTable } from "../orders/sql";
 import { commentsTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";
 
-export const commentsTable = orgTable(
+export const commentsTable = tenantTable(
   commentsTableName,
   {
     orderId: id("order_id").notNull(),
@@ -18,8 +18,8 @@ export const commentsTable = orgTable(
   },
   (table) => ({
     orderReference: foreignKey({
-      columns: [table.orderId, table.orgId],
-      foreignColumns: [ordersTable.id, ordersTable.orgId],
+      columns: [table.orderId, table.tenantId],
+      foreignColumns: [ordersTable.id, ordersTable.tenantId],
       name: "order_fk",
     }),
     orderIdIndex: index("order_id_idx").on(table.orderId),
