@@ -74,11 +74,30 @@ export const tenantInfraImage = new awsx.ecr.Image(
   },
 );
 
+export const tenantInfraRole = new aws.iam.Role("TenantInfraRole", {
+  assumeRolePolicy: {
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Principal: {
+          Service: "lambda.amazonaws.com",
+        },
+        Action: "sts:AssumeRole",
+      },
+    ],
+  },
+});
+new aws.iam.RolePolicyAttachment("TenantInfraBasicExecutionAttachment", {
+  role: tenantInfraRole,
+  policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+});
+
 export const tenantInfraFunction = new aws.lambda.Function(
   "TenantInfraFunction",
   {
     imageUri: tenantInfraImage.imageUri,
-    role: "TODO",
+    role: tenantInfraRole.arn,
     environment: {
       variables: {
         CUSTOM_RESOURCE_PulumiBackendBucket: $jsonStringify(
