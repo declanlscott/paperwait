@@ -30,15 +30,15 @@ func mockPapercut(res string) (*httptest.Server, papercut.GetCredentialsFunc, fu
 func TestBridge(t *testing.T) {
 	tests := []struct {
 		name     string
-		request  events.APIGatewayV2HTTPRequest
+		request  events.APIGatewayProxyRequest
 		res      string
-		expected events.APIGatewayV2HTTPResponse
+		expected events.APIGatewayProxyResponse
 	}{
 		{
 			"adjustSharedAccountAccountBalance",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "adjustSharedAccountAccountBalance"},
-				Body:           `{"sharedAccountName":"test account","adjustment":1.0,"comment":"test comment"}`,
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/adjustSharedAccountAccountBalance",
+				Body: `{"sharedAccountName":"test account","adjustment":1.0,"comment":"test comment"}`,
 			},
 			`<?xml version="1.0"?>
 			<methodResponse>
@@ -50,16 +50,16 @@ func TestBridge(t *testing.T) {
 					</param>
 				</params>
 			</methodResponse>`,
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"success":true}`,
 			},
 		},
 		{
 			"getSharedAccountProperties",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "getSharedAccountProperties"},
-				Body:           `{"sharedAccountName":"test account","properties":["test property"]}`,
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/getSharedAccountProperties",
+				Body: `{"sharedAccountName":"test account","properties":["test property"]}`,
 			},
 			`<?xml version="1.0"?>
 			<methodResponse>
@@ -75,16 +75,16 @@ func TestBridge(t *testing.T) {
 					</param>
 				</params>
 			</methodResponse>`,
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"properties":["property"]}`,
 			},
 		},
 		{
 			"isUserExists",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "isUserExists"},
-				Body:           `{"username":"test username"}`,
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/isUserExists",
+				Body: `{"username":"test username"}`,
 			},
 			`<?xml version="1.0"?>
 			<methodResponse>
@@ -96,16 +96,16 @@ func TestBridge(t *testing.T) {
 					</param>
 				</params>
 			</methodResponse>`,
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"exists":true}`,
 			},
 		},
 		{
 			"listSharedAccounts",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "listSharedAccounts"},
-				Body:           `{"offset":0,"limit":1000}`,
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/listSharedAccounts",
+				Body: `{"offset":0,"limit":1000}`,
 			},
 			`<?xml version="1.0"?>
 			<methodResponse>
@@ -123,15 +123,15 @@ func TestBridge(t *testing.T) {
 					</param>
 				</params>
 			</methodResponse>`,
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"sharedAccounts":["account 1","account 2","account 3"]}`,
 			},
 		},
 		{
 			"listUserSharedAccounts",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "listUserSharedAccounts"},
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/listUserSharedAccounts",
 				Body: `{
 					"username":"test username",
 					"offset":0,
@@ -154,27 +154,27 @@ func TestBridge(t *testing.T) {
 					</param>
 				</params>
 			</methodResponse>`,
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"userSharedAccounts":["account 1","account 2"]}`,
 			},
 		},
 		{
 			"notImplemented",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "notImplemented"},
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/notImplemented",
 			},
 			"",
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusNotImplemented,
 				Body:       `{"message":""notImplemented" method not implemented"}`,
 			},
 		},
 		{
 			"invalidAuth",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "isUserExists"},
-				Body:           `{"username":"test username"}`,
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/isUserExists",
+				Body: `{"username":"test username"}`,
 			},
 			`<?xml version="1.0"?>
 			<methodResponse>
@@ -195,31 +195,31 @@ func TestBridge(t *testing.T) {
 					</value>
 				</fault>
 			</methodResponse>`,
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusUnauthorized,
 				Body:       `{"message":"invalid authentication token"}`,
 			},
 		},
 		{
 			"invalidArgs",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "isUserExists"},
-				Body:           `{"args":"invalid"}`,
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/isUserExists",
+				Body: `{"args":"invalid"}`,
 			},
 			"",
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusInternalServerError,
 				Body:       `{"message":"EOF"}`,
 			},
 		},
 		{
 			"invalidJson",
-			events.APIGatewayV2HTTPRequest{
-				PathParameters: map[string]string{"method": "isUserExists"},
-				Body:           "invalid json",
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/isUserExists",
+				Body: "invalid json",
 			},
 			"",
-			events.APIGatewayV2HTTPResponse{
+			events.APIGatewayProxyResponse{
 				StatusCode: http.StatusInternalServerError,
 				Body:       `{"message":"invalid character 'i' looking for beginning of value"}`,
 			},

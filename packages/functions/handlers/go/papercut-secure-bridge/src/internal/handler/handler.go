@@ -28,8 +28,8 @@ var (
 
 func Handler(
 	ctx context.Context,
-	req events.APIGatewayV2HTTPRequest,
-) (events.APIGatewayV2HTTPResponse, error) {
+	req events.APIGatewayProxyRequest,
+) (events.APIGatewayProxyResponse, error) {
 	if httpClient, err := proxy.HttpClient(); err != nil {
 		return InternalServerErrorResponse(err), nil
 	} else {
@@ -76,10 +76,10 @@ func Handler(
 
 func Bridge(
 	ctx context.Context,
-	req events.APIGatewayV2HTTPRequest,
+	req events.APIGatewayProxyRequest,
 	httpClient *http.Client,
 	getCredentials papercut.GetCredentialsFunc,
-) events.APIGatewayV2HTTPResponse {
+) events.APIGatewayProxyResponse {
 	tenantId, ok := os.LookupEnv("TENANT_ID")
 	if !ok {
 		return InternalServerErrorResponse(errors.New("TENANT_ID environment variable is not set"))
@@ -97,7 +97,7 @@ func Bridge(
 
 		var data []byte
 		var err error
-		switch method := req.PathParameters["method"]; method {
+		switch method := strings.Split(req.Path, "/papercut/secure-bridge/")[1]; method {
 		case papercut.AdjustSharedAccountAccountBalance:
 			var reqBody papercut.AdjustSharedAccountAccountBalanceRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
@@ -195,7 +195,7 @@ func Bridge(
 
 		body := string(data)
 
-		return events.APIGatewayV2HTTPResponse{
+		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusOK,
 			Body:       body,
 		}

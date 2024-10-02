@@ -8,28 +8,28 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func UnauthorizedResponse(err error) events.APIGatewayV2HTTPResponse {
+func UnauthorizedResponse(err error) events.APIGatewayProxyResponse {
 	log.Printf("Unauthorized Error: %v", err)
 
-	return events.APIGatewayV2HTTPResponse{
+	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusUnauthorized,
 		Body:       fmt.Sprintf(`{"message":"%s"}`, err.Error()),
 	}
 }
 
-func InternalServerErrorResponse(err error) events.APIGatewayV2HTTPResponse {
+func InternalServerErrorResponse(err error) events.APIGatewayProxyResponse {
 	log.Printf("Internal Server Error: %v", err)
 
-	return events.APIGatewayV2HTTPResponse{
+	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       fmt.Sprintf(`{"message":"%s"}`, err.Error()),
 	}
 }
 
-func NotImplementedResponse(err error) events.APIGatewayV2HTTPResponse {
+func NotImplementedResponse(err error) events.APIGatewayProxyResponse {
 	log.Printf("Not Implemented Error: %v", err)
 
-	return events.APIGatewayV2HTTPResponse{
+	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusNotImplemented,
 		Body:       fmt.Sprintf(`{"message":"%s"}`, err.Error()),
 	}
