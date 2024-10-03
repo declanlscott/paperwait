@@ -295,26 +295,35 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
     { provider: accountProvider },
   );
 
-  const restApiValidationRecords =
-    restApiCertificate.domainValidationOptions.apply((options) =>
-      options.map(
-        (option, index) =>
-          new cloudflare.Record(`RestApiCertificateValidationRecord${index}`, {
-            zoneId: cloudflare
-              .getZone({ name: "paperwait.app" })
-              .then((zone) => zone.id),
-            name: option.resourceRecordName,
-            content: option.resourceRecordValue,
-            type: option.resourceRecordType,
-          }),
-      ),
-    );
-
   const restApiDomainName = new aws.apigateway.DomainName(
     "RestApiDomainName",
     {
       domainName: restApiCertificate.domainName,
-      regionalCertificateArn: "TODO",
+      regionalCertificateArn: restApiCertificate.arn,
+    },
+    { provider: accountProvider },
+  );
+
+  restApiCertificate.domainValidationOptions.apply((options) =>
+    options.map(
+      (option, index) =>
+        new cloudflare.Record(`RestApiCertificateValidationRecord${index}`, {
+          zoneId: cloudflare
+            .getZone({ name: "paperwait.app" })
+            .then((zone) => zone.id),
+          name: option.resourceRecordName,
+          content: option.resourceRecordValue,
+          type: option.resourceRecordType,
+        }),
+    ),
+  );
+
+  new aws.apigateway.BasePathMapping(
+    "RestApiDomainMapping",
+    {
+      restApi: restApi.id,
+      domainName: restApiDomainName.id,
+      stageName: restApiStage.stageName,
     },
     { provider: accountProvider },
   );
