@@ -76,6 +76,10 @@ export class TenantAccount extends pulumi.ComponentResource {
   }
 }
 
+export interface PapercutSecureBridgeArgs {
+  tenantAccountId: aws.organizations.Account["id"];
+}
+
 export class PapercutSecureBridge extends pulumi.ComponentResource {
   private static instance: PapercutSecureBridge;
 
@@ -83,19 +87,22 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
   private tailscaleLayer: aws.lambda.LayerVersion;
   private function: aws.lambda.Function;
 
-  public static getInstance(opts: pulumi.ComponentResourceOptions) {
-    if (!this.instance) this.instance = new PapercutSecureBridge(opts);
+  public static getInstance(
+    args: PapercutSecureBridgeArgs,
+    opts: pulumi.ComponentResourceOptions,
+  ) {
+    if (!this.instance) this.instance = new PapercutSecureBridge(args, opts);
 
     return this.instance;
   }
 
   private constructor(
-    ...[opts]: Parameters<typeof PapercutSecureBridge.getInstance>
+    ...[args, opts]: Parameters<typeof PapercutSecureBridge.getInstance>
   ) {
     super(
       `${resource.AppData.name}:aws:PapercutSecureBridgeFunction`,
       "PapercutSecureBridgeFunction",
-      {},
+      args,
       opts,
     );
 
@@ -125,6 +132,29 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
       {
         role: this.role,
         policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+      },
+      { ...opts, parent: this },
+    );
+
+    new aws.iam.RolePolicy(
+      "InlinePolicy",
+      {
+        role: this.role,
+        policy: aws.iam.getPolicyDocumentOutput({
+          statements: [
+            {
+              effect: "Allow",
+              actions: ["ssm:GetParameter"],
+              resources: [
+                "paperwait/tailscale/auth-key",
+                "paperwait/papercut/web-services/credentials",
+              ].map(
+                (name) =>
+                  pulumi.interpolate`arn:aws:ssm:${resource.Cloud.aws.region}:${args.tenantAccountId}:parameter/${name}`,
+              ),
+            },
+          ],
+        }).json,
       },
       { ...opts, parent: this },
     );
