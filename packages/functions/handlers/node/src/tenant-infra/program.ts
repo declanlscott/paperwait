@@ -7,9 +7,10 @@ import type { Tenant } from "@paperwait/core/tenants/sql";
 export const getProgram = (tenantId: Tenant["id"]) => async () => {
   const tenantAccount = TenantAccount.getInstance({ tenantId });
 
-  const papercutSecureBridge = PapercutSecureBridge.getInstance({
-    providers: { aws: tenantAccount.nodes.provider },
-  });
+  const papercutSecureBridge = PapercutSecureBridge.getInstance(
+    { tenantAccountId: tenantAccount.nodes.account.id },
+    { providers: { aws: tenantAccount.nodes.provider } },
+  );
 
   const tenantApi = TenantApi.getInstance(
     {
