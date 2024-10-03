@@ -9,7 +9,7 @@ import { resource } from "./resource";
 
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
 
-const projectName = `${resource.Meta.app.name}-${resource.Meta.app.stage}-tenants`;
+const projectName = `${resource.AppData.name}-${resource.AppData.stage}-tenants`;
 
 export const handler: SQSHandler = async (event) => {
   const workspace = await pulumi.automation.LocalWorkspace.create({
@@ -47,7 +47,7 @@ async function processRecord(record: SQSRecord) {
 
   const stack = await pulumi.automation.LocalWorkspace.createOrSelectStack({
     projectName,
-    stackName: `${resource.Meta.app.name}-${resource.Meta.app.stage}-tenant-${tenantId}`,
+    stackName: `${resource.AppData.name}-${resource.AppData.stage}-tenant-${tenantId}`,
     program: getProgram(tenantId),
   });
 

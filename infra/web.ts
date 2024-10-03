@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { domain } from "./dns";
-import { client, cloud, meta } from "./misc";
+import { appData, client, cloud } from "./misc";
 import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
 import { webPassword, webUsername } from "./secrets";
@@ -36,18 +36,18 @@ const architecture = "arm64";
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
-  link: [client, db, meta, oauth2, realtime, storage],
+  link: [appData, client, db, oauth2, realtime, storage],
   permissions: [
     {
-      actions: ["ssm:PutParameter", "ssm:GetParameter"],
+      actions: ["execute-api:Invoke"],
       resources: [
-        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/tenant/*/max-file-sizes`,
+        $interpolate`arn:aws:execute-api:${cloud.properties.aws.region}:*:${appData.properties.stage}/*`,
       ],
     },
     {
       actions: ["ssm:PutParameter", "ssm:GetParameter"],
       resources: [
-        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:${cloud.properties.aws.identity.accountId}:parameter/paperwait/tenant/*/documents-mime-types`,
+        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:*:parameter/paperwait/*`,
       ],
     },
   ],
@@ -57,7 +57,7 @@ export const web = new sst.aws.Astro("Web", {
   },
   server: {
     edge:
-      $app.stage === "production"
+      $app.stage !== "production"
         ? {
             viewerRequest: {
               injection: $interpolate`
@@ -84,6 +84,16 @@ export const web = new sst.aws.Astro("Web", {
       ),
     ],
     install: ["sharp"],
+  },
+});
+
+export const webOutputs = new sst.Linkable("WebOutputs", {
+  properties: {
+    server: {
+      roleArn:
+        web.nodes.server?.nodes.role.arn ??
+        $interpolate`arn:aws:iam::${cloud.properties.aws.identity.accountId}:role/*`,
+    },
   },
 });
 

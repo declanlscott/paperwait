@@ -33,7 +33,7 @@ export interface Unauthenticated extends Record<keyof Auth, null> {
 
 export const lucia = new Lucia(new DbAdapter(), {
   sessionCookie: {
-    attributes: { secure: Resource.Meta.app.stage === "production" },
+    attributes: { secure: Resource.AppData.stage === "production" },
     name: AUTH_SESSION_COOKIE_NAME,
   },
   getUserAttributes: ({ user, tenant }) => ({

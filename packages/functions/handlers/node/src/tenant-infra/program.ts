@@ -1,4 +1,5 @@
 import * as aws from "@pulumi/aws";
+import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 
 import { resource } from "./resource";
@@ -8,7 +9,7 @@ import type { Tenant } from "@paperwait/core/tenants/sql";
 // TODO: Finish implementing this function
 
 export const getProgram = (tenantId: Tenant["id"]) => async () => {
-  const accountName = `${resource.Meta.app.name}-${resource.Meta.app.stage}-tenant-${tenantId}`;
+  const accountName = `${resource.AppData.name}-${resource.AppData.stage}-tenant-${tenantId}`;
   const emailSegments = resource.Cloud.aws.orgRootEmail.split("@");
   const account = new aws.organizations.Account("Account", {
     name: accountName,
@@ -18,14 +19,12 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
     iamUserAccessToBilling: "ALLOW",
   });
 
-  const awsOpts = {
-    provider: new aws.Provider("AwsProvider", {
-      region: resource.Cloud.aws.region as aws.Region,
-      assumeRole: {
-        roleArn: pulumi.interpolate`arn:aws:iam::${account.id}:role/${account.roleName}`,
-      },
-    }),
-  } satisfies pulumi.CustomResourceOptions;
+  const accountProvider = new aws.Provider("AccountProvider", {
+    region: resource.Cloud.aws.region as aws.Region,
+    assumeRole: {
+      roleArn: pulumi.interpolate`arn:aws:iam::${account.id}:role/${account.roleName}`,
+    },
+  });
 
   const restApi = new aws.apigateway.RestApi(
     "RestApi",
@@ -34,7 +33,203 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
         types: "REGIONAL",
       },
     },
-    awsOpts,
+    { provider: accountProvider },
+  );
+
+  const restApiPolicy = new aws.apigateway.RestApiPolicy(
+    "RestApiPolicy",
+    {
+      restApiId: restApi.id,
+      policy: aws.iam.getPolicyDocumentOutput({
+        statements: [
+          {
+            effect: "Allow",
+            principals: [
+              {
+                type: "AWS",
+                identifiers: [resource.WebOutputs.server.roleArn],
+              },
+            ],
+            actions: ["execute-api:Invoke"],
+            resources: [restApi.executionArn],
+          },
+        ],
+      }).json,
+    },
+    { provider: accountProvider },
+  );
+
+  const papercutResource = new aws.apigateway.Resource(
+    "PapercutResource",
+    {
+      restApi: restApi.id,
+      parentId: restApi.rootResourceId,
+      pathPart: "papercut",
+    },
+    { provider: accountProvider },
+  );
+
+  const secureBridgeResource = new aws.apigateway.Resource(
+    "SecureBridgeResource",
+    {
+      restApi: restApi.id,
+      parentId: papercutResource.id,
+      pathPart: "secure-bridge",
+    },
+    { provider: accountProvider },
+  );
+
+  const papercutSecureBridgeLambdaRole = new aws.iam.Role(
+    "PapercutSecureBridgeLambdaRole",
+    {
+      assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+        statements: [
+          {
+            effect: "Allow",
+            principals: [
+              {
+                type: "Service",
+                identifiers: ["lambda.amazonaws.com"],
+              },
+            ],
+            actions: ["sts:AssumeRole"],
+          },
+        ],
+      }).json,
+    },
+    { provider: accountProvider },
+  );
+  new aws.iam.RolePolicyAttachment(
+    "PapercutSecureBridgePolicyAttachment",
+    {
+      role: papercutSecureBridgeLambdaRole,
+      policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+    },
+    { provider: accountProvider },
+  );
+
+  const tailscaleLayer = new aws.lambda.LayerVersion("TailscaleLayer", {
+    code: new pulumi.asset.FileArchive("/layers/tailscale/layer.zip"),
+    layerName: "tailscale",
+    compatibleRuntimes: [aws.lambda.Runtime.CustomAL2023],
+  });
+
+  const papercutSecureBridgeFunction = new aws.lambda.Function(
+    "PapercutSecureBridgeFunction",
+    {
+      code: new pulumi.asset.FileArchive(
+        "/functions/papercut-secure-bridge/function.zip",
+      ),
+      runtime: aws.lambda.Runtime.CustomAL2023,
+      architectures: ["arm64"],
+      layers: [tailscaleLayer.arn],
+      role: papercutSecureBridgeLambdaRole.arn,
+    },
+    { provider: accountProvider },
+  );
+
+  const adjustSharedAccountAccountBalanceRoute = new PapercutSecureBridgeRoute(
+    "AdjustSharedAccountAccountBalanceRoute",
+    {
+      restApiId: restApi.id,
+      parentId: secureBridgeResource.id,
+      pathPart: "adjustSharedAccountAccountBalance",
+      requestSchema: {
+        sharedAccountName: {
+          type: "string",
+        },
+        adjustment: {
+          type: "number",
+        },
+        comment: {
+          type: "string",
+        },
+      },
+      functionArn: papercutSecureBridgeFunction.arn,
+    },
+    { providers: { aws: accountProvider } },
+  );
+
+  const getSharedAccountPropertiesRoute = new PapercutSecureBridgeRoute(
+    "GetSharedAccountPropertiesRoute",
+    {
+      restApiId: restApi.id,
+      parentId: secureBridgeResource.id,
+      pathPart: "getSharedAccountProperties",
+      requestSchema: {
+        sharedAccountName: {
+          type: "string",
+        },
+        properties: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+        },
+      },
+      functionArn: papercutSecureBridgeFunction.arn,
+    },
+    { providers: { aws: accountProvider } },
+  );
+
+  const isUserExistsRoute = new PapercutSecureBridgeRoute(
+    "IsUserExistsRoute",
+    {
+      restApiId: restApi.id,
+      parentId: secureBridgeResource.id,
+      pathPart: "isUserExists",
+      requestSchema: {
+        username: {
+          type: "string",
+        },
+      },
+      functionArn: papercutSecureBridgeFunction.arn,
+    },
+    { providers: { aws: accountProvider } },
+  );
+
+  const listSharedAccountsRoute = new PapercutSecureBridgeRoute(
+    "ListSharedAccountsRoute",
+    {
+      restApiId: restApi.id,
+      parentId: secureBridgeResource.id,
+      pathPart: "listSharedAccounts",
+      requestSchema: {
+        offset: {
+          type: "integer",
+        },
+        limit: {
+          type: "integer",
+        },
+      },
+      functionArn: papercutSecureBridgeFunction.arn,
+    },
+    { providers: { aws: accountProvider } },
+  );
+
+  const listUserSharedAccountsRoute = new PapercutSecureBridgeRoute(
+    "ListUserSharedAccountsRoute",
+    {
+      restApiId: restApi.id,
+      parentId: secureBridgeResource.id,
+      pathPart: "listUserSharedAccounts",
+      requestSchema: {
+        username: {
+          type: "string",
+        },
+        offset: {
+          type: "integer",
+        },
+        limit: {
+          type: "integer",
+        },
+        ignoreUserAccountSelectionConfig: {
+          type: "boolean",
+        },
+      },
+      functionArn: papercutSecureBridgeFunction.arn,
+    },
+    { providers: { aws: accountProvider } },
   );
 
   const restApiLogGroup = new aws.cloudwatch.LogGroup(
@@ -43,24 +238,27 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
       name: pulumi.interpolate`/aws/vendedlogs/apis/${restApi.name}`,
       retentionInDays: 14,
     },
-    awsOpts,
+    { provider: accountProvider },
   );
 
-  const deployment = new aws.apigateway.Deployment(
+  const restApiDeployment = new aws.apigateway.Deployment(
     "RestApiDeployment",
     {
       restApi: restApi.id,
-      // TODO: triggers?
+      // TODO: Better triggers based on above resources
+      triggers: {
+        deployedAt: new Date().toISOString(),
+      },
     },
-    awsOpts,
+    { provider: accountProvider },
   );
 
-  const stage = new aws.apigateway.Stage(
+  const restApiStage = new aws.apigateway.Stage(
     "RestApiStage",
     {
       restApi: restApi.id,
-      stageName: resource.Meta.app.stage,
-      deployment: deployment.id,
+      stageName: resource.AppData.stage,
+      deployment: restApiDeployment.id,
       accessLogSettings: {
         destinationArn: restApiLogGroup.arn,
         format: JSON.stringify({
@@ -85,178 +283,40 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
         }),
       },
     },
-    awsOpts,
+    { provider: accountProvider },
   );
 
-  const papercutResource = new aws.apigateway.Resource(
-    "PapercutResource",
+  const restApiCertificate = new aws.acm.Certificate(
+    "RestApiCertificate",
     {
-      restApi: restApi.id,
-      parentId: restApi.rootResourceId,
-      pathPart: "papercut",
+      domainName: `${tenantId}.${resource.AppData.domain}`,
+      validationMethod: "DNS",
     },
-    awsOpts,
+    { provider: accountProvider },
   );
 
-  const secureBridgeResource = new aws.apigateway.Resource(
-    "SecureBridgeResource",
-    {
-      restApi: restApi.id,
-      parentId: papercutResource.id,
-      pathPart: "secure-bridge",
-    },
-    awsOpts,
-  );
-
-  const papercutSecureBridgeRole = new aws.iam.Role(
-    "PapercutSecureBridgeLambdaRole",
-    {
-      assumeRolePolicy: JSON.stringify({
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Principal: {
-              Service: "lambda.amazonaws.com",
-            },
-            Action: "sts:AssumeRole",
-          },
-        ],
-      }),
-    },
-    awsOpts,
-  );
-  new aws.iam.RolePolicyAttachment(
-    "PapercutSecureBridgePolicyAttachment",
-    {
-      role: papercutSecureBridgeRole,
-      policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
-    },
-    awsOpts,
-  );
-
-  const tailscaleLayer = new aws.lambda.LayerVersion("TailscaleLayer", {
-    code: new pulumi.asset.FileArchive("/layers/tailscale/layer.zip"),
-    layerName: "tailscale",
-    compatibleRuntimes: [aws.lambda.Runtime.CustomAL2023],
-  });
-
-  const papercutSecureBridgeFunction = new aws.lambda.Function(
-    "PapercutSecureBridgeFunction",
-    {
-      code: new pulumi.asset.FileArchive(
-        "/functions/papercut-secure-bridge/function.zip",
+  const restApiValidationRecords =
+    restApiCertificate.domainValidationOptions.apply((options) =>
+      options.map(
+        (option, index) =>
+          new cloudflare.Record(`RestApiCertificateValidationRecord${index}`, {
+            zoneId: cloudflare
+              .getZone({ name: "paperwait.app" })
+              .then((zone) => zone.id),
+            name: option.resourceRecordName,
+            content: option.resourceRecordValue,
+            type: option.resourceRecordType,
+          }),
       ),
-      runtime: aws.lambda.Runtime.CustomAL2023,
-      architectures: ["arm64"],
-      layers: [tailscaleLayer.arn],
-      role: papercutSecureBridgeRole.arn,
-    },
-    awsOpts,
-  );
+    );
 
-  new PapercutSecureBridgeRoute(
-    "AdjustSharedAccountAccountBalanceRoute",
+  const restApiDomainName = new aws.apigateway.DomainName(
+    "RestApiDomainName",
     {
-      restApiId: restApi.id,
-      parentId: secureBridgeResource.id,
-      pathPart: "adjustSharedAccountAccountBalance",
-      requestSchema: {
-        sharedAccountName: {
-          type: "string",
-        },
-        adjustment: {
-          type: "number",
-        },
-        comment: {
-          type: "string",
-        },
-      },
-      functionArn: papercutSecureBridgeFunction.arn,
+      domainName: restApiCertificate.domainName,
+      regionalCertificateArn: "TODO",
     },
-    awsOpts,
-  );
-
-  new PapercutSecureBridgeRoute(
-    "GetSharedAccountPropertiesRoute",
-    {
-      restApiId: restApi.id,
-      parentId: secureBridgeResource.id,
-      pathPart: "getSharedAccountProperties",
-      requestSchema: {
-        sharedAccountName: {
-          type: "string",
-        },
-        properties: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-        },
-      },
-      functionArn: papercutSecureBridgeFunction.arn,
-    },
-    awsOpts,
-  );
-
-  new PapercutSecureBridgeRoute(
-    "IsUserExistsRoute",
-    {
-      restApiId: restApi.id,
-      parentId: secureBridgeResource.id,
-      pathPart: "isUserExists",
-      requestSchema: {
-        username: {
-          type: "string",
-        },
-      },
-      functionArn: papercutSecureBridgeFunction.arn,
-    },
-    awsOpts,
-  );
-
-  new PapercutSecureBridgeRoute(
-    "ListSharedAccountsRoute",
-    {
-      restApiId: restApi.id,
-      parentId: secureBridgeResource.id,
-      pathPart: "listSharedAccounts",
-      requestSchema: {
-        offset: {
-          type: "integer",
-        },
-        limit: {
-          type: "integer",
-        },
-      },
-      functionArn: papercutSecureBridgeFunction.arn,
-    },
-    awsOpts,
-  );
-
-  new PapercutSecureBridgeRoute(
-    "ListUserSharedAccountsRoute",
-    {
-      restApiId: restApi.id,
-      parentId: secureBridgeResource.id,
-      pathPart: "listUserSharedAccounts",
-      requestSchema: {
-        username: {
-          type: "string",
-        },
-        offset: {
-          type: "integer",
-        },
-        limit: {
-          type: "integer",
-        },
-        ignoreUserAccountSelectionConfig: {
-          type: "boolean",
-        },
-      },
-      functionArn: papercutSecureBridgeFunction.arn,
-    },
-    awsOpts,
+    { provider: accountProvider },
   );
 };
 
@@ -281,7 +341,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
     opts: pulumi.ComponentResourceOptions,
   ) {
     super(
-      `${resource.Meta.app.name}:aws:PapercutSecureBridgeRoute`,
+      `${resource.AppData.name}:aws:PapercutSecureBridgeRoute`,
       name,
       args,
       opts,
@@ -349,6 +409,14 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
       },
       { ...opts, parent: this },
     );
+
+    this.registerOutputs({
+      resource: this.resource.id,
+      requestValidator: this.requestValidator.id,
+      requestModel: this.requestModel.id,
+      method: this.method.id,
+      integration: this.integration.id,
+    });
   }
 
   public get nodes() {

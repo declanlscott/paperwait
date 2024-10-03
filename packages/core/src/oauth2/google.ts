@@ -14,9 +14,9 @@ import type { IdToken } from "./tokens";
 export const provider = new Google(
   Resource.Oauth2.google.clientId,
   Resource.Oauth2.google.clientSecret,
-  Resource.Meta.isDev
+  Resource.AppData.isDev
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
-    : `https://${Resource.Meta.domain}${AUTH_CALLBACK_PATH}`,
+    : `https://${Resource.AppData.domain}${AUTH_CALLBACK_PATH}`,
 );
 
 export function createAuthorizationUrl(hostedDomain: string) {

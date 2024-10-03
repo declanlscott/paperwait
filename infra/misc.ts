@@ -18,12 +18,10 @@ export const client = new sst.Linkable("Client", {
   },
 });
 
-export const meta = new sst.Linkable("Meta", {
+export const appData = new sst.Linkable("AppData", {
   properties: {
-    app: {
-      name: $app.name,
-      stage: $app.stage,
-    },
+    name: $app.name,
+    stage: $app.stage,
     isDev,
     domain,
   },

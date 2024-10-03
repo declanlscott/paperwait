@@ -6,6 +6,13 @@ export {}
 import "sst"
 declare module "sst" {
   export interface Resource {
+    "AppData": {
+      "domain": string
+      "isDev": boolean
+      "name": string
+      "stage": string
+      "type": "sst.sst.Linkable"
+    }
     "AwsOrgRootEmail": {
       "type": "sst.sst.Secret"
       "value": string
@@ -52,15 +59,6 @@ declare module "sst" {
     "ManageTenantInfraRoleArn": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "Meta": {
-      "app": {
-        "name": string
-        "stage": string
-      }
-      "domain": string
-      "isDev": boolean
-      "type": "sst.sst.Linkable"
     }
     "Oauth2": {
       "entraId": {
@@ -112,6 +110,12 @@ declare module "sst" {
     "Web": {
       "type": "sst.aws.Astro"
       "url": string
+    }
+    "WebOutputs": {
+      "server": {
+        "roleArn": string
+      }
+      "type": "sst.sst.Linkable"
     }
     "WebPassword": {
       "type": "sst.sst.Secret"

@@ -122,7 +122,7 @@ export default new Hono()
         if (value)
           setCookie(c, name, value, {
             path: "/",
-            secure: Resource.Meta.app.stage === "production",
+            secure: Resource.AppData.stage === "production",
             httpOnly: true,
             maxAge: 60 * 10, // 10 minutes
             sameSite: "lax",
@@ -238,7 +238,7 @@ export default new Hono()
 
         if (!existingUser) {
           if (tenant.status === "suspended")
-            throw new Unauthorized("tenantanization is suspended");
+            throw new Unauthorized("tenant is suspended");
 
           const newUser = await Users.create({
             tenantId,

@@ -77,7 +77,7 @@ export async function getParameter(
     >;
   },
 ) {
-  if (Resource.Meta.isDev) {
+  if (Resource.AppData.isDev) {
     const { Parameter, $metadata } = (await client.send(
       new GetParameterCommand(input),
     )) satisfies GetParameterCommandOutput extends GetParameterJsonResponse

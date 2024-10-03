@@ -142,7 +142,7 @@ export async function parseJwt(jwt: string) {
 export function parseResource<TResource extends Record<string, any>>(
   prefix = "SST_RESOURCE_",
   input: Record<string, string | undefined> = process.env,
-) {
+): TResource {
   const raw = Object.entries(input).reduce(
     (raw, [key, value]) => {
       if (key.startsWith(prefix) && value)
