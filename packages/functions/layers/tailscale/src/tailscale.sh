@@ -46,7 +46,7 @@ function get_parameter {
 }
 
 # Get the Tailscale auth key from SSM
-SSM_RESPONSE=$(get_parameter "/paperwait/tenant/$TENANT_ID/tailscale/auth-key" true)
+SSM_RESPONSE=$(get_parameter "/paperwait/tailscale/auth-key" true)
 TAILSCALE_AUTH_KEY=$(echo "$SSM_RESPONSE" | jq -r '.Parameter.Value')
 
 # Start Tailscale - we use the bash script modified for the extension directory

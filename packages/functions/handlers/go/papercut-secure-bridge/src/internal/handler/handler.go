@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"papercut-secure-bridge/internal/papercut"
 	"papercut-secure-bridge/internal/proxy"
 	"strings"
@@ -39,7 +38,6 @@ func Handler(
 			httpClient,
 			func(
 				ctx context.Context,
-				tenantId string,
 			) (*papercut.Credentials, error) {
 				once.Do(func() {
 					cfg, err := config.LoadDefaultConfig(ctx)
@@ -51,9 +49,7 @@ func Handler(
 					client := ssm.NewFromConfig(cfg)
 
 					output, err := client.GetParameter(ctx, &ssm.GetParameterInput{
-						Name: aws.String(
-							fmt.Sprintf("/paperwait/tenant/%s/papercut/web-services/credentials", tenantId),
-						),
+						Name:           aws.String("/paperwait/papercut/web-services/credentials"),
 						WithDecryption: aws.Bool(true),
 					})
 					if err != nil {
@@ -80,12 +76,7 @@ func Bridge(
 	httpClient *http.Client,
 	getCredentials papercut.GetCredentialsFunc,
 ) events.APIGatewayProxyResponse {
-	tenantId, ok := os.LookupEnv("TENANT_ID")
-	if !ok {
-		return InternalServerErrorResponse(errors.New("TENANT_ID environment variable is not set"))
-	}
-
-	credentials, err := getCredentials(ctx, tenantId)
+	credentials, err := getCredentials(ctx)
 	if err != nil {
 		return InternalServerErrorResponse(err)
 	}

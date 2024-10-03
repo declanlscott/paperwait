@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"papercut-secure-bridge/internal/papercut"
 	"testing"
 
@@ -19,7 +18,7 @@ func mockPapercut(res string) (*httptest.Server, papercut.GetCredentialsFunc, fu
 		}),
 	)
 
-	return server, func(context.Context, string) (*papercut.Credentials, error) {
+	return server, func(context.Context) (*papercut.Credentials, error) {
 		return &papercut.Credentials{
 			Endpoint:  server.URL,
 			AuthToken: "auth-token",
@@ -224,10 +223,6 @@ func TestBridge(t *testing.T) {
 				Body:       `{"message":"invalid character 'i' looking for beginning of value"}`,
 			},
 		},
-	}
-
-	if err := os.Setenv("TENANT_ID", "test-tenant"); err != nil {
-		t.Fatal(err)
 	}
 
 	for _, tt := range tests {
