@@ -289,7 +289,7 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
   const restApiCertificate = new aws.acm.Certificate(
     "RestApiCertificate",
     {
-      domainName: `${tenantId}.${resource.AppData.domain}`,
+      domainName: `${tenantId}.${resource.AppData.domainName.fullyQualified}`,
       validationMethod: "DNS",
     },
     { provider: accountProvider },
@@ -309,7 +309,7 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
       (option, index) =>
         new cloudflare.Record(`RestApiCertificateValidationRecord${index}`, {
           zoneId: cloudflare
-            .getZone({ name: "paperwait.app" })
+            .getZone({ name: resource.AppData.domainName.value })
             .then((zone) => zone.id),
           name: option.resourceRecordName,
           content: option.resourceRecordValue,

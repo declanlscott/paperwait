@@ -21,7 +21,7 @@ export const provider = new MicrosoftEntraId(
   Resource.Oauth2.entraId.clientSecret,
   Resource.AppData.isDev
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
-    : `https://${Resource.AppData.domain}${AUTH_CALLBACK_PATH}`,
+    : `https://${Resource.AppData.domainName.fullyQualified}${AUTH_CALLBACK_PATH}`,
 );
 
 export function createAuthorizationUrl() {

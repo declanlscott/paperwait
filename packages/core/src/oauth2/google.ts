@@ -16,7 +16,7 @@ export const provider = new Google(
   Resource.Oauth2.google.clientSecret,
   Resource.AppData.isDev
     ? `http://localhost:4321${AUTH_CALLBACK_PATH}`
-    : `https://${Resource.AppData.domain}${AUTH_CALLBACK_PATH}`,
+    : `https://${Resource.AppData.domainName.fullyQualified}${AUTH_CALLBACK_PATH}`,
 );
 
 export function createAuthorizationUrl(hostedDomain: string) {

@@ -1,4 +1,4 @@
-import { domain } from "./dns";
+import { appFqdn } from "./dns";
 import { googleClientId, googleClientSecret } from "./secrets";
 
 const wellKnown = azuread.getApplicationPublishedAppIds({});
@@ -23,7 +23,7 @@ export const entraIdApplication = new azuread.Application(
     web: {
       redirectUris: [
         "http://localhost:4321/api/auth/callback",
-        $interpolate`https://${domain}/api/auth/callback`,
+        $interpolate`https://${appFqdn}/api/auth/callback`,
       ],
     },
     requiredResourceAccesses: [

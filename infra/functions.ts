@@ -53,63 +53,65 @@ export const buildTenantInfraHandler = new command.local.Command(
   },
 );
 
-// export const repository = new awsx.ecr.Repository("Repository", {
-//   forceDelete: true,
-// });
+export const repository = new awsx.ecr.Repository("Repository", {
+  forceDelete: true,
+});
 
-// export const tenantInfraImage = new awsx.ecr.Image(
-//   "Image",
-//   {
-//     repositoryUrl: repository.url,
-//     context: normalizePath("packages/functions/handlers/node/src/tenant-infra"),
-//   },
-//   {
-//     dependsOn: [
-//       buildTailscaleLayer,
-//       buildSecureBridgeHandler,
-//       buildTenantInfraHandler,
-//     ],
-//   },
-// );
+export const tenantInfraImage = new awsx.ecr.Image(
+  "Image",
+  {
+    repositoryUrl: repository.url,
+    context: normalizePath("packages/functions/handlers/node/src/tenant-infra"),
+  },
+  {
+    dependsOn: [
+      buildTailscaleLayer,
+      buildSecureBridgeHandler,
+      buildTenantInfraHandler,
+    ],
+  },
+);
 
-// export const tenantInfraRole = new aws.iam.Role("TenantInfraRole", {
-//   assumeRolePolicy: {
-//     Version: "2012-10-17",
-//     Statement: [
-//       {
-//         Effect: "Allow",
-//         Principal: {
-//           Service: "lambda.amazonaws.com",
-//         },
-//         Action: "sts:AssumeRole",
-//       },
-//     ],
-//   },
-// });
-// new aws.iam.RolePolicyAttachment("TenantInfraBasicExecutionAttachment", {
-//   role: tenantInfraRole,
-//   policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
-// });
+export const tenantInfraRole = new aws.iam.Role("TenantInfraRole", {
+  assumeRolePolicy: {
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Principal: {
+          Service: "lambda.amazonaws.com",
+        },
+        Action: "sts:AssumeRole",
+      },
+    ],
+  },
+});
+new aws.iam.RolePolicyAttachment("TenantInfraBasicExecutionAttachment", {
+  role: tenantInfraRole,
+  policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+});
 
-// export const tenantInfraFunction = new aws.lambda.Function(
-//   "TenantInfraFunction",
-//   {
-//     imageUri: tenantInfraImage.imageUri,
-//     role: tenantInfraRole.arn,
-//     environment: {
-//       variables: {
-//         CUSTOM_RESOURCE_App: $jsonStringify(appData.getSSTLink().properties),
-//         CUSTOM_RESOURCE_Cloud: $jsonStringify(cloud.getSSTLink().properties),
-//         CUSTOM_RESOURCE_PulumiBackendBucket: $jsonStringify(
-//           pulumiBackendBucket.getSSTLink().properties,
-//         ),
-//         CUSTOM_RESOURCE_Realtime: $jsonStringify(
-//           realtime.getSSTLink().properties,
-//         ),
-//         CUSTOM_RESOURCE_WebOutputs: $jsonStringify(
-//           webOutputs.getSSTLink().properties,
-//         ),
-//       },
-//     },
-//   },
-// );
+export const tenantInfraFunction = new aws.lambda.Function(
+  "TenantInfraFunction",
+  {
+    imageUri: tenantInfraImage.imageUri,
+    role: tenantInfraRole.arn,
+    environment: {
+      variables: {
+        CUSTOM_RESOURCE_AppData: $jsonStringify(
+          appData.getSSTLink().properties,
+        ),
+        CUSTOM_RESOURCE_Cloud: $jsonStringify(cloud.getSSTLink().properties),
+        CUSTOM_RESOURCE_PulumiBackendBucket: $jsonStringify(
+          pulumiBackendBucket.getSSTLink().properties,
+        ),
+        CUSTOM_RESOURCE_Realtime: $jsonStringify(
+          realtime.getSSTLink().properties,
+        ),
+        CUSTOM_RESOURCE_WebOutputs: $jsonStringify(
+          webOutputs.getSSTLink().properties,
+        ),
+      },
+    },
+  },
+);

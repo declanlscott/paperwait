@@ -1,5 +1,7 @@
-export const domain =
+export const domainName = new sst.Secret("DomainName");
+
+export const appFqdn =
   {
-    production: "paperwait.app",
-    dev: "dev.paperwait.app",
-  }[$app.stage] ?? $app.stage + ".dev.paperwait.app";
+    production: domainName.value,
+    dev: $interpolate`dev.${domainName.value}`,
+  }[$app.stage] ?? $interpolate`${$app.stage}.dev.${domainName.value}`;

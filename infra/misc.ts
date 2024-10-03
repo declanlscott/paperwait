@@ -1,4 +1,4 @@
-import { domain } from "./dns";
+import { appFqdn, domainName } from "./dns";
 import {
   awsOrgRootEmail,
   manageTenantInfraRoleArn,
@@ -11,7 +11,7 @@ export const isDev = $dev;
 
 export const client = new sst.Linkable("Client", {
   properties: {
-    domain,
+    appFqdn,
     isDev,
     replicacheLicenseKey: replicacheLicenseKey.value,
     realtimeUrl: partyKitUrl.value,
@@ -23,7 +23,10 @@ export const appData = new sst.Linkable("AppData", {
     name: $app.name,
     stage: $app.stage,
     isDev,
-    domain,
+    domainName: {
+      value: domainName.value,
+      fullyQualified: appFqdn,
+    },
   },
 });
 

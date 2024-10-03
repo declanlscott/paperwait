@@ -6,7 +6,10 @@ export {}
 declare module "sst" {
   export interface Resource {
     "AppData": {
-      "domain": string
+      "domainName": {
+        "fullyQualified": string
+        "value": string
+      }
       "isDev": boolean
       "name": string
       "stage": string
@@ -17,7 +20,7 @@ declare module "sst" {
       "value": string
     }
     "Client": {
-      "domain": string
+      "appFqdn": string
       "isDev": boolean
       "realtimeUrl": string
       "replicacheLicenseKey": string
@@ -46,6 +49,10 @@ declare module "sst" {
         "url": string
       }
       "type": "sst.sst.Linkable"
+    }
+    "DomainName": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "GoogleClientId": {
       "type": "sst.sst.Secret"

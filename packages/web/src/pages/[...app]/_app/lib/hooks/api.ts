@@ -6,11 +6,11 @@ import { useResource } from "~/app/lib/hooks/resource";
 import type { Api } from "~/api/index";
 
 export function useApi() {
-  const { isDev, domain } = useResource();
+  const { isDev, appFqdn } = useResource();
 
   const client = useMemo(
-    () => hc<Api>(isDev ? "http://localhost:4321" : `https://${domain}`),
-    [isDev, domain],
+    () => hc<Api>(isDev ? "http://localhost:4321" : `https://${appFqdn}`),
+    [isDev, appFqdn],
   );
 
   return { client };

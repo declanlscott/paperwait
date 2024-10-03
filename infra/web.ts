@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { domain } from "./dns";
+import { appFqdn } from "./dns";
 import { appData, client, cloud } from "./misc";
 import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
@@ -9,7 +9,7 @@ import { getLambdaLayerArn } from "./utils";
 
 export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
   handler: "packages/workers/src/reverse-proxy.ts",
-  domain,
+  domain: appFqdn,
   transform: {
     worker: {
       serviceBindings: [
@@ -52,7 +52,7 @@ export const web = new sst.aws.Astro("Web", {
     },
   ],
   domain: {
-    name: domain,
+    name: appFqdn,
     dns: sst.cloudflare.dns(),
   },
   server: {
