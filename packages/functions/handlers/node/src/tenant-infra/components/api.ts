@@ -2,215 +2,23 @@ import * as aws from "@pulumi/aws";
 import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "./resource";
+import { resource } from "../resource";
 
-import type { Tenant } from "@paperwait/core/tenants/sql";
-
-export interface TenantAccountArgs {
-  tenantId: Tenant["id"];
-}
-
-export class TenantAccount extends pulumi.ComponentResource {
-  private static instance: TenantAccount;
-
-  private account: aws.organizations.Account;
-  private provider: aws.Provider;
-
-  public static getInstance(
-    args: TenantAccountArgs,
-    opts?: pulumi.ComponentResourceOptions,
-  ): TenantAccount {
-    if (!this.instance) this.instance = new TenantAccount(args, opts);
-
-    return this.instance;
-  }
-
-  private constructor(
-    ...[args, opts]: Parameters<typeof TenantAccount.getInstance>
-  ) {
-    super(
-      `${resource.AppData.name}:aws:TenantAccount`,
-      "TenantAccount",
-      args,
-      opts,
-    );
-
-    const tenantAccountName = `${resource.AppData.name}-${resource.AppData.stage}-tenant-${args.tenantId}`;
-
-    const emailSegments = resource.Cloud.aws.orgRootEmail.split("@");
-
-    this.account = new aws.organizations.Account(
-      "Account",
-      {
-        name: tenantAccountName,
-        email: `${emailSegments[0]}+${tenantAccountName}@${emailSegments[1]}`,
-        parentId: resource.Cloud.aws.tenantsOrganizationalUnitId,
-        roleName: "OrganizationAccountAccessRole",
-        iamUserAccessToBilling: "ALLOW",
-      },
-      { ...opts, parent: this },
-    );
-
-    this.provider = new aws.Provider(
-      "Provider",
-      {
-        region: resource.Cloud.aws.region as aws.Region,
-        assumeRole: {
-          roleArn: pulumi.interpolate`arn:aws:iam::${this.account.id}:role/${this.account.roleName}`,
-        },
-      },
-      { ...opts, parent: this },
-    );
-
-    this.registerOutputs({
-      account: this.account.id,
-      provider: this.provider.id,
-    });
-  }
-
-  public get nodes() {
-    return {
-      account: this.account,
-      provider: this.provider,
-    };
-  }
-}
-
-export interface PapercutSecureBridgeArgs {
-  tenantAccountId: aws.organizations.Account["id"];
-}
-
-export class PapercutSecureBridge extends pulumi.ComponentResource {
-  private static instance: PapercutSecureBridge;
-
-  private role: aws.iam.Role;
-  private tailscaleLayer: aws.lambda.LayerVersion;
-  private function: aws.lambda.Function;
-
-  public static getInstance(
-    args: PapercutSecureBridgeArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ) {
-    if (!this.instance) this.instance = new PapercutSecureBridge(args, opts);
-
-    return this.instance;
-  }
-
-  private constructor(
-    ...[args, opts]: Parameters<typeof PapercutSecureBridge.getInstance>
-  ) {
-    super(
-      `${resource.AppData.name}:aws:PapercutSecureBridgeFunction`,
-      "PapercutSecureBridgeFunction",
-      args,
-      opts,
-    );
-
-    this.role = new aws.iam.Role(
-      "Role",
-      {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              effect: "Allow",
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["lambda.amazonaws.com"],
-                },
-              ],
-              actions: ["sts:AssumeRole"],
-            },
-          ],
-        }).json,
-      },
-      { ...opts, parent: this },
-    );
-
-    new aws.iam.RolePolicyAttachment(
-      "BasicExecutionPolicyAttachment",
-      {
-        role: this.role,
-        policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
-      },
-      { ...opts, parent: this },
-    );
-
-    new aws.iam.RolePolicy(
-      "InlinePolicy",
-      {
-        role: this.role,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              effect: "Allow",
-              actions: ["ssm:GetParameter"],
-              resources: [
-                "paperwait/tailscale/auth-key",
-                "paperwait/papercut/web-services/credentials",
-              ].map(
-                (name) =>
-                  pulumi.interpolate`arn:aws:ssm:${resource.Cloud.aws.region}:${args.tenantAccountId}:parameter/${name}`,
-              ),
-            },
-          ],
-        }).json,
-      },
-      { ...opts, parent: this },
-    );
-
-    this.tailscaleLayer = new aws.lambda.LayerVersion(
-      "TailscaleLayer",
-      {
-        code: new pulumi.asset.FileArchive("/layers/tailscale/layer.zip"),
-        layerName: "tailscale",
-        compatibleRuntimes: [aws.lambda.Runtime.CustomAL2023],
-      },
-      { ...opts, parent: this },
-    );
-
-    this.function = new aws.lambda.Function(
-      "Function",
-      {
-        code: new pulumi.asset.FileArchive(
-          "/functions/papercut-secure-bridge/function.zip",
-        ),
-        runtime: aws.lambda.Runtime.CustomAL2023,
-        architectures: ["arm64"],
-        layers: [this.tailscaleLayer.arn],
-        role: this.role.arn,
-      },
-      { ...opts, parent: this },
-    );
-
-    this.registerOutputs({
-      role: this.role.id,
-      tailscaleLayer: this.tailscaleLayer.id,
-      function: this.function.id,
-    });
-  }
-
-  public get nodes() {
-    return {
-      role: this.role,
-      tailscaleLayer: this.tailscaleLayer,
-      function: this.function,
-    };
-  }
-}
-
-export interface TenantApiArgs extends TenantAccountArgs {
+export interface ApiArgs {
+  tenantId: string;
   papercutSecureBridgeFunctionArn: aws.lambda.Function["arn"];
 }
 
-export class TenantApi extends pulumi.ComponentResource {
-  private static instance: TenantApi;
+export class Api extends pulumi.ComponentResource {
+  private static instance: Api;
 
-  private api: aws.apigateway.RestApi;
-  private policy: aws.apigateway.RestApiPolicy;
+  private restApi: aws.apigateway.RestApi;
+  private restApiPolicy: aws.apigateway.RestApiPolicy;
+
   private papercutResource: aws.apigateway.Resource;
   private secureBridgeResource: aws.apigateway.Resource;
   private papercutSecureBridgeRoutes: Array<PapercutSecureBridgeRoute> = [];
+
   private logGroup: aws.cloudwatch.LogGroup;
   private deployment: aws.apigateway.Deployment;
   private stage: aws.apigateway.Stage;
@@ -219,20 +27,18 @@ export class TenantApi extends pulumi.ComponentResource {
   private basePathMapping: aws.apigateway.BasePathMapping;
 
   public static getInstance(
-    args: TenantApiArgs,
+    args: ApiArgs,
     opts: pulumi.ComponentResourceOptions,
-  ): TenantApi {
-    if (!this.instance) this.instance = new TenantApi(args, opts);
+  ): Api {
+    if (!this.instance) this.instance = new Api(args, opts);
 
     return this.instance;
   }
 
-  private constructor(
-    ...[args, opts]: Parameters<typeof TenantApi.getInstance>
-  ) {
-    super(`${resource.AppData.name}:aws:TenantApi`, "TenantApi", args, opts);
+  private constructor(...[args, opts]: Parameters<typeof Api.getInstance>) {
+    super(`${resource.AppData.name}:aws:Api`, "Api", args, opts);
 
-    this.api = new aws.apigateway.RestApi(
+    this.restApi = new aws.apigateway.RestApi(
       "Api",
       {
         endpointConfiguration: {
@@ -242,10 +48,10 @@ export class TenantApi extends pulumi.ComponentResource {
       { ...opts, parent: this },
     );
 
-    this.policy = new aws.apigateway.RestApiPolicy(
+    this.restApiPolicy = new aws.apigateway.RestApiPolicy(
       "Policy",
       {
-        restApiId: this.api.id,
+        restApiId: this.restApi.id,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
@@ -257,7 +63,7 @@ export class TenantApi extends pulumi.ComponentResource {
                 },
               ],
               actions: ["execute-api:Invoke"],
-              resources: [this.api.executionArn],
+              resources: [this.restApi.executionArn],
             },
           ],
         }).json,
@@ -268,8 +74,8 @@ export class TenantApi extends pulumi.ComponentResource {
     this.papercutResource = new aws.apigateway.Resource(
       "PapercutResource",
       {
-        restApi: this.api.id,
-        parentId: this.api.rootResourceId,
+        restApi: this.restApi.id,
+        parentId: this.restApi.rootResourceId,
         pathPart: "papercut",
       },
       { ...opts, parent: this },
@@ -278,7 +84,7 @@ export class TenantApi extends pulumi.ComponentResource {
     this.secureBridgeResource = new aws.apigateway.Resource(
       "SecureBridgeResource",
       {
-        restApi: this.api.id,
+        restApi: this.restApi.id,
         parentId: this.papercutResource.id,
         pathPart: "secure-bridge",
       },
@@ -289,7 +95,7 @@ export class TenantApi extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "AdjustSharedAccountAccountBalanceRoute",
         {
-          restApiId: this.api.id,
+          restApiId: this.restApi.id,
           parentId: this.secureBridgeResource.id,
           pathPart: "adjustSharedAccountAccountBalance",
           requestSchema: {
@@ -313,7 +119,7 @@ export class TenantApi extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "GetSharedAccountPropertiesRoute",
         {
-          restApiId: this.api.id,
+          restApiId: this.restApi.id,
           parentId: this.secureBridgeResource.id,
           pathPart: "getSharedAccountProperties",
           requestSchema: {
@@ -337,7 +143,7 @@ export class TenantApi extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "IsUserExistsRoute",
         {
-          restApiId: this.api.id,
+          restApiId: this.restApi.id,
           parentId: this.secureBridgeResource.id,
           pathPart: "isUserExists",
           requestSchema: {
@@ -355,7 +161,7 @@ export class TenantApi extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "ListSharedAccountsRoute",
         {
-          restApiId: this.api.id,
+          restApiId: this.restApi.id,
           parentId: this.secureBridgeResource.id,
           pathPart: "listSharedAccounts",
           requestSchema: {
@@ -376,7 +182,7 @@ export class TenantApi extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "ListUserSharedAccountsRoute",
         {
-          restApiId: this.api.id,
+          restApiId: this.restApi.id,
           parentId: this.secureBridgeResource.id,
           pathPart: "listUserSharedAccounts",
           requestSchema: {
@@ -402,7 +208,7 @@ export class TenantApi extends pulumi.ComponentResource {
     this.logGroup = new aws.cloudwatch.LogGroup(
       "LogGroup",
       {
-        name: pulumi.interpolate`/aws/vendedlogs/apis/${this.api.name}`,
+        name: pulumi.interpolate`/aws/vendedlogs/apis/${this.restApi.name}`,
         retentionInDays: 14,
       },
       { ...opts, parent: this },
@@ -411,7 +217,7 @@ export class TenantApi extends pulumi.ComponentResource {
     this.deployment = new aws.apigateway.Deployment(
       "Deployment",
       {
-        restApi: this.api.id,
+        restApi: this.restApi.id,
         // TODO: Better triggers based on above resources
         triggers: {
           deployedAt: new Date().toISOString(),
@@ -423,7 +229,7 @@ export class TenantApi extends pulumi.ComponentResource {
     this.stage = new aws.apigateway.Stage(
       "Stage",
       {
-        restApi: this.api.id,
+        restApi: this.restApi.id,
         stageName: resource.AppData.stage,
         deployment: this.deployment.id,
         accessLogSettings: {
@@ -456,7 +262,7 @@ export class TenantApi extends pulumi.ComponentResource {
     this.certificate = new aws.acm.Certificate(
       "Certificate",
       {
-        domainName: `${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
+        domainName: `api.${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
         validationMethod: "DNS",
       },
       { ...opts, parent: this },
@@ -492,7 +298,7 @@ export class TenantApi extends pulumi.ComponentResource {
     this.basePathMapping = new aws.apigateway.BasePathMapping(
       "BasePathMapping",
       {
-        restApi: this.api.id,
+        restApi: this.restApi.id,
         domainName: this.domainName.id,
         stageName: this.stage.stageName,
       },
@@ -500,8 +306,8 @@ export class TenantApi extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      api: this.api.id,
-      policy: this.policy.id,
+      api: this.restApi.id,
+      policy: this.restApiPolicy.id,
       papercutResource: this.papercutResource.id,
       secureBridgeResource: this.secureBridgeResource.id,
       logGroup: this.logGroup.id,
@@ -511,22 +317,6 @@ export class TenantApi extends pulumi.ComponentResource {
       domainName: this.domainName.id,
       basePathMapping: this.basePathMapping.id,
     });
-  }
-
-  public get nodes() {
-    return {
-      api: this.api,
-      policy: this.policy,
-      papercutResource: this.papercutResource,
-      secureBridgeResource: this.secureBridgeResource,
-      papercutSecureBridgeRoutes: this.papercutSecureBridgeRoutes,
-      logGroup: this.logGroup,
-      deployment: this.deployment,
-      stage: this.stage,
-      certificate: this.certificate,
-      domainName: this.domainName,
-      basePathMapping: this.basePathMapping,
-    };
   }
 }
 
@@ -627,15 +417,5 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
       method: this.method.id,
       integration: this.integration.id,
     });
-  }
-
-  public get nodes() {
-    return {
-      resource: this.resource,
-      requestValidator: this.requestValidator,
-      requestModel: this.requestModel,
-      method: this.method,
-      integration: this.integration,
-    };
   }
 }

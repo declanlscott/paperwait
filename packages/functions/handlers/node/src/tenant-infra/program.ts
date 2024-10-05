@@ -1,22 +1,25 @@
-import { PapercutSecureBridge, TenantAccount, TenantApi } from "./components";
+import { Account } from "./components/account";
+import { Api } from "./components/api";
+import { PapercutSecureBridge } from "./components/papercut-secure-bridge";
+import { Storage } from "./components/storage";
 
 import type { Tenant } from "@paperwait/core/tenants/sql";
 
-// TODO: finish implementing this function
-
 export const getProgram = (tenantId: Tenant["id"]) => async () => {
-  const tenantAccount = TenantAccount.getInstance({ tenantId });
+  const account = Account.getInstance({ tenantId });
 
   const papercutSecureBridge = PapercutSecureBridge.getInstance(
-    { tenantAccountId: tenantAccount.nodes.account.id },
-    { providers: { aws: tenantAccount.nodes.provider } },
+    { accountId: account.id },
+    { providers: { aws: account.provider } },
   );
 
-  const tenantApi = TenantApi.getInstance(
+  const api = Api.getInstance(
     {
       tenantId,
-      papercutSecureBridgeFunctionArn: papercutSecureBridge.nodes.function.arn,
+      papercutSecureBridgeFunctionArn: papercutSecureBridge.functionArn,
     },
-    { providers: { aws: tenantAccount.nodes.provider } },
+    { providers: { aws: account.provider } },
   );
+
+  const storage = Storage.getInstance({ providers: { aws: account.provider } });
 };
