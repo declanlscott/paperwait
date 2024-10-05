@@ -1,5 +1,4 @@
 import * as aws from "@pulumi/aws";
-import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 
 import { resource } from "../resource";
@@ -22,9 +21,6 @@ export class Api extends pulumi.ComponentResource {
   private logGroup: aws.cloudwatch.LogGroup;
   private deployment: aws.apigateway.Deployment;
   private stage: aws.apigateway.Stage;
-  private certificate: aws.acm.Certificate;
-  private domainName: aws.apigateway.DomainName;
-  private basePathMapping: aws.apigateway.BasePathMapping;
 
   public static getInstance(
     args: ApiArgs,
@@ -259,52 +255,6 @@ export class Api extends pulumi.ComponentResource {
       { ...opts, parent: this },
     );
 
-    this.certificate = new aws.acm.Certificate(
-      "Certificate",
-      {
-        domainName: `api.${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
-        validationMethod: "DNS",
-      },
-      { ...opts, parent: this },
-    );
-
-    this.domainName = new aws.apigateway.DomainName(
-      "DomainName",
-      {
-        domainName: this.certificate.domainName,
-        regionalCertificateArn: this.certificate.arn,
-      },
-      { ...opts, parent: this },
-    );
-
-    this.certificate.domainValidationOptions.apply((options) =>
-      options.map(
-        (option, index) =>
-          new cloudflare.Record(
-            `CertificateValidationRecord${index}`,
-            {
-              zoneId: cloudflare
-                .getZone({ name: resource.AppData.domainName.value })
-                .then((zone) => zone.id),
-              name: option.resourceRecordName,
-              content: option.resourceRecordValue,
-              type: option.resourceRecordType,
-            },
-            { ...opts, parent: this },
-          ),
-      ),
-    );
-
-    this.basePathMapping = new aws.apigateway.BasePathMapping(
-      "BasePathMapping",
-      {
-        restApi: this.restApi.id,
-        domainName: this.domainName.id,
-        stageName: this.stage.stageName,
-      },
-      { ...opts, parent: this },
-    );
-
     this.registerOutputs({
       api: this.restApi.id,
       policy: this.restApiPolicy.id,
@@ -313,10 +263,11 @@ export class Api extends pulumi.ComponentResource {
       logGroup: this.logGroup.id,
       deployment: this.deployment.id,
       stage: this.stage.id,
-      certificate: this.certificate.id,
-      domainName: this.domainName.id,
-      basePathMapping: this.basePathMapping.id,
     });
+  }
+
+  public get invokeUrl() {
+    return this.deployment.invokeUrl;
   }
 }
 

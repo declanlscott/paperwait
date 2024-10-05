@@ -148,6 +148,9 @@ importers:
       '@pulumi/pulumi':
         specifier: ^3.135.0
         version: 3.135.0(typescript@5.6.2)
+      '@pulumi/tls':
+        specifier: ^5.0.7
+        version: 5.0.7(typescript@5.6.2)
     devDependencies:
       '@paperwait/eslint-config':
         specifier: workspace:*
@@ -2415,6 +2418,9 @@ packages:
 
   '@pulumi/query@0.3.0':
     resolution: {integrity: sha512-xfo+yLRM2zVjVEA4p23IjQWzyWl1ZhWOGobsBqRpIarzLvwNH/RAGaoehdxlhx4X92302DrpdIFgTICMN4P38w==}
+
+  '@pulumi/tls@5.0.7':
+    resolution: {integrity: sha512-Z/uSIPrzgHoP0F+O+3RNdWYHXayCHIPninlrMpsj2nPI+OULi8Czc0o+QajYh+cI/xmW7Dx0CFg6V1i+FJLgig==}
 
   '@radix-ui/primitive@1.0.1':
     resolution: {integrity: sha512-yQ8oGX2GVsEYMWGxcovu1uGWPCxV5BFfeeYxqPmuAzUyLT9qmaMXSAhXpb0WrspIeqYzdJpkh2vHModJPgRIaw==}
@@ -9949,6 +9955,15 @@ snapshots:
       - supports-color
 
   '@pulumi/query@0.3.0': {}
+
+  '@pulumi/tls@5.0.7(typescript@5.6.2)':
+    dependencies:
+      '@pulumi/pulumi': 3.135.0(typescript@5.6.2)
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+      - ts-node
+      - typescript
 
   '@radix-ui/primitive@1.0.1':
     dependencies:

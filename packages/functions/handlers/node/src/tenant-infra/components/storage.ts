@@ -1,5 +1,4 @@
 import * as aws from "@pulumi/aws";
-import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 
 import { resource } from "../resource";
@@ -150,26 +149,15 @@ class Bucket extends pulumi.ComponentResource {
       { ...opts, parent: this },
     );
 
-    new cloudflare.Record(
-      `${name}DnsRecord`,
-      {
-        zoneId: cloudflare
-          .getZone({ name: resource.AppData.domainName.value })
-          .then((zone) => zone.id),
-        name: this.bucket.bucket,
-        content: this.bucket.bucketRegionalDomainName,
-        type: "CNAME",
-        ttl: 300,
-        proxied: true,
-      },
-      { ...opts, parent: this },
-    );
-
     this.registerOutputs({
       bucket: this.bucket.id,
       publicAccessBlock: this.publicAccessBlock.id,
       policy: this.policy.id,
     });
+  }
+
+  public get url() {
+    return pulumi.interpolate`https://${this.bucket.bucketRegionalDomainName}`;
   }
 
   public get name() {
