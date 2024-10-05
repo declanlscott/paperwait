@@ -27,7 +27,7 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
     ...[args, opts]: Parameters<typeof PapercutSecureBridge.getInstance>
   ) {
     super(
-      `${resource.AppData.name}:aws:PapercutSecureBridgeFunction`,
+      `${resource.AppData.name}:tenant:aws:PapercutSecureBridgeFunction`,
       "PapercutSecureBridgeFunction",
       args,
       opts,
@@ -51,7 +51,7 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
           ],
         }).json,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     new aws.iam.RolePolicyAttachment(
@@ -60,7 +60,7 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
         role: this.role,
         policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     new aws.iam.RolePolicy(
@@ -83,30 +83,34 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
           ],
         }).json,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.tailscaleLayer = new aws.lambda.LayerVersion(
       "TailscaleLayer",
       {
-        code: new pulumi.asset.FileArchive("TODO"),
+        // code: new pulumi.asset.FileArchive("TODO"),
+        s3Bucket: "TODO",
+        s3Key: "TODO",
         layerName: "tailscale",
         compatibleRuntimes: [aws.lambda.Runtime.CustomAL2023],
         compatibleArchitectures: ["arm64"],
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.function = new aws.lambda.Function(
       "Function",
       {
-        code: new pulumi.asset.FileArchive("TODO"),
+        // code: new pulumi.asset.FileArchive("TODO"),
+        s3Bucket: "TODO",
+        s3Key: "TODO",
         runtime: aws.lambda.Runtime.CustomAL2023,
         architectures: ["arm64"],
         layers: [this.tailscaleLayer.arn],
         role: this.role.arn,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.registerOutputs({

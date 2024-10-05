@@ -1,11 +1,12 @@
 import * as aws from "@pulumi/aws";
+import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 
 import { resource } from "../resource";
 
 export interface RouterArgs {
   tenantId: string;
-  routes: Record<"api" | "documents" | "assets", { url: pulumi.Input<string> }>;
+  routes: Record<"api" | "assets" | "documents", { url: pulumi.Input<string> }>;
 }
 
 export class Router extends pulumi.ComponentResource {
@@ -26,7 +27,7 @@ export class Router extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Router.getInstance>) {
-    super(`${resource.AppData.name}:aws:Router`, "Router", args, opts);
+    super(`${resource.AppData.name}:tenant:aws:Router`, "Router", args, opts);
 
     this.cachePolicy = new aws.cloudfront.CachePolicy(
       "CachePolicy",
@@ -48,7 +49,13 @@ export class Router extends pulumi.ComponentResource {
           enableAcceptEncodingGzip: true,
         },
       },
-      { ...opts, parent: this },
+      { parent: this },
+    );
+
+    const usEast1Provider = new aws.Provider(
+      "UsEast1Provider",
+      { region: "us-east-1" },
+      { parent: this },
     );
 
     this.certificate = new aws.acm.Certificate(
@@ -57,7 +64,28 @@ export class Router extends pulumi.ComponentResource {
         domainName: `${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
         validationMethod: "DNS",
       },
-      { ...opts, parent: this },
+      {
+        provider: usEast1Provider,
+        parent: this,
+      },
+    );
+
+    this.certificate.domainValidationOptions.apply((options) =>
+      options.forEach(
+        (option, index) =>
+          new cloudflare.Record(
+            `CertificateValidationRecord${index}`,
+            {
+              zoneId: cloudflare.getZoneOutput({
+                name: resource.AppData.domainName.value,
+              }).id,
+              type: option.resourceRecordType,
+              name: option.resourceRecordName,
+              content: option.resourceRecordValue,
+            },
+            { parent: this },
+          ),
+      ),
     );
 
     const customOriginConfig = {
@@ -75,10 +103,10 @@ export class Router extends pulumi.ComponentResource {
         signingBehavior: "always",
         signingProtocol: "sigv4",
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
-    const urlCacheBehavior = {
+    const urlCacheBehaviorConfig = {
       viewerProtocolPolicy: "redirect-to-https",
       allowedMethods: [
         "DELETE",
@@ -96,11 +124,31 @@ export class Router extends pulumi.ComponentResource {
       originRequestPolicyId: aws.cloudfront
         .getOriginRequestPolicy(
           { name: "Managed-AllViewerExceptHostHeader" },
-          { ...opts, parent: this },
+          { parent: this },
         )
         .then((policy) => {
           if (!policy.id)
-            throw new Error("Managed origin request policy not found");
+            throw new Error(
+              "Managed-AllViewerExceptHostHeader origin request policy not found",
+            );
+
+          return policy.id;
+        }),
+    };
+
+    const bucketCacheBehaviorConfig = {
+      viewerProtocolPolicy: "redirect-to-https",
+      allowedMethods: ["GET", "HEAD", "OPTIONS"],
+      cachedMethods: ["GET", "HEAD"],
+      compress: true,
+      cachePolicyId: aws.cloudfront
+        .getOriginRequestPolicy(
+          { name: "Managed-CachingOptimized" },
+          { parent: this },
+        )
+        .then((policy) => {
+          if (!policy.id)
+            throw new Error("Managed-CachingOptimized cache policy not found");
 
           return policy.id;
         }),
@@ -112,15 +160,15 @@ export class Router extends pulumi.ComponentResource {
         enabled: true,
         origins: [
           {
-            originId: "/*",
-            domainName: `does-not-exist.${resource.AppData.domainName.value}`,
-            customOriginConfig,
-          },
-          {
             originId: "/api/*",
             domainName: new URL(args.routes.api.url).hostname,
             customOriginConfig,
             originPath: `/${resource.AppData.stage}`,
+          },
+          {
+            originId: "/assets/*",
+            domainName: new URL(args.routes.assets.url).hostname,
+            originAccessControlId: this.s3AccessControl.id,
           },
           {
             originId: "/documents/*",
@@ -128,20 +176,30 @@ export class Router extends pulumi.ComponentResource {
             originAccessControlId: this.s3AccessControl.id,
           },
           {
-            originId: "/assets/*",
-            domainName: new URL(args.routes.assets.url).hostname,
-            originAccessControlId: this.s3AccessControl.id,
+            originId: "/*",
+            domainName: `does-not-exist.${resource.AppData.domainName.value}`,
+            customOriginConfig,
           },
         ],
         defaultCacheBehavior: {
           targetOriginId: "/*",
-          ...urlCacheBehavior,
+          ...urlCacheBehaviorConfig,
         },
         orderedCacheBehaviors: [
           {
             targetOriginId: "/api/*",
             pathPattern: "/api/*",
-            ...urlCacheBehavior,
+            ...urlCacheBehaviorConfig,
+          },
+          {
+            targetOriginId: "/assets/*",
+            pathPattern: "/assets/*",
+            ...bucketCacheBehaviorConfig,
+          },
+          {
+            targetOriginId: "/documents/*",
+            pathPattern: "/documents/*",
+            ...bucketCacheBehaviorConfig,
           },
         ],
         restrictions: {
@@ -156,7 +214,7 @@ export class Router extends pulumi.ComponentResource {
         },
         waitForDeployment: false,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.registerOutputs({
@@ -165,5 +223,9 @@ export class Router extends pulumi.ComponentResource {
       s3AccessControl: this.s3AccessControl.id,
       distribution: this.distribution.id,
     });
+  }
+
+  public get url() {
+    return pulumi.interpolate`https://${this.certificate.domainName}`;
   }
 }

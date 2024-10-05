@@ -10,8 +10,8 @@ export interface StorageArgs {
 export class Storage extends pulumi.ComponentResource {
   private static instance: Storage;
 
-  private documentsBucket: Bucket;
   private assetsBucket: Bucket;
+  private documentsBucket: Bucket;
 
   public static getInstance(
     args: StorageArgs,
@@ -23,18 +23,18 @@ export class Storage extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Storage.getInstance>) {
-    super(`${resource.AppData.name}:aws:Storage`, "Storage", args, opts);
+    super(`${resource.AppData.name}:tenant:aws:Storage`, "Storage", args, opts);
+
+    this.assetsBucket = new Bucket(
+      "Assets",
+      { tenantId: args.tenantId },
+      { parent: this },
+    );
 
     this.documentsBucket = new Bucket(
       "Documents",
       { tenantId: args.tenantId },
-      { ...opts, parent: this },
-    );
-
-    this.assetsBucket = new Bucket(
-      "Assets",
-      { tenantId: args.tenantId, withCloudfront: true },
-      { ...opts, parent: this },
+      { parent: this },
     );
   }
 
@@ -49,7 +49,6 @@ export class Storage extends pulumi.ComponentResource {
 
 interface BucketArgs {
   tenantId: string;
-  withCloudfront?: boolean;
 }
 
 class Bucket extends pulumi.ComponentResource {
@@ -62,7 +61,7 @@ class Bucket extends pulumi.ComponentResource {
     args: BucketArgs,
     opts: pulumi.ComponentResourceOptions,
   ) {
-    super(`${resource.AppData.name}:aws:Bucket`, name, {}, opts);
+    super(`${resource.AppData.name}:tenant:aws:Bucket`, name, {}, opts);
 
     this.bucket = new aws.s3.Bucket(
       `${name}Bucket`,
@@ -70,7 +69,7 @@ class Bucket extends pulumi.ComponentResource {
         bucket: `${name.toLowerCase()}.${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
         forceDestroy: true,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     new aws.s3.BucketVersioningV2(
@@ -79,7 +78,7 @@ class Bucket extends pulumi.ComponentResource {
         bucket: this.bucket.bucket,
         versioningConfiguration: { status: "Enabled" },
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.publicAccessBlock = new aws.s3.BucketPublicAccessBlock(
@@ -91,46 +90,45 @@ class Bucket extends pulumi.ComponentResource {
         ignorePublicAcls: true,
         restrictPublicBuckets: true,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
-
-    const statements: pulumi.Input<
-      Array<aws.types.input.iam.GetPolicyDocumentStatementArgs>
-    > = [];
-
-    statements.push({
-      effect: "Deny",
-      principals: [{ type: "*", identifiers: ["*"] }],
-      actions: ["s3:*"],
-      resources: [this.bucket.arn, pulumi.interpolate`${this.bucket.arn}/*`],
-      conditions: [
-        {
-          test: "Bool",
-          variable: "aws:SecureTransport",
-          values: ["false"],
-        },
-      ],
-    });
-
-    if (args.withCloudfront) {
-      statements.push({
-        principals: [
-          { type: "Service", identifiers: ["withCloudfront.amazonaws.com"] },
-        ],
-        actions: ["s3:GetObject"],
-        resources: [pulumi.interpolate`${this.bucket.arn}/*`],
-      });
-    }
 
     this.policy = new aws.s3.BucketPolicy(
       `${name}Policy`,
       {
         bucket: this.bucket.bucket,
         policy: aws.iam.getPolicyDocumentOutput({
-          statements,
+          statements: [
+            {
+              principals: [
+                {
+                  type: "Service",
+                  identifiers: ["cloudfront.amazonaws.com"],
+                },
+              ],
+              actions: ["s3:GetObject"],
+              resources: [pulumi.interpolate`${this.bucket.arn}/*`],
+            },
+            {
+              effect: "Deny",
+              principals: [{ type: "*", identifiers: ["*"] }],
+              actions: ["s3:*"],
+              resources: [
+                this.bucket.arn,
+                pulumi.interpolate`${this.bucket.arn}/*`,
+              ],
+              conditions: [
+                {
+                  test: "Bool",
+                  variable: "aws:SecureTransport",
+                  values: ["false"],
+                },
+              ],
+            },
+          ],
         }).json,
       },
-      { ...opts, parent: this, dependsOn: this.publicAccessBlock },
+      { parent: this, dependsOn: this.publicAccessBlock },
     );
 
     new aws.s3.BucketCorsConfigurationV2(
@@ -146,7 +144,7 @@ class Bucket extends pulumi.ComponentResource {
           },
         ],
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.registerOutputs({

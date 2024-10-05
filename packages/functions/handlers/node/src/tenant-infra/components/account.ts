@@ -13,7 +13,7 @@ export class Account extends pulumi.ComponentResource {
   private static instance: Account;
 
   private account: aws.organizations.Account;
-  private accountProvider: aws.Provider;
+  private _provider: aws.Provider;
 
   public static getInstance(
     args: AccountArgs,
@@ -25,12 +25,7 @@ export class Account extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Account.getInstance>) {
-    super(
-      `${resource.AppData.name}:aws:TenantAccount`,
-      "TenantAccount",
-      args,
-      opts,
-    );
+    super(`${resource.AppData.name}:tenant:aws:Account`, "Account", args, opts);
 
     const accountName = `${resource.AppData.name}-${resource.AppData.stage}-tenant-${args.tenantId}`;
 
@@ -45,23 +40,23 @@ export class Account extends pulumi.ComponentResource {
         roleName: "OrganizationAccountAccessRole",
         iamUserAccessToBilling: "ALLOW",
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
-    this.accountProvider = new aws.Provider(
-      "AccountProvider",
+    this._provider = new aws.Provider(
+      "Provider",
       {
         region: resource.Cloud.aws.region as aws.Region,
         assumeRole: {
           roleArn: pulumi.interpolate`arn:aws:iam::${this.account.id}:role/${this.account.roleName}`,
         },
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.registerOutputs({
       account: this.account.id,
-      provider: this.accountProvider.id,
+      provider: this._provider.id,
     });
   }
 
@@ -70,6 +65,6 @@ export class Account extends pulumi.ComponentResource {
   }
 
   public get provider() {
-    return this.accountProvider;
+    return this._provider;
   }
 }

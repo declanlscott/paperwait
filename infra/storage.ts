@@ -1,4 +1,4 @@
-export const pulumiBackendBucket = new sst.aws.Bucket("PulumiBackendBucket");
+export const infraBucket = new sst.aws.Bucket("InfraBucket");
 
 export const tenantInfraDlq = new sst.aws.Queue("TenantInfraDlq");
 
@@ -11,15 +11,15 @@ export const tenantInfraQueue = new sst.aws.Queue("TenantInfraQueue", {
 
 export const storage = new sst.Linkable("Storage", {
   properties: {
-    pulumiBackend: {
-      bucket: pulumiBackendBucket.name,
+    infra: {
+      bucket: infraBucket.name,
     },
     tenantInfraQueue: tenantInfraQueue.url,
   },
   include: [
     sst.aws.permission({
       actions: ["s3:*"],
-      resources: [pulumiBackendBucket.arn],
+      resources: [infraBucket.arn],
     }),
     sst.aws.permission({
       actions: ["sqs:*"],

@@ -32,7 +32,7 @@ export class Api extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Api.getInstance>) {
-    super(`${resource.AppData.name}:aws:Api`, "Api", args, opts);
+    super(`${resource.AppData.name}:tenant:aws:Api`, "Api", args, opts);
 
     this.restApi = new aws.apigateway.RestApi(
       "Api",
@@ -41,7 +41,7 @@ export class Api extends pulumi.ComponentResource {
           types: "REGIONAL",
         },
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.restApiPolicy = new aws.apigateway.RestApiPolicy(
@@ -64,7 +64,7 @@ export class Api extends pulumi.ComponentResource {
           ],
         }).json,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.papercutResource = new aws.apigateway.Resource(
@@ -74,7 +74,7 @@ export class Api extends pulumi.ComponentResource {
         parentId: this.restApi.rootResourceId,
         pathPart: "papercut",
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.secureBridgeResource = new aws.apigateway.Resource(
@@ -84,7 +84,7 @@ export class Api extends pulumi.ComponentResource {
         parentId: this.papercutResource.id,
         pathPart: "secure-bridge",
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.papercutSecureBridgeRoutes.push(
@@ -107,7 +107,7 @@ export class Api extends pulumi.ComponentResource {
           },
           functionArn: args.papercutSecureBridgeFunctionArn,
         },
-        { ...opts, parent: this },
+        { parent: this },
       ),
     );
 
@@ -131,7 +131,7 @@ export class Api extends pulumi.ComponentResource {
           },
           functionArn: args.papercutSecureBridgeFunctionArn,
         },
-        { ...opts, parent: this },
+        { parent: this },
       ),
     );
 
@@ -149,7 +149,7 @@ export class Api extends pulumi.ComponentResource {
           },
           functionArn: args.papercutSecureBridgeFunctionArn,
         },
-        { ...opts, parent: this },
+        { parent: this },
       ),
     );
 
@@ -170,7 +170,7 @@ export class Api extends pulumi.ComponentResource {
           },
           functionArn: args.papercutSecureBridgeFunctionArn,
         },
-        { ...opts, parent: this },
+        { parent: this },
       ),
     );
 
@@ -197,7 +197,7 @@ export class Api extends pulumi.ComponentResource {
           },
           functionArn: args.papercutSecureBridgeFunctionArn,
         },
-        { ...opts, parent: this },
+        { parent: this },
       ),
     );
 
@@ -207,7 +207,7 @@ export class Api extends pulumi.ComponentResource {
         name: pulumi.interpolate`/aws/vendedlogs/apis/${this.restApi.name}`,
         retentionInDays: 14,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.deployment = new aws.apigateway.Deployment(
@@ -219,7 +219,7 @@ export class Api extends pulumi.ComponentResource {
           deployedAt: new Date().toISOString(),
         },
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.stage = new aws.apigateway.Stage(
@@ -252,7 +252,7 @@ export class Api extends pulumi.ComponentResource {
           }),
         },
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.registerOutputs({
@@ -292,7 +292,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
     opts: pulumi.ComponentResourceOptions,
   ) {
     super(
-      `${resource.AppData.name}:aws:PapercutSecureBridgeRoute`,
+      `${resource.AppData.name}:tenant:aws:PapercutSecureBridgeRoute`,
       name,
       args,
       opts,
@@ -305,7 +305,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
         parentId: args.parentId,
         pathPart: args.pathPart,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.requestValidator = new aws.apigateway.RequestValidator(
@@ -315,7 +315,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
         validateRequestBody: true,
         validateRequestParameters: false,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.requestModel = new aws.apigateway.Model(
@@ -330,7 +330,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
           properties: args.requestSchema,
         }),
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.method = new aws.apigateway.Method(
@@ -345,7 +345,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
           "application/json": this.requestModel.id,
         },
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.integration = new aws.apigateway.Integration(
@@ -358,7 +358,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
         type: "AWS_PROXY",
         uri: args.functionArn,
       },
-      { ...opts, parent: this },
+      { parent: this },
     );
 
     this.registerOutputs({

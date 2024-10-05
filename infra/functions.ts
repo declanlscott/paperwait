@@ -1,8 +1,8 @@
 import { db } from "./db";
 import { appData, cloud } from "./misc";
 import { realtime } from "./realtime";
-import { pulumiBackendBucket } from "./storage";
-import { normalizePath } from "./utils";
+import { infraBucket } from "./storage";
+import { injectLinkables, normalizePath } from "./utils";
 import { webOutputs } from "./web";
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
@@ -86,7 +86,7 @@ export const tenantInfraRole = new aws.iam.Role("TenantInfraRole", {
     ],
   },
 });
-new aws.iam.RolePolicyAttachment("TenantInfraBasicExecutionAttachment", {
+new aws.iam.RolePolicyAttachment("TenantInfraBasicExecutionPolicyAttachment", {
   role: tenantInfraRole,
   policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
 });
@@ -97,21 +97,13 @@ export const tenantInfraFunction = new aws.lambda.Function(
     imageUri: tenantInfraImage.imageUri,
     role: tenantInfraRole.arn,
     environment: {
-      variables: {
-        CUSTOM_RESOURCE_AppData: $jsonStringify(
-          appData.getSSTLink().properties,
-        ),
-        CUSTOM_RESOURCE_Cloud: $jsonStringify(cloud.getSSTLink().properties),
-        CUSTOM_RESOURCE_PulumiBackendBucket: $jsonStringify(
-          pulumiBackendBucket.getSSTLink().properties,
-        ),
-        CUSTOM_RESOURCE_Realtime: $jsonStringify(
-          realtime.getSSTLink().properties,
-        ),
-        CUSTOM_RESOURCE_WebOutputs: $jsonStringify(
-          webOutputs.getSSTLink().properties,
-        ),
-      },
+      variables: injectLinkables([
+        appData,
+        cloud,
+        infraBucket,
+        realtime,
+        webOutputs,
+      ]),
     },
   },
 );

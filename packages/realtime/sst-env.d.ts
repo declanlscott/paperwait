@@ -62,6 +62,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "InfraBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "ManageTenantInfraRoleArn": {
       "type": "sst.sst.Secret"
       "value": string
@@ -81,10 +85,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "PulumiBackendBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
-    }
     "Realtime": {
       "apiKey": string
       "type": "sst.sst.Linkable"
@@ -99,7 +99,7 @@ declare module "sst" {
       "url": string
     }
     "Storage": {
-      "pulumiBackend": {
+      "infra": {
         "bucket": string
       }
       "tenantInfraQueue": string

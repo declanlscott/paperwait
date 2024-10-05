@@ -17,7 +17,7 @@ export const handler: SQSHandler = async (event) => {
       name: projectName,
       runtime: "nodejs",
       backend: {
-        url: `s3://${resource.PulumiBackendBucket.name}`,
+        url: `s3://${resource.InfraBucket.name}/pulumi`,
       },
     },
   });
@@ -60,7 +60,10 @@ async function processRecord(record: SQSRecord) {
     },
   });
 
-  const result = await stack.up();
+  const result = await stack.up({
+    onEvent: console.log,
+    onOutput: console.log,
+  });
 
   if (result.summary.result === "failed") {
     console.error("Pulumi up failed: ", result);

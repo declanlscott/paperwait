@@ -11,7 +11,7 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
 
   const papercutSecureBridge = PapercutSecureBridge.getInstance(
     { accountId: account.id },
-    { providers: { aws: account.provider } },
+    { providers: [account.provider] },
   );
 
   const api = Api.getInstance(
@@ -19,12 +19,12 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
       tenantId,
       papercutSecureBridgeFunctionArn: papercutSecureBridge.functionArn,
     },
-    { providers: { aws: account.provider } },
+    { providers: [account.provider] },
   );
 
   const storage = Storage.getInstance(
     { tenantId },
-    { providers: { aws: account.provider } },
+    { providers: [account.provider] },
   );
 
   const router = Router.getInstance(
@@ -32,10 +32,14 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
       tenantId,
       routes: {
         api: { url: api.invokeUrl },
-        documents: { url: storage.documents.url },
         assets: { url: storage.assets.url },
+        documents: { url: storage.documents.url },
       },
     },
-    { providers: { aws: account.provider } },
+    { providers: [account.provider] },
   );
+
+  return {
+    url: router.url,
+  };
 };
