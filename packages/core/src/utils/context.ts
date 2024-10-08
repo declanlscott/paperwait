@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from "async_hooks";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 export function createContext<TContext>() {
   const storage = new AsyncLocalStorage<TContext>();
