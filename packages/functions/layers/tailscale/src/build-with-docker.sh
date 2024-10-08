@@ -8,7 +8,7 @@ docker build -t lambda-layer-builder .
 echo "Container is ready."
 
 CURRENT_DIR=$(pwd)
-DIST_DIR="${CURRENT_DIR}/../dist"
+DIST_DIR="${CURRENT_DIR}/dist"
 
 if [ -d "$DIST_DIR" ]; then
   rm -rf "$DIST_DIR"

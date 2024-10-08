@@ -5,8 +5,8 @@ DISTRO_VERSION="$(grep -oP '(?<=^VERSION=).+' < /etc/os-release | tr -d '"')"
 DISTRO_TITLE="${DISTRO_NAME} ${DISTRO_VERSION}"
 PWD_PATH="$(pwd)"
 START_PATH="${WORKDIR:=$PWD_PATH}"
-DIST_LAYER_PATH="${START_PATH}/dist/layer"
-DIST_LAYER_ZIP_NAME="layer.zip"
+DIST_LAYER_PATH="${START_PATH}/dist"
+DIST_LAYER_ZIP_NAME="package.zip"
 DIST_LAYER_ASSET_PATH="${START_PATH}/dist/${DIST_LAYER_ZIP_NAME}"
 JQ_RPM_PATH="${DIST_LAYER_PATH}/tmp_extracts/usr/bin/jq"
 TAILSCALE_RPM_PATH="/tmp/tailscale.rpm"
@@ -77,7 +77,7 @@ function build_layer_asset {
   cd "${DIST_LAYER_PATH}"
 
   echo "Zipping Lambda Layer"
-  zip -r "../${DIST_LAYER_ZIP_NAME}" ./bin ./extensions
+  zip -r "${DIST_LAYER_ZIP_NAME}" ./bin ./extensions
 
   cd "${START_PATH}"
 }
