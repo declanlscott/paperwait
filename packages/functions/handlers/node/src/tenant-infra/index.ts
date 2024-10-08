@@ -17,7 +17,7 @@ export const handler: SQSHandler = async (event) => {
       name: projectName,
       runtime: "nodejs",
       backend: {
-        url: `s3://${resource.InfraBucket.name}/pulumi`,
+        url: `s3://${resource.PulumiBackendBucket.name}/${projectName}`,
       },
     },
   });

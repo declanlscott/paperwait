@@ -11,3 +11,7 @@ RUN mkdir /tmp/pulumi_home
 ENV PULUMI_HOME=/tmp/pulumi_home
 
 WORKDIR /var/task
+
+COPY dist/index.js .
+
+CMD [ "index.handler" ]

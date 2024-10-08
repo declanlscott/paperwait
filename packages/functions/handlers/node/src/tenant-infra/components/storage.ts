@@ -52,32 +52,20 @@ interface BucketArgs {
 }
 
 class Bucket extends pulumi.ComponentResource {
-  private bucket: aws.s3.Bucket;
+  private bucket: aws.s3.BucketV2;
   private publicAccessBlock: aws.s3.BucketPublicAccessBlock;
   private policy: aws.s3.BucketPolicy;
 
   public constructor(
     name: string,
-    args: BucketArgs,
+    _args: BucketArgs,
     opts: pulumi.ComponentResourceOptions,
   ) {
     super(`${resource.AppData.name}:tenant:aws:Bucket`, name, {}, opts);
 
-    this.bucket = new aws.s3.Bucket(
+    this.bucket = new aws.s3.BucketV2(
       `${name}Bucket`,
-      {
-        bucket: `${name.toLowerCase()}.${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
-        forceDestroy: true,
-      },
-      { parent: this },
-    );
-
-    new aws.s3.BucketVersioningV2(
-      `${name}Versioning`,
-      {
-        bucket: this.bucket.bucket,
-        versioningConfiguration: { status: "Enabled" },
-      },
+      { forceDestroy: true },
       { parent: this },
     );
 

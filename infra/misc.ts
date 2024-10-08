@@ -38,6 +38,7 @@ export const cloud = new sst.Linkable("Cloud", {
       tenantsOrganizationalUnitId: tenantsOrganizationalUnitId.value,
       orgRootEmail: awsOrgRootEmail.value,
       manageTenantInfraRoleArn: manageTenantInfraRoleArn.value,
+      tenantAccountRoleName: "OrganizationAccountAccessRole",
     },
     cloudflare: {
       apiToken: process.env.CLOUDFLARE_API_TOKEN,

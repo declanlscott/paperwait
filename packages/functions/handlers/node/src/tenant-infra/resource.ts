@@ -5,6 +5,11 @@ import type { Resource } from "sst";
 export const resource = parseResource<{
   [TKey in keyof Pick<
     Resource,
-    "AppData" | "Cloud" | "InfraBucket" | "Realtime" | "WebOutputs"
+    | "AppData"
+    | "Code"
+    | "Cloud"
+    | "PulumiBackendBucket"
+    | "Realtime"
+    | "WebOutputs"
   >]: Omit<Resource[TKey], "type">;
 }>("CUSTOM_RESOURCE_");

@@ -89,9 +89,9 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
     this.tailscaleLayer = new aws.lambda.LayerVersion(
       "TailscaleLayer",
       {
-        // code: new pulumi.asset.FileArchive("TODO"),
-        s3Bucket: "TODO",
-        s3Key: "TODO",
+        s3Bucket: resource.Code.bucket.name,
+        s3Key: resource.Code.bucket.object.tailscaleLayer.key,
+        s3ObjectVersion: resource.Code.bucket.object.tailscaleLayer.versionId,
         layerName: "tailscale",
         compatibleRuntimes: [aws.lambda.Runtime.CustomAL2023],
         compatibleArchitectures: ["arm64"],
@@ -102,9 +102,10 @@ export class PapercutSecureBridge extends pulumi.ComponentResource {
     this.function = new aws.lambda.Function(
       "Function",
       {
-        // code: new pulumi.asset.FileArchive("TODO"),
-        s3Bucket: "TODO",
-        s3Key: "TODO",
+        s3Bucket: resource.Code.bucket.name,
+        s3Key: resource.Code.bucket.object.papercutSecureBridgeHandler.key,
+        s3ObjectVersion:
+          resource.Code.bucket.object.papercutSecureBridgeHandler.versionId,
         runtime: aws.lambda.Runtime.CustomAL2023,
         architectures: ["arm64"],
         layers: [this.tailscaleLayer.arn],

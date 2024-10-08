@@ -38,12 +38,33 @@ declare module "sst" {
         "manageTenantInfraRoleArn": string
         "orgRootEmail": string
         "region": string
+        "tenantAccountRoleName": string
         "tenantsOrganizationalUnitId": string
       }
       "cloudflare": {
         "apiToken": string
       }
       "type": "sst.sst.Linkable"
+    }
+    "Code": {
+      "bucket": {
+        "name": string
+        "object": {
+          "papercutSecureBridgeHandler": {
+            "key": string
+            "versionId": string
+          }
+          "tailscaleLayer": {
+            "key": string
+            "versionId": string
+          }
+        }
+      }
+      "type": "sst.sst.Linkable"
+    }
+    "CodeBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
     }
     "Db": {
       "postgres": {
@@ -62,10 +83,6 @@ declare module "sst" {
     "GoogleClientSecret": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "InfraBucket": {
-      "name": string
-      "type": "sst.aws.Bucket"
     }
     "ManageTenantInfraRoleArn": {
       "type": "sst.sst.Secret"
@@ -86,6 +103,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "PulumiBackendBucket": {
+      "name": string
+      "type": "sst.aws.Bucket"
+    }
     "Realtime": {
       "apiKey": string
       "type": "sst.sst.Linkable"
@@ -94,13 +115,6 @@ declare module "sst" {
     "ReplicacheLicenseKey": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "Storage": {
-      "infra": {
-        "bucket": string
-      }
-      "tenantInfraQueue": string
-      "type": "sst.sst.Linkable"
     }
     "TenantInfraDlq": {
       "type": "sst.aws.Queue"

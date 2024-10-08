@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { appData, cloud } from "./misc";
 import { realtime } from "./realtime";
-import { infraBucket } from "./storage";
+import { codeBucket, pulumiBackendBucket } from "./storage";
 import { injectLinkables, normalizePath } from "./utils";
 import { webOutputs } from "./web";
 
@@ -15,41 +15,106 @@ export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
   schedule: "rate(1 day)",
 });
 
-export const tailscaleLayerSrcAsset = $asset(
+const tailscaleLayerSrcPath = normalizePath(
   "packages/functions/layers/tailscale/src",
 );
-export const buildTailscaleLayer = new command.local.Command(
-  "BuildTailscaleLayer",
+const tailscaleLayerSrc = await command.local.run({
+  dir: tailscaleLayerSrcPath,
+  command: 'echo "Archiving tailscale layer source code..."',
+  archivePaths: ["**", "!dist/**"],
+});
+const tailscaleLayerBuildAssetPath = "dist/package.zip";
+const tailscaleLayerBuild = new command.local.Command("TailscaleLayerBuild", {
+  dir: tailscaleLayerSrcPath,
+  create: "./build-with-docker.sh",
+  assetPaths: [tailscaleLayerBuildAssetPath],
+  triggers: [tailscaleLayerSrc.archive],
+});
+export const tailscaleLayerObject = new aws.s3.BucketObjectv2(
+  "TailscaleLayerObject",
   {
-    dir: tailscaleLayerSrcAsset.path,
-    create: "./build-with-docker.sh",
-    triggers: [tailscaleLayerSrcAsset],
+    bucket: codeBucket.name,
+    key: "functions/layers/tailscale/package.zip",
+    source: tailscaleLayerBuild.assets.apply((assets) => {
+      if (!assets) throw new Error("Missing tailscale layer build assets");
+      const asset = assets[tailscaleLayerBuildAssetPath];
+      if (!asset) throw new Error("Missing tailscale layer build asset");
+
+      return asset;
+    }),
   },
 );
 
-export const secureBridgeHandlerSrcAsset = $asset(
-  "packages/functions/handlers/go/papercut-secure-bridge/src",
+const papercutSecureBridgeHandlerSrcPath = normalizePath(
+  "packages/functions/handlers/go/papercut-secure-bridge",
 );
-export const buildSecureBridgeHandler = new command.local.Command(
-  "BuildSecureBridgeHandler",
+const papercutSecureBridgeHandlerSrc = await command.local.run({
+  dir: papercutSecureBridgeHandlerSrcPath,
+  command: 'echo "Archiving papercut secure bridge handler source code..."',
+  archivePaths: ["**", "!bin/**"],
+});
+const papercutSecureBridgeHandlerBuildAssetPath = "bin/package.zip";
+const papercutSecureBridgeHandlerBuild = new command.local.Command(
+  "PapercutSecureBridgeHandlerBuild",
   {
-    dir: secureBridgeHandlerSrcAsset.path,
+    dir: papercutSecureBridgeHandlerSrcPath,
     create:
-      "GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o ../bin/bootstrap cmd/function/main.go && zip -j ../bin/function.zip ../bin/bootstrap",
-    triggers: [secureBridgeHandlerSrcAsset],
+      "GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o bin/bootstrap cmd/function/main.go && zip -j bin/package.zip bin/bootstrap",
+    assetPaths: [papercutSecureBridgeHandlerBuildAssetPath],
+    triggers: [papercutSecureBridgeHandlerSrc.archive],
+  },
+);
+export const papercutSecureBridgeHandlerObject = new aws.s3.BucketObjectv2(
+  "PapercutSecureBridgeHandlerObject",
+  {
+    bucket: codeBucket.name,
+    key: "functions/handlers/papercut-secure-bridge/package.zip",
+    source: papercutSecureBridgeHandlerBuild.assets.apply((assets) => {
+      if (!assets)
+        throw new Error("Missing papercut secure bridge handler build assets");
+      const asset = assets[papercutSecureBridgeHandlerBuildAssetPath];
+      if (!asset)
+        throw new Error("Missing papercut secure bridge handler build asset");
+
+      return asset;
+    }),
   },
 );
 
-const nodeHandlersPath = "packages/functions/handlers/node";
-export const buildTenantInfraHandler = new command.local.Command(
-  "BuildTenantInfraHandler",
+export const code = new sst.Linkable("Code", {
+  properties: {
+    bucket: {
+      name: codeBucket.name,
+      object: {
+        tailscaleLayer: {
+          key: tailscaleLayerObject.key,
+          versionId: tailscaleLayerObject.versionId,
+        },
+        papercutSecureBridgeHandler: {
+          key: papercutSecureBridgeHandlerObject.key,
+          versionId: papercutSecureBridgeHandlerObject.versionId,
+        },
+      },
+    },
+  },
+});
+
+const nodeHandlersPath = normalizePath("packages/functions/handlers/node");
+const tenantInfraSrc = await command.local.run({
+  dir: nodeHandlersPath,
+  command: 'echo "Archiving tenant-infra source code..."',
+  archivePaths: [
+    "src/tenant-infra/**",
+    "!src/tenant-infra/dist/**",
+    "package.json",
+  ],
+});
+const tenantInfraHandlerBuild = new command.local.Command(
+  "TenantInfraHandlerBuild",
   {
-    dir: normalizePath(nodeHandlersPath),
+    dir: nodeHandlersPath,
     create: "pnpm run tenant-infra:build",
-    triggers: [
-      $asset(normalizePath("src/tenant-infra", nodeHandlersPath)),
-      $asset(normalizePath("package.json", nodeHandlersPath)),
-    ],
+    triggers: [tenantInfraSrc.archive],
   },
 );
 
@@ -63,13 +128,7 @@ export const tenantInfraImage = new awsx.ecr.Image(
     repositoryUrl: repository.url,
     context: normalizePath("packages/functions/handlers/node/src/tenant-infra"),
   },
-  {
-    dependsOn: [
-      buildTailscaleLayer,
-      buildSecureBridgeHandler,
-      buildTenantInfraHandler,
-    ],
-  },
+  { dependsOn: [tenantInfraHandlerBuild] },
 );
 
 export const tenantInfraRole = new aws.iam.Role("TenantInfraRole", {
@@ -99,8 +158,9 @@ export const tenantInfraFunction = new aws.lambda.Function(
     environment: {
       variables: injectLinkables([
         appData,
+        code,
         cloud,
-        infraBucket,
+        pulumiBackendBucket,
         realtime,
         webOutputs,
       ]),

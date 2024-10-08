@@ -37,7 +37,7 @@ export class Account extends pulumi.ComponentResource {
         name: accountName,
         email: `${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
         parentId: resource.Cloud.aws.tenantsOrganizationalUnitId,
-        roleName: "OrganizationAccountAccessRole",
+        roleName: resource.Cloud.aws.tenantAccountRoleName,
         iamUserAccessToBilling: "ALLOW",
       },
       { parent: this },

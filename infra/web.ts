@@ -4,7 +4,7 @@ import { appData, client, cloud } from "./misc";
 import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
 import { webPassword, webUsername } from "./secrets";
-import { storage } from "./storage";
+import { tenantInfraQueue } from "./storage";
 import { getLambdaLayerArn } from "./utils";
 
 export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
@@ -36,7 +36,7 @@ const architecture = "arm64";
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
-  link: [appData, client, db, oauth2, realtime, storage],
+  link: [appData, client, db, oauth2, realtime, tenantInfraQueue],
   permissions: [
     {
       actions: ["execute-api:Invoke"],
