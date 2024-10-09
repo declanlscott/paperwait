@@ -36,8 +36,7 @@ export const tailscaleLayerObject = new aws.s3.BucketObjectv2(
     bucket: codeBucket.name,
     key: "functions/layers/tailscale/package.zip",
     source: tailscaleLayerBuild.assets.apply((assets) => {
-      if (!assets) throw new Error("Missing tailscale layer build assets");
-      const asset = assets[tailscaleLayerBuildAssetPath];
+      const asset = assets?.[tailscaleLayerBuildAssetPath];
       if (!asset) throw new Error("Missing tailscale layer build asset");
 
       return asset;
@@ -70,9 +69,7 @@ export const papercutSecureBridgeHandlerObject = new aws.s3.BucketObjectv2(
     bucket: codeBucket.name,
     key: "functions/handlers/papercut-secure-bridge/package.zip",
     source: papercutSecureBridgeHandlerBuild.assets.apply((assets) => {
-      if (!assets)
-        throw new Error("Missing papercut secure bridge handler build assets");
-      const asset = assets[papercutSecureBridgeHandlerBuildAssetPath];
+      const asset = assets?.[papercutSecureBridgeHandlerBuildAssetPath];
       if (!asset)
         throw new Error("Missing papercut secure bridge handler build asset");
 
@@ -100,9 +97,9 @@ export const code = new sst.Linkable("Code", {
 });
 
 const nodeHandlersPath = normalizePath("packages/functions/handlers/node");
-const tenantInfraSrc = await command.local.run({
+const tenantInfraHandlerSrc = await command.local.run({
   dir: nodeHandlersPath,
-  command: 'echo "Archiving tenant-infra source code..."',
+  command: 'echo "Archiving tenant-infra handler source code..."',
   archivePaths: [
     "src/tenant-infra/**",
     "!src/tenant-infra/dist/**",
@@ -114,7 +111,7 @@ const tenantInfraHandlerBuild = new command.local.Command(
   {
     dir: nodeHandlersPath,
     create: "pnpm run tenant-infra:build",
-    triggers: [tenantInfraSrc.archive],
+    triggers: [tenantInfraHandlerSrc.archive],
   },
 );
 
