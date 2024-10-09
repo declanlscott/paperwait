@@ -15,23 +15,20 @@ export const auth = defineMiddleware(async (context, next) => {
       next,
     );
 
-  const { session, user, tenant } = await Auth.validateSessionToken(token);
-  if (!session) {
+  const auth = await Auth.validateSessionToken(token);
+  if (!auth.session) {
     const cookie = Auth.createSessionCookie();
 
     context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
-    return await withAuth(
-      { isAuthed: false, session: null, user: null, tenant: null },
-      next,
-    );
+    return await withAuth({ isAuthed: false, ...auth }, next);
   }
 
   const cookie = Auth.createSessionCookie({
     token,
-    expiresAt: session.expiresAt,
+    expiresAt: auth.session.expiresAt,
   });
   context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
-  return await withAuth({ isAuthed: true, session, user, tenant }, next);
+  return await withAuth({ isAuthed: true, ...auth }, next);
 });
