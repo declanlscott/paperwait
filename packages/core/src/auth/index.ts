@@ -1,91 +1,83 @@
-import { Lucia } from "lucia";
-import { Resource } from "sst";
+import { sha256 } from "@oslojs/crypto/sha2";
+import {
+  encodeBase32LowerCaseNoPadding,
+  encodeHexLowerCase,
+} from "@oslojs/encoding";
+import { add, isAfter, sub } from "date-fns";
+import { eq, lte } from "drizzle-orm";
 
-import { AUTH_SESSION_COOKIE_NAME } from "../constants";
+import { SESSION_COOKIE_NAME, SESSION_EXPIRATION_DURATION } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
-import { generateId } from "../utils/helpers";
-import { DbAdapter } from "./adapter";
-import { sessionTokensTable } from "./sql";
+import { tenantsTable } from "../tenants/sql";
+import { usersTable } from "../users/sql";
+import { sessionsTable, sessionTokensTable } from "./sql";
 
-import type {
-  Session as LuciaSession,
-  User as LuciaUser,
-  RegisteredDatabaseSessionAttributes,
-} from "lucia";
 import type { Oauth2Tokens } from "../oauth2/tokens";
 import type { Tenant } from "../tenants/sql";
 import type { User } from "../users/sql";
 import type { Session, SessionTokens } from "./sql";
 
-export type Auth = {
-  session: LuciaSession | null;
-  user: LuciaUser["data"] | null;
-  tenant: LuciaUser["tenant"] | null;
-};
+export type Auth =
+  | { user: User; session: Session; tenant: Tenant }
+  | { user: null; session: null; tenant: null };
 
 export type Authenticated = {
   [TKey in keyof Auth]: NonNullable<Auth[TKey]>;
 } & { isAuthed: true };
 
-export interface Unauthenticated extends Record<keyof Auth, null> {
-  isAuthed: false;
+export type Unauthenticated = {
+  [TKey in keyof Auth]: null;
+} & { isAuthed: false };
+
+export type Cookie = {
+  name: typeof SESSION_COOKIE_NAME;
+  value: string;
+  attributes: {
+    secure?: boolean;
+    path?: string;
+    domain?: string;
+    sameSite?: "lax" | "strict" | "none";
+    httpOnly?: boolean;
+    maxAge?: number;
+    expires?: Date;
+  };
+};
+
+export function generateSessionToken(): string {
+  const randomBytes = crypto.getRandomValues(new Uint8Array(20));
+
+  const token = encodeBase32LowerCaseNoPadding(randomBytes);
+
+  return token;
 }
 
-export const lucia = new Lucia(new DbAdapter(), {
-  sessionCookie: {
-    attributes: { secure: Resource.AppData.stage === "production" },
-    name: AUTH_SESSION_COOKIE_NAME,
-  },
-  getUserAttributes: ({ user, tenant }) => ({
-    data: {
-      id: user.id,
-      oauth2UserId: user.oauth2UserId,
-      tenantId: user.tenantId,
-      name: user.name,
-      role: user.role,
-      email: user.email,
-      username: user.username,
-    },
-    tenant: {
-      id: tenant.id,
-      slug: tenant.slug,
-      status: tenant.status,
-    },
-  }),
-  getSessionAttributes: (attributes) => ({
-    tenantId: attributes.tenantId,
-  }),
-});
-
-declare module "lucia" {
-  interface Register {
-    Lucia: typeof lucia;
-    DatabaseUserAttributes: { user: User; tenant: Tenant };
-    DatabaseSessionAttributes: Pick<Session, "tenantId">;
-  }
-}
-
-export function createSessionCookie(sessionId?: LuciaSession["id"]) {
-  if (!sessionId) return lucia.createBlankSessionCookie();
-
-  return lucia.createSessionCookie(sessionId);
-}
+const getSessionId = (token: string) =>
+  encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
 export async function createSession(
-  userId: LuciaUser["id"],
-  attributes: RegisteredDatabaseSessionAttributes,
-  tokens: Oauth2Tokens,
-) {
+  attributes: Omit<Session, "id" | "expiresAt">,
+  oauth2Tokens: Oauth2Tokens,
+): Promise<{ session: Session; cookie: Cookie }> {
+  const token = generateSessionToken();
+  const id = getSessionId(token);
+
   const session = await useTransaction(async (tx) => {
-    const session = await lucia.createSession(userId, attributes, {
-      sessionId: generateId(),
-    });
+    const session = await tx
+      .insert(sessionsTable)
+      .values({
+        id,
+        expiresAt: add(Date.now(), SESSION_EXPIRATION_DURATION),
+        ...attributes,
+      })
+      .returning()
+      .then((rows) => rows.at(0));
+    if (!session) throw new Error("Failed to create session");
 
     const sessionTokens = {
-      idToken: tokens.idToken(),
-      accessToken: tokens.accessToken(),
-      accessTokenExpiresAt: tokens.accessTokenExpiresAt(),
-      refreshToken: tokens.refreshToken(),
+      idToken: oauth2Tokens.idToken(),
+      accessToken: oauth2Tokens.accessToken(),
+      accessTokenExpiresAt: oauth2Tokens.accessTokenExpiresAt(),
+      refreshToken: oauth2Tokens.refreshToken(),
     } satisfies Pick<
       SessionTokens,
       "idToken" | "accessToken" | "accessTokenExpiresAt" | "refreshToken"
@@ -94,8 +86,8 @@ export async function createSession(
     await tx
       .insert(sessionTokensTable)
       .values({
-        sessionId: session.id,
-        userId,
+        sessionId: id,
+        userId: attributes.userId,
         tenantId: attributes.tenantId,
         ...sessionTokens,
       })
@@ -107,24 +99,94 @@ export async function createSession(
     return session;
   });
 
-  const cookie = createSessionCookie(session.id);
+  const cookie = createSessionCookie({ token, expiresAt: session.expiresAt });
 
   return { session, cookie };
 }
 
-export const validateSession = async (sessionId: LuciaSession["id"]) =>
-  lucia.validateSession(sessionId);
+export async function validateSessionToken(token: string): Promise<Auth> {
+  const sessionId = getSessionId(token);
 
-export async function invalidateSession(sessionId: LuciaSession["id"]) {
-  await lucia.invalidateSession(sessionId);
+  return useTransaction(async (tx) => {
+    const auth = await tx
+      .select({
+        user: usersTable,
+        session: sessionsTable,
+        tenant: tenantsTable,
+      })
+      .from(sessionsTable)
+      .innerJoin(usersTable, eq(sessionsTable.userId, usersTable.id))
+      .innerJoin(tenantsTable, eq(sessionsTable.tenantId, tenantsTable.id))
+      .where(eq(sessionsTable.id, sessionId))
+      .then((rows) => rows.at(0));
+    if (!auth) return { user: null, session: null, tenant: null };
+
+    const now = Date.now();
+
+    if (isAfter(now, auth.session.expiresAt)) {
+      await tx.delete(sessionsTable).where(eq(sessionsTable.id, sessionId));
+
+      return { user: null, session: null, tenant: null };
+    }
+
+    if (isAfter(now, sub(auth.session.expiresAt, { days: 15 })))
+      await tx
+        .update(sessionsTable)
+        .set({ expiresAt: add(now, SESSION_EXPIRATION_DURATION) })
+        .where(eq(sessionsTable.id, sessionId));
+
+    return auth;
+  });
+}
+
+export async function invalidateSession(
+  sessionId: Session["id"],
+): Promise<{ cookie: Cookie }> {
+  await useTransaction(async (tx) =>
+    tx.delete(sessionsTable).where(eq(sessionsTable.id, sessionId)),
+  );
 
   const cookie = createSessionCookie();
 
   return { cookie };
 }
 
-export async function invalidateUserSessions(userId: LuciaUser["id"]) {
-  await lucia.invalidateUserSessions(userId);
+export function createSessionCookie(props?: {
+  token: string;
+  expiresAt: Date;
+}): Cookie {
+  if (!props)
+    return {
+      name: SESSION_COOKIE_NAME,
+      value: "",
+      attributes: {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 0,
+      },
+    };
+
+  return {
+    name: SESSION_COOKIE_NAME,
+    value: props.token,
+    attributes: {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      expires: props.expiresAt,
+    },
+  };
 }
 
-export const deleteExpiredSessions = async () => lucia.deleteExpiredSessions();
+export const invalidateUserSessions = async (userId: User["id"]) =>
+  useTransaction(async (tx) => {
+    tx.delete(sessionsTable).where(eq(sessionsTable.userId, userId));
+  });
+
+export const deleteExpiredSessions = async () =>
+  useTransaction(async (tx) => {
+    tx.delete(sessionsTable).where(lte(sessionsTable.expiresAt, new Date()));
+  });

@@ -253,7 +253,7 @@ export default new Hono()
             Replicache.poke([Realtime.formatChannel("tenant", tenantId)]),
           );
 
-          return Auth.createSession(newUser.id, { tenantId }, tokens);
+          return Auth.createSession({ userId: newUser.id, tenantId }, tokens);
         }
 
         if (existingUser.deletedAt) throw new Unauthorized("User is deleted");
@@ -285,7 +285,10 @@ export default new Hono()
           );
         }
 
-        return Auth.createSession(existingUser.id, { tenantId }, tokens);
+        return Auth.createSession(
+          { userId: existingUser.id, tenantId },
+          tokens,
+        );
       });
 
       setCookie(c, cookie.name, cookie.value, cookie.attributes);

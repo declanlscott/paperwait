@@ -37,7 +37,11 @@ export const NANOID_PATTERN = new RegExp(
 
 export const TENANT_SLUG_PATTERN = new RegExp(/^[a-zA-Z0-9-]+$/);
 
-export const AUTH_SESSION_COOKIE_NAME = "auth_session";
+export const SESSION_COOKIE_NAME = "auth_session";
+
+export const SESSION_EXPIRATION_DURATION = {
+  days: 30,
+} as const satisfies Duration;
 
 export const REPLICACHE_EXPIRATION_DURATION = {
   weeks: 2,

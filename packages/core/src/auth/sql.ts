@@ -9,7 +9,7 @@ import type { InferSelectModel } from "drizzle-orm";
 export const sessionsTable = pgTable(
   "sessions",
   {
-    id: id("id").primaryKey(),
+    id: text("id").primaryKey(),
     tenantId: tenantIdColumns.tenantId,
     userId: id("user_id").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
@@ -26,7 +26,7 @@ export type SessionsTable = typeof sessionsTable;
 export type Session = InferSelectModel<SessionsTable>;
 
 export const sessionTokensTable = pgTable("session_tokens", {
-  sessionId: id("session_id")
+  sessionId: text("session_id")
     .primaryKey()
     .references(() => sessionsTable.id, { onDelete: "cascade" }),
   userId: id("user_id").notNull(),
