@@ -29,7 +29,7 @@ export class Cron extends pulumi.ComponentResource {
         "TailscaleAuthKeyRotation",
         {
           target: args.tailscaleAuthKeyRotationFunctionArn,
-          scheduleExpression: "TODO",
+          scheduleExpression: "rate(60 days)",
         },
         { parent: this },
       ),
