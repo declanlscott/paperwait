@@ -5,7 +5,6 @@ import { oauth2 } from "./oauth2";
 import { realtime } from "./realtime";
 import { webPassword, webUsername } from "./secrets";
 import { tenantInfraQueue } from "./storage";
-import { getLambdaLayerArn } from "./utils";
 
 export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
   handler: "packages/workers/src/reverse-proxy.ts",
@@ -31,8 +30,6 @@ const basicAuth = $output([webUsername.value, webPassword.value]).apply(
     Buffer.from(`${username}:${password}`).toString("base64"),
 );
 
-const architecture = "arm64";
-
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
@@ -42,12 +39,6 @@ export const web = new sst.aws.Astro("Web", {
       actions: ["execute-api:Invoke"],
       resources: [
         $interpolate`arn:aws:execute-api:${cloud.properties.aws.region}:*:${appData.properties.stage}/*`,
-      ],
-    },
-    {
-      actions: ["ssm:PutParameter", "ssm:GetParameter"],
-      resources: [
-        $interpolate`arn:aws:ssm:${cloud.properties.aws.region}:*:parameter/paperwait/*`,
       ],
     },
   ],
@@ -76,13 +67,7 @@ export const web = new sst.aws.Astro("Web", {
             },
           }
         : undefined,
-    architecture,
-    layers: [
-      await getLambdaLayerArn(
-        "AWS-Parameters-and-Secrets-Lambda-Extension",
-        architecture,
-      ),
-    ],
+    architecture: "arm64",
     install: ["sharp"],
   },
 });

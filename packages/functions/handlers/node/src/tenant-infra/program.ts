@@ -1,7 +1,8 @@
 import { Account } from "./components/account";
 import { Api } from "./components/api";
 import { Config } from "./components/config";
-import { PapercutSecureBridge } from "./components/papercut-secure-bridge";
+import { Cron } from "./components/cron";
+import { Functions } from "./components/functions";
 import { Router } from "./components/router";
 import { Ssl } from "./components/ssl";
 import { Storage } from "./components/storage";
@@ -13,7 +14,7 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
 
   const ssl = Ssl.getInstance({ tenantId }, { providers: [account.provider] });
 
-  const papercutSecureBridge = PapercutSecureBridge.getInstance(
+  const functions = Functions.getInstance(
     { accountId: account.id },
     { providers: [account.provider] },
   );
@@ -22,7 +23,7 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
     {
       domainName: ssl.domainName,
       certificateArn: ssl.certificateArn,
-      papercutSecureBridgeFunctionArn: papercutSecureBridge.functionArn,
+      papercutSecureBridgeFunctionArn: functions.papercutSecureBridgeArn,
     },
     { providers: [account.provider] },
   );
@@ -35,8 +36,8 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
       certificateArn: ssl.certificateArn,
       routes: {
         api: { url: api.invokeUrl },
-        assets: { url: storage.assets.url },
-        documents: { url: storage.documents.url },
+        assets: { url: storage.buckets.assets.url },
+        documents: { url: storage.buckets.documents.url },
       },
     },
     { providers: [account.provider] },
@@ -46,6 +47,14 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
     {
       cloudfrontKeyPairId: router.keyPairId,
       cloudfrontPrivateKey: router.privateKey,
+    },
+    { providers: [account.provider] },
+  );
+
+  Cron.getInstance(
+    {
+      tailscaleAuthKeyRotationFunctionArn:
+        functions.tailscaleAuthKeyRotationArn,
     },
     { providers: [account.provider] },
   );

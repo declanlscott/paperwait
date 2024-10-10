@@ -53,7 +53,6 @@ export class Api extends pulumi.ComponentResource {
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
-              effect: "Allow",
               principals: [
                 {
                   type: "AWS",

@@ -3,11 +3,12 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { resource } from "../resource";
 
+type Buckets = Record<"assets" | "documents", Bucket>;
+
 export class Storage extends pulumi.ComponentResource {
   private static instance: Storage;
 
-  private assetsBucket: Bucket;
-  private documentsBucket: Bucket;
+  private _buckets: Buckets = {} as Buckets;
 
   public static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
     if (!this.instance) this.instance = new Storage(opts);
@@ -18,17 +19,13 @@ export class Storage extends pulumi.ComponentResource {
   private constructor(...[opts]: Parameters<typeof Storage.getInstance>) {
     super(`${resource.AppData.name}:tenant:aws:Storage`, "Storage", {}, opts);
 
-    this.assetsBucket = new Bucket("Assets", { parent: this });
+    this._buckets.assets = new Bucket("Assets", { parent: this });
 
-    this.documentsBucket = new Bucket("Documents", { parent: this });
+    this._buckets.documents = new Bucket("Documents", { parent: this });
   }
 
-  public get documents() {
-    return this.documentsBucket;
-  }
-
-  public get assets() {
-    return this.assetsBucket;
+  public get buckets() {
+    return this._buckets;
   }
 }
 
