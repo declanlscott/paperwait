@@ -1,7 +1,7 @@
 import { Account } from "./components/account";
 import { Api } from "./components/api";
+import { Config } from "./components/config";
 import { PapercutSecureBridge } from "./components/papercut-secure-bridge";
-import { ParameterStore } from "./components/parameter-store";
 import { Router } from "./components/router";
 import { Ssl } from "./components/ssl";
 import { Storage } from "./components/storage";
@@ -42,9 +42,8 @@ export const getProgram = (tenantId: Tenant["id"]) => async () => {
     { providers: [account.provider] },
   );
 
-  ParameterStore.getInstance(
+  Config.getInstance(
     {
-      accountId: account.id,
       cloudfrontKeyPairId: router.keyPairId,
       cloudfrontPrivateKey: router.privateKey,
     },

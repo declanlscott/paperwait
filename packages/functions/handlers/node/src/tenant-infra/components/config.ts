@@ -5,43 +5,28 @@ import { resource } from "../resource";
 
 import type * as tls from "@pulumi/tls";
 
-export interface ParameterStoreArgs {
-  accountId: aws.organizations.Account["id"];
+export interface ConfigArgs {
   cloudfrontKeyPairId: aws.cloudfront.PublicKey["id"];
   cloudfrontPrivateKey: tls.PrivateKey["privateKeyPem"];
 }
 
-export class ParameterStore extends pulumi.ComponentResource {
-  private static instance: ParameterStore;
+export class Config extends pulumi.ComponentResource {
+  private static instance: Config;
 
-  private accountId: aws.ssm.Parameter;
   private cloudfrontKeyPairId: aws.ssm.Parameter;
   private cloudfrontPrivateKey: aws.ssm.Parameter;
 
   public static getInstance(
-    args: ParameterStoreArgs,
+    args: ConfigArgs,
     opts: pulumi.ComponentResourceOptions,
-  ): ParameterStore {
-    if (!this.instance) this.instance = new ParameterStore(args, opts);
+  ): Config {
+    if (!this.instance) this.instance = new Config(args, opts);
 
     return this.instance;
   }
 
-  private constructor(
-    ...[args, opts]: Parameters<typeof ParameterStore.getInstance>
-  ) {
-    super(
-      `${resource.AppData.name}:tenant:aws:ParameterStore`,
-      "ParameterStore",
-      args,
-      opts,
-    );
-
-    this.accountId = new aws.ssm.Parameter("AccountId", {
-      name: "/account-id",
-      type: "String",
-      value: args.accountId,
-    });
+  private constructor(...[args, opts]: Parameters<typeof Config.getInstance>) {
+    super(`${resource.AppData.name}:tenant:aws:Config`, "Config", args, opts);
 
     this.cloudfrontKeyPairId = new aws.ssm.Parameter(
       "CloudfrontKeyPairId",
@@ -60,7 +45,6 @@ export class ParameterStore extends pulumi.ComponentResource {
     });
 
     this.registerOutputs({
-      accountId: this.accountId.id,
       cloudfrontKeyPairId: this.cloudfrontKeyPairId.id,
       cloudfrontPrivateKey: this.cloudfrontPrivateKey.id,
     });
