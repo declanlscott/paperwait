@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
-    "partykit": "^0.0.108"
+    "partykit": "^0.0.111"
   }
 }
