@@ -3,39 +3,24 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { resource } from "../resource";
 
-export interface StorageArgs {
-  tenantId: string;
-}
-
 export class Storage extends pulumi.ComponentResource {
   private static instance: Storage;
 
   private assetsBucket: Bucket;
   private documentsBucket: Bucket;
 
-  public static getInstance(
-    args: StorageArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ): Storage {
-    if (!this.instance) this.instance = new Storage(args, opts);
+  public static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
+    if (!this.instance) this.instance = new Storage(opts);
 
     return this.instance;
   }
 
-  private constructor(...[args, opts]: Parameters<typeof Storage.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Storage`, "Storage", args, opts);
+  private constructor(...[opts]: Parameters<typeof Storage.getInstance>) {
+    super(`${resource.AppData.name}:tenant:aws:Storage`, "Storage", {}, opts);
 
-    this.assetsBucket = new Bucket(
-      "Assets",
-      { tenantId: args.tenantId },
-      { parent: this },
-    );
+    this.assetsBucket = new Bucket("Assets", { parent: this });
 
-    this.documentsBucket = new Bucket(
-      "Documents",
-      { tenantId: args.tenantId },
-      { parent: this },
-    );
+    this.documentsBucket = new Bucket("Documents", { parent: this });
   }
 
   public get documents() {
@@ -47,20 +32,12 @@ export class Storage extends pulumi.ComponentResource {
   }
 }
 
-interface BucketArgs {
-  tenantId: string;
-}
-
 class Bucket extends pulumi.ComponentResource {
   private bucket: aws.s3.BucketV2;
   private publicAccessBlock: aws.s3.BucketPublicAccessBlock;
   private policy: aws.s3.BucketPolicy;
 
-  public constructor(
-    name: string,
-    _args: BucketArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ) {
+  public constructor(name: string, opts: pulumi.ComponentResourceOptions) {
     super(`${resource.AppData.name}:tenant:aws:Bucket`, name, {}, opts);
 
     this.bucket = new aws.s3.BucketV2(

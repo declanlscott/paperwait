@@ -3,6 +3,7 @@ import { valibot as v } from "@paperwait/core/utils/libs";
 import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
 import * as pulumi from "@pulumi/pulumi";
+import { version as tlsPluginVersion } from "@pulumi/tls/package.json";
 
 import { getProgram } from "./program";
 import { resource } from "./resource";
@@ -22,8 +23,11 @@ export const handler: SQSHandler = async (event) => {
     },
   });
 
-  await workspace.installPlugin("aws", `v${awsPluginVersion}`);
-  await workspace.installPlugin("cloudflare", `v${cloudflarePluginVersion}`);
+  await Promise.all([
+    workspace.installPlugin("aws", `v${awsPluginVersion}`),
+    workspace.installPlugin("cloudflare", `v${cloudflarePluginVersion}`),
+    workspace.installPlugin("tls", `v${tlsPluginVersion}`),
+  ]);
 
   const batchItemFailures: Array<SQSBatchItemFailure> = [];
   for (const record of event.Records) {

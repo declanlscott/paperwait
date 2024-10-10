@@ -6,7 +6,7 @@ import { resource } from "../resource";
 import type { Tenant } from "@paperwait/core/tenants/sql";
 
 export interface AccountArgs {
-  tenantId: Tenant["id"];
+  tenantId: pulumi.Input<Tenant["id"]>;
 }
 
 export class Account extends pulumi.ComponentResource {
@@ -27,7 +27,7 @@ export class Account extends pulumi.ComponentResource {
   private constructor(...[args, opts]: Parameters<typeof Account.getInstance>) {
     super(`${resource.AppData.name}:tenant:aws:Account`, "Account", args, opts);
 
-    const accountName = `${resource.AppData.name}-${resource.AppData.stage}-tenant-${args.tenantId}`;
+    const accountName = pulumi.interpolate`${resource.AppData.name}-${resource.AppData.stage}-tenant-${args.tenantId}`;
 
     const emailSegments = resource.Cloud.aws.orgRootEmail.split("@");
 
@@ -35,7 +35,7 @@ export class Account extends pulumi.ComponentResource {
       "Account",
       {
         name: accountName,
-        email: `${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
+        email: pulumi.interpolate`${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
         parentId: resource.Cloud.aws.tenantsOrganizationalUnitId,
         roleName: resource.Cloud.aws.tenantAccountRoleName,
         iamUserAccessToBilling: "ALLOW",

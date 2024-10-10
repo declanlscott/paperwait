@@ -90,9 +90,9 @@ export const web = new sst.aws.Astro("Web", {
 export const webOutputs = new sst.Linkable("WebOutputs", {
   properties: {
     server: {
-      roleArn:
-        web.nodes.server?.nodes.role.arn ??
-        $interpolate`arn:aws:iam::${cloud.properties.aws.identity.accountId}:role/*`,
+      role: {
+        principal: web.nodes.server?.nodes.role.arn ?? "*",
+      },
     },
   },
 });

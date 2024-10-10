@@ -4,7 +4,8 @@ import * as pulumi from "@pulumi/pulumi";
 import { resource } from "../resource";
 
 export interface ApiArgs {
-  tenantId: string;
+  domainName: aws.acm.Certificate["domainName"];
+  certificateArn: aws.acm.Certificate["arn"];
   papercutSecureBridgeFunctionArn: aws.lambda.Function["arn"];
 }
 
@@ -13,6 +14,7 @@ export class Api extends pulumi.ComponentResource {
 
   private restApi: aws.apigateway.RestApi;
   private restApiPolicy: aws.apigateway.RestApiPolicy;
+  private domainName: aws.apigateway.DomainName;
 
   private papercutResource: aws.apigateway.Resource;
   private secureBridgeResource: aws.apigateway.Resource;
@@ -55,14 +57,36 @@ export class Api extends pulumi.ComponentResource {
               principals: [
                 {
                   type: "AWS",
-                  identifiers: [resource.WebOutputs.server.roleArn],
+                  identifiers: [resource.WebOutputs.server.role.principal],
                 },
               ],
               actions: ["execute-api:Invoke"],
-              resources: [this.restApi.executionArn],
+              resources: [pulumi.interpolate`${this.restApi.executionArn}/*`],
+              conditions:
+                resource.WebOutputs.server.role.principal === "*"
+                  ? [
+                      {
+                        test: "StringLike",
+                        variable: "aws:PrincipalArn",
+                        values: [
+                          `arn:aws:iam::${resource.Cloud.aws.identity.accountId}:role/*`,
+                        ],
+                      },
+                    ]
+                  : [],
             },
           ],
         }).json,
+      },
+      { parent: this },
+    );
+
+    this.domainName = new aws.apigateway.DomainName(
+      "DomainName",
+      {
+        domainName: args.domainName,
+        endpointConfiguration: this.restApi.endpointConfiguration,
+        regionalCertificateArn: args.certificateArn,
       },
       { parent: this },
     );
@@ -258,6 +282,7 @@ export class Api extends pulumi.ComponentResource {
     this.registerOutputs({
       api: this.restApi.id,
       policy: this.restApiPolicy.id,
+      domainName: this.domainName.id,
       papercutResource: this.papercutResource.id,
       secureBridgeResource: this.secureBridgeResource.id,
       logGroup: this.logGroup.id,

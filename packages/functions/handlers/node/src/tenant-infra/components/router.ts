@@ -1,11 +1,16 @@
 import * as aws from "@pulumi/aws";
 import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
+import * as tls from "@pulumi/tls";
 
 import { resource } from "../resource";
 
+const allViewerExceptHostHeaderPolicyName = "Managed-AllViewerExceptHostHeader";
+const cachingOptimizedPolicyName = "Managed-CachingOptimized";
+
 export interface RouterArgs {
-  tenantId: string;
+  domainName: aws.acm.Certificate["domainName"];
+  certificateArn: aws.acm.Certificate["arn"];
   routes: Record<"api" | "assets" | "documents", { url: pulumi.Input<string> }>;
 }
 
@@ -13,9 +18,12 @@ export class Router extends pulumi.ComponentResource {
   private static instance: Router;
 
   private cachePolicy: aws.cloudfront.CachePolicy;
-  private certificate: aws.acm.Certificate;
+  private _privateKey: tls.PrivateKey;
+  private publicKey: aws.cloudfront.PublicKey;
+  private keyGroup: aws.cloudfront.KeyGroup;
   private s3AccessControl: aws.cloudfront.OriginAccessControl;
   private distribution: aws.cloudfront.Distribution;
+  private cname: cloudflare.Record;
 
   public static getInstance(
     args: RouterArgs,
@@ -52,40 +60,26 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    const usEast1Provider = new aws.Provider(
-      "UsEast1Provider",
-      { region: "us-east-1" },
+    this._privateKey = new tls.PrivateKey(
+      "PrivateKey",
+      { algorithm: "RSA" },
       { parent: this },
     );
 
-    this.certificate = new aws.acm.Certificate(
-      "Certificate",
+    this.publicKey = new aws.cloudfront.PublicKey(
+      "PublicKey",
       {
-        domainName: `${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
-        validationMethod: "DNS",
+        encodedKey: this._privateKey.publicKeyPem,
       },
-      {
-        provider: usEast1Provider,
-        parent: this,
-      },
+      { parent: this },
     );
 
-    this.certificate.domainValidationOptions.apply((options) =>
-      options.forEach(
-        (option, index) =>
-          new cloudflare.Record(
-            `CertificateValidationRecord${index}`,
-            {
-              zoneId: cloudflare.getZoneOutput({
-                name: resource.AppData.domainName.value,
-              }).id,
-              type: option.resourceRecordType,
-              name: option.resourceRecordName,
-              content: option.resourceRecordValue,
-            },
-            { parent: this },
-          ),
-      ),
+    this.keyGroup = new aws.cloudfront.KeyGroup(
+      "KeyGroup",
+      {
+        items: [this.publicKey.id],
+      },
+      { parent: this },
     );
 
     const customOriginConfig = {
@@ -94,7 +88,7 @@ export class Router extends pulumi.ComponentResource {
       originProtocolPolicy: "https-only",
       originReadTimeout: 30,
       originSslProtocols: ["TLSv1.2"],
-    } satisfies aws.types.input.cloudfront.DistributionOriginCustomOriginConfig;
+    } satisfies CustomOriginConfig;
 
     this.s3AccessControl = new aws.cloudfront.OriginAccessControl(
       "S3AccessControl",
@@ -123,18 +117,19 @@ export class Router extends pulumi.ComponentResource {
       cachePolicyId: this.cachePolicy.id,
       originRequestPolicyId: aws.cloudfront
         .getOriginRequestPolicy(
-          { name: "Managed-AllViewerExceptHostHeader" },
+          { name: allViewerExceptHostHeaderPolicyName },
           { parent: this },
         )
         .then((policy) => {
           if (!policy.id)
             throw new Error(
-              "Managed-AllViewerExceptHostHeader origin request policy not found",
+              `${allViewerExceptHostHeaderPolicyName} origin request policy not found`,
             );
 
           return policy.id;
         }),
-    };
+      trustedKeyGroups: [this.keyGroup.id],
+    } satisfies BehaviorConfig;
 
     const bucketCacheBehaviorConfig = {
       viewerProtocolPolicy: "redirect-to-https",
@@ -143,21 +138,25 @@ export class Router extends pulumi.ComponentResource {
       compress: true,
       cachePolicyId: aws.cloudfront
         .getOriginRequestPolicy(
-          { name: "Managed-CachingOptimized" },
+          { name: cachingOptimizedPolicyName },
           { parent: this },
         )
         .then((policy) => {
           if (!policy.id)
-            throw new Error("Managed-CachingOptimized cache policy not found");
+            throw new Error(
+              `${cachingOptimizedPolicyName} cache policy not found`,
+            );
 
           return policy.id;
         }),
-    };
+      trustedKeyGroups: [this.keyGroup.id],
+    } satisfies BehaviorConfig;
 
     this.distribution = new aws.cloudfront.Distribution(
       "Distribution",
       {
         enabled: true,
+        aliases: [args.domainName],
         origins: [
           {
             originId: "/api/*",
@@ -208,7 +207,7 @@ export class Router extends pulumi.ComponentResource {
           },
         },
         viewerCertificate: {
-          acmCertificateArn: this.certificate.arn,
+          acmCertificateArn: args.certificateArn,
           sslSupportMethod: "sni-only",
           minimumProtocolVersion: "TLSv1.2_2021",
         },
@@ -217,15 +216,45 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    this.cname = new cloudflare.Record(
+      "Cname",
+      {
+        zoneId: cloudflare.getZoneOutput({
+          name: resource.AppData.domainName.value,
+        }).id,
+        name: args.domainName,
+        type: "CNAME",
+        value: this.distribution.domainName,
+        proxied: true,
+      },
+      { parent: this },
+    );
+
     this.registerOutputs({
       cachePolicy: this.cachePolicy.id,
-      certificate: this.certificate.id,
+      privateKey: this._privateKey.id,
+      publicKey: this.publicKey.id,
+      keyGroup: this.keyGroup.id,
       s3AccessControl: this.s3AccessControl.id,
       distribution: this.distribution.id,
+      cname: this.cname.id,
     });
   }
 
-  public get url() {
-    return pulumi.interpolate`https://${this.certificate.domainName}`;
+  public get keyPairId() {
+    return this.publicKey.id;
+  }
+
+  public get privateKey() {
+    return this._privateKey.privateKeyPem;
   }
 }
+
+type CustomOriginConfig =
+  aws.types.input.cloudfront.DistributionOriginCustomOriginConfig;
+
+type BehaviorConfig = Omit<
+  | aws.types.input.cloudfront.DistributionDefaultCacheBehavior
+  | aws.types.input.cloudfront.DistributionOrderedCacheBehavior,
+  "targetOriginId" | "pathPattern"
+>;

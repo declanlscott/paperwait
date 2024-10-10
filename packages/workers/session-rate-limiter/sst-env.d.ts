@@ -134,7 +134,9 @@ declare module "sst" {
     }
     "WebOutputs": {
       "server": {
-        "roleArn": string
+        "role": {
+          "principal": string
+        }
       }
       "type": "sst.sst.Linkable"
     }
