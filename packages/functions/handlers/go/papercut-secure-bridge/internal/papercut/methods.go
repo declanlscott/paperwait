@@ -6,6 +6,7 @@ const (
 	GetSharedAccountProperties        = "getSharedAccountProperties"
 	IsUserExists                      = "isUserExists"
 	ListSharedAccounts                = "listSharedAccounts"
+	ListUserAccounts                  = "listUserAccounts"
 	ListUserSharedAccounts            = "listUserSharedAccounts"
 )
 
@@ -59,6 +60,21 @@ type ListSharedAccountsArgs struct {
 }
 type ListSharedAccountsReply struct {
 	SharedAccounts []any `json:"sharedAccounts"`
+}
+
+type ListUserAccountsRequestBody struct {
+	Username string `json:"username"`
+	Offset   int    `json:"offset"`
+	Limit    int    `json:"limit"`
+}
+type ListUserAccountsArgs struct {
+	AuthToken string
+	Username  string
+	Offset    int
+	Limit     int
+}
+type ListUserAccountsReply struct {
+	UserAccounts []any `json:"userAccounts"`
 }
 
 type ListUserSharedAccountsRequestBody struct {

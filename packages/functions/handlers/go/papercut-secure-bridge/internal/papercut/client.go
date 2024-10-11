@@ -2,6 +2,7 @@ package papercut
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"alexejk.io/go-xmlrpc"
@@ -22,11 +23,11 @@ func Client(httpClient *http.Client, endpoint string) (*xmlrpc.Client, error) {
 
 func Call(
 	client *xmlrpc.Client,
-	serviceMethod string,
+	methodName string,
 	args any,
 	reply any,
 ) ([]byte, error) {
-	if err := client.Call(serviceMethod, args, reply); err != nil {
+	if err := client.Call(fmt.Sprintf("%s%s", MethodPrefix, methodName), args, reply); err != nil {
 		return nil, err
 	}
 

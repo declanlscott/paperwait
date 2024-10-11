@@ -128,6 +128,33 @@ func TestBridge(t *testing.T) {
 			},
 		},
 		{
+			"listUserAccounts",
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/listUserAccounts",
+				Body: `{"offset":0,"limit":1000}`,
+			},
+			`<?xml version="1.0"?>
+			<methodResponse>
+				<params>
+					<param>
+						<value>
+							<array>
+								<data>
+									<value>user-1@example.com</value>
+									<value>user-2@example.com</value>
+									<value>user-3@example.com</value>
+								</data>
+							</array>
+						</value>
+					</param>
+				</params>
+			</methodResponse>`,
+			events.APIGatewayProxyResponse{
+				StatusCode: http.StatusOK,
+				Body:       `{"userAccounts":["user-1@example.com","user-2@example.com","user-3@example.com"]}`,
+			},
+		},
+		{
 			"listUserSharedAccounts",
 			events.APIGatewayProxyRequest{
 				Path: "/papercut/secure-bridge/listUserSharedAccounts",

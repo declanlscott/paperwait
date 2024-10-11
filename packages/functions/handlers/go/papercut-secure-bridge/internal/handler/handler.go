@@ -88,7 +88,7 @@ func Bridge(
 
 		var data []byte
 		var err error
-		switch method := strings.Split(req.Path, "/papercut/secure-bridge/")[1]; method {
+		switch methodName := strings.Split(req.Path, "/papercut/secure-bridge/")[1]; methodName {
 		case papercut.AdjustSharedAccountAccountBalance:
 			var reqBody papercut.AdjustSharedAccountAccountBalanceRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
@@ -97,7 +97,7 @@ func Bridge(
 
 			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				methodName,
 				&papercut.AdjustSharedAccountAccountBalanceArgs{
 					AuthToken:         credentials.AuthToken,
 					SharedAccountName: reqBody.SharedAccountName,
@@ -114,7 +114,7 @@ func Bridge(
 
 			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				methodName,
 				&papercut.GetSharedAccountPropertiesArgs{
 					AuthToken:         credentials.AuthToken,
 					SharedAccountName: reqBody.SharedAccountName,
@@ -130,7 +130,7 @@ func Bridge(
 
 			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				methodName,
 				&papercut.IsUserExistsArgs{
 					AuthToken: credentials.AuthToken,
 					Username:  reqBody.Username,
@@ -145,13 +145,30 @@ func Bridge(
 
 			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				methodName,
 				&papercut.ListSharedAccountsArgs{
 					AuthToken: credentials.AuthToken,
 					Offset:    reqBody.Offset,
 					Limit:     reqBody.Limit,
 				},
 				&papercut.ListSharedAccountsReply{},
+			)
+		case papercut.ListUserAccounts:
+			var reqBody papercut.ListUserAccountsRequestBody
+			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
+				return InternalServerErrorResponse(err)
+			}
+
+			data, err = papercut.Call(
+				client,
+				methodName,
+				&papercut.ListUserAccountsArgs{
+					AuthToken: credentials.AuthToken,
+					Username:  reqBody.Username,
+					Offset:    reqBody.Offset,
+					Limit:     reqBody.Limit,
+				},
+				&papercut.ListUserAccountsReply{},
 			)
 		case papercut.ListUserSharedAccounts:
 			var reqBody papercut.ListUserSharedAccountsRequestBody
@@ -161,7 +178,7 @@ func Bridge(
 
 			data, err = papercut.Call(
 				client,
-				fmt.Sprintf("%s%s", papercut.MethodPrefix, method),
+				methodName,
 				&papercut.ListUserSharedAccountsArgs{
 					AuthToken:                        credentials.AuthToken,
 					Username:                         reqBody.Username,
@@ -173,7 +190,7 @@ func Bridge(
 			)
 		default:
 			return NotImplementedResponse(
-				errors.New(fmt.Sprintf(`"%s" method not implemented`, method)),
+				errors.New(fmt.Sprintf(`"%s" method not implemented`, methodName)),
 			)
 		}
 		if err != nil {
