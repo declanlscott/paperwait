@@ -68,7 +68,7 @@ export const clientSecretRotation = new time.Rotating("ClientSecretRotation", {
 export const entraIdClientSecret = new azuread.ApplicationPassword(
   "EntraIdClientSecret",
   {
-    applicationObjectId: entraIdApplication.id,
+    applicationId: entraIdApplication.id,
     endDateRelative: `${rotationHours.toString()}h`,
     rotateWhenChanged: {
       rotation: clientSecretRotation.id,

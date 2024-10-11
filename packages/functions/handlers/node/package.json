@@ -9,7 +9,7 @@
     "@pulumi/aws": "^6.55.0",
     "@pulumi/cloudflare": "^5.40.1",
     "@pulumi/pulumi": "^3.136.1",
-    "@pulumi/tls": "^5.0.7"
+    "@pulumi/tls": "^5.0.8"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
