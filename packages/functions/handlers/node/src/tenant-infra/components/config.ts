@@ -1,7 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "../resource";
+import { useResource } from "../resource";
 
 import type * as tls from "@pulumi/tls";
 
@@ -26,7 +26,9 @@ export class Config extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Config.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Config`, "Config", args, opts);
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Config`, "Config", args, opts);
 
     this.cloudfrontKeyPairId = new aws.ssm.Parameter(
       "CloudfrontKeyPairId",

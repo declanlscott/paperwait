@@ -1,7 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "../../resource";
+import { useResource } from "../../resource";
 import { handler as tailscaleAuthKeyRotationHandler } from "./handlers/tailscale-auth-key-rotation";
 
 export interface FunctionsArgs {
@@ -26,12 +26,9 @@ export class Functions extends pulumi.ComponentResource {
   private constructor(
     ...[args, opts]: Parameters<typeof Functions.getInstance>
   ) {
-    super(
-      `${resource.AppData.name}:tenant:aws:Functions`,
-      "Functions",
-      args,
-      opts,
-    );
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Functions`, "Functions", args, opts);
 
     this.papercutSecureBridge = PapercutSecureBridge.getInstance(args, {
       parent: this,
@@ -70,8 +67,10 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
   private constructor(
     ...[args, opts]: Parameters<typeof PapercutSecureBridge.getInstance>
   ) {
+    const { AppData, Cloud, Code } = useResource();
+
     super(
-      `${resource.AppData.name}:tenant:aws:PapercutSecureBridge`,
+      `${AppData.name}:tenant:aws:PapercutSecureBridge`,
       "PapercutSecureBridge",
       args,
       opts,
@@ -119,7 +118,7 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
                 "paperwait/papercut/web-services/credentials",
               ].map(
                 (name) =>
-                  pulumi.interpolate`arn:aws:ssm:${resource.Cloud.aws.region}:${args.accountId}:parameter/${name}`,
+                  pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter/${name}`,
               ),
             },
           ],
@@ -131,9 +130,9 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
     this.tailscaleLayer = new aws.lambda.LayerVersion(
       "TailscaleLayer",
       {
-        s3Bucket: resource.Code.bucket.name,
-        s3Key: resource.Code.bucket.object.tailscaleLayer.key,
-        s3ObjectVersion: resource.Code.bucket.object.tailscaleLayer.versionId,
+        s3Bucket: Code.bucket.name,
+        s3Key: Code.bucket.object.tailscaleLayer.key,
+        s3ObjectVersion: Code.bucket.object.tailscaleLayer.versionId,
         layerName: "tailscale",
         compatibleRuntimes: [aws.lambda.Runtime.CustomAL2023],
         compatibleArchitectures: ["arm64"],
@@ -144,10 +143,10 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
     this.function = new aws.lambda.Function(
       "Function",
       {
-        s3Bucket: resource.Code.bucket.name,
-        s3Key: resource.Code.bucket.object.papercutSecureBridgeHandler.key,
+        s3Bucket: Code.bucket.name,
+        s3Key: Code.bucket.object.papercutSecureBridgeHandler.key,
         s3ObjectVersion:
-          resource.Code.bucket.object.papercutSecureBridgeHandler.versionId,
+          Code.bucket.object.papercutSecureBridgeHandler.versionId,
         runtime: aws.lambda.Runtime.CustomAL2023,
         architectures: ["arm64"],
         layers: [this.tailscaleLayer.arn],
@@ -190,8 +189,10 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
   private constructor(
     ...[args, opts]: Parameters<typeof TailscaleAuthKeyRotation.getInstance>
   ) {
+    const { AppData, Cloud } = useResource();
+
     super(
-      `${resource.AppData.name}:tenant:aws:TailscaleAuthKeyRotation`,
+      `${AppData.name}:tenant:aws:TailscaleAuthKeyRotation`,
       "TailscaleAuthKeyRotation",
       args,
       opts,
@@ -235,13 +236,13 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
             {
               actions: ["ssm:GetParameter"],
               resources: [
-                pulumi.interpolate`arn:aws:ssm:${resource.Cloud.aws.region}:${args.accountId}:parameter/paperwait/tailscale/oauth2-client`,
+                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter/paperwait/tailscale/oauth2-client`,
               ],
             },
             {
               actions: ["ssm:PutParameter"],
               resources: [
-                pulumi.interpolate`arn:aws:ssm:${resource.Cloud.aws.region}:${args.accountId}:parameter/paperwait/tailscale/auth-key`,
+                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter/paperwait/tailscale/auth-key`,
               ],
             },
           ],

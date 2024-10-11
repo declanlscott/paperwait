@@ -1,7 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "../resource";
+import { useResource } from "../resource";
 
 export interface CronArgs {
   tailscaleAuthKeyRotationFunctionArn: aws.lambda.Function["arn"];
@@ -22,7 +22,9 @@ export class Cron extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Cron.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Cron`, "Cron", args, opts);
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Cron`, "Cron", args, opts);
 
     this.jobs.push(
       new CronJob(
@@ -52,7 +54,9 @@ class CronJob extends pulumi.ComponentResource {
     args: CronJobArgs,
     opts: pulumi.ComponentResourceOptions,
   ) {
-    super(`${resource.AppData.name}:tenant:aws:CronJob`, name, args, opts);
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:CronJob`, name, args, opts);
 
     this.rule = new aws.cloudwatch.EventRule(
       `${name}Rule`,

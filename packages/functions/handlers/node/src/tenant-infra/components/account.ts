@@ -1,7 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "../resource";
+import { useResource } from "../resource";
 
 import type { Tenant } from "@paperwait/core/tenants/sql";
 
@@ -25,19 +25,21 @@ export class Account extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Account.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Account`, "Account", args, opts);
+    const { AppData, Cloud } = useResource();
 
-    const accountName = pulumi.interpolate`${resource.AppData.name}-${resource.AppData.stage}-tenant-${args.tenantId}`;
+    super(`${AppData.name}:tenant:aws:Account`, "Account", args, opts);
 
-    const emailSegments = resource.Cloud.aws.orgRootEmail.split("@");
+    const accountName = pulumi.interpolate`${AppData.name}-${AppData.stage}-tenant-${args.tenantId}`;
+
+    const emailSegments = Cloud.aws.orgRootEmail.split("@");
 
     this.account = new aws.organizations.Account(
       "Account",
       {
         name: accountName,
         email: pulumi.interpolate`${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
-        parentId: resource.Cloud.aws.tenantsOrganizationalUnitId,
-        roleName: resource.Cloud.aws.tenantAccountRoleName,
+        parentId: Cloud.aws.tenantsOrganizationalUnitId,
+        roleName: Cloud.aws.tenantAccountRoleName,
         iamUserAccessToBilling: "ALLOW",
       },
       { parent: this },
@@ -46,7 +48,7 @@ export class Account extends pulumi.ComponentResource {
     this._provider = new aws.Provider(
       "Provider",
       {
-        region: resource.Cloud.aws.region as aws.Region,
+        region: Cloud.aws.region as aws.Region,
         assumeRole: {
           roleArn: pulumi.interpolate`arn:aws:iam::${this.account.id}:role/${this.account.roleName}`,
         },

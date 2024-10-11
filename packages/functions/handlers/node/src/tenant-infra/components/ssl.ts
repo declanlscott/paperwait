@@ -2,7 +2,7 @@ import * as aws from "@pulumi/aws";
 import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "../resource";
+import { useResource } from "../resource";
 
 import type { Tenant } from "@paperwait/core/tenants/sql";
 
@@ -26,7 +26,9 @@ export class Ssl extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Ssl.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Ssl`, "Ssl", args, opts);
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Ssl`, "Ssl", args, opts);
 
     const usEast1Provider = new aws.Provider(
       "UsEast1Provider",
@@ -37,7 +39,7 @@ export class Ssl extends pulumi.ComponentResource {
     this.certificate = new aws.acm.Certificate(
       "Certificate",
       {
-        domainName: pulumi.interpolate`${args.tenantId}.${resource.AppData.domainName.fullyQualified}`,
+        domainName: pulumi.interpolate`${args.tenantId}.${AppData.domainName.fullyQualified}`,
         validationMethod: "DNS",
       },
       { provider: usEast1Provider, parent: this },
@@ -50,7 +52,7 @@ export class Ssl extends pulumi.ComponentResource {
             `CertificateValidationRecord${index}`,
             {
               zoneId: cloudflare.getZoneOutput({
-                name: resource.AppData.domainName.value,
+                name: AppData.domainName.value,
               }).id,
               type: option.resourceRecordType,
               name: option.resourceRecordName,

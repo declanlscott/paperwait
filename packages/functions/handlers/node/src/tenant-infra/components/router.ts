@@ -3,7 +3,7 @@ import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 import * as tls from "@pulumi/tls";
 
-import { resource } from "../resource";
+import { useResource } from "../resource";
 
 const allViewerExceptHostHeaderPolicyName = "Managed-AllViewerExceptHostHeader";
 const cachingOptimizedPolicyName = "Managed-CachingOptimized";
@@ -35,7 +35,9 @@ export class Router extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Router.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Router`, "Router", args, opts);
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Router`, "Router", args, opts);
 
     this.cachePolicy = new aws.cloudfront.CachePolicy(
       "CachePolicy",
@@ -162,7 +164,7 @@ export class Router extends pulumi.ComponentResource {
             originId: "/api/*",
             domainName: new URL(args.routes.api.url).hostname,
             customOriginConfig,
-            originPath: `/${resource.AppData.stage}`,
+            originPath: `/${AppData.stage}`,
           },
           {
             originId: "/assets/*",
@@ -176,7 +178,7 @@ export class Router extends pulumi.ComponentResource {
           },
           {
             originId: "/*",
-            domainName: `does-not-exist.${resource.AppData.domainName.value}`,
+            domainName: `does-not-exist.${AppData.domainName.value}`,
             customOriginConfig,
           },
         ],
@@ -220,7 +222,7 @@ export class Router extends pulumi.ComponentResource {
       "Cname",
       {
         zoneId: cloudflare.getZoneOutput({
-          name: resource.AppData.domainName.value,
+          name: AppData.domainName.value,
         }).id,
         name: args.domainName,
         type: "CNAME",

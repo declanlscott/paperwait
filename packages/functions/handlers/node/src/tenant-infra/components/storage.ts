@@ -1,7 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "../resource";
+import { useResource } from "../resource";
 
 type Buckets = Record<"assets" | "documents", Bucket>;
 
@@ -17,7 +17,9 @@ export class Storage extends pulumi.ComponentResource {
   }
 
   private constructor(...[opts]: Parameters<typeof Storage.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Storage`, "Storage", {}, opts);
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Storage`, "Storage", {}, opts);
 
     this._buckets.assets = new Bucket("Assets", { parent: this });
 
@@ -35,7 +37,9 @@ class Bucket extends pulumi.ComponentResource {
   private policy: aws.s3.BucketPolicy;
 
   public constructor(name: string, opts: pulumi.ComponentResourceOptions) {
-    super(`${resource.AppData.name}:tenant:aws:Bucket`, name, {}, opts);
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Bucket`, name, {}, opts);
 
     this.bucket = new aws.s3.BucketV2(
       `${name}Bucket`,

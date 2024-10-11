@@ -1,7 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
-import { resource } from "../resource";
+import { useResource } from "../resource";
 
 export interface ApiArgs {
   domainName: aws.acm.Certificate["domainName"];
@@ -34,7 +34,9 @@ export class Api extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Api.getInstance>) {
-    super(`${resource.AppData.name}:tenant:aws:Api`, "Api", args, opts);
+    const { AppData, Cloud, WebOutputs } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Api`, "Api", args, opts);
 
     this.restApi = new aws.apigateway.RestApi(
       "Api",
@@ -56,19 +58,19 @@ export class Api extends pulumi.ComponentResource {
               principals: [
                 {
                   type: "AWS",
-                  identifiers: [resource.WebOutputs.server.role.principal],
+                  identifiers: [WebOutputs.server.role.principal],
                 },
               ],
               actions: ["execute-api:Invoke"],
               resources: [pulumi.interpolate`${this.restApi.executionArn}/*`],
               conditions:
-                resource.WebOutputs.server.role.principal === "*"
+                WebOutputs.server.role.principal === "*"
                   ? [
                       {
                         test: "StringLike",
                         variable: "aws:PrincipalArn",
                         values: [
-                          `arn:aws:iam::${resource.Cloud.aws.identity.accountId}:role/*`,
+                          `arn:aws:iam::${Cloud.aws.identity.accountId}:role/*`,
                         ],
                       },
                     ]
@@ -249,7 +251,7 @@ export class Api extends pulumi.ComponentResource {
       "Stage",
       {
         restApi: this.restApi.id,
-        stageName: resource.AppData.stage,
+        stageName: AppData.stage,
         deployment: this.deployment.id,
         accessLogSettings: {
           destinationArn: this.logGroup.arn,
@@ -315,8 +317,10 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
     args: PapercutSecureBridgeRouteArgs,
     opts: pulumi.ComponentResourceOptions,
   ) {
+    const { AppData } = useResource();
+
     super(
-      `${resource.AppData.name}:tenant:aws:PapercutSecureBridgeRoute`,
+      `${AppData.name}:tenant:aws:PapercutSecureBridgeRoute`,
       name,
       args,
       opts,
