@@ -25,7 +25,7 @@ type TransactionContext<
   tx: Transaction;
   effects: Array<TEffect>;
 };
-const TransactionContext = createContext<TransactionContext>();
+const TransactionContext = createContext<TransactionContext>("Transaction");
 
 export async function useTransaction<
   TCallback extends (tx: TxOrDb) => ReturnType<TCallback>,

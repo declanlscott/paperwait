@@ -4,7 +4,7 @@ import { createContext } from "../utils/context";
 import type { Authenticated, Unauthenticated } from ".";
 
 export type AuthContext = Authenticated | Unauthenticated;
-export const AuthContext = createContext<AuthContext>();
+export const AuthContext = createContext<AuthContext>("Auth");
 
 export function useAuth(): AuthContext {
   try {

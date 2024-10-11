@@ -7,7 +7,7 @@ export type Oauth2Context = {
   provider: Pick<Oauth2Provider, "variant" | "id"> &
     Pick<SessionTokens, "accessToken">;
 };
-export const Oauth2Context = createContext<Oauth2Context>();
+export const Oauth2Context = createContext<Oauth2Context>("Oauth2");
 
 export const useOauth2 = Oauth2Context.use;
 

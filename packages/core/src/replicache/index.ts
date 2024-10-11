@@ -398,7 +398,7 @@ export const push = fn(
     if (pushRequest.pushVersion !== 1)
       return { error: "VersionNotSupported", versionType: "push" };
 
-    const context = createContext<{ errorMode: boolean }>();
+    const context = createContext<{ errorMode: boolean }>("Push");
 
     for (const mutation of pushRequest.mutations) {
       try {
