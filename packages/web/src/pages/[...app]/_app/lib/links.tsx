@@ -1,3 +1,4 @@
+import { linkOptions } from "@tanstack/react-router";
 import {
   Blocks,
   DollarSign,
@@ -16,56 +17,61 @@ import type { AppLink, AppLinksFactory } from "~/app/types";
 
 const dashboardLink = {
   name: "Dashboard",
-  props: { href: { to: "/dashboard" } },
+  props: { href: linkOptions({ to: "/dashboard" }) },
   icon: <LayoutDashboard />,
 } satisfies AppLink;
 
 const productsLinks = {
   name: "Products",
-  props: { href: { to: "/products" } },
+  props: { href: linkOptions({ to: "/products" }) },
   icon: <Package />,
 } satisfies AppLink;
 
 const usersLink = {
   name: "Users",
-  props: { href: { to: "/users" } },
+  props: { href: linkOptions({ to: "/users" }) },
   icon: <Users />,
 } satisfies AppLink;
 
 const settingsLink = {
   name: "Settings",
-  props: { href: { to: "/settings" } },
+  props: { href: linkOptions({ to: "/settings" }) },
   icon: <Settings />,
 } satisfies AppLink;
 
 const settingsGeneralLink = {
   name: "General",
-  props: { href: { to: "/settings" } },
+  props: { href: linkOptions({ to: "/settings" }) },
   icon: <Settings />,
 } satisfies AppLink;
 
 const settingsIntegrationsLink = {
   name: "Integrations",
-  props: { href: { to: "/settings/integrations" } },
+  props: { href: linkOptions({ to: "/settings/integrations" }) },
   icon: <Blocks />,
 } satisfies AppLink;
 
 const roomsSettingsLink = {
   name: "Rooms",
-  props: { href: { to: "/settings/rooms" } },
+  props: { href: linkOptions({ to: "/settings/rooms" }) },
   icon: <Home />,
 } satisfies AppLink;
 
 const roomSettingsGeneralLink = ((roomId: Room["id"]) => ({
   name: "General",
-  props: { href: { to: "/settings/rooms/$roomId", params: { roomId } } },
+  props: {
+    href: linkOptions({ to: "/settings/rooms/$roomId", params: { roomId } }),
+  },
   icon: <Settings />,
 })) satisfies AppLink;
 
 const roomSettingsConfigurationLink = ((roomId: Room["id"]) => ({
   name: "Configuration",
   props: {
-    href: { to: "/settings/rooms/$roomId/configuration", params: { roomId } },
+    href: linkOptions({
+      to: "/settings/rooms/$roomId/configuration",
+      params: { roomId },
+    }),
   },
   icon: <Wrench />,
 })) satisfies AppLink;
@@ -73,7 +79,10 @@ const roomSettingsConfigurationLink = ((roomId: Room["id"]) => ({
 const roomSettingsProductsLink = ((roomId: Room["id"]) => ({
   name: "Products",
   props: {
-    href: { to: "/settings/rooms/$roomId/products", params: { roomId } },
+    href: linkOptions({
+      to: "/settings/rooms/$roomId/products",
+      params: { roomId },
+    }),
   },
   icon: <Package />,
 })) satisfies AppLink;
@@ -81,7 +90,10 @@ const roomSettingsProductsLink = ((roomId: Room["id"]) => ({
 const roomSettingsCostScriptsLink = ((roomId: Room["id"]) => ({
   name: "Cost Scripts",
   props: {
-    href: { to: "/settings/rooms/$roomId/cost-scripts", params: { roomId } },
+    href: linkOptions({
+      to: "/settings/rooms/$roomId/cost-scripts",
+      params: { roomId },
+    }),
   },
   icon: <DollarSign />,
 })) satisfies AppLink;
@@ -92,17 +104,17 @@ const productSettingsLink = ((
 ) => ({
   name: "",
   props: {
-    href: {
+    href: linkOptions({
       to: "/settings/rooms/$roomId/products/$productId",
       params: { roomId, productId },
-    },
+    }),
   },
   icon: <Settings />,
 })) satisfies AppLink;
 
 const imagesSettingsLink = {
   name: "Images",
-  props: { href: { to: "/settings/images" } },
+  props: { href: linkOptions({ to: "/settings/images" }) },
   icon: <Image />,
 } satisfies AppLink;
 
