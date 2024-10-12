@@ -11,10 +11,10 @@ export type OptimisticMutator<TSchema extends v.GenericSchema> = (
   args: v.InferOutput<TSchema>,
 ) => Promise<void>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OptimisticMutatorWithUser<TSchema extends v.GenericSchema = any> = (
-  user: Authenticated["user"],
-) => OptimisticMutator<TSchema>;
+export type AuthenticatedOptimisticMutator<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TSchema extends v.GenericSchema = any,
+> = (user: Authenticated["user"]) => OptimisticMutator<TSchema>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OptimisticMutatorFactory<TSchema extends v.GenericSchema = any> =

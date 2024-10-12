@@ -6,12 +6,18 @@ import { Button } from "~/app/components/ui/primitives/button";
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/text-field";
 import { useSlot } from "~/app/lib/hooks/slot";
-import { initialLoginSearchParams, LoginSearchParams } from "~/app/lib/schemas";
+import {
+  initialLoginSearchParams,
+  loginSearchParamsSchema,
+} from "~/app/lib/schemas";
 import { buttonStyles } from "~/styles/components/primitives/button";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search) =>
-    v.parse(v.fallback(LoginSearchParams, initialLoginSearchParams), search),
+    v.parse(
+      v.fallback(loginSearchParamsSchema, initialLoginSearchParams),
+      search,
+    ),
   beforeLoad: ({ context }) => {
     if (context.authStore.user) throw redirect({ to: "/dashboard" });
   },
@@ -20,7 +26,7 @@ export const Route = createFileRoute("/login")({
 
 function Component() {
   const search = Route.useSearch();
-  const isValid = v.safeParse(LoginSearchParams, search).success;
+  const isValid = v.safeParse(loginSearchParamsSchema, search).success;
 
   const navigate = Route.useNavigate();
 

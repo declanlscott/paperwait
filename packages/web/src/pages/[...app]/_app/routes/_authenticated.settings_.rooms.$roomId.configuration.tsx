@@ -1,7 +1,9 @@
 import { FileTrigger } from "react-aria-components";
 import {
   deliveryOptionAttributesSchema,
+  deliveryOptionsConfigurationSchema,
   workflowConfigurationSchema,
+  workflowStatusTypes,
 } from "@paperwait/core/rooms/shared";
 import { formatPascalCase } from "@paperwait/core/utils/helpers";
 import { remeda as R, valibot as v } from "@paperwait/core/utils/libs";
@@ -56,6 +58,7 @@ import type {
   DeliveryOptionsConfiguration,
   RoomConfiguration,
   WorkflowConfiguration,
+  WorkflowStatusType,
 } from "@paperwait/core/rooms/shared";
 
 export const Route = createFileRoute(
@@ -691,7 +694,7 @@ function DeliveryOptionsCard() {
                         }
 
                         const result = v.safeParse(
-                          DeliveryOptionsConfiguration,
+                          deliveryOptionsConfigurationSchema,
                           data,
                         );
 

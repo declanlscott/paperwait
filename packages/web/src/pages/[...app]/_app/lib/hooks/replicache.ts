@@ -7,8 +7,8 @@ import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 import type { Authenticated } from "@paperwait/core/auth";
 import type {
+  AuthenticatedOptimisticMutator,
   OptimisticMutatorFactory,
-  OptimisticMutatorWithUser,
   ReadTransaction,
   SubscribeOptions,
   WriteTransaction,
