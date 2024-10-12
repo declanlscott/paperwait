@@ -19,7 +19,7 @@ export const sessionsTable = pgTable(
       columns: [table.userId, table.tenantId],
       foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "user_fk",
-    }),
+    }).onDelete("cascade"),
   }),
 );
 export type SessionsTable = typeof sessionsTable;

@@ -23,7 +23,7 @@ export const productsTable = tenantTable(
       columns: [table.roomId, table.tenantId],
       foreignColumns: [roomsTable.id, roomsTable.tenantId],
       name: "room_fk",
-    }),
+    }).onDelete("cascade"),
     statusIndex: index("status_idx").on(table.status),
     roomIdIndex: index("room_id_idx").on(table.roomId),
   }),

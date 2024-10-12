@@ -45,7 +45,7 @@ export const papercutAccountCustomerAuthorizationsTable = tenantTable(
       columns: [table.customerId, table.tenantId],
       foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "user_fk",
-    }),
+    }).onDelete("cascade"),
     papercutAccountReference: foreignKey({
       columns: [table.papercutAccountId, table.tenantId],
       foreignColumns: [
@@ -53,7 +53,7 @@ export const papercutAccountCustomerAuthorizationsTable = tenantTable(
         papercutAccountsTable.tenantId,
       ],
       name: "papercut_account_fk",
-    }),
+    }).onDelete("cascade"),
     uniquePapercutAccountCustomer: unique(
       "unique_papercut_account_customer",
     ).on(table.papercutAccountId, table.customerId),
@@ -79,7 +79,7 @@ export const papercutAccountManagerAuthorizationsTable = tenantTable(
       columns: [table.managerId, table.tenantId],
       foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "manager_fk",
-    }),
+    }).onDelete("cascade"),
     papercutAccountReference: foreignKey({
       columns: [table.papercutAccountId, table.tenantId],
       foreignColumns: [
@@ -87,7 +87,7 @@ export const papercutAccountManagerAuthorizationsTable = tenantTable(
         papercutAccountsTable.tenantId,
       ],
       name: "papercut_account_fk",
-    }),
+    }).onDelete("cascade"),
     uniquePapercutAccountManager: unique("unique_papercut_account_manager").on(
       table.papercutAccountId,
       table.managerId,
