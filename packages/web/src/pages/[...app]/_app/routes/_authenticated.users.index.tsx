@@ -69,7 +69,7 @@ import { useManager } from "~/app/lib/hooks/manager";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { UserRole } from "@paperwait/core/users/shared";
-import type { User } from "@paperwait/core/users/sql";
+import type { User, UserWithProfile } from "@paperwait/core/users/sql";
 import type {
   ColumnDef,
   SortingState,
@@ -158,7 +158,7 @@ const columns = [
     enableHiding: false,
     cell: ({ row }) => <UserActionsMenu user={row.original} />,
   },
-] satisfies Array<ColumnDef<User>>;
+] satisfies Array<ColumnDef<UserWithProfile>>;
 
 function UsersCard() {
   const { initialUsers } = Route.useLoaderData();
@@ -340,10 +340,10 @@ function UsersCard() {
 }
 
 interface UserRoleCellProps {
-  user: User;
+  user: UserWithProfile;
 }
 function UserRoleCell(props: UserRoleCellProps) {
-  const role = props.user.role;
+  const role = props.user.profile.role;
 
   const { updateUserRole } = useMutator();
 

@@ -36,13 +36,13 @@ function Realtime(props: PropsWithChildren) {
 
   useQuery(queryFactory.user(user.id), {
     onData: (u) => {
-      if (u && u.role !== user.role)
+      if (u && u.profile.role !== user.profile.role)
         toast(
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-col gap-2">
               <p className="text-muted-foreground text-sm">
                 Your role has been updated to "
-                <span className="font-bold capitalize">{u.role}</span>".
+                <span className="font-bold capitalize">{u.profile.role}</span>".
               </p>
 
               <p className="text-muted-foreground text-sm">

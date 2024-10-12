@@ -7,7 +7,7 @@ import { useAuthenticated } from "../auth/context";
 import { AUTH_CALLBACK_PATH } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { HttpError, InternalServerError, NotFound } from "../errors/http";
-import { usersTable } from "../users/sql";
+import { userProfilesTable, usersTable } from "../users/sql";
 import { parseJwt } from "../utils/helpers";
 import { useOauth2 } from "./context";
 
@@ -97,8 +97,15 @@ export async function photo(userId: User["id"]): Promise<Response> {
 
   const user = await useTransaction((tx) =>
     tx
-      .select({ id: usersTable.oauth2UserId })
+      .select({ id: userProfilesTable.oauth2UserId })
       .from(usersTable)
+      .innerJoin(
+        userProfilesTable,
+        and(
+          eq(usersTable.id, userProfilesTable.userId),
+          eq(usersTable.tenantId, userProfilesTable.tenantId),
+        ),
+      )
       .where(and(eq(usersTable.id, userId), eq(usersTable.tenantId, tenant.id)))
       .then((rows) => rows.at(0)),
   );

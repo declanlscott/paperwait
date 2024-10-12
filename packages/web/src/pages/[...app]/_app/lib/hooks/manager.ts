@@ -9,7 +9,8 @@ import type { User } from "@paperwait/core/users/sql";
 export function useManager() {
   const { user } = useAuthenticated();
 
-  if (user.role !== "manager") throw new AccessDenied("Manager role required");
+  if (user.profile.role !== "manager")
+    throw new AccessDenied("Manager role required");
 
   const papercutAccountIds = useQuery(
     queryFactory.managedPapercutAccountIds(user.id),

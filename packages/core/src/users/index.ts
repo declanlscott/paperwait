@@ -17,23 +17,25 @@ import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
 import { fn } from "../utils/helpers";
 import {
-  deleteUserMutationArgsSchema,
-  restoreUserMutationArgsSchema,
-  updateUserRoleMutationArgsSchema,
+  deleteUserProfileMutationArgsSchema,
+  restoreUserProfileMutationArgsSchema,
+  updateUserProfileRoleMutationArgsSchema,
 } from "./shared";
-import { usersTable } from "./sql";
+import { userProfilesTable, usersTable } from "./sql";
 
 import type { InferInsertModel } from "drizzle-orm";
 import type { Order } from "../orders/sql";
 import type { UserRole } from "./shared";
-import type { User, UsersTable } from "./sql";
+import type { User, UserProfilesTable } from "./sql";
 
-export const create = async (user: InferInsertModel<UsersTable>) =>
+export const createProfile = async (
+  profile: InferInsertModel<UserProfilesTable>,
+) =>
   useTransaction(async (tx) =>
     tx
-      .insert(usersTable)
-      .values(user)
-      .returning({ id: usersTable.id })
+      .insert(userProfilesTable)
+      .values(profile)
+      .returning({ id: userProfilesTable.id })
       .then((rows) => rows.at(0)),
   );
 
@@ -44,23 +46,32 @@ export async function metadata() {
     const baseQuery = tx
       .select({
         id: usersTable.id,
-        rowVersion: sql<number>`"${usersTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
+        rowVersion: sql<number>`"${userProfilesTable._.name}"."${ROW_VERSION_COLUMN_NAME}"`,
       })
       .from(usersTable)
-      .where(eq(usersTable.tenantId, tenant.id))
+      .innerJoin(
+        userProfilesTable,
+        and(
+          eq(usersTable.id, userProfilesTable.userId),
+          eq(usersTable.tenantId, userProfilesTable.tenantId),
+        ),
+      )
+      .where(
+        and(eq(usersTable.tenantId, tenant.id), isNull(usersTable.deletedAt)),
+      )
       .$dynamic();
 
-    switch (user.role) {
+    switch (user.profile.role) {
       case "administrator":
         return baseQuery;
       case "operator":
-        return baseQuery.where(isNull(usersTable.deletedAt));
+        return baseQuery.where(isNull(userProfilesTable.deletedAt));
       case "manager":
-        return baseQuery.where(isNull(usersTable.deletedAt));
+        return baseQuery.where(isNull(userProfilesTable.deletedAt));
       case "customer":
-        return baseQuery.where(isNull(usersTable.deletedAt));
+        return baseQuery.where(isNull(userProfilesTable.deletedAt));
       default:
-        throw new NonExhaustiveValue(user.role);
+        throw new NonExhaustiveValue(user.profile.role);
     }
   });
 }
@@ -70,11 +81,22 @@ export async function fromIds(ids: Array<User["id"]>) {
 
   return useTransaction((tx) =>
     tx
-      .select()
+      .select({
+        user: usersTable,
+        profile: userProfilesTable,
+      })
       .from(usersTable)
+      .innerJoin(
+        userProfilesTable,
+        and(
+          eq(usersTable.id, userProfilesTable.userId),
+          eq(usersTable.tenantId, userProfilesTable.tenantId),
+        ),
+      )
       .where(
         and(inArray(usersTable.id, ids), eq(usersTable.tenantId, tenant.id)),
-      ),
+      )
+      .then((rows) => rows.map(({ user, profile }) => ({ ...user, profile }))),
   );
 }
 
@@ -85,11 +107,18 @@ export async function fromRoles(
 
   return useTransaction((tx) =>
     tx
-      .select({ id: usersTable.id, role: usersTable.role })
+      .select({ id: usersTable.id, role: userProfilesTable.role })
       .from(usersTable)
+      .innerJoin(
+        userProfilesTable,
+        and(
+          eq(usersTable.id, userProfilesTable.userId),
+          eq(usersTable.tenantId, userProfilesTable.tenantId),
+        ),
+      )
       .where(
         and(
-          inArray(usersTable.role, roles),
+          inArray(userProfilesTable.role, roles),
           eq(usersTable.tenantId, tenant.id),
         ),
       ),
@@ -105,6 +134,13 @@ export async function withOrderAccess(orderId: Order["id"]) {
       tx
         .select({ id: usersTable.id })
         .from(usersTable)
+        .innerJoin(
+          userProfilesTable,
+          and(
+            eq(usersTable.id, userProfilesTable.userId),
+            eq(usersTable.tenantId, userProfilesTable.tenantId),
+          ),
+        )
         .innerJoin(
           papercutAccountManagerAuthorizationsTable,
           and(
@@ -134,7 +170,20 @@ export async function withOrderAccess(orderId: Order["id"]) {
       tx
         .select({ id: usersTable.id })
         .from(usersTable)
-        .innerJoin(ordersTable, eq(usersTable.id, ordersTable.customerId))
+        .innerJoin(
+          userProfilesTable,
+          and(
+            eq(usersTable.id, userProfilesTable.userId),
+            eq(usersTable.tenantId, userProfilesTable.tenantId),
+          ),
+        )
+        .innerJoin(
+          ordersTable,
+          and(
+            eq(usersTable.id, ordersTable.customerId),
+            eq(usersTable.tenantId, ordersTable.tenantId),
+          ),
+        )
         .where(
           and(eq(ordersTable.id, orderId), eq(ordersTable.tenantId, tenant.id)),
         ),
@@ -159,21 +208,26 @@ export async function exists(userId: User["id"]) {
   });
 }
 
-export const updateRole = fn(
-  updateUserRoleMutationArgsSchema,
+export const updateProfileRole = fn(
+  updateUserProfileRoleMutationArgsSchema,
   async ({ id, ...values }) => {
     const { user, tenant } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.updateUserRole, {
+    enforceRbac(user, mutationRbac.updateUserProfileRole, {
       Error: AccessDenied,
-      args: [rbacErrorMessage(user, "update user role mutator")],
+      args: [rbacErrorMessage(user, "update user profile role mutator")],
     });
 
     return useTransaction(async (tx) => {
       await tx
-        .update(usersTable)
+        .update(userProfilesTable)
         .set(values)
-        .where(and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)));
+        .where(
+          and(
+            eq(userProfilesTable.id, id),
+            eq(userProfilesTable.tenantId, tenant.id),
+          ),
+        );
 
       await afterTransaction(() =>
         Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
@@ -182,16 +236,16 @@ export const updateRole = fn(
   },
 );
 
-export const delete_ = fn(
-  deleteUserMutationArgsSchema,
+export const deleteProfile = fn(
+  deleteUserProfileMutationArgsSchema,
   async ({ id, ...values }) => {
     const { user, tenant } = useAuthenticated();
 
     if (
       id === user.id ||
-      enforceRbac(user, mutationRbac.deleteUser, {
+      enforceRbac(user, mutationRbac.deleteUserProfile, {
         Error: AccessDenied,
-        args: [rbacErrorMessage(user, "delete user mutator")],
+        args: [rbacErrorMessage(user, "delete user profile mutator")],
       })
     ) {
       return useTransaction(async (tx) => {
@@ -213,19 +267,27 @@ export const delete_ = fn(
   },
 );
 
-export const restore = fn(restoreUserMutationArgsSchema, async ({ id }) => {
-  const { tenant } = useAuthenticated();
+export const restoreProfile = fn(
+  restoreUserProfileMutationArgsSchema,
+  async ({ id }) => {
+    const { user, tenant } = useAuthenticated();
 
-  return useTransaction(async (tx) => {
-    await tx
-      .update(usersTable)
-      .set({ deletedAt: null })
-      .where(and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)));
+    enforceRbac(user, mutationRbac.restoreUserProfile, {
+      Error: AccessDenied,
+      args: [rbacErrorMessage(user, "restore user profile mutator")],
+    });
 
-    await afterTransaction(() =>
-      Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
-    );
-  });
-});
+    return useTransaction(async (tx) => {
+      await tx
+        .update(usersTable)
+        .set({ deletedAt: null })
+        .where(and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)));
+
+      await afterTransaction(() =>
+        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+      );
+    });
+  },
+);
 
 export { userSchema as schema } from "./shared";

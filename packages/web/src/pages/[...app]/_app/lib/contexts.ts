@@ -14,9 +14,7 @@ export type AuthActions = {
   authorizeRoute: (user: Authenticated["user"], roles: Array<UserRole>) => void;
 };
 
-export interface AuthStore extends Auth {
-  actions: AuthActions;
-}
+export type AuthStore = Auth & { actions: AuthActions };
 export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 
 export const AuthenticatedContext = createContext<Authenticated | null>(null);

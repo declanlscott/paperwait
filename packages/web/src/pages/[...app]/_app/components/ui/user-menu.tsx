@@ -39,10 +39,13 @@ export function UserMenu() {
         )}
       >
         <Avatar>
-          <AvatarImage src={`/api/users/${user.id}/photo`} alt={user.name} />
+          <AvatarImage
+            src={`/api/users/${user.id}/photo`}
+            alt={user.profile.name}
+          />
 
           <AvatarFallback className="text-foreground bg-muted border-primary border-2">
-            {getUserInitials(user.name)}
+            {getUserInitials(user.profile.name)}
           </AvatarFallback>
         </Avatar>
       </AriaButton>
@@ -78,15 +81,15 @@ export function UserMenu() {
             <MenuHeader>
               <div className="flex flex-col space-y-1">
                 <span className="text-sm font-medium leading-none">
-                  {user.name}
+                  {user.profile.name}
                 </span>
 
                 <span className="text-muted-foreground text-xs leading-none">
-                  {user.email}
+                  {user.profile.email}
                 </span>
 
                 <span className="text-muted-foreground/90 text-xs font-thin capitalize leading-none">
-                  {user.role}
+                  {user.profile.role}
                 </span>
               </div>
             </MenuHeader>

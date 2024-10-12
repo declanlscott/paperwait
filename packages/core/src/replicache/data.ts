@@ -159,7 +159,7 @@ export const authoritativeMutatorFactory = {
   deleteRoom: Rooms.delete_,
   restoreRoom: Rooms.restore,
   updateTenant: Tenants.update,
-  updateUserRole: Users.updateRole,
-  deleteUser: Users.delete_,
-  restoreUser: Users.restore,
+  updateUserProfileRole: Users.updateProfileRole,
+  deleteUserProfile: Users.deleteProfile,
+  restoreUserProfile: Users.restoreProfile,
 } satisfies AuthoritativeMutatorFactory;

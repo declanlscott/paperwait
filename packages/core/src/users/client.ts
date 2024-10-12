@@ -5,9 +5,9 @@ import { AccessDenied, EntityNotFound } from "../errors/application";
 import { ordersTableName } from "../orders/shared";
 import { optimisticMutator } from "../utils/helpers";
 import {
-  deleteUserMutationArgsSchema,
-  restoreUserMutationArgsSchema,
-  updateUserRoleMutationArgsSchema,
+  deleteUserProfileMutationArgsSchema,
+  restoreUserProfileMutationArgsSchema,
+  updateUserProfileRoleMutationArgsSchema,
   usersTableName,
 } from "./shared";
 
@@ -15,16 +15,16 @@ import type { DeepReadonlyObject, WriteTransaction } from "replicache";
 import type { Order } from "../orders/sql";
 import type { PapercutAccountManagerAuthorization } from "../papercut/sql";
 import type { UserRole } from "./shared";
-import type { User } from "./sql";
+import type { UserWithProfile } from "./sql";
 
 export const fromRoles = async (
   tx: WriteTransaction,
   roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],
 ) =>
   tx
-    .scan<User>({ prefix: `${usersTableName}/` })
+    .scan<UserWithProfile>({ prefix: `${usersTableName}/` })
     .toArray()
-    .then((users) => users.filter((user) => roles.includes(user.role)));
+    .then((users) => users.filter((user) => roles.includes(user.profile.role)));
 
 export const withOrderAccess = async (
   tx: WriteTransaction,
@@ -49,11 +49,11 @@ export const withOrderAccess = async (
       .then((authorizations) =>
         Promise.all(
           authorizations.map(({ managerId }) =>
-            tx.get<User>(`${usersTableName}/${managerId}`),
+            tx.get<UserWithProfile>(`${usersTableName}/${managerId}`),
           ),
         ),
       ),
-    tx.get<User>(`${usersTableName}/${order.customerId}`),
+    tx.get<UserWithProfile>(`${usersTableName}/${order.customerId}`),
   ]);
 
   return R.uniqueBy(
@@ -62,46 +62,52 @@ export const withOrderAccess = async (
   );
 };
 
-export const updateRole = optimisticMutator(
-  updateUserRoleMutationArgsSchema,
+export const updateProfileRole = optimisticMutator(
+  updateUserProfileRoleMutationArgsSchema,
   (user) =>
-    enforceRbac(user, mutationRbac.updateUserRole, {
+    enforceRbac(user, mutationRbac.updateUserProfileRole, {
       Error: AccessDenied,
-      args: [rbacErrorMessage(user, "update user role mutator")],
+      args: [rbacErrorMessage(user, "update user profile role mutator")],
     }),
   () =>
     async (tx, { id, ...values }) => {
-      const prev = await tx.get<User>(`${usersTableName}/${id}`);
+      const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
       if (!prev) throw new EntityNotFound(usersTableName, id);
 
       const next = {
         ...prev,
-        ...values,
-      } satisfies DeepReadonlyObject<User>;
+        profile: {
+          ...prev.profile,
+          ...values,
+        },
+      } satisfies DeepReadonlyObject<UserWithProfile>;
 
       return tx.set(`${usersTableName}/${id}`, next);
     },
 );
 
-export const delete_ = optimisticMutator(
-  deleteUserMutationArgsSchema,
+export const deleteProfile = optimisticMutator(
+  deleteUserProfileMutationArgsSchema,
   (user, _tx, { id }) =>
     id === user.id ||
-    enforceRbac(user, mutationRbac.deleteUser, {
+    enforceRbac(user, mutationRbac.deleteUserProfile, {
       Error: AccessDenied,
-      args: [rbacErrorMessage(user, "delete user mutator")],
+      args: [rbacErrorMessage(user, "delete user profile mutator")],
     }),
   ({ user }) =>
     async (tx, { id, ...values }) => {
       // Soft delete for administrators
       if (enforceRbac(user, ["administrator"])) {
-        const prev = await tx.get<User>(`${usersTableName}/${id}`);
+        const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
         if (!prev) throw new EntityNotFound(usersTableName, id);
 
         const next = {
           ...prev,
-          ...values,
-        } satisfies DeepReadonlyObject<User>;
+          profile: {
+            ...prev.profile,
+            ...values,
+          },
+        } satisfies DeepReadonlyObject<UserWithProfile>;
 
         return tx.set(`${usersTableName}/${id}`, next);
       }
@@ -111,22 +117,25 @@ export const delete_ = optimisticMutator(
     },
 );
 
-export const restore = optimisticMutator(
-  restoreUserMutationArgsSchema,
+export const restoreProfile = optimisticMutator(
+  restoreUserProfileMutationArgsSchema,
   (user) =>
-    enforceRbac(user, mutationRbac.restoreUser, {
+    enforceRbac(user, mutationRbac.restoreUserProfile, {
       Error: AccessDenied,
-      args: [rbacErrorMessage(user, "restore user mutator")],
+      args: [rbacErrorMessage(user, "restore user profile mutator")],
     }),
   () =>
     async (tx, { id }) => {
-      const prev = await tx.get<User>(`${usersTableName}/${id}`);
+      const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
       if (!prev) throw new EntityNotFound(usersTableName, id);
 
       const next = {
         ...prev,
-        deletedAt: null,
-      } satisfies DeepReadonlyObject<User>;
+        profile: {
+          ...prev.profile,
+          deletedAt: null,
+        },
+      } satisfies DeepReadonlyObject<UserWithProfile>;
 
       return tx.set(`${usersTableName}/${id}`, next);
     },

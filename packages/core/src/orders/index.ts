@@ -65,7 +65,7 @@ export async function metadata() {
       eq(ordersTable.customerId, user.id),
     );
 
-    switch (user.role) {
+    switch (user.profile.role) {
       case "administrator":
         return baseQuery;
       case "operator":
@@ -102,7 +102,7 @@ export async function metadata() {
       case "customer":
         return customerOrdersQuery;
       default:
-        throw new NonExhaustiveValue(user.role);
+        throw new NonExhaustiveValue(user.profile.role);
     }
   });
 }

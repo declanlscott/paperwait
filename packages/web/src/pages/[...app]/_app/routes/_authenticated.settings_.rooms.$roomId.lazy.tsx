@@ -64,7 +64,7 @@ function Component() {
           </Breadcrumbs>
         </>
       }
-      links={linksFactory.roomSettings(roomId)[user.role]}
+      links={linksFactory.roomSettings(roomId)[user.profile.role]}
     />
   );
 }

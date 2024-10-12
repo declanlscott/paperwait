@@ -48,7 +48,7 @@ export async function metadata() {
       .where(eq(productsTable.tenantId, tenant.id))
       .$dynamic();
 
-    switch (user.role) {
+    switch (user.profile.role) {
       case "administrator":
         return baseQuery;
       case "operator":
@@ -68,7 +68,7 @@ export async function metadata() {
           ),
         );
       default:
-        throw new NonExhaustiveValue(user.role);
+        throw new NonExhaustiveValue(user.profile.role);
     }
   });
 }

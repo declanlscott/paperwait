@@ -4,21 +4,21 @@ import {
   encodeHexLowerCase,
 } from "@oslojs/encoding";
 import { add, isAfter, sub } from "date-fns";
-import { eq, lte } from "drizzle-orm";
+import { and, eq, lte } from "drizzle-orm";
 
 import { SESSION_COOKIE_NAME, SESSION_EXPIRATION_DURATION } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { tenantsTable } from "../tenants/sql";
-import { usersTable } from "../users/sql";
+import { userProfilesTable, usersTable } from "../users/sql";
 import { sessionsTable, sessionTokensTable } from "./sql";
 
 import type { Oauth2Tokens } from "../oauth2/tokens";
 import type { Tenant } from "../tenants/sql";
-import type { User } from "../users/sql";
+import type { User, UserWithProfile } from "../users/sql";
 import type { Session, SessionTokens } from "./sql";
 
 export type Auth =
-  | { user: User; session: Session; tenant: Tenant }
+  | { user: UserWithProfile; session: Session; tenant: Tenant }
   | { user: null; session: null; tenant: null };
 
 export type Authenticated = {
@@ -108,34 +108,48 @@ export async function validateSessionToken(token: string): Promise<Auth> {
   const sessionId = getSessionId(token);
 
   return useTransaction(async (tx) => {
-    const auth = await tx
+    const result = await tx
       .select({
         user: usersTable,
+        userProfile: userProfilesTable,
         session: sessionsTable,
         tenant: tenantsTable,
       })
       .from(sessionsTable)
-      .innerJoin(usersTable, eq(sessionsTable.userId, usersTable.id))
+      .innerJoin(
+        usersTable,
+        and(
+          eq(sessionsTable.userId, usersTable.id),
+          eq(sessionsTable.tenantId, usersTable.tenantId),
+        ),
+      )
+      .innerJoin(
+        userProfilesTable,
+        and(
+          eq(usersTable.id, userProfilesTable.userId),
+          eq(usersTable.tenantId, userProfilesTable.tenantId),
+        ),
+      )
       .innerJoin(tenantsTable, eq(sessionsTable.tenantId, tenantsTable.id))
       .where(eq(sessionsTable.id, sessionId))
       .then((rows) => rows.at(0));
-    if (!auth) return { user: null, session: null, tenant: null };
+    if (!result) return { user: null, session: null, tenant: null };
 
     const now = Date.now();
 
-    if (isAfter(now, auth.session.expiresAt)) {
+    if (isAfter(now, result.session.expiresAt)) {
       await tx.delete(sessionsTable).where(eq(sessionsTable.id, sessionId));
 
       return { user: null, session: null, tenant: null };
     }
 
-    if (isAfter(now, sub(auth.session.expiresAt, { days: 15 })))
+    if (isAfter(now, sub(result.session.expiresAt, { days: 15 })))
       await tx
         .update(sessionsTable)
         .set({ expiresAt: add(now, SESSION_EXPIRATION_DURATION) })
         .where(eq(sessionsTable.id, sessionId));
 
-    return auth;
+    return { ...result, user: { ...result.user, profile: result.userProfile } };
   });
 }
 

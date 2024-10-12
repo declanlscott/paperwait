@@ -1,4 +1,13 @@
 import { useMemo } from "react";
+import {
+  papercutAccountCustomerAuthorizationsTableName,
+  papercutAccountManagerAuthorizationsTableName,
+  papercutAccountsTableName,
+} from "@paperwait/core/papercut/shared";
+import { productsTableName } from "@paperwait/core/products/shared";
+import { roomsTableName } from "@paperwait/core/rooms/shared";
+import { tenantsTableName } from "@paperwait/core/tenants/shared";
+import { usersTableName } from "@paperwait/core/users/shared";
 
 import { useApi } from "~/app/lib/hooks/api";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
@@ -12,7 +21,7 @@ import type {
 import type { Product } from "@paperwait/core/products/sql";
 import type { Room } from "@paperwait/core/rooms/sql";
 import type { Tenant } from "@paperwait/core/tenants/sql";
-import type { User } from "@paperwait/core/users/sql";
+import type { User, UserWithProfile } from "@paperwait/core/users/sql";
 import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
 
 export const useQuery = <TData, TDefaultData = undefined>(
@@ -21,20 +30,26 @@ export const useQuery = <TData, TDefaultData = undefined>(
 
 export const queryFactory = {
   tenant: () => async (tx) => {
-    const tenants = await tx.scan<Tenant>({ prefix: "tenant/" }).toArray();
+    const tenants = await tx
+      .scan<Tenant>({ prefix: `${tenantsTableName}/` })
+      .toArray();
 
     return tenants.at(0);
   },
-  users: () => (tx) => tx.scan<User>({ prefix: "user/" }).toArray(),
-  user: (userId: User["id"]) => (tx) => tx.get<User>(`user/${userId}`),
+  users: () => (tx) =>
+    tx.scan<UserWithProfile>({ prefix: `${usersTableName}/` }).toArray(),
+  user: (userId: User["id"]) => (tx) =>
+    tx.get<UserWithProfile>(`${usersTableName}/${userId}`),
   papercutAccounts: () => (tx) =>
-    tx.scan<PapercutAccount>({ prefix: "papercutAccount/" }).toArray(),
+    tx
+      .scan<PapercutAccount>({ prefix: `${papercutAccountsTableName}/` })
+      .toArray(),
   papercutAccount: (accountId: PapercutAccount["id"]) => (tx) =>
-    tx.get<PapercutAccount>(`papercutAccount/${accountId}`),
+    tx.get<PapercutAccount>(`${papercutAccountsTableName}/${accountId}`),
   managedPapercutAccountIds: (managerId: User["id"]) => async (tx) => {
     const managerAuthorizations = await tx
       .scan<PapercutAccountManagerAuthorization>({
-        prefix: "papercutAccountManagerAuthorization/",
+        prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
       })
       .toArray();
 
@@ -47,19 +62,19 @@ export const queryFactory = {
   papercutAccountCustomerAuthorizations: () => (tx) =>
     tx
       .scan<PapercutAccountCustomerAuthorization>({
-        prefix: "papercutAccountCustomerAuthorization/",
+        prefix: `${papercutAccountCustomerAuthorizationsTableName}/`,
       })
       .toArray(),
   papercutAccountManagerAuthorizations: () => (tx) =>
     tx
       .scan<PapercutAccountManagerAuthorization>({
-        prefix: "papercutAccountManagerAuthorization/",
+        prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
       })
       .toArray(),
   managedCustomerIds: (managerId: User["id"]) => async (tx) => {
     const managerAuthorizations = await tx
       .scan<PapercutAccountManagerAuthorization>({
-        prefix: "papercutAccountManagerAuthorization/",
+        prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
       })
       .toArray();
 
@@ -69,7 +84,7 @@ export const queryFactory = {
 
     const customerAuthorizations = await tx
       .scan<PapercutAccountCustomerAuthorization>({
-        prefix: "papercutAccountCustomerAuthorization/",
+        prefix: `${papercutAccountCustomerAuthorizationsTableName}/`,
       })
       .toArray();
 
@@ -79,11 +94,14 @@ export const queryFactory = {
 
     return managedCustomerIds;
   },
-  rooms: () => (tx) => tx.scan<Room>({ prefix: "room/" }).toArray(),
-  room: (roomId: Room["id"]) => (tx) => tx.get<Room>(`room/${roomId}`),
-  products: () => (tx) => tx.scan<Product>({ prefix: "product/" }).toArray(),
+  rooms: () => (tx) =>
+    tx.scan<Room>({ prefix: `${roomsTableName}/` }).toArray(),
+  room: (roomId: Room["id"]) => (tx) =>
+    tx.get<Room>(`${roomsTableName}/${roomId}`),
+  products: () => (tx) =>
+    tx.scan<Product>({ prefix: `${productsTableName}/` }).toArray(),
   product: (productId: Product["id"]) => (tx) =>
-    tx.get<Product>(`product/${productId}`),
+    tx.get<Product>(`${productsTableName}/${productId}`),
 } satisfies QueryFactory;
 
 export function useMutator() {

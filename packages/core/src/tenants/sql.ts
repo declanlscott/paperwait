@@ -17,7 +17,9 @@ import type { InferSelectModel } from "drizzle-orm";
 
 export const licensesTable = pgTable(licensesTableName, {
   key: uuid("key").defaultRandom().primaryKey(),
-  tenantId: id("tenant_id").references(() => tenantsTable.id),
+  tenantId: id("tenant_id")
+    .unique()
+    .references(() => tenantsTable.id),
   status: licenseStatus("status").notNull().default("active"),
 });
 export type LicensesTable = typeof licensesTable;

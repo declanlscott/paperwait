@@ -120,7 +120,7 @@ function HomeCommand(_props: HomeCommandProps) {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Navigation">
-          {linksFactory.mainNav()[user.role].map((link) => (
+          {linksFactory.mainNav()[user.profile.role].map((link) => (
             <CommandItem
               key={link.name}
               onSelect={() => handleNavigation(link.props.href)}
@@ -197,7 +197,7 @@ function HomeCommand(_props: HomeCommandProps) {
                     <AvatarImage src={`/api/users/${u.id}/photo`} />
                   </Avatar>
 
-                  <span>{u.name}</span>
+                  <span>{u.profile.name}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -207,7 +207,7 @@ function HomeCommand(_props: HomeCommandProps) {
         <CommandSeparator />
 
         <CommandGroup heading="Scope">
-          {linksFactory.settings()[user.role].map((link) => (
+          {linksFactory.settings()[user.profile.role].map((link) => (
             <CommandItem
               key={`settings-${link.name}`}
               onSelect={() => handleNavigation(link.props.href)}
@@ -222,7 +222,7 @@ function HomeCommand(_props: HomeCommandProps) {
             </CommandItem>
           ))}
 
-          {linksFactory.roomSettings("")[user.role].map((link) => (
+          {linksFactory.roomSettings("")[user.profile.role].map((link) => (
             <CommandItem
               key={`room-settings-${link.name}`}
               onSelect={() =>
@@ -242,25 +242,27 @@ function HomeCommand(_props: HomeCommandProps) {
             </CommandItem>
           ))}
 
-          {linksFactory.productSettings("", "")[user.role].map((link) => (
-            <CommandItem
-              key={`product-settings-${link.name}`}
-              onSelect={() =>
-                pushPage({
-                  type: "product-settings-select-room",
-                  to: link.props.href.to,
-                })
-              }
-              keywords={["scope", "product settings"]}
-            >
-              <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
+          {linksFactory
+            .productSettings("", "")
+            [user.profile.role].map((link) => (
+              <CommandItem
+                key={`product-settings-${link.name}`}
+                onSelect={() =>
+                  pushPage({
+                    type: "product-settings-select-room",
+                    to: link.props.href.to,
+                  })
+                }
+                keywords={["scope", "product settings"]}
+              >
+                <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
 
-              <p>
-                Jump to <span className="font-medium">Product Settings</span>{" "}
-                {link.name}
-              </p>
-            </CommandItem>
-          ))}
+                <p>
+                  Jump to <span className="font-medium">Product Settings</span>{" "}
+                  {link.name}
+                </p>
+              </CommandItem>
+            ))}
         </CommandGroup>
       </CommandList>
     </>

@@ -21,32 +21,34 @@ export const userSchema = v.object({
   username: v.string(),
 });
 
-export const userMutationNames = [
-  "updateUserRole",
-  "deleteUser",
-  "restoreUser",
+export const userProfileMutationNames = [
+  "updateUserProfileRole",
+  "deleteUserProfile",
+  "restoreUserProfile",
 ] as const;
 
-export const updateUserRoleMutationArgsSchema = v.object({
+export const updateUserProfileRoleMutationArgsSchema = v.object({
   id: nanoIdSchema,
   role: v.picklist(userRoles),
   updatedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
 export type UpdateUserRoleMutationArgs = v.InferOutput<
-  typeof updateUserRoleMutationArgsSchema
+  typeof updateUserProfileRoleMutationArgsSchema
 >;
 
-export const deleteUserMutationArgsSchema = v.object({
+export const deleteUserProfileMutationArgsSchema = v.object({
   id: nanoIdSchema,
   deletedAt: v.pipe(v.string(), v.isoTimestamp()),
 });
-export type DeleteUserMutationArgs = v.InferOutput<
-  typeof deleteUserMutationArgsSchema
+export type DeleteUserProfileMutationArgs = v.InferOutput<
+  typeof deleteUserProfileMutationArgsSchema
 >;
 
-export const restoreUserMutationArgsSchema = v.object({
+export const restoreUserProfileMutationArgsSchema = v.object({
   id: nanoIdSchema,
 });
-export type RestoreUserMutationArgs = v.InferOutput<
-  typeof restoreUserMutationArgsSchema
+export type RestoreUserProfileMutationArgs = v.InferOutput<
+  typeof restoreUserProfileMutationArgsSchema
 >;
+
+export const userProfilesTableName = "user_profiles";

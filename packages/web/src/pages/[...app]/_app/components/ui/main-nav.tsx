@@ -140,7 +140,7 @@ function NavList() {
 
   return (
     <ul className="flex items-center">
-      {linksFactory.mainNav()[user.role].map((link) => (
+      {linksFactory.mainNav()[user.profile.role].map((link) => (
         <li key={link.name}>
           <TooltipTrigger>
             <Link href={link.props.href} className="flex items-center gap-2">

@@ -68,7 +68,7 @@ export async function accountsMetadata() {
       .where(eq(papercutAccountsTable.tenantId, tenant.id))
       .$dynamic();
 
-    switch (user.role) {
+    switch (user.profile.role) {
       case "administrator":
         return baseQuery;
       case "manager":
@@ -78,7 +78,7 @@ export async function accountsMetadata() {
       case "customer":
         return baseQuery.where(isNull(papercutAccountsTable.deletedAt));
       default:
-        throw new NonExhaustiveValue(user.role);
+        throw new NonExhaustiveValue(user.profile.role);
     }
   });
 }
@@ -96,7 +96,7 @@ export async function accountCustomerAuthorizationsMetadata() {
       .where(eq(papercutAccountCustomerAuthorizationsTable.tenantId, tenant.id))
       .$dynamic();
 
-    switch (user.role) {
+    switch (user.profile.role) {
       case "administrator":
         return baseQuery;
       case "manager":
@@ -112,7 +112,7 @@ export async function accountCustomerAuthorizationsMetadata() {
           isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
         );
       default:
-        throw new NonExhaustiveValue(user.role);
+        throw new NonExhaustiveValue(user.profile.role);
     }
   });
 }
@@ -130,7 +130,7 @@ export const accountManagerAuthorizationsMetadata = async () =>
       .where(eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id))
       .$dynamic();
 
-    switch (user.role) {
+    switch (user.profile.role) {
       case "administrator":
         return baseQuery;
       case "manager":
@@ -146,7 +146,7 @@ export const accountManagerAuthorizationsMetadata = async () =>
           isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
         );
       default:
-        throw new NonExhaustiveValue(user.role);
+        throw new NonExhaustiveValue(user.profile.role);
     }
   });
 

@@ -19,7 +19,7 @@ export function enforceRbac<TMaybeError extends AnyError | undefined>(
     ? InferCustomError<CustomError<TMaybeError>>
     : never,
 ): EnforceRbacResult<TMaybeError> {
-  const hasAccess = roles.includes(user.role);
+  const hasAccess = roles.includes(user.profile.role);
 
   if (!hasAccess) {
     console.log(rbacErrorMessage(user));
@@ -55,7 +55,7 @@ export const mutationRbac = {
   updateRoom: ["administrator", "operator"],
   deleteRoom: ["administrator"],
   restoreRoom: ["administrator"],
-  updateUserRole: ["administrator"],
-  deleteUser: ["administrator"],
-  restoreUser: ["administrator"],
+  updateUserProfileRole: ["administrator"],
+  deleteUserProfile: ["administrator"],
+  restoreUserProfile: ["administrator"],
 } as const satisfies Record<MutationName, Array<UserRole>>;

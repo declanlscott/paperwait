@@ -45,7 +45,7 @@ export const replicacheClientGroupsTable = pgTable(
       columns: [table.userId, table.tenantId],
       foreignColumns: [usersTable.id, usersTable.tenantId],
       name: "user_fk",
-    }),
+    }).onDelete("cascade"),
     updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
 );
@@ -73,7 +73,7 @@ export const replicacheClientsTable = pgTable(
         replicacheClientGroupsTable.tenantId,
       ],
       name: "client_group_fk",
-    }),
+    }).onDelete("cascade"),
     clientGroupIdIndex: index("client_group_id_idx").on(table.clientGroupId),
     updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
@@ -101,7 +101,7 @@ export const replicacheClientViewsTable = pgTable(
         replicacheClientGroupsTable.tenantId,
       ],
       name: "client_group_fk",
-    }),
+    }).onDelete("cascade"),
     updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
 );

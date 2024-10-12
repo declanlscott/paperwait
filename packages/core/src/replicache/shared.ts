@@ -7,7 +7,7 @@ import { papercutMutationNames } from "../papercut/shared";
 import { productMutationNames } from "../products/shared";
 import { roomMutationNames } from "../rooms/shared";
 import { tenantMutationNames } from "../tenants/shared";
-import { userMutationNames } from "../users/shared";
+import { userProfileMutationNames } from "../users/shared";
 
 export const replicacheMetaTableName = "replicache_meta";
 export const replicacheClientGroupsTableName = "replicache_client_groups";
@@ -31,7 +31,7 @@ export const mutationNameSchema = v.picklist([
   ...papercutMutationNames,
   ...productMutationNames,
   ...roomMutationNames,
-  ...userMutationNames,
+  ...userProfileMutationNames,
 ]);
 export type MutationName = v.InferOutput<typeof mutationNameSchema>;
 
