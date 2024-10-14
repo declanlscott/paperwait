@@ -2,9 +2,9 @@ import { foreignKey, index, jsonb, varchar } from "drizzle-orm/pg-core";
 
 import { VARCHAR_LENGTH } from "../constants";
 import { id } from "../drizzle/columns";
-import { productStatus } from "../drizzle/enums.sql";
 import { tenantTable } from "../drizzle/tables";
 import { roomsTable } from "../rooms/sql";
+import { productStatus } from "../utils/sql";
 import { productsTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";

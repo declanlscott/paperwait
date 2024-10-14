@@ -2,7 +2,7 @@ import * as R from "remeda";
 import * as v from "valibot";
 
 import { userRoles } from "../users/shared";
-import { nanoIdSchema, tenantTableSchema } from "../utils/schemas";
+import { nanoIdSchema, tenantTableSchema } from "../utils/shared";
 
 export const commentsTableName = "comments";
 

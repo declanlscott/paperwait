@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@paperwait/core/auth/context";
-import { Replicache } from "@paperwait/core/replicache/client";
+import { Replicache } from "@paperwait/core/replicache/shared";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthActions } from "~/app/lib/hooks/auth";

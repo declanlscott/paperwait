@@ -9,8 +9,8 @@ import {
 
 import { VARCHAR_LENGTH } from "../constants";
 import { id, idPrimaryKey, timestamps } from "../drizzle/columns";
-import { licenseStatus, tenantStatus } from "../drizzle/enums.sql";
 import { oauth2ProvidersTable } from "../oauth2/sql";
+import { licenseStatus, tenantStatus } from "../utils/sql";
 import { licensesTableName, tenantsTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";

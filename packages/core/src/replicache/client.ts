@@ -3,8 +3,6 @@ import type * as v from "valibot";
 import type { Authenticated } from "../auth";
 import type { MutationName } from "./shared";
 
-export * from "replicache";
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OptimisticMutator<TSchema extends v.GenericSchema> = (
   tx: WriteTransaction,

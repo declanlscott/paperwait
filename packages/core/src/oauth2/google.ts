@@ -4,7 +4,7 @@ import * as v from "valibot";
 
 import { AUTH_CALLBACK_PATH } from "../constants";
 import { HttpError, InternalServerError, NotImplemented } from "../errors/http";
-import { parseJwt } from "../utils/helpers";
+import { parseJwt } from "../utils";
 import { GOOGLE } from "./shared";
 
 import type { SessionTokens } from "../auth/sql";

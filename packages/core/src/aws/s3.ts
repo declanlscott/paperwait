@@ -11,7 +11,7 @@ import type {
   PutObjectCommandInput,
   S3Client,
 } from "@aws-sdk/client-s3";
-import type { NanoId } from "../utils/schemas";
+import type { NanoId } from "../utils/shared";
 
 type RequestPresigningArguments = Parameters<typeof getSignedUrl>[2];
 

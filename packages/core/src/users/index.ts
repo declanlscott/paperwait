@@ -15,7 +15,7 @@ import {
 } from "../papercut/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
-import { fn } from "../utils/helpers";
+import { fn } from "../utils/shared";
 import {
   deleteUserProfileMutationArgsSchema,
   restoreUserProfileMutationArgsSchema,

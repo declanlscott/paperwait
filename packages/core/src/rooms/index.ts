@@ -9,7 +9,7 @@ import { NonExhaustiveValue } from "../errors/misc";
 import { productsTable } from "../products/sql";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
-import { fn } from "../utils/helpers";
+import { fn } from "../utils/shared";
 import {
   createRoomMutationArgsSchema,
   deleteRoomMutationArgsSchema,

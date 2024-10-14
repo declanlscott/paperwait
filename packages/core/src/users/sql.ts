@@ -1,8 +1,8 @@
 import { foreignKey, index, text, unique } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
-import { userRole } from "../drizzle/enums.sql";
 import { tenantTable } from "../drizzle/tables";
+import { userRole } from "../utils/sql";
 import { userProfilesTableName, usersTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";

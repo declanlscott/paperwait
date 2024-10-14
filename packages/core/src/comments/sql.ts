@@ -1,9 +1,9 @@
 import { foreignKey, index, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
-import { userRole } from "../drizzle/enums.sql";
 import { tenantTable } from "../drizzle/tables";
 import { ordersTable } from "../orders/sql";
+import { userRole } from "../utils/sql";
 import { commentsTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";

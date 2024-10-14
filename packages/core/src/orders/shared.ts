@@ -4,7 +4,7 @@ import {
   nanoIdSchema,
   papercutAccountIdSchema,
   tenantTableSchema,
-} from "../utils/schemas";
+} from "../utils/shared";
 
 export const ordersTableName = "orders";
 

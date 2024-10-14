@@ -14,8 +14,8 @@ import {
   MutationConflict,
   Unauthorized,
 } from "../errors/replicache";
-import { createContext } from "../utils/context";
-import { fn } from "../utils/helpers";
+import { createContext } from "../utils";
+import { fn } from "../utils/shared";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import {
   authoritativeMutatorFactory,

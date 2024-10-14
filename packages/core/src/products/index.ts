@@ -8,7 +8,7 @@ import { AccessDenied } from "../errors/application";
 import { NonExhaustiveValue } from "../errors/misc";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
-import { fn } from "../utils/helpers";
+import { fn } from "../utils/shared";
 import {
   createProductMutationArgsSchema,
   deleteProductMutationArgsSchema,

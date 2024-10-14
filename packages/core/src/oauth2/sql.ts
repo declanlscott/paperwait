@@ -1,7 +1,7 @@
 import { pgTable, primaryKey, text } from "drizzle-orm/pg-core";
 
 import { id, timestamps } from "../drizzle/columns";
-import { oauth2ProviderVariant } from "../drizzle/enums.sql";
+import { oauth2ProviderVariant } from "../utils/sql";
 import { oauth2ProvidersTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";

@@ -1,7 +1,7 @@
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 
 import { tenantsTable } from "../tenants/sql";
-import { generateId } from "../utils/helpers";
+import { generateId } from "../utils/shared";
 import { id, timestamps } from "./columns";
 
 import type { BuildColumns } from "drizzle-orm";

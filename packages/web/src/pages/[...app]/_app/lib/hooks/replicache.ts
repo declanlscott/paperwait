@@ -7,12 +7,10 @@ import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 import type { Authenticated } from "@paperwait/core/auth";
 import type {
-  AuthenticatedOptimisticMutator,
-  OptimisticMutatorFactory,
   ReadTransaction,
   SubscribeOptions,
   WriteTransaction,
-} from "@paperwait/core/replicache/client";
+} from "@paperwait/core/replicache/shared";
 
 export function useReplicache() {
   const replicache = useContext(ReplicacheContext);

@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { nanoIdSchema, tenantTableSchema } from "../utils/schemas";
+import { nanoIdSchema, tenantTableSchema } from "../utils/shared";
 
 export const announcementsTableName = "announcements";
 

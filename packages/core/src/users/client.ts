@@ -3,7 +3,7 @@ import * as R from "remeda";
 import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { AccessDenied, EntityNotFound } from "../errors/application";
 import { ordersTableName } from "../orders/shared";
-import { optimisticMutator } from "../utils/helpers";
+import { optimisticMutator } from "../utils/client";
 import {
   deleteUserProfileMutationArgsSchema,
   restoreUserProfileMutationArgsSchema,

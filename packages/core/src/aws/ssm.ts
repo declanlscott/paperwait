@@ -18,7 +18,7 @@ import type {
   PutParameterCommandInput,
   SSMClient,
 } from "@aws-sdk/client-ssm";
-import type { NanoId } from "../utils/schemas";
+import type { NanoId } from "../utils/shared";
 
 export { SSMClient as Client } from "@aws-sdk/client-ssm";
 

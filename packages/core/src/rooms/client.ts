@@ -1,7 +1,7 @@
 import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { AccessDenied, EntityNotFound } from "../errors/application";
 import { productsTableName } from "../products/shared";
-import { optimisticMutator } from "../utils/helpers";
+import { optimisticMutator } from "../utils/client";
 import {
   createRoomMutationArgsSchema,
   deleteRoomMutationArgsSchema,

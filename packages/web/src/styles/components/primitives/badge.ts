@@ -1,6 +1,6 @@
 import { tv } from "tailwind-variants";
 
-import type { UserRole } from "@paperwait/core/user";
+import type { UserRole } from "@paperwait/core/users/shared";
 import type { VariantProps } from "tailwind-variants";
 
 export const badgeStyles = tv({

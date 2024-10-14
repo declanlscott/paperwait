@@ -1,7 +1,7 @@
 import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { AccessDenied, EntityNotFound } from "../errors/application";
 import * as Users from "../users/client";
-import { optimisticMutator } from "../utils/helpers";
+import { optimisticMutator } from "../utils/client";
 import {
   commentsTableName,
   createCommentMutationArgsSchema,

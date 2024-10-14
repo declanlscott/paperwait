@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { enforceRbac, mutationRbac } from "@paperwait/core/auth/rbac";
 import { userRoles } from "@paperwait/core/users/shared";
-import { getUserInitials } from "@paperwait/core/utils/helpers";
+import { getUserInitials } from "@paperwait/core/utils/client";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   flexRender,

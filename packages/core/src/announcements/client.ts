@@ -1,6 +1,6 @@
 import { enforceRbac, mutationRbac, rbacErrorMessage } from "../auth/rbac";
 import { AccessDenied, EntityNotFound } from "../errors/application";
-import { optimisticMutator } from "../utils/helpers";
+import { optimisticMutator } from "../utils/client";
 import {
   announcementsTableName,
   createAnnouncementMutationArgsSchema,

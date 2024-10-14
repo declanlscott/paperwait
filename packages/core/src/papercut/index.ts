@@ -9,7 +9,7 @@ import { NonExhaustiveValue } from "../errors/misc";
 import * as Realtime from "../realtime";
 import * as Replicache from "../replicache";
 import * as Users from "../users";
-import { fn } from "../utils/helpers";
+import { fn } from "../utils/shared";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
   deletePapercutAccountManagerAuthorizationMutationArgsSchema,

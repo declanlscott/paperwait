@@ -1,7 +1,7 @@
 import { createContext } from "react";
 
 import type { Auth, Authenticated } from "@paperwait/core/auth";
-import type { Replicache } from "@paperwait/core/replicache/client";
+import type { Replicache } from "@paperwait/core/replicache/shared";
 import type { UserRole } from "@paperwait/core/users/shared";
 import type { Resource } from "sst";
 import type { StoreApi } from "zustand";

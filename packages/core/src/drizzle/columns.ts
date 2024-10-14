@@ -2,7 +2,7 @@ import { getTableColumns, sql } from "drizzle-orm";
 import { char, customType, timestamp } from "drizzle-orm/pg-core";
 
 import { NANOID_LENGTH } from "../constants";
-import { generateId } from "../utils/helpers";
+import { generateId } from "../utils/shared";
 
 import type { SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";

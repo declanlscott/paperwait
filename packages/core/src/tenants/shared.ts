@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 import { TENANT_SLUG_PATTERN } from "../constants";
 import { oauth2ProvidersSchema } from "../oauth2/shared";
-import { nanoIdSchema, timestampsSchema } from "../utils/schemas";
+import { nanoIdSchema, timestampsSchema } from "../utils/shared";
 
 export const licensesTableName = "licenses";
 

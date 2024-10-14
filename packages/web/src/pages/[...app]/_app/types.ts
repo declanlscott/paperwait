@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
-import type { ReadTransaction } from "@paperwait/core/replicache/client";
+import type { ReadTransaction } from "@paperwait/core/replicache/shared";
 import type { Room } from "@paperwait/core/rooms/sql";
 import type { UserRole } from "@paperwait/core/users/shared";
 import type { StartsWith } from "@paperwait/core/utils/types";

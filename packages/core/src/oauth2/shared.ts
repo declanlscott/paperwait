@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { timestampsSchema } from "../utils/schemas";
+import { timestampsSchema } from "../utils/shared";
 
 export const oauth2ProvidersTableName = "oauth2_providers";
 

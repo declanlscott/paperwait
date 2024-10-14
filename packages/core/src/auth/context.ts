@@ -1,5 +1,5 @@
 import { Unauthenticated as UnauthenticatedError } from "../errors/application";
-import { createContext } from "../utils/context";
+import { createContext } from "../utils";
 
 import type { Authenticated, Unauthenticated } from ".";
 

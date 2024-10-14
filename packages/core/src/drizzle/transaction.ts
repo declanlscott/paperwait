@@ -5,7 +5,7 @@ import {
   POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE,
 } from "../constants";
 import { InternalServerError } from "../errors/http";
-import { createContext } from "../utils/context";
+import { createContext } from "../utils";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { PgTransaction, PgTransactionConfig } from "drizzle-orm/pg-core";

@@ -5,7 +5,7 @@ import {
   papercutAccountIdSchema,
   tenantTableSchema,
   timestampsSchema,
-} from "../utils/schemas";
+} from "../utils/shared";
 
 export const papercutAccountsTableName = "papercut_accounts";
 export const papercutAccountCustomerAuthorizationsTableName =

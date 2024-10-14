@@ -9,6 +9,8 @@ import { roomMutationNames } from "../rooms/shared";
 import { tenantMutationNames } from "../tenants/shared";
 import { userProfileMutationNames } from "../users/shared";
 
+export * from "replicache";
+
 export const replicacheMetaTableName = "replicache_meta";
 export const replicacheClientGroupsTableName = "replicache_client_groups";
 export const replicacheClientsTableName = "replicache_clients";

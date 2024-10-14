@@ -8,7 +8,7 @@ import { AUTH_CALLBACK_PATH } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { HttpError, InternalServerError, NotFound } from "../errors/http";
 import { userProfilesTable, usersTable } from "../users/sql";
-import { parseJwt } from "../utils/helpers";
+import { parseJwt } from "../utils";
 import { useOauth2 } from "./context";
 
 import type { SessionTokens } from "../auth/sql";

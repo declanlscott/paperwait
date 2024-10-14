@@ -1,8 +1,8 @@
 import { index, jsonb, text, unique, varchar } from "drizzle-orm/pg-core";
 
 import { VARCHAR_LENGTH } from "../constants";
-import { roomStatus } from "../drizzle/enums.sql";
 import { tenantTable } from "../drizzle/tables";
+import { roomStatus } from "../utils/sql";
 import { roomsTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";
