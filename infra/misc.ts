@@ -1,11 +1,11 @@
 import { appFqdn, domainName } from "./dns";
 import {
-  awsOrgRootEmail,
-  manageTenantInfraRoleArn,
-  partyKitUrl,
-  replicacheLicenseKey,
-  tenantsOrganizationalUnitId,
-} from "./secrets";
+  organization,
+  organizationManagementRole,
+  tenantAccountAccessRoleName,
+  tenantsOrganizationalUnit,
+} from "./organization";
+import { partyKitUrl, replicacheLicenseKey } from "./secrets";
 
 export const isDev = $dev;
 
@@ -33,15 +33,27 @@ export const appData = new sst.Linkable("AppData", {
 export const cloud = new sst.Linkable("Cloud", {
   properties: {
     aws: {
-      identity: aws.getCallerIdentityOutput({}),
+      organization: {
+        id: organization.id,
+        email: organization.masterAccountEmail,
+        managementRole: {
+          arn: organizationManagementRole.arn,
+        },
+        tenantsOrganizationalUnit: {
+          id: tenantsOrganizationalUnit.id,
+          arn: tenantsOrganizationalUnit.arn,
+        },
+      },
+      account: {
+        id: aws.getCallerIdentityOutput().accountId,
+      },
       region: aws.getRegionOutput({}).name,
-      tenantsOrganizationalUnitId: tenantsOrganizationalUnitId.value,
-      orgRootEmail: awsOrgRootEmail.value,
-      manageTenantInfraRoleArn: manageTenantInfraRoleArn.value,
-      tenantAccountRoleName: "OrganizationAccountAccessRole",
+      tenantAccountAccessRole: {
+        name: tenantAccountAccessRoleName,
+      },
     },
     cloudflare: {
-      apiToken: process.env.CLOUDFLARE_API_TOKEN,
+      apiToken: process.env.CLOUDFLARE_API_TOKEN!,
     },
   },
 });

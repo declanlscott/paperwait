@@ -16,7 +16,7 @@ declare module "sst" {
       "stage": string
       "type": "sst.sst.Linkable"
     }
-    "AwsOrgRootEmail": {
+    "BootstrapRoleArn": {
       "type": "sst.sst.Secret"
       "value": string
     }
@@ -29,17 +29,24 @@ declare module "sst" {
     }
     "Cloud": {
       "aws": {
-        "identity": {
-          "accountId": string
-          "arn": string
+        "account": {
           "id": string
-          "userId": string
         }
-        "manageTenantInfraRoleArn": string
-        "orgRootEmail": string
+        "organization": {
+          "email": string
+          "id": string
+          "managementRole": {
+            "arn": string
+          }
+          "tenantsOrganizationalUnit": {
+            "arn": string
+            "id": string
+          }
+        }
         "region": string
-        "tenantAccountRoleName": string
-        "tenantsOrganizationalUnitId": string
+        "tenantAccountAccessRole": {
+          "name": string
+        }
       }
       "cloudflare": {
         "apiToken": string
@@ -84,10 +91,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "ManageTenantInfraRoleArn": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "Oauth2": {
       "entraId": {
         "clientId": string
@@ -123,10 +126,6 @@ declare module "sst" {
     "TenantInfraQueue": {
       "type": "sst.aws.Queue"
       "url": string
-    }
-    "TenantsOrganizationalUnitId": {
-      "type": "sst.sst.Secret"
-      "value": string
     }
     "Web": {
       "type": "sst.aws.Astro"
