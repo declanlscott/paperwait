@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "scripts": {
     "seed": "tsx ./src/seed.ts",
-    "realtime": "tsx ./src/realtime.ts",
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
