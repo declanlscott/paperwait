@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { enforceRbac } from "@paperwait/core/auth/rbac";
+import { enforceRbac } from "@paperwait/core/utils/shared";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 

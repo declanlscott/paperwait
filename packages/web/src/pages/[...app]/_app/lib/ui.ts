@@ -1,4 +1,4 @@
-import { valibot as v } from "@paperwait/core/utils/libs";
+import * as v from "@paperwait/core/libs/valibot";
 import { fn } from "@paperwait/core/utils/shared";
 
 export const collectionItem = (name: string) => ({ name });

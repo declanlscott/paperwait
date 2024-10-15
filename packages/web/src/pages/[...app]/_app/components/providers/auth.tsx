@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { enforceRbac, rbacErrorMessage } from "@paperwait/core/auth/rbac";
 import { AccessDenied } from "@paperwait/core/errors/application";
 import { HttpError } from "@paperwait/core/errors/http";
+import { enforceRbac, rbacErrorMessage } from "@paperwait/core/utils/shared";
 import { redirect } from "@tanstack/react-router";
 import { createStore } from "zustand";
 
@@ -11,7 +11,7 @@ import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
-import type { Auth } from "@paperwait/core/auth";
+import type { Auth } from "@paperwait/core/sessions/shared";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { AppRouter } from "~/app/types";
 
@@ -21,16 +21,13 @@ interface AuthStoreProviderProps extends PropsWithChildren {
 }
 
 export function AuthStoreProvider(props: AuthStoreProviderProps) {
-  const { auth } = props;
-
   const [store] = useState(() =>
     createStore<AuthStore>((set, get) => ({
-      user: auth.user,
-      session: auth.session,
-      tenant: auth.tenant,
+      ...props.auth,
       actions: {
         reset: () =>
           set(() => ({
+            isAuthed: false,
             user: null,
             session: null,
             tenant: null,
@@ -42,15 +39,20 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
           get().actions.reset();
         },
         authenticateRoute: (from) => {
-          const { user, session, tenant } = get();
+          const store = get();
 
-          if (!user || !session || !tenant)
+          if (!store.isAuthed) {
             throw redirect({
               to: "/login",
               search: { redirect: from, ...initialLoginSearchParams },
             });
+          }
 
-          return { user, session, tenant };
+          return {
+            user: store.user,
+            session: store.session,
+            tenant: store.tenant,
+          };
         },
         authorizeRoute: (user, roles) =>
           enforceRbac(user, roles, {

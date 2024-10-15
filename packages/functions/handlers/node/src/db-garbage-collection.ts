@@ -1,9 +1,9 @@
-import * as Auth from "@paperwait/core/auth";
-import * as Replicache from "@paperwait/core/replicache";
+import { Replicache } from "@paperwait/core/replicache";
+import { Sessions } from "@paperwait/core/sessions";
 
 export const handler = async () =>
   Promise.all([
-    Auth.deleteExpiredSessions(),
+    Sessions.deleteExpired(),
     Replicache.deleteExpiredClientGroups(),
     Replicache.deleteExpiredClients(),
   ]);

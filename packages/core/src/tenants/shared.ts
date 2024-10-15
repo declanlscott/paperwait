@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { TENANT_SLUG_PATTERN } from "../constants";
+import { Constants } from "../constants";
 import { oauth2ProvidersSchema } from "../oauth2/shared";
 import { nanoIdSchema, timestampsSchema } from "../utils/shared";
 
@@ -25,7 +25,7 @@ export const tenantSchema = v.object({
   slug: v.pipe(
     v.string(),
     v.regex(
-      TENANT_SLUG_PATTERN,
+      Constants.TENANT_SLUG_PATTERN,
       "Invalid format, only alphanumeric characters and hyphens are allowed",
     ),
   ),

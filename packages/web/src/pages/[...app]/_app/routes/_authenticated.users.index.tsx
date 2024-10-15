@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
-import { enforceRbac, mutationRbac } from "@paperwait/core/auth/rbac";
+import { mutationRbac } from "@paperwait/core/replicache/shared";
 import { userRoles } from "@paperwait/core/users/shared";
-import { getUserInitials } from "@paperwait/core/utils/client";
+import { Utils } from "@paperwait/core/utils/client";
+import { enforceRbac } from "@paperwait/core/utils/shared";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   flexRender,
@@ -117,7 +118,7 @@ const columns = [
           />
 
           <AvatarFallback className="text-foreground bg-muted border-primary border-2">
-            {getUserInitials(row.getValue("name"))}
+            {Utils.getUserInitials(row.getValue("name"))}
           </AvatarFallback>
         </Avatar>
 
@@ -429,7 +430,7 @@ function UserActionsMenu(props: UserActionsMenuProps) {
           </MenuSection>
 
           {props.user.deletedAt ? (
-            <EnforceRbac roles={mutationRbac.restoreUser}>
+            <EnforceRbac roles={mutationRbac.restoreUserProfile}>
               <MenuSeparator />
 
               <MenuSection>
@@ -443,7 +444,7 @@ function UserActionsMenu(props: UserActionsMenuProps) {
               </MenuSection>
             </EnforceRbac>
           ) : (
-            <EnforceRbac roles={mutationRbac.deleteUser}>
+            <EnforceRbac roles={mutationRbac.deleteUserProfile}>
               <MenuSeparator />
 
               <MenuSection>

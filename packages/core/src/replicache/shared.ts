@@ -9,7 +9,7 @@ import { roomMutationNames } from "../rooms/shared";
 import { tenantMutationNames } from "../tenants/shared";
 import { userProfileMutationNames } from "../users/shared";
 
-export * from "replicache";
+import type { UserRole } from "../users/shared";
 
 export const replicacheMetaTableName = "replicache_meta";
 export const replicacheClientGroupsTableName = "replicache_client_groups";
@@ -64,3 +64,29 @@ export const pullRequestSchema = v.variant("pullVersion", [
   }),
 ]);
 export type PullRequest = v.InferOutput<typeof pullRequestSchema>;
+
+export const mutationRbac = {
+  createAnnouncement: ["administrator", "operator"],
+  updateAnnouncement: ["administrator", "operator"],
+  deleteAnnouncement: ["administrator", "operator"],
+  createComment: ["administrator", "operator"],
+  updateComment: ["administrator"],
+  deleteComment: ["administrator"],
+  createOrder: ["administrator", "operator", "manager", "customer"],
+  updateOrder: ["administrator", "operator"],
+  deleteOrder: ["administrator", "operator"],
+  updateTenant: ["administrator"],
+  deletePapercutAccount: ["administrator"],
+  createPapercutAccountManagerAuthorization: ["administrator"],
+  deletePapercutAccountManagerAuthorization: ["administrator"],
+  createProduct: ["administrator", "operator"],
+  updateProduct: ["administrator", "operator"],
+  deleteProduct: ["administrator", "operator"],
+  createRoom: ["administrator"],
+  updateRoom: ["administrator", "operator"],
+  deleteRoom: ["administrator"],
+  restoreRoom: ["administrator"],
+  updateUserProfileRole: ["administrator"],
+  deleteUserProfile: ["administrator"],
+  restoreUserProfile: ["administrator"],
+} as const satisfies Record<MutationName, Array<UserRole>>;

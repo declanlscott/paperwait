@@ -1,11 +1,11 @@
-import { DB_SCHEMA_VERSION } from "@paperwait/core/constants";
+import { Constants } from "@paperwait/core/constants";
 import { db } from "@paperwait/core/drizzle";
 import { replicacheMetaTable } from "@paperwait/core/replicache/sql";
 
 async function seed() {
   await db.insert(replicacheMetaTable).values({
     key: "schemaVersion",
-    value: DB_SCHEMA_VERSION,
+    value: Constants.DB_SCHEMA_VERSION,
   });
 }
 

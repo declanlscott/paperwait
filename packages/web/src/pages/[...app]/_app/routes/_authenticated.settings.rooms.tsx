@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { mutationRbac } from "@paperwait/core/auth/rbac";
+import { mutationRbac } from "@paperwait/core/replicache/shared";
 import { roomStatuses } from "@paperwait/core/rooms/shared";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import {
@@ -59,7 +59,7 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { Product } from "@paperwait/core/products/sql";
-import type { DeepReadonlyObject } from "@paperwait/core/replicache/client";
+import type { DeepReadonlyObject } from "@paperwait/core/replicache/lib";
 import type { Room } from "@paperwait/core/rooms/sql";
 import type {
   ColumnDef,

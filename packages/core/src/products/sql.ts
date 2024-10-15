@@ -1,6 +1,6 @@
 import { foreignKey, index, jsonb, varchar } from "drizzle-orm/pg-core";
 
-import { VARCHAR_LENGTH } from "../constants";
+import { Constants } from "../constants";
 import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
 import { roomsTable } from "../rooms/sql";
@@ -13,7 +13,7 @@ import type { ProductConfiguration } from "./shared";
 export const productsTable = tenantTable(
   productsTableName,
   {
-    name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
+    name: varchar("name", { length: Constants.VARCHAR_LENGTH }).notNull(),
     status: productStatus("status").notNull(),
     roomId: id("room_id").notNull(),
     config: jsonb("config").$type<ProductConfiguration>().notNull(),

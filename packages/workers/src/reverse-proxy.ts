@@ -1,4 +1,4 @@
-import { SESSION_COOKIE_NAME } from "@paperwait/core/constants";
+import { Constants } from "@paperwait/core/constants";
 import { HttpError, TooManyRequests } from "@paperwait/core/errors/http";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/cloudflare-workers";
@@ -15,7 +15,7 @@ export default new Hono<{
   };
 }>()
   .use("/api/*", async (c, next) => {
-    const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+    const sessionId = getCookie(c, Constants.SESSION_COOKIE_NAME);
 
     let outcome: RateLimitOutcome;
     if (sessionId)

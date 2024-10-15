@@ -1,4 +1,4 @@
-import { POKE } from "@paperwait/core/constants";
+import { Constants } from "@paperwait/core/constants";
 import usePartySocket from "partysocket/react";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
@@ -17,7 +17,7 @@ export function useRealtime(props: RealtimeProps) {
     host: realtimeUrl,
     room: props.channel,
     onMessage: (message) => {
-      if (message.data === POKE) void replicache.pull();
+      if (message.data === Constants.POKE) void replicache.pull();
     },
     query: { replicacheLicenseKey },
   });

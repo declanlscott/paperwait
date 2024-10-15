@@ -1,11 +1,7 @@
 import { db } from ".";
-import {
-  DB_TRANSACTION_MAX_RETRIES,
-  POSTGRES_DEADLOCK_DETECTED_ERROR_CODE,
-  POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE,
-} from "../constants";
+import { Constants } from "../constants";
 import { InternalServerError } from "../errors/http";
-import { createContext } from "../utils";
+import { Utils } from "../utils";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { PgTransaction, PgTransactionConfig } from "drizzle-orm/pg-core";
@@ -25,7 +21,8 @@ type TransactionContext<
   tx: Transaction;
   effects: Array<TEffect>;
 };
-const TransactionContext = createContext<TransactionContext>("Transaction");
+const TransactionContext =
+  Utils.createContext<TransactionContext>("Transaction");
 
 export async function useTransaction<
   TCallback extends (tx: TxOrDb) => ReturnType<TCallback>,
@@ -104,7 +101,7 @@ export async function transact<
 export async function serializable<TOutput>(
   callback: (tx: Transaction) => Promise<TOutput>,
 ) {
-  for (let i = 0; i < DB_TRANSACTION_MAX_RETRIES; i++) {
+  for (let i = 0; i < Constants.DB_TRANSACTION_MAX_RETRIES; i++) {
     const result = await transact(callback, {
       transaction: { isolationLevel: "serializable" },
       onRollback: (e) => {
@@ -147,7 +144,7 @@ function shouldRetryTransaction(error: unknown) {
   const code = typeof error === "object" ? String((error as any).code) : null;
 
   return (
-    code === POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE ||
-    code === POSTGRES_DEADLOCK_DETECTED_ERROR_CODE
+    code === Constants.POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE ||
+    code === Constants.POSTGRES_DEADLOCK_DETECTED_ERROR_CODE
   );
 }

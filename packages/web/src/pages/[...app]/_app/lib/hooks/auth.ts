@@ -15,7 +15,10 @@ import {
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
-import type { Authenticated, Unauthenticated } from "@paperwait/core/auth";
+import type {
+  Authenticated,
+  Unauthenticated,
+} from "@paperwait/core/sessions/shared";
 import type { AuthStore } from "~/app/lib/contexts";
 
 export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {

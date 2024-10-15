@@ -1,10 +1,11 @@
 import { Unauthenticated as UnauthenticatedError } from "../errors/application";
-import { createContext } from "../utils";
+import { Utils } from "../utils";
 
-import type { Authenticated, Unauthenticated } from ".";
+import type { Authenticated, Unauthenticated } from "./shared";
 
-export type AuthContext = Authenticated | Unauthenticated;
-export const AuthContext = createContext<AuthContext>("Auth");
+export type Auth = Authenticated | Unauthenticated;
+export type AuthContext = Auth;
+export const AuthContext = Utils.createContext<AuthContext>("Session");
 
 export function useAuth(): AuthContext {
   try {

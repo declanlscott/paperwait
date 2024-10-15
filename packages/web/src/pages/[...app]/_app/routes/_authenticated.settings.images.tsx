@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ASSETS_MIME_TYPES } from "@paperwait/core/constants";
+import { Constants } from "@paperwait/core/constants";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Dropzone } from "~/app/components/ui/primitives/dropzone";
@@ -18,7 +18,7 @@ function Component() {
           e.items
             .filter((item) => item.kind === "file")
             .filter((item) => {
-              const isImage = ASSETS_MIME_TYPES.includes(item.type);
+              const isImage = Constants.ASSETS_MIME_TYPES.includes(item.type);
               if (!isImage) {
                 //
               }

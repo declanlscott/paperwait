@@ -2,15 +2,16 @@ import { customAlphabet } from "nanoid";
 import * as R from "remeda";
 import * as v from "valibot";
 
-import {
-  NANOID_CUSTOM_ALPHABET,
-  NANOID_LENGTH,
-  NANOID_PATTERN,
-} from "../constants";
+import { Constants } from "../constants";
 
+import type { Authenticated } from "../sessions/shared";
+import type { UserRole } from "../users/shared";
 import type { AnyError, CustomError, InferCustomError } from "./types";
 
-export const generateId = customAlphabet(NANOID_CUSTOM_ALPHABET, NANOID_LENGTH);
+export const generateId = customAlphabet(
+  Constants.NANOID_CUSTOM_ALPHABET,
+  Constants.NANOID_LENGTH,
+);
 
 export const formatPascalCase = (value: string) =>
   value.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -52,7 +53,10 @@ export const isUniqueByName = <TInput extends Array<{ name: string }>>(
     R.isDeepEqual(input.length),
   );
 
-export const nanoIdSchema = v.pipe(v.string(), v.regex(NANOID_PATTERN));
+export const nanoIdSchema = v.pipe(
+  v.string(),
+  v.regex(Constants.NANOID_PATTERN),
+);
 export type NanoId = v.InferOutput<typeof nanoIdSchema>;
 
 export const timestampsSchema = v.object({
@@ -71,3 +75,31 @@ export const papercutAccountIdSchema = v.pipe(
   v.string(),
   v.transform((input) => BigInt(input).toString()),
 );
+
+type EnforceRbacResult<TMaybeError extends AnyError | undefined> =
+  TMaybeError extends AnyError ? true : boolean;
+
+export function enforceRbac<TMaybeError extends AnyError | undefined>(
+  user: Authenticated["user"],
+  roles: Array<UserRole>,
+  customError?: TMaybeError extends AnyError
+    ? InferCustomError<CustomError<TMaybeError>>
+    : never,
+): EnforceRbacResult<TMaybeError> {
+  const hasAccess = roles.includes(user.profile.role);
+
+  if (!hasAccess) {
+    console.log(rbacErrorMessage(user));
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    if (customError) throw new customError.Error(...customError.args);
+  }
+
+  return hasAccess as EnforceRbacResult<TMaybeError>;
+}
+
+export const rbacErrorMessage = (
+  user: Authenticated["user"],
+  resourceName?: string,
+) =>
+  `User "${user.id}" does not have the required role to access ${resourceName ? `"${resourceName}"` : "this resource"}.`;

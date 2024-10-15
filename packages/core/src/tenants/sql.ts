@@ -7,7 +7,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { VARCHAR_LENGTH } from "../constants";
+import { Constants } from "../constants";
 import { id, idPrimaryKey, timestamps } from "../drizzle/columns";
 import { oauth2ProvidersTable } from "../oauth2/sql";
 import { licenseStatus, tenantStatus } from "../utils/sql";
@@ -29,8 +29,10 @@ export const tenantsTable = pgTable(
   tenantsTableName,
   {
     ...idPrimaryKey,
-    slug: varchar("slug", { length: VARCHAR_LENGTH }).notNull().unique(),
-    name: varchar("name", { length: VARCHAR_LENGTH }).notNull(),
+    slug: varchar("slug", { length: Constants.VARCHAR_LENGTH })
+      .notNull()
+      .unique(),
+    name: varchar("name", { length: Constants.VARCHAR_LENGTH }).notNull(),
     status: tenantStatus("status").notNull().default("initializing"),
     oauth2ProviderId: text("oauth2_provider_id"),
     ...timestamps,

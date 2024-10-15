@@ -57,13 +57,17 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
           <>
             <DialogHeader>
               <DialogTitle>
-                {isSelf ? "Delete Account" : `Delete "${userToDelete?.name}"`}?
+                {isSelf
+                  ? "Delete Account"
+                  : `Delete "${userToDelete?.profile.name}"`}
+                ?
               </DialogTitle>
 
               <p className="text-muted-foreground text-sm">
                 Are you sure you want to continue?{" "}
-                {isSelf ? "You" : `${userToDelete?.name}`} will not be able to
-                access {isSelf ? "your" : "their"} account after deletion.
+                {isSelf ? "You" : `${userToDelete?.profile.name}`} will not be
+                able to access {isSelf ? "your" : "their"} account after
+                deletion.
               </p>
 
               <EnforceRbac roles={["administrator"]}>

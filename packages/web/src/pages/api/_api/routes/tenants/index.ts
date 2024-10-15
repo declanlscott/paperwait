@@ -1,5 +1,5 @@
 import { vValidator } from "@hono/valibot-validator";
-import { and, eq } from "@paperwait/core/drizzle";
+import { and, eq } from "@paperwait/core/drizzle/lib";
 import { transact } from "@paperwait/core/drizzle/transaction";
 import { registrationSchema } from "@paperwait/core/tenants/shared";
 import { licensesTable, tenantsTable } from "@paperwait/core/tenants/sql";

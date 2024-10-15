@@ -1,13 +1,13 @@
-import { useAuthenticated } from "@paperwait/core/auth/context";
-import { enforceRbac } from "@paperwait/core/auth/rbac";
 import { withTransaction } from "@paperwait/core/drizzle/transaction";
 import { Forbidden, InternalServerError } from "@paperwait/core/errors/http";
 import {
   ArcticFetchError,
   Oauth2RequestError,
 } from "@paperwait/core/errors/oauth2";
-import * as Oauth2 from "@paperwait/core/oauth2";
+import { Oauth2 } from "@paperwait/core/oauth2";
 import { withOauth2 } from "@paperwait/core/oauth2/context";
+import { useAuthenticated } from "@paperwait/core/sessions/context";
+import { enforceRbac } from "@paperwait/core/utils/shared";
 import { createMiddleware } from "hono/factory";
 
 import type { UserRole } from "@paperwait/core/users/shared";

@@ -1,7 +1,7 @@
 import { getTableColumns, sql } from "drizzle-orm";
 import { char, customType, timestamp } from "drizzle-orm/pg-core";
 
-import { NANOID_LENGTH } from "../constants";
+import { Constants } from "../constants";
 import { generateId } from "../utils/shared";
 
 import type { SQL } from "drizzle-orm";
@@ -11,7 +11,7 @@ import type { PgTable } from "drizzle-orm/pg-core";
  * NanoID column
  */
 export function id(name: string) {
-  return char(name, { length: NANOID_LENGTH });
+  return char(name, { length: Constants.NANOID_LENGTH });
 }
 
 /**

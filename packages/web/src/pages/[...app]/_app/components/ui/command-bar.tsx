@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
-import { enforceRbac } from "@paperwait/core/auth/rbac";
+import { enforceRbac } from "@paperwait/core/utils/shared";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { Check, CircleCheck, CircleDashed, Home, LogOut } from "lucide-react";

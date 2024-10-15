@@ -2,7 +2,7 @@ import {
   Button as AriaButton,
   composeRenderProps,
 } from "react-aria-components";
-import { getUserInitials } from "@paperwait/core/utils/helpers";
+import { Utils } from "@paperwait/core/utils/client";
 import { Building2, LogOut } from "lucide-react";
 
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
@@ -45,7 +45,7 @@ export function UserMenu() {
           />
 
           <AvatarFallback className="text-foreground bg-muted border-primary border-2">
-            {getUserInitials(user.profile.name)}
+            {Utils.getUserInitials(user.profile.name)}
           </AvatarFallback>
         </Avatar>
       </AriaButton>

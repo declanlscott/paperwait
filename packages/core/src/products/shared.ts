@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { VARCHAR_LENGTH } from "../constants";
+import { Constants } from "../constants";
 import {
   isUniqueByName,
   nanoIdSchema,
@@ -224,7 +224,7 @@ export type ProductConfiguration = v.InferOutput<
 
 export const productSchema = v.object({
   ...tenantTableSchema.entries,
-  name: v.pipe(v.string(), v.maxLength(VARCHAR_LENGTH)),
+  name: v.pipe(v.string(), v.maxLength(Constants.VARCHAR_LENGTH)),
   status: v.picklist(productStatuses),
   roomId: nanoIdSchema,
   config: productConfigurationSchema,

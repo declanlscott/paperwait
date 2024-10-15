@@ -7,7 +7,7 @@ import {
   Unauthorized,
 } from "@paperwait/core/errors/http";
 import { UnrecoverableError } from "@paperwait/core/errors/replicache";
-import * as Replicache from "@paperwait/core/replicache";
+import { Replicache } from "@paperwait/core/replicache";
 import { Hono } from "hono";
 
 import { authorization } from "~/api/middleware";

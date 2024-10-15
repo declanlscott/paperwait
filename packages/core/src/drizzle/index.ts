@@ -10,5 +10,3 @@ export const db = drizzle(
 );
 
 export type Db = typeof db;
-
-export * from "drizzle-orm";

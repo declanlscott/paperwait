@@ -1,9 +1,8 @@
 import { vValidator } from "@hono/valibot-validator";
-import * as Auth from "@paperwait/core/auth";
-import { useAuthenticated } from "@paperwait/core/auth/context";
-import { and, db, eq, or, sql } from "@paperwait/core/drizzle";
+import { and, eq, or, sql } from "@paperwait/core/drizzle/lib";
 import {
   afterTransaction,
+  useTransaction,
   withTransaction,
 } from "@paperwait/core/drizzle/transaction";
 import {
@@ -17,30 +16,32 @@ import {
   ArcticFetchError,
   Oauth2RequestError,
 } from "@paperwait/core/errors/oauth2";
-import * as EntraId from "@paperwait/core/oauth2/entra-id";
-import * as Google from "@paperwait/core/oauth2/google";
+import * as R from "@paperwait/core/libs/remeda";
+import * as v from "@paperwait/core/libs/valibot";
+import { EntraId } from "@paperwait/core/oauth2/entra-id";
+import { Google } from "@paperwait/core/oauth2/google";
 import {
   ENTRA_ID,
   GOOGLE,
   oauth2ProviderVariants,
 } from "@paperwait/core/oauth2/shared";
 import { oauth2ProvidersTable } from "@paperwait/core/oauth2/sql";
-import * as PapercutApi from "@paperwait/core/papercut/api";
-import * as Realtime from "@paperwait/core/realtime";
-import * as Replicache from "@paperwait/core/replicache";
+import { Realtime } from "@paperwait/core/realtime";
+import { Replicache } from "@paperwait/core/replicache";
+import { Sessions } from "@paperwait/core/sessions";
+import { useAuthenticated } from "@paperwait/core/sessions/context";
 import { tenantsTable } from "@paperwait/core/tenants/sql";
-import * as Users from "@paperwait/core/users";
-import { usersTable } from "@paperwait/core/users/sql";
-import { remeda as R, valibot as v } from "@paperwait/core/utils/libs";
-import { nanoIdSchema } from "@paperwait/core/utils/schemas";
+import { Users } from "@paperwait/core/users";
+import { userProfilesTable, usersTable } from "@paperwait/core/users/sql";
+import { nanoIdSchema } from "@paperwait/core/utils/shared";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
 import { Resource } from "sst";
 
 import { authorization } from "~/api/middleware";
 
+import type { Oauth2 } from "@paperwait/core/oauth2";
 import type { UserInfo } from "@paperwait/core/oauth2/shared";
-import type { IdToken, Oauth2Tokens } from "@paperwait/core/oauth2/tokens";
 
 export default new Hono()
   // Login
@@ -53,33 +54,35 @@ export default new Hono()
     async (c) => {
       const { tenant: tenantParam, redirect } = c.req.valid("query");
 
-      const tenant = await db
-        .select({
-          id: tenantsTable.id,
-          oauth2ProviderId: oauth2ProvidersTable.id,
-          oauth2ProviderVariant: oauth2ProvidersTable.variant,
-        })
-        .from(tenantsTable)
-        .where(
-          or(
-            eq(
-              sql`TRIM(LOWER(${tenantsTable.name}))`,
-              sql`TRIM(LOWER(${tenantParam}))`,
+      const tenant = await useTransaction((tx) =>
+        tx
+          .select({
+            id: tenantsTable.id,
+            oauth2ProviderId: oauth2ProvidersTable.id,
+            oauth2ProviderVariant: oauth2ProvidersTable.variant,
+          })
+          .from(tenantsTable)
+          .where(
+            or(
+              eq(
+                sql`TRIM(LOWER(${tenantsTable.name}))`,
+                sql`TRIM(LOWER(${tenantParam}))`,
+              ),
+              eq(
+                sql`TRIM(LOWER(${tenantsTable.slug}))`,
+                sql`TRIM(LOWER(${tenantParam}))`,
+              ),
             ),
-            eq(
-              sql`TRIM(LOWER(${tenantsTable.slug}))`,
-              sql`TRIM(LOWER(${tenantParam}))`,
+          )
+          .innerJoin(
+            oauth2ProvidersTable,
+            and(
+              eq(tenantsTable.oauth2ProviderId, oauth2ProvidersTable.id),
+              eq(tenantsTable.id, oauth2ProvidersTable.tenantId),
             ),
-          ),
-        )
-        .innerJoin(
-          oauth2ProvidersTable,
-          and(
-            eq(tenantsTable.oauth2ProviderId, oauth2ProvidersTable.id),
-            eq(tenantsTable.id, oauth2ProvidersTable.tenantId),
-          ),
-        )
-        .then((rows) => rows.at(0));
+          )
+          .then((rows) => rows.at(0)),
+      );
       if (!tenant) throw new NotFound("Tenant not found");
 
       let state: string;
@@ -151,8 +154,8 @@ export default new Hono()
       const { provider, code_verifier, tenantId, redirect } =
         c.req.valid("cookie");
 
-      let tokens: Oauth2Tokens;
-      let idToken: IdToken;
+      let tokens: Oauth2.Tokens;
+      let idToken: Oauth2.IdToken;
       switch (provider) {
         case ENTRA_ID: {
           tokens = await EntraId.validateAuthorizationCode(
@@ -180,33 +183,45 @@ export default new Hono()
         }
       }
 
-      const tenant = await db
-        .select({ status: tenantsTable.status })
-        .from(tenantsTable)
-        .where(
-          and(
-            eq(tenantsTable.oauth2ProviderId, idToken.providerId),
-            eq(tenantsTable.id, tenantId),
-          ),
-        )
-        .then((rows) => rows.at(0));
-      if (!tenant)
-        throw new NotFound(
-          `Tenant "${tenantId}" not found with oauth2 provider "${idToken.providerId}"`,
-        );
-
-      const userExists = await PapercutApi.isUserExists(idToken.username);
-      if (!userExists)
-        throw new Unauthorized("User does not exist in PaperCut");
+      const result = await useTransaction((tx) =>
+        tx
+          .select({
+            tenant: tenantsTable,
+            user: usersTable,
+            userProfile: userProfilesTable,
+          })
+          .from(tenantsTable)
+          .leftJoin(usersTable, eq(usersTable.tenantId, tenantsTable.id))
+          .leftJoin(
+            userProfilesTable,
+            eq(userProfilesTable.userId, usersTable.id),
+          )
+          .where(
+            and(
+              eq(tenantsTable.id, tenantId),
+              eq(usersTable.username, idToken.username),
+              eq(usersTable.tenantId, tenantId),
+              eq(userProfilesTable.tenantId, tenantId),
+            ),
+          )
+          .then((rows) => rows.at(0)),
+      );
+      if (!result?.tenant) throw new NotFound("Tenant not found");
+      if (result.tenant.status === "suspended")
+        throw new Unauthorized("Tenant is suspended");
+      if (!result.user) throw new NotFound("User not found");
+      if (result.user.deletedAt) throw new Unauthorized("User is deleted");
 
       let userInfo: UserInfo;
       switch (provider) {
-        case ENTRA_ID:
+        case ENTRA_ID: {
           userInfo = await EntraId.getUserInfo(tokens.accessToken());
           break;
-        case GOOGLE:
+        }
+        case GOOGLE: {
           userInfo = await Google.getUserInfo(tokens.accessToken());
           break;
+        }
         default: {
           provider satisfies never;
 
@@ -217,52 +232,34 @@ export default new Hono()
         }
       }
 
+      const user = {
+        ...result.user,
+        profile: result.userProfile,
+      };
       const { cookie } = await withTransaction(async (tx) => {
-        const existingUser = await tx
-          .select({
-            id: usersTable.id,
-            name: usersTable.name,
-            email: usersTable.email,
-            username: usersTable.username,
-            role: usersTable.role,
-            deletedAt: usersTable.deletedAt,
-          })
-          .from(usersTable)
-          .where(
-            and(
-              eq(usersTable.oauth2UserId, idToken.userId),
-              eq(usersTable.tenantId, tenantId),
-            ),
-          )
-          .then((rows) => rows.at(0));
-
-        if (!existingUser) {
-          if (tenant.status === "suspended")
-            throw new Unauthorized("tenant is suspended");
-
-          const newUser = await Users.create({
-            tenantId,
+        if (!user.profile) {
+          const newUserProfile = await Users.createProfile({
+            userId: user.id,
             oauth2UserId: idToken.userId,
             name: userInfo.name,
-            username: idToken.username,
             email: userInfo.email,
+            tenantId,
           });
-          if (!newUser) throw new Error("Failed to insert new user");
+          if (!newUserProfile) throw new Error("Failed to create user profile");
 
           await afterTransaction(() =>
             Replicache.poke([Realtime.formatChannel("tenant", tenantId)]),
           );
 
-          return Auth.createSession({ userId: newUser.id, tenantId }, tokens);
+          return Sessions.create({ userId: user.id, tenantId }, tokens);
         }
 
-        if (existingUser.deletedAt) throw new Unauthorized("User is deleted");
-
         const existingUserInfo = {
-          name: existingUser.name,
-          email: existingUser.email,
-          username: existingUser.username,
+          name: user.profile.name,
+          email: user.profile.email,
+          username: user.username,
         };
+
         const freshUserInfo = {
           name: userInfo.name,
           email: userInfo.email,
@@ -270,25 +267,38 @@ export default new Hono()
         };
 
         if (!R.isDeepEqual(existingUserInfo, freshUserInfo)) {
-          await tx
-            .update(usersTable)
-            .set(freshUserInfo)
-            .where(
-              and(
-                eq(usersTable.id, existingUser.id),
-                eq(usersTable.tenantId, tenantId),
-              ),
-            );
+          if (user.profile.name !== idToken.username)
+            await tx
+              .update(usersTable)
+              .set({ username: idToken.username })
+              .where(
+                and(
+                  eq(usersTable.id, user.id),
+                  eq(usersTable.tenantId, tenantId),
+                ),
+              );
+
+          if (
+            existingUserInfo.name !== freshUserInfo.name ||
+            existingUserInfo.email !== freshUserInfo.email
+          ) {
+            await tx
+              .update(userProfilesTable)
+              .set({ name: freshUserInfo.name, email: freshUserInfo.email })
+              .where(
+                and(
+                  eq(userProfilesTable.userId, user.id),
+                  eq(userProfilesTable.tenantId, tenantId),
+                ),
+              );
+          }
 
           await afterTransaction(() =>
             Replicache.poke([Realtime.formatChannel("tenant", tenantId)]),
           );
         }
 
-        return Auth.createSession(
-          { userId: existingUser.id, tenantId },
-          tokens,
-        );
+        return Sessions.create({ userId: user.id, tenantId }, tokens);
       });
 
       setCookie(c, cookie.name, cookie.value, cookie.attributes);
@@ -300,7 +310,7 @@ export default new Hono()
   .post("/logout", authorization(), async (c) => {
     const { session } = useAuthenticated();
 
-    const { cookie } = await Auth.invalidateSession(session.id);
+    const { cookie } = await Sessions.invalidate(session.id);
 
     setCookie(c, cookie.name, cookie.value, cookie.attributes);
 
@@ -317,7 +327,7 @@ export default new Hono()
       const userExists = await Users.exists(userId);
       if (!userExists) throw new NotFound(`User "${userId}" not found`);
 
-      await Auth.invalidateUserSessions(userId);
+      await Sessions.invalidateUser(userId);
 
       return c.body(null, 204);
     },

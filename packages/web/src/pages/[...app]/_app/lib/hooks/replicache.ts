@@ -1,16 +1,16 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import * as Announcements from "@paperwait/core/announcements/client";
+import { Announcements } from "@paperwait/core/announcements/client";
 import { MissingContextProvider } from "@paperwait/core/errors/application";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 
-import type { Authenticated } from "@paperwait/core/auth";
 import type {
   ReadTransaction,
   SubscribeOptions,
   WriteTransaction,
-} from "@paperwait/core/replicache/shared";
+} from "@paperwait/core/replicache/lib";
+import type { Authenticated } from "@paperwait/core/sessions/shared";
 
 export function useReplicache() {
   const replicache = useContext(ReplicacheContext);

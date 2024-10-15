@@ -1,34 +1,28 @@
-import * as Auth from "@paperwait/core/auth";
-import { withAuth } from "@paperwait/core/auth/context";
-import { SESSION_COOKIE_NAME } from "@paperwait/core/constants";
+import { Constants } from "@paperwait/core/constants";
+import { Sessions } from "@paperwait/core/sessions";
+import { withAuth } from "@paperwait/core/sessions/context";
 import { defineMiddleware } from "astro:middleware";
 
 import { isPrerenderedPage } from "~/middleware/utils";
 
 export const auth = defineMiddleware(async (context, next) => {
-  if (isPrerenderedPage(context.url.pathname)) return await next();
+  if (isPrerenderedPage(context.url.pathname)) return next();
 
-  const token = context.cookies.get(SESSION_COOKIE_NAME)?.value ?? null;
+  const token =
+    context.cookies.get(Constants.SESSION_COOKIE_NAME)?.value ?? null;
   if (!token)
-    return await withAuth(
+    return withAuth(
       { isAuthed: false, session: null, user: null, tenant: null },
       next,
     );
 
-  const auth = await Auth.validateSessionToken(token);
-  if (!auth.session) {
-    const cookie = Auth.createSessionCookie();
+  const auth = await Sessions.validateToken(token);
 
-    context.cookies.set(cookie.name, cookie.value, cookie.attributes);
+  const cookie = Sessions.createCookie(
+    auth.session ? { token, expiresAt: auth.session.expiresAt } : undefined,
+  );
 
-    return await withAuth({ isAuthed: false, ...auth }, next);
-  }
-
-  const cookie = Auth.createSessionCookie({
-    token,
-    expiresAt: auth.session.expiresAt,
-  });
   context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
-  return await withAuth({ isAuthed: true, ...auth }, next);
+  return withAuth(auth, next);
 });

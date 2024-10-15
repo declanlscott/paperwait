@@ -1,23 +1,23 @@
-import { clientMetadataFromGroupId } from ".";
-import * as Announcements from "../announcements";
+import { Replicache } from ".";
+import { Announcements } from "../announcements";
 import { announcementsTable } from "../announcements/sql";
-import * as Comments from "../comments";
+import { Comments } from "../comments";
 import { commentsTable } from "../comments/sql";
-import * as Orders from "../orders";
+import { Orders } from "../orders";
 import { ordersTable } from "../orders/sql";
-import * as Papercut from "../papercut";
+import { Papercut } from "../papercut";
 import {
   papercutAccountCustomerAuthorizationsTable,
   papercutAccountManagerAuthorizationsTable,
   papercutAccountsTable,
 } from "../papercut/sql";
-import * as Products from "../products";
+import { Products } from "../products";
 import { productsTable } from "../products/sql";
-import * as Rooms from "../rooms";
+import { Rooms } from "../rooms";
 import { roomsTable } from "../rooms/sql";
-import * as Tenants from "../tenants";
+import { Tenants } from "../tenants";
 import { tenantsTable } from "../tenants/sql";
-import * as Users from "../users";
+import { Users } from "../users";
 import { usersTable } from "../users/sql";
 import { replicacheClientsTable } from "./sql";
 
@@ -84,7 +84,7 @@ export const metadataQueryFactory = {
   papercut_account_manager_authorizations:
     Papercut.accountManagerAuthorizationsMetadata,
   products: Products.metadata,
-  replicache_clients: clientMetadataFromGroupId,
+  replicache_clients: Replicache.clientMetadataFromGroupId,
   rooms: Rooms.metadata,
   tenants: Tenants.metadata,
   users: Users.metadata,
