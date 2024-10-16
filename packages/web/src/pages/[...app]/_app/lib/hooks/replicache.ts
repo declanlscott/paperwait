@@ -5,12 +5,12 @@ import { MissingContextProvider } from "@paperwait/core/errors/application";
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 
+import type { Authenticated } from "@paperwait/core/sessions/shared";
 import type {
   ReadTransaction,
   SubscribeOptions,
   WriteTransaction,
-} from "@paperwait/core/replicache/lib";
-import type { Authenticated } from "@paperwait/core/sessions/shared";
+} from "replicache";
 
 export function useReplicache() {
   const replicache = useContext(ReplicacheContext);

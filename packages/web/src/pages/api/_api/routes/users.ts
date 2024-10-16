@@ -1,12 +1,12 @@
 import { vValidator } from "@hono/valibot-validator";
 import { NotImplemented } from "@paperwait/core/errors/http";
-import * as v from "@paperwait/core/libs/valibot";
 import { useOauth2 } from "@paperwait/core/oauth2/context";
 import { EntraId } from "@paperwait/core/oauth2/entra-id";
 import { Google } from "@paperwait/core/oauth2/google";
 import { ENTRA_ID, GOOGLE } from "@paperwait/core/oauth2/shared";
 import { nanoIdSchema } from "@paperwait/core/utils/shared";
 import { Hono } from "hono";
+import * as v from "valibot";
 
 import { authorization, provider } from "~/api/middleware";
 

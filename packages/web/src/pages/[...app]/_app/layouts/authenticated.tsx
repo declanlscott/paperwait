@@ -1,4 +1,4 @@
-import { formatChannel } from "@paperwait/core/realtime";
+import { Realtime } from "@paperwait/core/realtime";
 import { Outlet } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -15,7 +15,7 @@ import type { PropsWithChildren } from "react";
 export function AuthenticatedLayout() {
   return (
     <AuthenticatedProvider>
-      <Realtime>
+      <RealtimeWrapper>
         <CommandBarProvider>
           <MainNav />
 
@@ -23,16 +23,16 @@ export function AuthenticatedLayout() {
             <Outlet />
           </main>
         </CommandBarProvider>
-      </Realtime>
+      </RealtimeWrapper>
     </AuthenticatedProvider>
   );
 }
 
-function Realtime(props: PropsWithChildren) {
+function RealtimeWrapper(props: PropsWithChildren) {
   const { user } = useAuthenticated();
 
-  useRealtime({ channel: formatChannel("tenant", user.tenantId) });
-  useRealtime({ channel: formatChannel("user", user.id) });
+  useRealtime({ channel: Realtime.formatChannel("tenant", user.tenantId) });
+  useRealtime({ channel: Realtime.formatChannel("user", user.id) });
 
   useQuery(queryFactory.user(user.id), {
     onData: (u) => {

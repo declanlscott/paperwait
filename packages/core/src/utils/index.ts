@@ -74,23 +74,4 @@ export namespace Utils {
       },
     }) as TResource;
   }
-
-  export function createPrefixedRecord<
-    TKey extends string,
-    TDelimiter extends string,
-    TPrefix extends string,
-  >(
-    prefix: TPrefix,
-    delimiter: TDelimiter,
-    keys: Array<TKey>,
-  ): PrefixedRecord<TPrefix, TDelimiter, TKey> {
-    return keys.reduce(
-      (prefixedRecord, key) => {
-        prefixedRecord[key] = `${prefix}${delimiter}${key}`;
-
-        return prefixedRecord;
-      },
-      {} as PrefixedRecord<TPrefix, TDelimiter, TKey>,
-    );
-  }
 }
