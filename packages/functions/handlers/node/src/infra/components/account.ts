@@ -31,15 +31,15 @@ export class Account extends pulumi.ComponentResource {
 
     const accountName = pulumi.interpolate`${AppData.name}-${AppData.stage}-tenant-${args.tenantId}`;
 
-    const emailSegments = Cloud.aws.orgRootEmail.split("@");
+    const emailSegments = Cloud.aws.organization.email.split("@");
 
     this.account = new aws.organizations.Account(
       "Account",
       {
         name: accountName,
         email: pulumi.interpolate`${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
-        parentId: Cloud.aws.tenantsOrganizationalUnitId,
-        roleName: Cloud.aws.tenantAccountRoleName,
+        parentId: Cloud.aws.organization.tenantsOrganizationalUnit.id,
+        roleName: Cloud.aws.tenantAccountAccessRole.name,
         iamUserAccessToBilling: "ALLOW",
       },
       { parent: this },

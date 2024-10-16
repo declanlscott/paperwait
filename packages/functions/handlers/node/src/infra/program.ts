@@ -1,12 +1,14 @@
+import * as pulumi from "@pulumi/pulumi";
+
 import { Account } from "./components/account";
 import { Api } from "./components/api";
 import { Config } from "./components/config";
-import { Cron } from "./components/cron";
+import { Events } from "./components/events";
 import { Functions } from "./components/functions";
 import { Router } from "./components/router";
 import { Ssl } from "./components/ssl";
 import { Storage } from "./components/storage";
-import { withResource } from "./resource";
+import { useResource, withResource } from "./resource";
 
 import type { Tenant } from "@paperwait/core/tenants/sql";
 
@@ -56,10 +58,16 @@ export const getProgram = (tenantId: Tenant["id"]) => () =>
       { providers: [account.provider] },
     );
 
-    Cron.getInstance(
+    Events.getInstance(
       {
-        tailscaleAuthKeyRotationFunctionArn:
-          functions.tailscaleAuthKeyRotationArn,
+        userSync: {
+          functionArn: pulumi.output(useResource().UserSync.functionArn),
+          scheduleExpression: "TODO",
+          timezone: "TODO",
+        },
+        tailscaleAuthKeyRotation: {
+          functionArn: functions.tailscaleAuthKeyRotationArn,
+        },
       },
       { providers: [account.provider] },
     );

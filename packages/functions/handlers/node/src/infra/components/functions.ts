@@ -1,8 +1,8 @@
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import { handler as tailscaleAuthKeyRotationHandler } from "src/tailscale-auth-key-rotation";
 
-import { useResource } from "../../resource";
-import { handler as tailscaleAuthKeyRotationHandler } from "./handlers/tailscale-auth-key-rotation";
+import { useResource } from "../resource";
 
 export interface FunctionsArgs {
   accountId: aws.organizations.Account["id"];
@@ -51,7 +51,7 @@ export class Functions extends pulumi.ComponentResource {
 class PapercutSecureBridge extends pulumi.ComponentResource {
   private static instance: PapercutSecureBridge;
 
-  private role: aws.iam.Role;
+  private role: FunctionRole;
   private tailscaleLayer: aws.lambda.LayerVersion;
   private function: aws.lambda.Function;
 
@@ -76,39 +76,11 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
       opts,
     );
 
-    this.role = new aws.iam.Role(
-      "Role",
-      {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["lambda.amazonaws.com"],
-                },
-              ],
-              actions: ["sts:AssumeRole"],
-            },
-          ],
-        }).json,
-      },
-      { parent: this },
-    );
-
-    new aws.iam.RolePolicyAttachment(
-      "BasicExecutionPolicyAttachment",
-      {
-        role: this.role,
-        policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
-      },
-      { parent: this },
-    );
-
+    this.role = new FunctionRole("PapercutSecureBridge", { parent: this });
     new aws.iam.RolePolicy(
       "InlinePolicy",
       {
-        role: this.role,
+        role: this.role.arn,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
@@ -156,7 +128,6 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      role: this.role.id,
       tailscaleLayer: this.tailscaleLayer.id,
       function: this.function.id,
     });
@@ -170,7 +141,7 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
 class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
   private static instance: TailscaleAuthKeyRotation;
 
-  private role: aws.iam.Role;
+  private role: FunctionRole;
   private function: aws.lambda.CallbackFunction<
     Parameters<typeof tailscaleAuthKeyRotationHandler>,
     ReturnType<typeof tailscaleAuthKeyRotationHandler>
@@ -198,39 +169,11 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
       opts,
     );
 
-    this.role = new aws.iam.Role(
-      "Role",
-      {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["lambda.amazonaws.com"],
-                },
-              ],
-              actions: ["sts:AssumeRole"],
-            },
-          ],
-        }).json,
-      },
-      { parent: this },
-    );
-
-    new aws.iam.RolePolicyAttachment(
-      "BasicExecutionPolicyAttachment",
-      {
-        role: this.role,
-        policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
-      },
-      { parent: this },
-    );
-
+    this.role = new FunctionRole("TailscaleAuthKeyRotation", { parent: this });
     new aws.iam.RolePolicy(
       "InlinePolicy",
       {
-        role: this.role,
+        role: this.role.arn,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
@@ -257,18 +200,64 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
         callback: tailscaleAuthKeyRotationHandler,
         runtime: aws.lambda.Runtime.NodeJS20dX,
         architectures: ["arm64"],
-        role: this.role,
+        role: this.role.arn,
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      role: this.role.id,
       function: this.function.id,
     });
   }
 
   public get functionArn() {
     return this.function.arn;
+  }
+}
+
+class FunctionRole extends pulumi.ComponentResource {
+  private role: aws.iam.Role;
+
+  public constructor(name: string, opts: pulumi.ComponentResourceOptions) {
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:FunctionRole`, name, {}, opts);
+
+    this.role = new aws.iam.Role(
+      `${name}Role`,
+      {
+        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+          statements: [
+            {
+              principals: [
+                {
+                  type: "Service",
+                  identifiers: ["lambda.amazonaws.com"],
+                },
+              ],
+              actions: ["sts:AssumeRole"],
+            },
+          ],
+        }).json,
+      },
+      { parent: this },
+    );
+
+    new aws.iam.RolePolicyAttachment(
+      `${name}BasicExecutionPolicyAttachment`,
+      {
+        role: this.role,
+        policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+      },
+      { parent: this },
+    );
+
+    this.registerOutputs({
+      role: this.role.id,
+    });
+  }
+
+  public get arn() {
+    return this.role.arn;
   }
 }

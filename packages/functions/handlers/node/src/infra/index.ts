@@ -1,17 +1,17 @@
 import { tenantSchema } from "@paperwait/core/tenants/shared";
-import { valibot as v } from "@paperwait/core/utils/libs";
 import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
 import * as pulumi from "@pulumi/pulumi";
 import { version as tlsPluginVersion } from "@pulumi/tls/package.json";
+import * as v from "valibot";
 
 import { getProgram } from "./program";
 import { useResource, withResource } from "./resource";
 
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
 
-export const handler: SQSHandler = (event) =>
-  withResource(async () => {
+export const handler: SQSHandler = async (event) => {
+  return withResource(async () => {
     const batchItemFailures: Array<SQSBatchItemFailure> = [];
 
     for (const record of event.Records) {
@@ -26,14 +26,17 @@ export const handler: SQSHandler = (event) =>
 
     return { batchItemFailures };
   });
+};
 
 async function processRecord(record: SQSRecord) {
   const { tenantId } = v.parse(
-    v.object({ tenantId: tenantSchema.entries.id }),
+    v.object({
+      tenantId: tenantSchema.entries.id,
+    }),
     record.body,
   );
 
-  const { AppData, Cloud, PulumiBackendBucket } = useResource();
+  const { AppData, Cloud, PulumiBucket } = useResource();
 
   const projectName = `${AppData.name}-${AppData.stage}-tenants`;
   const stack = await pulumi.automation.LocalWorkspace.createOrSelectStack(
@@ -47,7 +50,7 @@ async function processRecord(record: SQSRecord) {
         name: projectName,
         runtime: "nodejs",
         backend: {
-          url: `s3://${PulumiBackendBucket.name}/${projectName}`,
+          url: `s3://${PulumiBucket.name}/${projectName}`,
         },
       },
       pulumiHome: "/tmp/pulumi_home",
@@ -66,7 +69,7 @@ async function processRecord(record: SQSRecord) {
   console.log("Setting stack configuration...");
   await stack.setAllConfig({
     "aws:region": { value: Cloud.aws.region },
-    "aws:assumeRole": { value: Cloud.aws.manageTenantInfraRoleArn },
+    "aws:assumeRole": { value: Cloud.aws.organization.managementRole.arn },
     "cloudflare:apiToken": {
       value: Cloud.cloudflare.apiToken,
       secret: true,

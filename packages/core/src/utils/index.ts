@@ -44,8 +44,8 @@ export namespace Utils {
 
   export function parseResource<TResource extends Record<string, unknown>>(
     prefix: string,
+    input: Record<string, string | undefined>,
     crypto: { key: string; iv: string },
-    input: Record<string, string | undefined> = process.env,
   ): TResource {
     const raw = Object.entries(input).reduce(
       (raw, [key, value]) => {

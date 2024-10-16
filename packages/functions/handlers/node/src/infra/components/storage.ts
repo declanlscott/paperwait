@@ -9,6 +9,7 @@ export class Storage extends pulumi.ComponentResource {
   private static instance: Storage;
 
   private _buckets: Buckets = {} as Buckets;
+  // TODO: Add queues
 
   public static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
     if (!this.instance) this.instance = new Storage(opts);
