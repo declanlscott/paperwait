@@ -32,7 +32,6 @@
     "astro-sst": "^2.43.5",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "hono": "^4.6.5",
     "jotai": "^2.10.1",
     "lucide-react": "^0.452.0",
     "partysocket": "^1.0.2",

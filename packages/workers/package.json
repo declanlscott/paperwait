@@ -7,8 +7,7 @@
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@paperwait/core": "workspace:*",
-    "hono": "^4.6.5"
+    "@paperwait/core": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241011.0",

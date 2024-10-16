@@ -29,12 +29,8 @@
     "@smithy/signature-v4": "^4.2.0",
     "arctic": "next",
     "date-fns": "^4.1.0",
-    "drizzle-orm": "^0.34.1",
     "nanoid": "^5.0.7",
-    "postgres": "^3.4.4",
-    "remeda": "^2.15.0",
-    "replicache": "^15.0.1",
-    "valibot": "^0.42.1"
+    "postgres": "^3.4.4"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
