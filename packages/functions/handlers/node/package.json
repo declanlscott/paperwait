@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "@paperwait/core": "workspace:*",
-    "@pulumi/aws": "^6.55.0",
+    "@pulumi/aws": "^6.56.0",
     "@pulumi/cloudflare": "^5.40.1",
     "@pulumi/pulumi": "^3.136.1",
     "@pulumi/tls": "^5.0.8"
