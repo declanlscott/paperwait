@@ -8,12 +8,12 @@
     "format:write": "prettier --write ."
   },
   "dependencies": {
-    "drizzle-orm": "^0.35.0",
+    "drizzle-orm": "^0.35.1",
     "hono": "^4.6.5",
     "remeda": "^2.15.0",
     "replicache": "^15.0.1",
-    "sst": "^3.2.26",
-    "valibot": "^0.42.1"
+    "sst": "^3.2.31",
+    "valibot": "beta"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
