@@ -1,8 +1,8 @@
 import { db } from "./db";
-import { appData, cloud } from "./misc";
+import { appData, cloud, customResourceCryptoParameter } from "./misc";
 import { realtime } from "./realtime";
-import { codeBucket, pulumiBackendBucket } from "./storage";
-import { injectLinkables, normalizePath } from "./utils";
+import { codeBucket, pulumiBucket } from "./storage";
+import { link, normalizePath } from "./utils";
 import { webOutputs } from "./web";
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
@@ -97,38 +97,31 @@ export const code = new sst.Linkable("Code", {
 });
 
 const nodeHandlersPath = normalizePath("packages/functions/handlers/node");
-const tenantInfraHandlerSrc = await command.local.run({
+const infraHandlerSrc = await command.local.run({
   dir: nodeHandlersPath,
-  command: 'echo "Archiving tenant-infra handler source code..."',
-  archivePaths: [
-    "src/tenant-infra/**",
-    "!src/tenant-infra/dist/**",
-    "package.json",
-  ],
+  command: 'echo "Archiving infra handler source code..."',
+  archivePaths: ["src/infra/**", "!src/infra/dist/**", "package.json"],
 });
-const tenantInfraHandlerBuild = new command.local.Command(
-  "TenantInfraHandlerBuild",
-  {
-    dir: nodeHandlersPath,
-    create: "pnpm run tenant-infra:build",
-    triggers: [tenantInfraHandlerSrc.archive],
-  },
-);
+const infraHandlerBuild = new command.local.Command("InfraHandlerBuild", {
+  dir: nodeHandlersPath,
+  create: "pnpm run infra:build",
+  triggers: [infraHandlerSrc.archive],
+});
 
 export const repository = new awsx.ecr.Repository("Repository", {
   forceDelete: true,
 });
 
-export const tenantInfraImage = new awsx.ecr.Image(
-  "Image",
+export const infraFunctionImage = new awsx.ecr.Image(
+  "InfraFunctionImage",
   {
     repositoryUrl: repository.url,
-    context: normalizePath("packages/functions/handlers/node/src/tenant-infra"),
+    context: normalizePath("packages/functions/handlers/node/src/infra"),
   },
-  { dependsOn: [tenantInfraHandlerBuild] },
+  { dependsOn: [infraHandlerBuild] },
 );
 
-export const tenantInfraRole = new aws.iam.Role("TenantInfraRole", {
+export const infraFunctionRole = new aws.iam.Role("InfraFunctionRole", {
   assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
     statements: [
       {
@@ -144,40 +137,39 @@ export const tenantInfraRole = new aws.iam.Role("TenantInfraRole", {
   }).json,
 });
 
-new aws.iam.RolePolicyAttachment("TenantInfraBasicExecutionPolicyAttachment", {
-  role: tenantInfraRole,
-  policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
-});
+new aws.iam.RolePolicyAttachment(
+  "InfraFunctionRoleBasicExecutionPolicyAttachment",
+  {
+    role: infraFunctionRole.name,
+    policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+  },
+);
 
-new aws.iam.RolePolicy("TenantInfraInlinePolicy", {
-  role: tenantInfraRole,
+new aws.iam.RolePolicy("InfraFunctionRoleInlinePolicy", {
+  role: infraFunctionRole.name,
   policy: aws.iam.getPolicyDocumentOutput({
     statements: [
       {
         actions: ["s3:*"],
-        resources: [
-          pulumiBackendBucket.arn,
-          $interpolate`${pulumiBackendBucket.arn}/*`,
-        ],
+        resources: [pulumiBucket.arn, $interpolate`${pulumiBucket.arn}/*`],
+      },
+      {
+        actions: ["ssm:GetParameter"],
+        resources: [customResourceCryptoParameter.arn],
       },
     ],
   }).json,
 });
 
-export const tenantInfraFunction = new aws.lambda.Function(
-  "TenantInfraFunction",
-  {
-    imageUri: tenantInfraImage.imageUri,
-    role: tenantInfraRole.arn,
-    environment: {
-      variables: injectLinkables([
-        appData,
-        code,
-        cloud,
-        pulumiBackendBucket,
-        realtime,
-        webOutputs,
-      ]),
-    },
-  },
-);
+export const infraFunction = new aws.lambda.Function("InfraFunction", {
+  imageUri: infraFunctionImage.imageUri,
+  role: infraFunctionRole.arn,
+  ...link({
+    AppData: appData.properties,
+    Cloud: cloud.properties,
+    Code: code.properties,
+    PulumiBucket: pulumiBucket.getSSTLink().properties,
+    Realtime: realtime.properties,
+    WebOutputs: webOutputs.properties,
+  }),
+});

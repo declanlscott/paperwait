@@ -27,8 +27,7 @@ export const codeBucket = new sst.aws.Bucket("CodeBucket", {
   },
 });
 
-export const pulumiBucketConstructorName = "PulumiBucket";
-export const pulumiBucket = new sst.aws.Bucket(pulumiBucketConstructorName);
+export const pulumiBucket = new sst.aws.Bucket("PulumiBucket");
 
 export const infraDeadLetterQueue = new sst.aws.Queue("InfraDeadLetterQueue");
 

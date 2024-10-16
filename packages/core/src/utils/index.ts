@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { privateDecrypt } from "node:crypto";
+import { createDecipheriv } from "node:crypto";
 
 import {
   joseAlgorithmHS256,
@@ -7,8 +7,6 @@ import {
   JWTClaims,
   parseJWT,
 } from "@oslojs/jwt";
-
-import type { PrefixedRecord } from "./types";
 
 export namespace Utils {
   export function createContext<TContext>(name: string) {
@@ -44,30 +42,36 @@ export namespace Utils {
     return payload;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  export function parseResource<TResource extends Record<string, any>>(
+  export function parseResource<TResource extends Record<string, unknown>>(
     prefix: string,
-    privateKey: string,
+    crypto: { key: string; iv: string },
     input: Record<string, string | undefined> = process.env,
   ): TResource {
     const raw = Object.entries(input).reduce(
       (raw, [key, value]) => {
-        if (key.startsWith(prefix) && value)
-          raw[key.slice(prefix.length)] = JSON.parse(
-            privateDecrypt(privateKey, Buffer.from(value, "base64")).toString(
-              "utf8",
-            ),
+        if (key.startsWith(prefix) && value) {
+          const decipher = createDecipheriv(
+            "aes-256-gcm",
+            Buffer.from(crypto.key, "hex"),
+            Buffer.from(crypto.iv, "hex"),
           );
+
+          const data = Buffer.from(value, "base64").toString("hex");
+          decipher.setAuthTag(Buffer.from(data.slice(-32), "hex"));
+
+          raw[key.slice(prefix.length)] = JSON.parse(
+            decipher.update(data.slice(0, -32), "hex", "utf-8") +
+              decipher.final("utf-8"),
+          );
+        }
 
         return raw;
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      {} as Record<string, any>,
+      {} as Record<string, unknown>,
     );
 
     return new Proxy(raw, {
       get(target, prop: string) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         if (prop in target) return target[prop];
 
         throw new Error(`Resource "${prop}" not linked.`);

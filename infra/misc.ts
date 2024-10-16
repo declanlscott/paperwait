@@ -41,7 +41,6 @@ export const cloud = new sst.Linkable("Cloud", {
         },
         tenantsOrganizationalUnit: {
           id: tenantsOrganizationalUnit.id,
-          arn: tenantsOrganizationalUnit.arn,
         },
       },
       account: {
@@ -57,3 +56,25 @@ export const cloud = new sst.Linkable("Cloud", {
     },
   },
 });
+
+export const customResourceEncryptionKey = new random.RandomBytes(
+  "CustomResourceEncryptionKey",
+  { length: 32 },
+);
+
+export const customResourceEncryptionIv = new random.RandomBytes(
+  "CustomResourceEncryptionIv",
+  { length: 16 },
+);
+
+export const customResourceCryptoParameter = new aws.ssm.Parameter(
+  "CustomResourceCryptoParameter",
+  {
+    name: "/paperwait/crypto/custom-resource",
+    type: "SecureString",
+    value: $jsonStringify({
+      key: customResourceEncryptionKey.base64,
+      iv: customResourceEncryptionIv.base64,
+    }),
+  },
+);

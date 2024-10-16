@@ -39,7 +39,6 @@ declare module "sst" {
             "arn": string
           }
           "tenantsOrganizationalUnit": {
-            "arn": string
             "id": string
           }
         }
@@ -91,6 +90,10 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "InfraDeadLetterQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
     "Oauth2": {
       "entraId": {
         "clientId": string
@@ -106,7 +109,7 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "PulumiBackendBucket": {
+    "PulumiBucket": {
       "name": string
       "type": "sst.aws.Bucket"
     }
@@ -118,10 +121,6 @@ declare module "sst" {
     "ReplicacheLicenseKey": {
       "type": "sst.sst.Secret"
       "value": string
-    }
-    "TenantInfraDlq": {
-      "type": "sst.aws.Queue"
-      "url": string
     }
     "TenantInfraQueue": {
       "type": "sst.aws.Queue"
