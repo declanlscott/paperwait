@@ -1,15 +1,38 @@
+import {
+  organization,
+  organizationRoot,
+  tenantsOrganizationalUnit,
+} from "./organization";
+
 export const codeBucket = new sst.aws.Bucket("CodeBucket", {
-  access: "public",
   versioning: true,
+  transform: {
+    policy: (args) => {
+      args.policy = sst.aws.iamEdit(args.policy, (policy) => {
+        policy.Statement.push({
+          Effect: "Allow",
+          Action: ["s3:GetObject"],
+          Resource: $interpolate`arn:aws:s3:::${args.bucket}/*`,
+          Principal: "*",
+          Condition: {
+            "ForAnyValue:StringEquals": {
+              "aws:PrincipalOrgPaths": [
+                $interpolate`${organization.id}/${organizationRoot.id}/${tenantsOrganizationalUnit.id}/`,
+              ],
+            },
+          },
+        });
+      });
+    },
+  },
 });
 
-export const pulumiBackendBucket = new sst.aws.Bucket("PulumiBackendBucket");
+export const pulumiBucketConstructorName = "PulumiBucket";
+export const pulumiBucket = new sst.aws.Bucket(pulumiBucketConstructorName);
 
-export const tenantInfraDlq = new sst.aws.Queue("TenantInfraDlq");
-
-export const tenantInfraTimeout = "5 minutes";
+export const infraDeadLetterQueue = new sst.aws.Queue("InfraDeadLetterQueue");
 
 export const tenantInfraQueue = new sst.aws.Queue("TenantInfraQueue", {
-  dlq: tenantInfraDlq.arn,
-  visibilityTimeout: tenantInfraTimeout,
+  dlq: infraDeadLetterQueue.arn,
+  visibilityTimeout: "5 minutes",
 });
