@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "seed": "tsx ./src/seed.ts",
-    "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0",
+    "tsx": "tsx"
   },
   "dependencies": {
     "@paperwait/core": "workspace:*"
