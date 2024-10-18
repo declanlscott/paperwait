@@ -12,8 +12,8 @@ import { useResource, withResource } from "./resource";
 
 import type { Tenant } from "@paperwait/core/tenants/sql";
 
-export const getProgram = (tenantId: Tenant["id"]) => () =>
-  withResource(async () => {
+export const getProgram = (tenantId: Tenant["id"]) => async () =>
+  withResource(() => {
     const account = Account.getInstance({ tenantId });
 
     const ssl = Ssl.getInstance(

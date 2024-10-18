@@ -80,7 +80,7 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       "InlinePolicy",
       {
-        role: this.role.arn,
+        role: this.role.name,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
@@ -173,7 +173,7 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       "InlinePolicy",
       {
-        role: this.role.arn,
+        role: this.role.name,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
@@ -255,6 +255,10 @@ class FunctionRole extends pulumi.ComponentResource {
     this.registerOutputs({
       role: this.role.id,
     });
+  }
+
+  public get name() {
+    return this.role.name;
   }
 
   public get arn() {

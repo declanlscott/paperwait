@@ -10,8 +10,8 @@ import { useResource, withResource } from "./resource";
 
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
 
-export const handler: SQSHandler = async (event) => {
-  return withResource(async () => {
+export const handler: SQSHandler = async (event) =>
+  withResource(async () => {
     const batchItemFailures: Array<SQSBatchItemFailure> = [];
 
     for (const record of event.Records) {
@@ -26,7 +26,6 @@ export const handler: SQSHandler = async (event) => {
 
     return { batchItemFailures };
   });
-};
 
 async function processRecord(record: SQSRecord) {
   const { tenantId } = v.parse(
