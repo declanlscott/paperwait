@@ -108,7 +108,7 @@ class ScheduledEvent extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       `${name}InlinePolicy`,
       {
-        role: this.role,
+        role: this.role.name,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
