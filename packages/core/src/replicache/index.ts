@@ -123,10 +123,7 @@ export namespace Replicache {
         .where(
           lt(
             replicacheClientGroupsTable.updatedAt,
-            sub(
-              new Date(),
-              Constants.REPLICACHE_EXPIRATION_DURATION,
-            ).toISOString(),
+            sub(new Date(), Constants.REPLICACHE_LIFETIME).toISOString(),
           ),
         ),
     );
@@ -149,10 +146,7 @@ export namespace Replicache {
         .where(
           lt(
             replicacheClientsTable.updatedAt,
-            sub(
-              new Date(),
-              Constants.REPLICACHE_EXPIRATION_DURATION,
-            ).toISOString(),
+            sub(new Date(), Constants.REPLICACHE_LIFETIME).toISOString(),
           ),
         ),
     );
@@ -340,10 +334,7 @@ export namespace Replicache {
                 eq(replicacheClientViewsTable.tenantId, user.tenantId),
                 lt(
                   replicacheClientViewsTable.updatedAt,
-                  sub(
-                    new Date(),
-                    Constants.REPLICACHE_EXPIRATION_DURATION,
-                  ).toISOString(),
+                  sub(new Date(), Constants.REPLICACHE_LIFETIME).toISOString(),
                 ),
               ),
             ),

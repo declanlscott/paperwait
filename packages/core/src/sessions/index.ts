@@ -55,7 +55,7 @@ export namespace Sessions {
         .insert(sessionsTable)
         .values({
           id,
-          expiresAt: add(Date.now(), Constants.SESSION_EXPIRATION_DURATION),
+          expiresAt: add(Date.now(), Constants.SESSION_LIFETIME),
           ...attributes,
         })
         .returning()
@@ -135,7 +135,7 @@ export namespace Sessions {
       if (isAfter(now, sub(result.session.expiresAt, { days: 15 })))
         await tx
           .update(sessionsTable)
-          .set({ expiresAt: add(now, Constants.SESSION_EXPIRATION_DURATION) })
+          .set({ expiresAt: add(now, Constants.SESSION_LIFETIME) })
           .where(eq(sessionsTable.id, sessionId));
 
       return {

@@ -40,11 +40,10 @@ export namespace Constants {
 
   export const SESSION_COOKIE_NAME = "auth_session";
 
-  export const SESSION_EXPIRATION_DURATION = {
+  export const SESSION_LIFETIME = {
     days: 30,
   } as const satisfies Duration;
-
-  export const REPLICACHE_EXPIRATION_DURATION = {
+  export const REPLICACHE_LIFETIME = {
     weeks: 2,
   } as const satisfies Duration;
 }
