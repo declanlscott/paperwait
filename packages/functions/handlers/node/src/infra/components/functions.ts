@@ -1,3 +1,4 @@
+import { Ssm } from "@paperwait/core/aws/ssm";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import { handler as tailscaleAuthKeyRotationHandler } from "src/tailscale-auth-key-rotation";
@@ -179,13 +180,17 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
             {
               actions: ["ssm:GetParameter"],
               resources: [
-                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter/paperwait/tailscale/oauth2-client`,
-              ],
+                Ssm.buildParameterPath(AppData, "tailscale", "oauth-client"),
+                Ssm.buildParameterPath(AppData, "tailscale", "tailnet"),
+              ].map(
+                (parameter) =>
+                  pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${parameter}`,
+              ),
             },
             {
               actions: ["ssm:PutParameter"],
               resources: [
-                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter/paperwait/tailscale/auth-key`,
+                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${Ssm.buildParameterPath(AppData, "tailscale", "auth-key")}`,
               ],
             },
           ],
