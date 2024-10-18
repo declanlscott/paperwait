@@ -30,10 +30,6 @@ export const withResource = <TCallback extends () => ReturnType<TCallback>>(
   callback: TCallback,
 ) =>
   ResourceContext.with(
-    Utils.parseResource<CustomResource>(
-      "CUSTOM_RESOURCE_",
-      process.env,
-      crypto,
-    ),
+    Utils.getResource<CustomResource>("CUSTOM_RESOURCE_", process.env, crypto),
     callback,
   );

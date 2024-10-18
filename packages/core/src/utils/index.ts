@@ -42,7 +42,7 @@ export namespace Utils {
     return payload;
   }
 
-  export function parseResource<TResource extends Record<string, unknown>>(
+  export function getResource<TResource extends Record<string, unknown>>(
     prefix: string,
     input: Record<string, string | undefined>,
     crypto: { key: string; iv: string },
