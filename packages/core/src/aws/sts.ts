@@ -4,6 +4,7 @@ import type { AssumeRoleCommandInput, Credentials } from "@aws-sdk/client-sts";
 
 export namespace Sts {
   export const Client = STSClient;
+  export type Client = STSClient;
 
   export type NonNullableCredentials = {
     [TKey in keyof Credentials]: NonNullable<Credentials[TKey]>;

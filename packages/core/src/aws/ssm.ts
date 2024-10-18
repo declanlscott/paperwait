@@ -11,15 +11,17 @@ import type {
   GetParameterCommandInput,
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
-import type { NanoId } from "../utils/shared";
+import type { Resource } from "sst";
 
 export namespace Ssm {
   export const Client = SSMClient;
+  export type Client = SSMClient;
 
   export const buildParameterPath = (
-    tenantId: NanoId,
+    appData?: Pick<Resource["AppData"], "name" | "stage">,
     ...segments: Array<string>
-  ) => `/paperwait/tenant/${tenantId}/${segments.join("/")}`;
+  ) =>
+    `/${[appData?.name, appData?.stage, ...segments].filter(Boolean).join("/")}`;
 
   export async function putParameter(
     client: SSMClient,

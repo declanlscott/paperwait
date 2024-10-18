@@ -17,6 +17,7 @@ type RequestPresigningArguments = Parameters<typeof getSignedUrl>[2];
 
 export namespace S3 {
   export const Client = S3Client;
+  export type Client = S3Client;
 
   export const buildObjectKey = (
     tenantId: NanoId,
