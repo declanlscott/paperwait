@@ -5,12 +5,18 @@ import { codeBucket, pulumiBucket } from "./storage";
 import { link, normalizePath } from "./utils";
 import { webOutputs } from "./web";
 
+export const userSync = new sst.aws.Function("UserSync", {
+  handler: "packages/functions/handlers/node/src/user-sync.handler",
+  timeout: "20 seconds",
+  link: [db],
+});
+
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
   job: {
     handler:
       "packages/functions/handlers/node/src/db-garbage-collection.handler",
     timeout: "10 seconds",
-    link: [appData, db],
+    link: [db],
   },
   schedule: "rate(1 day)",
 });
