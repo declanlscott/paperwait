@@ -8,7 +8,13 @@ module.exports = {
     "plugin:drizzle/recommended",
     "prettier",
   ],
-  ignorePatterns: ["dist", ".eslintrc.cjs", "sst-env.d.ts", "index.js"],
+  ignorePatterns: [
+    "dist",
+    ".eslintrc.cjs",
+    "sst-env.d.ts",
+    "schema.d.ts",
+    "index.js",
+  ],
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint", "drizzle"],
   rules: {
