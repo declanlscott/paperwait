@@ -87,11 +87,11 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
             {
               actions: ["ssm:GetParameter"],
               resources: [
-                "paperwait/tailscale/auth-key",
-                "paperwait/papercut/web-services/credentials",
+                Ssm.buildParameterPath(AppData, "tailscale", "auth"),
+                Ssm.buildParameterPath(AppData, "papercut", "web-services"),
               ].map(
-                (name) =>
-                  pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter/${name}`,
+                (parameter) =>
+                  pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${parameter}`,
               ),
             },
           ],
@@ -195,7 +195,7 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
             {
               actions: ["ssm:PutParameter"],
               resources: [
-                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${Ssm.buildParameterPath(AppData, "tailscale", "auth-key")}`,
+                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${Ssm.buildParameterPath(AppData, "tailscale", "auth")}`,
               ],
             },
           ],

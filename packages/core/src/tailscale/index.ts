@@ -111,7 +111,7 @@ export namespace Tailscale {
     if (!result.data.key) throw new Error("Missing 'key' field");
 
     await Ssm.putParameter(ssm, {
-      Name: Ssm.buildParameterPath(appData),
+      Name: Ssm.buildParameterPath(appData, "tailscale", "auth"),
       Type: "SecureString",
       Value: JSON.stringify({ id: result.data.id, key: result.data.key }),
       Overwrite: true,
@@ -245,7 +245,7 @@ export namespace Tailscale {
       throw new HttpError(result.error.message, result.response.status);
 
     await Ssm.deleteParameter(ssm, {
-      Name: Ssm.buildParameterPath(appData, "tailscale", "auth-key"),
+      Name: Ssm.buildParameterPath(appData, "tailscale", "auth"),
     });
   }
 }
