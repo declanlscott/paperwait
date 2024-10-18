@@ -1,7 +1,7 @@
 import { Ssm } from "@paperwait/core/aws/ssm";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import { handler as tailscaleAuthKeyRotationHandler } from "src/tailscale-auth-key-rotation";
+import { getHandler as getTailscaleAuthKeyRotationHandler } from "src/tailscale-auth-key-rotation";
 
 import { useResource } from "../resource";
 
@@ -149,8 +149,8 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
 
   private role: FunctionRole;
   private function: aws.lambda.CallbackFunction<
-    Parameters<typeof tailscaleAuthKeyRotationHandler>,
-    ReturnType<typeof tailscaleAuthKeyRotationHandler>
+    Parameters<typeof getTailscaleAuthKeyRotationHandler>,
+    ReturnType<typeof getTailscaleAuthKeyRotationHandler>
   >;
 
   public static getInstance(
@@ -207,7 +207,7 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
     this.function = new aws.lambda.CallbackFunction(
       "CallbackFunction",
       {
-        callback: tailscaleAuthKeyRotationHandler,
+        callbackFactory: getTailscaleAuthKeyRotationHandler,
         runtime: aws.lambda.Runtime.NodeJS20dX,
         architectures: ["arm64"],
         role: this.role.arn,
