@@ -45,9 +45,14 @@ function get_parameter {
   )
 }
 
+# Get app data from the environment
+APP_DATA=$CUSTOM_RESOURCE_AppData
+APP_NAME=$(echo "$APP_DATA" | jq -r 'fromjson | .name')
+APP_STAGE=$(echo "$APP_DATA" | jq -r 'fromjson | .stage')
+
 # Get the Tailscale auth key from SSM
-SSM_RESPONSE=$(get_parameter "/paperwait/tailscale/auth-key" true)
-TAILSCALE_AUTH_KEY=$(echo "$SSM_RESPONSE" | jq -r '.Parameter.Value')
+SSM_RESPONSE=$(get_parameter "/$APP_NAME/$APP_STAGE/tailscale/auth" true)
+TAILSCALE_AUTH_KEY=$(echo "$SSM_RESPONSE" | jq -r '.Parameter.Value | fromjson | .key')
 
 # Start Tailscale - we use the bash script modified for the extension directory
 # structure from the Tailscale documentation here.  Note these provide symbolic link from /tmp/ to the /var/run, /var/cache,

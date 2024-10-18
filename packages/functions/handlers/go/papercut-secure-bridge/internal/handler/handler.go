@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"papercut-secure-bridge/internal/papercut"
 	"papercut-secure-bridge/internal/proxy"
+	"papercut-secure-bridge/internal/utils"
 	"strings"
 	"sync"
 
@@ -40,6 +41,12 @@ func Handler(
 				ctx context.Context,
 			) (*papercut.Credentials, error) {
 				once.Do(func() {
+					resource, err := utils.GetResource("CUSTOM_RESOURCE_")
+					if err != nil {
+						credentials.err = err
+						return
+					}
+
 					cfg, err := config.LoadDefaultConfig(ctx)
 					if err != nil {
 						credentials.err = err
@@ -49,7 +56,11 @@ func Handler(
 					client := ssm.NewFromConfig(cfg)
 
 					output, err := client.GetParameter(ctx, &ssm.GetParameterInput{
-						Name:           aws.String("/paperwait/papercut/web-services/credentials"),
+						Name: aws.String(fmt.Sprintf(
+							"/%s/%s/papercut/web-services",
+							resource.AppData.Name,
+							resource.AppData.Stage,
+						)),
 						WithDecryption: aws.Bool(true),
 					})
 					if err != nil {

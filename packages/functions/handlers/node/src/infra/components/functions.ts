@@ -124,6 +124,11 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
         architectures: ["arm64"],
         layers: [this.tailscaleLayer.arn],
         role: this.role.arn,
+        environment: {
+          variables: {
+            CUSTOM_RESOURCE_AppData: JSON.stringify(AppData),
+          },
+        },
       },
       { parent: this },
     );
