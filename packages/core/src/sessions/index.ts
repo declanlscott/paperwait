@@ -122,14 +122,25 @@ export namespace Sessions {
         .innerJoin(tenantsTable, eq(sessionsTable.tenantId, tenantsTable.id))
         .where(eq(sessionsTable.id, sessionId))
         .then((rows) => rows.at(0));
-      if (!result) return { user: null, session: null, tenant: null };
+      if (!result)
+        return {
+          user: null,
+          session: null,
+          tenant: null,
+          isAuthed: false,
+        } as const;
 
       const now = Date.now();
 
       if (isAfter(now, result.session.expiresAt)) {
         await tx.delete(sessionsTable).where(eq(sessionsTable.id, sessionId));
 
-        return { user: null, session: null, tenant: null };
+        return {
+          user: null,
+          session: null,
+          tenant: null,
+          isAuthed: false,
+        } as const;
       }
 
       if (isAfter(now, sub(result.session.expiresAt, { days: 15 })))
@@ -142,7 +153,8 @@ export namespace Sessions {
         user: { ...result.user, profile: result.userProfile },
         session: result.session,
         tenant: result.tenant,
-      };
+        isAuthed: true,
+      } as const;
     });
   }
 
