@@ -2,7 +2,7 @@ import { customAlphabet } from "nanoid";
 import * as R from "remeda";
 import * as v from "valibot";
 
-import { Constants } from "../constants";
+import { Constants } from "./constants";
 
 import type { Authenticated } from "../sessions/shared";
 import type { UserRole } from "../users/shared";

@@ -1,6 +1,6 @@
-import { AccessDenied, EntityNotFound } from "../errors/application";
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
+import { ApplicationError } from "../utils/errors";
 import { enforceRbac, rbacErrorMessage } from "../utils/shared";
 import {
   announcementsTableName,
@@ -17,7 +17,7 @@ export namespace Announcements {
     createAnnouncementMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.createAnnouncement, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "create announcement mutator")],
       }),
     () => async (tx, values) =>
@@ -28,14 +28,18 @@ export namespace Announcements {
     updateAnnouncementMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.updateAnnouncement, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "update announcement mutator")],
       }),
     () => async (tx, values) => {
       const prev = await tx.get<Announcement>(
         `${announcementsTableName}/${values.id}`,
       );
-      if (!prev) throw new EntityNotFound(announcementsTableName, values.id);
+      if (!prev)
+        throw new ApplicationError.EntityNotFound(
+          announcementsTableName,
+          values.id,
+        );
 
       const next = {
         ...prev,
@@ -50,7 +54,7 @@ export namespace Announcements {
     deleteAnnouncementMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.deleteAnnouncement, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "delete announcement mutator")],
       }),
     ({ user }) =>
@@ -60,7 +64,10 @@ export namespace Announcements {
             `${announcementsTableName}/${values.id}`,
           );
           if (!prev)
-            throw new EntityNotFound(announcementsTableName, values.id);
+            throw new ApplicationError.EntityNotFound(
+              announcementsTableName,
+              values.id,
+            );
 
           const next = {
             ...prev,
@@ -72,7 +79,10 @@ export namespace Announcements {
 
         const success = await tx.del(`${announcementsTableName}/${values.id}`);
         if (!success)
-          throw new EntityNotFound(announcementsTableName, values.id);
+          throw new ApplicationError.EntityNotFound(
+            announcementsTableName,
+            values.id,
+          );
       },
   );
 }

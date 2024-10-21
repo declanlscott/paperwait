@@ -1,6 +1,6 @@
-import { AccessDenied, EntityNotFound } from "../errors/application";
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
+import { ApplicationError } from "../utils/errors";
 import { enforceRbac, rbacErrorMessage } from "../utils/shared";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
@@ -24,7 +24,7 @@ export namespace Papercut {
         user,
         mutationRbac.createPapercutAccountManagerAuthorization,
         {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [
             rbacErrorMessage(
               user,
@@ -44,7 +44,7 @@ export namespace Papercut {
     deletePapercutAccountMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.deletePapercutAccount, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "delete papercut account mutator")],
       }),
     ({ user }) =>
@@ -53,7 +53,11 @@ export namespace Papercut {
           const prev = await tx.get<PapercutAccount>(
             `${papercutAccountsTableName}/${id}`,
           );
-          if (!prev) throw new EntityNotFound(papercutAccountsTableName, id);
+          if (!prev)
+            throw new ApplicationError.EntityNotFound(
+              papercutAccountsTableName,
+              id,
+            );
 
           const next = {
             ...prev,
@@ -64,7 +68,11 @@ export namespace Papercut {
         }
 
         const success = await tx.del(`${papercutAccountsTableName}/${id}`);
-        if (!success) throw new EntityNotFound(papercutAccountsTableName, id);
+        if (!success)
+          throw new ApplicationError.EntityNotFound(
+            papercutAccountsTableName,
+            id,
+          );
       },
   );
 
@@ -75,7 +83,7 @@ export namespace Papercut {
         user,
         mutationRbac.deletePapercutAccountManagerAuthorization,
         {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [
             rbacErrorMessage(
               user,
@@ -91,7 +99,7 @@ export namespace Papercut {
             `${papercutAccountManagerAuthorizationsTableName}/${id}`,
           );
           if (!prev)
-            throw new EntityNotFound(
+            throw new ApplicationError.EntityNotFound(
               papercutAccountManagerAuthorizationsTableName,
               id,
             );
@@ -111,7 +119,7 @@ export namespace Papercut {
           `${papercutAccountManagerAuthorizationsTableName}/${id}`,
         );
         if (!success)
-          throw new EntityNotFound(
+          throw new ApplicationError.EntityNotFound(
             papercutAccountManagerAuthorizationsTableName,
             id,
           );

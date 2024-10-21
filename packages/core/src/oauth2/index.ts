@@ -1,3 +1,4 @@
+import { ArcticFetchError, OAuth2RequestError } from "arctic";
 import { eq } from "drizzle-orm";
 
 import { useTransaction } from "../drizzle/transaction";
@@ -95,4 +96,10 @@ export namespace Oauth2 {
         accessToken: sessionTokens.accessToken,
       };
     });
+
+  export const RequestError = OAuth2RequestError;
+  export type RequestError = OAuth2RequestError;
+
+  export const FetchError = ArcticFetchError;
+  export type FetchError = ArcticFetchError;
 }

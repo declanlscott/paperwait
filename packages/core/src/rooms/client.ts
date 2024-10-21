@@ -1,7 +1,7 @@
-import { AccessDenied, EntityNotFound } from "../errors/application";
 import { productsTableName } from "../products/shared";
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
+import { ApplicationError } from "../utils/errors";
 import { enforceRbac, rbacErrorMessage } from "../utils/shared";
 import {
   createRoomMutationArgsSchema,
@@ -20,7 +20,7 @@ export namespace Rooms {
     createRoomMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.createRoom, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "create room mutator")],
       }),
     () => async (tx, values) =>
@@ -31,13 +31,14 @@ export namespace Rooms {
     updateRoomMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.updateRoom, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "update room mutator")],
       }),
     () =>
       async (tx, { id, ...values }) => {
         const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
-        if (!prev) throw new EntityNotFound(roomsTableName, id);
+        if (!prev)
+          throw new ApplicationError.EntityNotFound(roomsTableName, id);
 
         const next = {
           ...prev,
@@ -52,7 +53,7 @@ export namespace Rooms {
     deleteRoomMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.deleteRoom, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "delete room mutator")],
       }),
     ({ user }) =>
@@ -65,7 +66,11 @@ export namespace Rooms {
         await Promise.all(
           products.map(async (p) => {
             const prev = await tx.get<Product>(`${productsTableName}/${p.id}`);
-            if (!prev) throw new EntityNotFound(productsTableName, p.id);
+            if (!prev)
+              throw new ApplicationError.EntityNotFound(
+                productsTableName,
+                p.id,
+              );
 
             const next = {
               ...prev,
@@ -78,7 +83,8 @@ export namespace Rooms {
 
         if (enforceRbac(user, ["administrator"])) {
           const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
-          if (!prev) throw new EntityNotFound(roomsTableName, id);
+          if (!prev)
+            throw new ApplicationError.EntityNotFound(roomsTableName, id);
 
           const next = {
             ...prev,
@@ -89,7 +95,8 @@ export namespace Rooms {
         }
 
         const success = await tx.del(`${roomsTableName}/${id}`);
-        if (!success) throw new EntityNotFound(roomsTableName, id);
+        if (!success)
+          throw new ApplicationError.EntityNotFound(roomsTableName, id);
       },
   );
 
@@ -97,12 +104,13 @@ export namespace Rooms {
     restoreRoomMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.restoreRoom, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "restore room mutator")],
       }),
     () => async (tx, values) => {
       const prev = await tx.get<Room>(`${roomsTableName}/${values.id}`);
-      if (!prev) throw new EntityNotFound(roomsTableName, values.id);
+      if (!prev)
+        throw new ApplicationError.EntityNotFound(roomsTableName, values.id);
 
       const next = {
         ...prev,

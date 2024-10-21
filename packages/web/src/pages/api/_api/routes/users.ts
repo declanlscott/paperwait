@@ -1,9 +1,9 @@
 import { vValidator } from "@hono/valibot-validator";
-import { NotImplemented } from "@paperwait/core/errors/http";
 import { useOauth2 } from "@paperwait/core/oauth2/context";
 import { EntraId } from "@paperwait/core/oauth2/entra-id";
 import { Google } from "@paperwait/core/oauth2/google";
 import { ENTRA_ID, GOOGLE } from "@paperwait/core/oauth2/shared";
+import { HttpError } from "@paperwait/core/utils/errors";
 import { nanoIdSchema } from "@paperwait/core/utils/shared";
 import { Hono } from "hono";
 import * as v from "valibot";
@@ -31,7 +31,7 @@ export default new Hono()
         default: {
           oauth2.provider.variant satisfies never;
 
-          throw new NotImplemented(
+          throw new HttpError.NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Provider variant "${oauth2.provider.variant}" not implemented`,
           );

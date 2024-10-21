@@ -1,16 +1,13 @@
-import { sha256 } from "@oslojs/crypto/sha2";
-import {
-  encodeBase32LowerCaseNoPadding,
-  encodeHexLowerCase,
-} from "@oslojs/encoding";
+import { encodeBase32LowerCaseNoPadding } from "@oslojs/encoding";
 import { add, isAfter, sub } from "date-fns";
 import { and, eq, lte } from "drizzle-orm";
 import { Resource } from "sst";
 
-import { Constants } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
 import { tenantsTable } from "../tenants/sql";
 import { userProfilesTable, usersTable } from "../users/sql";
+import { Utils } from "../utils";
+import { Constants } from "../utils/constants";
 import { sessionsTable, sessionTokensTable } from "./sql";
 
 import type { Oauth2 } from "../oauth2";
@@ -41,15 +38,12 @@ export namespace Sessions {
     return token;
   }
 
-  const hashToken = (token: string) =>
-    encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-
   export async function create(
     attributes: Omit<Session, "id" | "expiresAt">,
     oauth2Tokens: Oauth2.Tokens,
   ): Promise<{ session: Session; cookie: Cookie }> {
     const token = generateToken();
-    const id = hashToken(token);
+    const id = Utils.hashToken(token);
 
     const session = await useTransaction(async (tx) => {
       const session = await tx
@@ -95,7 +89,7 @@ export namespace Sessions {
   }
 
   export async function validateToken(token: string): Promise<Auth> {
-    const sessionId = hashToken(token);
+    const sessionId = Utils.hashToken(token);
 
     return useTransaction(async (tx) => {
       const result = await tx

@@ -1,7 +1,7 @@
 import { index, jsonb, text, unique, varchar } from "drizzle-orm/pg-core";
 
-import { Constants } from "../constants";
 import { tenantTable } from "../drizzle/tables";
+import { Constants } from "../utils/constants";
 import { roomStatus } from "../utils/sql";
 import { roomsTableName } from "./shared";
 

@@ -1,10 +1,7 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import * as R from "remeda";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
-import { NonExhaustiveValue } from "../errors/misc";
 import { ordersTable } from "../orders/sql";
 import {
   papercutAccountManagerAuthorizationsTable,
@@ -15,6 +12,8 @@ import { Replicache } from "../replicache";
 import { mutationRbac } from "../replicache/shared";
 import { Sessions } from "../sessions";
 import { useAuthenticated } from "../sessions/context";
+import { Constants } from "../utils/constants";
+import { ApplicationError, MiscellaneousError } from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import {
   deleteUserProfileMutationArgsSchema,
@@ -72,7 +71,7 @@ export namespace Users {
         case "customer":
           return baseQuery.where(isNull(userProfilesTable.deletedAt));
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
   }
@@ -228,7 +227,7 @@ export namespace Users {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.updateUserProfileRole, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "update user profile role mutator")],
       });
 
@@ -258,7 +257,7 @@ export namespace Users {
       if (
         id === user.id ||
         enforceRbac(user, mutationRbac.deleteUserProfile, {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [rbacErrorMessage(user, "delete user profile mutator")],
         })
       ) {
@@ -287,7 +286,7 @@ export namespace Users {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.restoreUserProfile, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "restore user profile mutator")],
       });
 

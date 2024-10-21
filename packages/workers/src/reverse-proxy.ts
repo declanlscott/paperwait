@@ -1,5 +1,5 @@
-import { Constants } from "@paperwait/core/constants";
-import { HttpError, TooManyRequests } from "@paperwait/core/errors/http";
+import { Constants } from "@paperwait/core/utils/constants";
+import { HttpError } from "@paperwait/core/utils/errors";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/cloudflare-workers";
 import { getCookie } from "hono/cookie";
@@ -25,7 +25,7 @@ export default new Hono<{
 
       outcome = await c.env.IP_RATE_LIMITER.limit({ key: ip });
     }
-    if (!outcome.success) throw new TooManyRequests();
+    if (!outcome.success) throw new HttpError.TooManyRequests();
 
     await next();
   })
@@ -34,7 +34,7 @@ export default new Hono<{
     if (!ip) throw new Error("Missing remote address");
 
     const outcome = await c.env.IP_RATE_LIMITER.limit({ key: ip });
-    if (!outcome.success) throw new TooManyRequests();
+    if (!outcome.success) throw new HttpError.TooManyRequests();
 
     await next();
   })
@@ -42,7 +42,7 @@ export default new Hono<{
   .onError((e, c) => {
     console.error(e);
 
-    if (e instanceof HttpError)
+    if (e instanceof HttpError.Error)
       return c.json(e.message, e.statusCode as StatusCode);
     if (e instanceof HTTPException) return e.getResponse();
 

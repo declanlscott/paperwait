@@ -1,13 +1,12 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
-import { NonExhaustiveValue } from "../errors/misc";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
+import { Constants } from "../utils/constants";
+import { ApplicationError, MiscellaneousError } from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import {
   createProductMutationArgsSchema,
@@ -23,7 +22,7 @@ export namespace Products {
     const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.createProduct, {
-      Error: AccessDenied,
+      Error: ApplicationError.AccessDenied,
       args: [rbacErrorMessage(user, "create product mutator")],
     });
 
@@ -69,7 +68,7 @@ export namespace Products {
             ),
           );
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
   }
@@ -96,7 +95,7 @@ export namespace Products {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.updateProduct, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "update product mutator")],
       });
 
@@ -124,7 +123,7 @@ export namespace Products {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.deleteProduct, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "delete product mutator")],
       });
 

@@ -1,9 +1,6 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
-import { NonExhaustiveValue } from "../errors/misc";
 import {
   papercutAccountManagerAuthorizationsTable,
   papercutAccountsTable,
@@ -13,6 +10,8 @@ import { Replicache } from "../replicache";
 import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
+import { Constants } from "../utils/constants";
+import { ApplicationError, MiscellaneousError } from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import {
   createOrderMutationArgsSchema,
@@ -28,7 +27,7 @@ export namespace Orders {
     const { user } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.createOrder, {
-      Error: AccessDenied,
+      Error: ApplicationError.AccessDenied,
       args: [rbacErrorMessage(user, "create order mutator")],
     });
 
@@ -103,7 +102,7 @@ export namespace Orders {
         case "customer":
           return customerOrdersQuery;
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
   }
@@ -131,7 +130,7 @@ export namespace Orders {
 
       const users = await Users.withOrderAccess(id);
       if (!users.some((u) => u.id === user.id))
-        throw new AccessDenied(
+        throw new ApplicationError.AccessDenied(
           `User "${user.id}" cannot update order "${id}", order access denied.`,
         );
 
@@ -159,7 +158,7 @@ export namespace Orders {
 
       const users = await Users.withOrderAccess(id);
       if (!users.some((u) => u.id === user.id))
-        throw new AccessDenied(
+        throw new ApplicationError.AccessDenied(
           `User "${user.id}" cannot delete order "${id}", order access denied.`,
         );
 

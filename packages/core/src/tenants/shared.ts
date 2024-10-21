@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
-import { Constants } from "../constants";
 import { oauth2ProvidersSchema } from "../oauth2/shared";
+import { Constants } from "../utils/constants";
 import { nanoIdSchema, timestampsSchema } from "../utils/shared";
 
 export const licensesTableName = "licenses";

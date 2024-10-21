@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ApplicationError } from "@paperwait/core/errors/application";
+import { ApplicationError } from "@paperwait/core/utils/errors";
 import { useForm } from "@tanstack/react-form";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -302,7 +302,7 @@ function SyncAccounts() {
 
 function ErrorComponent(props: ComponentProps<ErrorRouteComponent>) {
   const message =
-    props.error instanceof ApplicationError
+    props.error instanceof ApplicationError.Error
       ? props.error.message
       : "Something went wrong...";
 

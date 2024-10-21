@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { Constants } from "../constants";
+import { Constants } from "../utils/constants";
 import {
   isUniqueByName,
   nanoIdSchema,

@@ -1,6 +1,6 @@
-import { AccessDenied, EntityNotFound } from "../errors/application";
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
+import { ApplicationError } from "../utils/errors";
 import { enforceRbac, rbacErrorMessage } from "../utils/shared";
 import { tenantsTableName, updateTenantMutationArgsSchema } from "./shared";
 
@@ -12,13 +12,14 @@ export namespace Tenants {
     updateTenantMutationArgsSchema,
     (user) =>
       enforceRbac(user, mutationRbac.updateTenant, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "update tenant mutator")],
       }),
     () =>
       async (tx, { id, ...values }) => {
         const prev = await tx.get<Tenant>(`${tenantsTableName}/${id}`);
-        if (!prev) throw new EntityNotFound(tenantsTableName, id);
+        if (!prev)
+          throw new ApplicationError.EntityNotFound(tenantsTableName, id);
 
         const next = {
           ...prev,

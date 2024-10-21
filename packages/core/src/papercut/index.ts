@@ -1,14 +1,13 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
-import { NonExhaustiveValue } from "../errors/misc";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
+import { Constants } from "../utils/constants";
+import { ApplicationError, MiscellaneousError } from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
@@ -37,7 +36,7 @@ export namespace Papercut {
         user,
         mutationRbac.createPapercutAccountManagerAuthorization,
         {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [
             rbacErrorMessage(
               user,
@@ -83,7 +82,7 @@ export namespace Papercut {
         case "customer":
           return baseQuery.where(isNull(papercutAccountsTable.deletedAt));
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
   }
@@ -119,7 +118,7 @@ export namespace Papercut {
             isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
           );
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
   }
@@ -155,7 +154,7 @@ export namespace Papercut {
             isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
           );
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
 
@@ -215,7 +214,7 @@ export namespace Papercut {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.deletePapercutAccount, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "delete papercut account mutator")],
       });
 
@@ -291,7 +290,7 @@ export namespace Papercut {
         user,
         mutationRbac.deletePapercutAccountManagerAuthorization,
         {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [
             rbacErrorMessage(
               user,

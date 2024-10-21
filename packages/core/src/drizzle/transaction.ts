@@ -1,7 +1,7 @@
 import { db } from ".";
-import { Constants } from "../constants";
-import { InternalServerError } from "../errors/http";
 import { Utils } from "../utils";
+import { Constants } from "../utils/constants";
+import { HttpError } from "../utils/errors";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { PgTransaction, PgTransactionConfig } from "drizzle-orm/pg-core";
@@ -127,7 +127,7 @@ export async function serializable<TOutput>(
     return result.output;
   }
 
-  throw new InternalServerError(
+  throw new HttpError.InternalServerError(
     "Failed to execute transaction after maximum number of retries, giving up.",
   );
 }

@@ -1,9 +1,6 @@
 import { and, arrayOverlaps, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
-import { NonExhaustiveValue } from "../errors/misc";
 import { ordersTable } from "../orders/sql";
 import {
   papercutAccountManagerAuthorizationsTable,
@@ -13,6 +10,8 @@ import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
+import { Constants } from "../utils/constants";
+import { ApplicationError, MiscellaneousError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import {
   createCommentMutationArgsSchema,
@@ -29,7 +28,7 @@ export namespace Comments {
 
     const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
-      throw new AccessDenied(
+      throw new ApplicationError.AccessDenied(
         `User "${user.id}" cannot create a comment on order "${values.orderId}", order access denied.`,
       );
 
@@ -121,7 +120,7 @@ export namespace Comments {
               ),
             );
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
   }
@@ -149,7 +148,7 @@ export namespace Comments {
 
       const users = await Users.withOrderAccess(values.orderId);
       if (!users.some((u) => u.id === user.id))
-        throw new AccessDenied(
+        throw new ApplicationError.AccessDenied(
           `User "${user.id}" cannot update comment "${id}" on order "${values.orderId}", order access denied.`,
         );
 
@@ -180,7 +179,7 @@ export namespace Comments {
 
       const users = await Users.withOrderAccess(values.orderId);
       if (!users.some((u) => u.id === user.id))
-        throw new AccessDenied(
+        throw new ApplicationError.AccessDenied(
           `User "${user.id}" cannot delete comment "${id}" on order "${values.orderId}", order access denied.`,
         );
 

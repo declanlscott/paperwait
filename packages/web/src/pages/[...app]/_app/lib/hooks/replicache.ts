@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Announcements } from "@paperwait/core/announcements/client";
-import { MissingContextProvider } from "@paperwait/core/errors/application";
+import { ApplicationError } from "@paperwait/core/utils/errors";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
@@ -15,7 +15,8 @@ import type {
 export function useReplicache() {
   const replicache = useContext(ReplicacheContext);
 
-  if (!replicache) throw new MissingContextProvider("Replicache");
+  if (!replicache)
+    throw new ApplicationError.MissingContextProvider("Replicache");
 
   return replicache;
 }

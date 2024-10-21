@@ -4,17 +4,7 @@ import {
   useTransaction,
   withTransaction,
 } from "@paperwait/core/drizzle/transaction";
-import {
-  BadRequest,
-  InternalServerError,
-  NotFound,
-  NotImplemented,
-  Unauthorized,
-} from "@paperwait/core/errors/http";
-import {
-  ArcticFetchError,
-  Oauth2RequestError,
-} from "@paperwait/core/errors/oauth2";
+import { Oauth2 } from "@paperwait/core/oauth2";
 import { EntraId } from "@paperwait/core/oauth2/entra-id";
 import { Google } from "@paperwait/core/oauth2/google";
 import {
@@ -30,6 +20,7 @@ import { useAuthenticated } from "@paperwait/core/sessions/context";
 import { tenantsTable } from "@paperwait/core/tenants/sql";
 import { Users } from "@paperwait/core/users";
 import { userProfilesTable, usersTable } from "@paperwait/core/users/sql";
+import { HttpError } from "@paperwait/core/utils/errors";
 import { nanoIdSchema } from "@paperwait/core/utils/shared";
 import { and, eq, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
@@ -40,7 +31,6 @@ import * as v from "valibot";
 
 import { authorization } from "~/api/middleware";
 
-import type { Oauth2 } from "@paperwait/core/oauth2";
 import type { UserInfo } from "@paperwait/core/oauth2/shared";
 
 export default new Hono()
@@ -83,7 +73,7 @@ export default new Hono()
           )
           .then((rows) => rows.at(0)),
       );
-      if (!tenant) throw new NotFound("Tenant not found");
+      if (!tenant) throw new HttpError.NotFound("Tenant not found");
 
       let state: string;
       let codeVerifier: string;
@@ -106,7 +96,7 @@ export default new Hono()
         default: {
           tenant.oauth2ProviderVariant satisfies never;
 
-          throw new NotImplemented(
+          throw new HttpError.NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Provider "${tenant.oauth2ProviderVariant}" not implemented`,
           );
@@ -176,7 +166,7 @@ export default new Hono()
         default: {
           provider satisfies never;
 
-          throw new NotImplemented(
+          throw new HttpError.NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Provider "${provider}" not implemented`,
           );
@@ -206,11 +196,12 @@ export default new Hono()
           )
           .then((rows) => rows.at(0)),
       );
-      if (!result?.tenant) throw new NotFound("Tenant not found");
+      if (!result?.tenant) throw new HttpError.NotFound("Tenant not found");
       if (result.tenant.status === "suspended")
-        throw new Unauthorized("Tenant is suspended");
-      if (!result.user) throw new NotFound("User not found");
-      if (result.user.deletedAt) throw new Unauthorized("User is deleted");
+        throw new HttpError.Unauthorized("Tenant is suspended");
+      if (!result.user) throw new HttpError.NotFound("User not found");
+      if (result.user.deletedAt)
+        throw new HttpError.Unauthorized("User is deleted");
 
       let userInfo: UserInfo;
       switch (provider) {
@@ -225,7 +216,7 @@ export default new Hono()
         default: {
           provider satisfies never;
 
-          throw new NotImplemented(
+          throw new HttpError.NotImplemented(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `Provider "${provider}" not implemented`,
           );
@@ -325,7 +316,8 @@ export default new Hono()
       const { userId } = c.req.valid("param");
 
       const userExists = await Users.exists(userId);
-      if (!userExists) throw new NotFound(`User "${userId}" not found`);
+      if (!userExists)
+        throw new HttpError.NotFound(`User "${userId}" not found`);
 
       await Sessions.invalidateUser(userId);
 
@@ -336,10 +328,12 @@ export default new Hono()
 function rethrowHttpError(error: Error): never {
   console.error(error);
 
-  if (error instanceof Oauth2RequestError) throw new BadRequest(error.message);
-  if (error instanceof ArcticFetchError)
-    throw new InternalServerError(error.message);
-  if (error instanceof Error) throw new InternalServerError(error.message);
+  if (error instanceof Oauth2.RequestError)
+    throw new HttpError.BadRequest(error.message);
+  if (error instanceof Oauth2.FetchError)
+    throw new HttpError.InternalServerError(error.message);
+  if (error instanceof Error)
+    throw new HttpError.InternalServerError(error.message);
 
-  throw new InternalServerError("An unexpected error occurred");
+  throw new HttpError.InternalServerError("An unexpected error occurred");
 }

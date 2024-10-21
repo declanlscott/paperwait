@@ -1,3 +1,9 @@
+/**
+ * NOTE: This module provides constants and must remain framework-agnostic.
+ * For example it should not depend on sst for linked resources. Other modules in the
+ * core package may depend on sst, but this module should not.
+ */
+
 import type { Duration } from "date-fns";
 
 export namespace Constants {
@@ -17,7 +23,6 @@ export namespace Constants {
 
   export const POKE = "poke";
 
-  export const PAPERCUT_PARAMETER_NAME = "papercut";
   export const MAX_FILE_SIZES_PARAMETER_NAME = "max-file-sizes";
   export const DOCUMENTS_MIME_TYPES_PARAMETER_NAME = "documents-mime-types";
 

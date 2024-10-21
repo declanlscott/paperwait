@@ -1,14 +1,13 @@
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
-import { NonExhaustiveValue } from "../errors/misc";
 import { productsTable } from "../products/sql";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
+import { Constants } from "../utils/constants";
+import { ApplicationError, MiscellaneousError } from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import {
   createRoomMutationArgsSchema,
@@ -25,7 +24,7 @@ export namespace Rooms {
     const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.createRoom, {
-      Error: AccessDenied,
+      Error: ApplicationError.AccessDenied,
       args: [rbacErrorMessage(user, "create room mutator")],
     });
 
@@ -71,7 +70,7 @@ export namespace Rooms {
             ),
           );
         default:
-          throw new NonExhaustiveValue(user.profile.role);
+          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
       }
     });
   }
@@ -95,7 +94,7 @@ export namespace Rooms {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.updateRoom, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "update room mutator")],
       });
 
@@ -120,7 +119,7 @@ export namespace Rooms {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.deleteRoom, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "delete room mutator")],
       });
 
@@ -155,7 +154,7 @@ export namespace Rooms {
     const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.restoreRoom, {
-      Error: AccessDenied,
+      Error: ApplicationError.AccessDenied,
       args: [rbacErrorMessage(user, "restore room mutator")],
     });
 

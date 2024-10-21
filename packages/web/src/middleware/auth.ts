@@ -1,6 +1,6 @@
-import { Constants } from "@paperwait/core/constants";
 import { Sessions } from "@paperwait/core/sessions";
 import { withAuth } from "@paperwait/core/sessions/context";
+import { Constants } from "@paperwait/core/utils/constants";
 import { defineMiddleware } from "astro:middleware";
 
 import { isPrerenderedPage } from "~/middleware/utils";

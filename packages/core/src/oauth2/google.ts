@@ -6,9 +6,9 @@ import {
 import { Resource } from "sst";
 import * as v from "valibot";
 
-import { Constants } from "../constants";
-import { HttpError, InternalServerError, NotImplemented } from "../errors/http";
 import { Utils } from "../utils";
+import { Constants } from "../utils/constants";
+import { HttpError } from "../utils/errors";
 import { GOOGLE } from "./shared";
 
 import type { Oauth2 } from ".";
@@ -54,7 +54,7 @@ export namespace Google {
         },
       },
     );
-    if (!res.ok) throw new HttpError(res.statusText, res.status);
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
 
     return v.parse(
       v.looseObject({
@@ -72,7 +72,8 @@ export namespace Google {
     idToken: SessionTokens["idToken"],
   ): Promise<Oauth2.IdToken> {
     const payload = await Utils.parseJwt(idToken);
-    if (!payload) throw new InternalServerError("Empty id token payload");
+    if (!payload)
+      throw new HttpError.InternalServerError("Empty id token payload");
 
     const { hd, sub, name } = v.parse(
       v.object({ hd: v.string(), sub: v.string(), name: v.string() }),
@@ -92,6 +93,8 @@ export namespace Google {
 
   // TODO: Implement this function
   export async function photo(_userId: User["id"]): Promise<Response> {
-    throw new NotImplemented(`Provider variant "${GOOGLE}" not implemented`);
+    throw new HttpError.NotImplemented(
+      `Provider variant "${GOOGLE}" not implemented`,
+    );
   }
 }

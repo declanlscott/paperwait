@@ -1,12 +1,12 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
+import { Constants } from "../utils/constants";
+import { ApplicationError } from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import {
   createAnnouncementMutationArgsSchema,
@@ -24,7 +24,7 @@ export namespace Announcements {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.createAnnouncement, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "create announcement mutator")],
       });
 
@@ -74,7 +74,7 @@ export namespace Announcements {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.updateAnnouncement, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "update announcement mutator")],
       });
 
@@ -102,7 +102,7 @@ export namespace Announcements {
       const { user, tenant } = useAuthenticated();
 
       enforceRbac(user, mutationRbac.deleteAnnouncement, {
-        Error: AccessDenied,
+        Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "delete announcement mutator")],
       });
 

@@ -1,9 +1,9 @@
 import { foreignKey, index, jsonb, varchar } from "drizzle-orm/pg-core";
 
-import { Constants } from "../constants";
 import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
 import { roomsTable } from "../rooms/sql";
+import { Constants } from "../utils/constants";
 import { productStatus } from "../utils/sql";
 import { productsTableName } from "./shared";
 

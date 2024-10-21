@@ -1,5 +1,5 @@
-import { HttpError } from "@paperwait/core/errors/http";
-import { ArcticFetchError } from "@paperwait/core/errors/oauth2";
+import { Oauth2 } from "@paperwait/core/oauth2";
+import { HttpError } from "@paperwait/core/utils/errors";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
@@ -25,9 +25,9 @@ const api = new Hono()
   .onError((e, c) => {
     console.error(e);
 
-    if (e instanceof HttpError)
+    if (e instanceof HttpError.Error)
       return c.json(e.message, e.statusCode as StatusCode);
-    if (e instanceof ArcticFetchError) return c.json(e.message, 500);
+    if (e instanceof Oauth2.FetchError) return c.json(e.message, 500);
     if (e instanceof HTTPException) return e.getResponse();
 
     return c.json("Internal server error", 500);

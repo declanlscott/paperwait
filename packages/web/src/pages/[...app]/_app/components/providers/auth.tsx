@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { AccessDenied } from "@paperwait/core/errors/application";
-import { HttpError } from "@paperwait/core/errors/http";
+import { ApplicationError, HttpError } from "@paperwait/core/utils/errors";
 import { enforceRbac, rbacErrorMessage } from "@paperwait/core/utils/shared";
 import { redirect } from "@tanstack/react-router";
 import { createStore } from "zustand";
@@ -34,7 +33,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
           })),
         logout: async () => {
           const res = await fetch("/api/auth/logout", { method: "POST" });
-          if (!res.ok) throw new HttpError(res.statusText, res.status);
+          if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
 
           get().actions.reset();
         },
@@ -56,7 +55,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
         },
         authorizeRoute: (user, roles) =>
           enforceRbac(user, roles, {
-            Error: AccessDenied,
+            Error: ApplicationError.AccessDenied,
             args: [rbacErrorMessage(user)],
           }),
       },

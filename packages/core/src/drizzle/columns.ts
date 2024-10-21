@@ -1,7 +1,7 @@
 import { getTableColumns, sql } from "drizzle-orm";
 import { char, customType, timestamp } from "drizzle-orm/pg-core";
 
-import { Constants } from "../constants";
+import { Constants } from "../utils/constants";
 import { generateId } from "../utils/shared";
 
 import type { SQL } from "drizzle-orm";

@@ -7,9 +7,9 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { Constants } from "../constants";
 import { id, idPrimaryKey, timestamps } from "../drizzle/columns";
 import { oauth2ProvidersTable } from "../oauth2/sql";
+import { Constants } from "../utils/constants";
 import { licenseStatus, tenantStatus } from "../utils/sql";
 import { licensesTableName, tenantsTableName } from "./shared";
 

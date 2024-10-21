@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { MissingContextProvider } from "@paperwait/core/errors/application";
+import { ApplicationError } from "@paperwait/core/utils/errors";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 
@@ -12,7 +12,8 @@ export function useCommandBarStore<TSlice>(
 ) {
   const store = useContext(CommandBarContext);
 
-  if (!store) throw new MissingContextProvider("CommandBarStore");
+  if (!store)
+    throw new ApplicationError.MissingContextProvider("CommandBarStore");
 
   return useStore(store, selector);
 }

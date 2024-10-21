@@ -1,7 +1,7 @@
-import { AccessDenied, EntityNotFound } from "../errors/application";
 import { mutationRbac } from "../replicache/shared";
 import { Users } from "../users/client";
 import { Utils } from "../utils/client";
+import { ApplicationError } from "../utils/errors";
 import { enforceRbac, rbacErrorMessage } from "../utils/shared";
 import {
   commentsTableName,
@@ -22,13 +22,13 @@ export namespace Comments {
       if (
         users.some((u) => u.id === user.id) ||
         enforceRbac(user, mutationRbac.createComment, {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [rbacErrorMessage(user, "create comment mutator")],
         })
       )
         return true;
 
-      throw new AccessDenied();
+      throw new ApplicationError.AccessDenied();
     },
     () => async (tx, values) =>
       tx.set(`${commentsTableName}/${values.id}`, values),
@@ -42,17 +42,18 @@ export namespace Comments {
       if (
         users.some((u) => u.id === user.id) ||
         enforceRbac(user, mutationRbac.updateComment, {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [rbacErrorMessage(user, "update comment mutator")],
         })
       )
         return true;
 
-      throw new AccessDenied();
+      throw new ApplicationError.AccessDenied();
     },
     () => async (tx, values) => {
       const prev = await tx.get<Comment>(`${commentsTableName}/${values.id}`);
-      if (!prev) throw new EntityNotFound(commentsTableName, values.id);
+      if (!prev)
+        throw new ApplicationError.EntityNotFound(commentsTableName, values.id);
 
       const next = {
         ...prev,
@@ -71,13 +72,13 @@ export namespace Comments {
       if (
         users.some((u) => u.id === user.id) ||
         enforceRbac(user, mutationRbac.deleteComment, {
-          Error: AccessDenied,
+          Error: ApplicationError.AccessDenied,
           args: [rbacErrorMessage(user, "delete comment mutator")],
         })
       )
         return true;
 
-      throw new AccessDenied();
+      throw new ApplicationError.AccessDenied();
     },
     ({ user }) =>
       async (tx, values) => {
@@ -85,7 +86,11 @@ export namespace Comments {
           const prev = await tx.get<Comment>(
             `${commentsTableName}/${values.id}`,
           );
-          if (!prev) throw new EntityNotFound(commentsTableName, values.id);
+          if (!prev)
+            throw new ApplicationError.EntityNotFound(
+              commentsTableName,
+              values.id,
+            );
 
           const next = {
             ...prev,
@@ -96,7 +101,11 @@ export namespace Comments {
         }
 
         const success = await tx.del(`${commentsTableName}/${values.id}`);
-        if (!success) throw new EntityNotFound(commentsTableName, values.id);
+        if (!success)
+          throw new ApplicationError.EntityNotFound(
+            commentsTableName,
+            values.id,
+          );
       },
   );
 }

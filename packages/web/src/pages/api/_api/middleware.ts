@@ -1,12 +1,8 @@
 import { withTransaction } from "@paperwait/core/drizzle/transaction";
-import { Forbidden, InternalServerError } from "@paperwait/core/errors/http";
-import {
-  ArcticFetchError,
-  Oauth2RequestError,
-} from "@paperwait/core/errors/oauth2";
 import { Oauth2 } from "@paperwait/core/oauth2";
 import { withOauth2 } from "@paperwait/core/oauth2/context";
 import { useAuthenticated } from "@paperwait/core/sessions/context";
+import { HttpError } from "@paperwait/core/utils/errors";
 import { enforceRbac } from "@paperwait/core/utils/shared";
 import { createMiddleware } from "hono/factory";
 
@@ -17,7 +13,7 @@ export const authorization = (
 ) =>
   createMiddleware(async (_, next) => {
     enforceRbac(useAuthenticated().user, roles, {
-      Error: Forbidden,
+      Error: HttpError.Forbidden,
       args: [],
     });
     await next();
@@ -31,14 +27,16 @@ export const provider = createMiddleware(async (_, next) =>
           (error: Error): never => {
             console.error(error);
 
-            if (error instanceof Oauth2RequestError)
-              throw new InternalServerError(error.message);
-            if (error instanceof ArcticFetchError)
-              throw new InternalServerError(error.message);
+            if (error instanceof Oauth2.RequestError)
+              throw new HttpError.InternalServerError(error.message);
+            if (error instanceof Oauth2.RequestError)
+              throw new HttpError.InternalServerError(error.message);
             if (error instanceof Error)
-              throw new InternalServerError(error.message);
+              throw new HttpError.InternalServerError(error.message);
 
-            throw new InternalServerError("An unexpected error occurred");
+            throw new HttpError.InternalServerError(
+              "An unexpected error occurred",
+            );
           },
         ),
       ),

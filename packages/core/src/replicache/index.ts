@@ -4,17 +4,11 @@ import * as R from "remeda";
 import { Resource } from "sst";
 import * as v from "valibot";
 
-import { Constants } from "../constants";
 import { serializable, useTransaction } from "../drizzle/transaction";
-import { HttpError } from "../errors/http";
-import {
-  BadRequest,
-  ClientStateNotFound,
-  MutationConflict,
-  Unauthorized,
-} from "../errors/replicache";
 import { useAuthenticated } from "../sessions/context";
 import { Utils } from "../utils";
+import { Constants } from "../utils/constants";
+import { HttpError, ReplicacheError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import {
@@ -165,7 +159,7 @@ export namespace Replicache {
 
         if (!res.ok) {
           console.log(`Failed to poke channel "${channel}"`);
-          throw new HttpError(res.statusText, res.status);
+          throw new HttpError.Error(res.statusText, res.status);
         }
       }),
     );
@@ -243,7 +237,7 @@ export namespace Replicache {
 
         // 5: Verify requesting client group owns requested client
         if (baseClientGroup.userId !== user.id)
-          throw new Unauthorized(
+          throw new ReplicacheError.Unauthorized(
             `User "${user.id}" does not own client group "${baseClientGroup.id}"`,
           );
 
@@ -391,7 +385,10 @@ export namespace Replicache {
         lastMutationIDChanges,
       };
     },
-    { Error: BadRequest, args: ["Failed to parse pull request"] },
+    {
+      Error: ReplicacheError.BadRequest,
+      args: ["Failed to parse pull request"],
+    },
   );
 
   /**
@@ -418,7 +415,7 @@ export namespace Replicache {
             `Encountered error during push on mutation "${mutation.id}"`,
           );
 
-          if (error instanceof ClientStateNotFound)
+          if (error instanceof ReplicacheError.ClientStateNotFound)
             return { error: error.name };
 
           console.log(`Retrying mutation "${mutation.id}" in error mode`);
@@ -453,7 +450,7 @@ export namespace Replicache {
 
             // 4: Verify requesting user owns the client group
             if (clientGroup.userId !== user.id)
-              throw new Unauthorized(
+              throw new ReplicacheError.Unauthorized(
                 `User "${user.id}" does not own client group "${clientGroupId}"`,
               );
 
@@ -469,12 +466,12 @@ export namespace Replicache {
 
             // 6: Verify requesting client group owns the client
             if (client.clientGroupId !== clientGroupId)
-              throw new Unauthorized(
+              throw new ReplicacheError.Unauthorized(
                 `Client ${mutation.clientID} does not belong to client group ${clientGroupId}`,
               );
 
             if (client.lastMutationId === 0 && mutation.id > 1)
-              throw new ClientStateNotFound();
+              throw new ReplicacheError.ClientStateNotFound();
 
             // 7: Next mutation ID
             const nextMutationId = client.lastMutationId + 1;
@@ -487,7 +484,7 @@ export namespace Replicache {
 
             // 9: Rollback and throw if mutation is from the future
             if (mutation.id > nextMutationId)
-              throw new MutationConflict(
+              throw new ReplicacheError.MutationConflict(
                 `Mutation "${mutation.id}" is from the future - aborting`,
               );
 
@@ -531,6 +528,9 @@ export namespace Replicache {
 
       return null;
     },
-    { Error: BadRequest, args: ["Failed to parse push request"] },
+    {
+      Error: ReplicacheError.BadRequest,
+      args: ["Failed to parse push request"],
+    },
   );
 }

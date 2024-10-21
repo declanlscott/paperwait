@@ -1,8 +1,4 @@
-import {
-  HttpError,
-  MethodNotAllowed,
-  Unauthorized,
-} from "@paperwait/core/errors/http";
+import { HttpError } from "@paperwait/core/utils/errors";
 
 import type * as Party from "partykit/server";
 
@@ -19,13 +15,13 @@ export default class Server implements Party.Server {
         new URL(request.url).searchParams.get("replicacheLicenseKey") !==
         lobby.env.REPLICACHE_LICENSE_KEY
       )
-        throw new Unauthorized();
+        throw new HttpError.Unauthorized();
 
       return request;
     } catch (e) {
       console.error(e);
 
-      if (e instanceof HttpError)
+      if (e instanceof HttpError.Error)
         return new Response(e.message, { status: e.statusCode });
 
       return new Response("Internal server error", { status: 500 });
@@ -34,16 +30,16 @@ export default class Server implements Party.Server {
 
   static onBeforeRequest(request: Party.Request, lobby: Party.Lobby) {
     try {
-      if (request.method !== "POST") throw new MethodNotAllowed();
+      if (request.method !== "POST") throw new HttpError.MethodNotAllowed();
 
       if (request.headers.get("x-api-key") !== lobby.env.API_KEY)
-        throw new Unauthorized();
+        throw new HttpError.Unauthorized();
 
       return request;
     } catch (e) {
       console.error(e);
 
-      if (e instanceof HttpError)
+      if (e instanceof HttpError.Error)
         return new Response(e.message, { status: e.statusCode });
 
       return new Response("Internal server error", { status: 500 });

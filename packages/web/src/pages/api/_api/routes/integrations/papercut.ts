@@ -2,7 +2,7 @@
 // import { useAuthenticated } from "@paperwait/core/auth/context";
 // import { mutationRbac } from "@paperwait/core/auth/rbac";
 // import { buildSsmParameterPath, putSsmParameter } from "@paperwait/core/aws";
-// import { PAPERCUT_PARAMETER_NAME } from "@paperwait/core/constants";
+// import { PAPERCUT_PARAMETER_NAME } from "@paperwait/core/utils/constants";
 // import { serializable } from "@paperwait/core/orm";
 // import { healthCheck, syncPapercutAccounts } from "@paperwait/core/papercut";
 // import { formatChannel } from "@paperwait/core/realtime";

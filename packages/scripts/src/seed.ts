@@ -1,6 +1,6 @@
-import { Constants } from "@paperwait/core/constants";
 import { db } from "@paperwait/core/drizzle";
 import { replicacheMetaTable } from "@paperwait/core/replicache/sql";
+import { Constants } from "@paperwait/core/utils/constants";
 
 async function seed() {
   await db.insert(replicacheMetaTable).values({

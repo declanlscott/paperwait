@@ -3,12 +3,12 @@ import { and, eq } from "drizzle-orm";
 import { Resource } from "sst";
 import * as v from "valibot";
 
-import { Constants } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
-import { HttpError, InternalServerError, NotFound } from "../errors/http";
 import { useAuthenticated } from "../sessions/context";
 import { userProfilesTable, usersTable } from "../users/sql";
 import { Utils } from "../utils";
+import { Constants } from "../utils/constants";
+import { HttpError } from "../utils/errors";
 import { useOauth2 } from "./context";
 
 import type { Oauth2 } from ".";
@@ -51,7 +51,7 @@ export namespace EntraId {
         "Content-Type": "application/json",
       },
     });
-    if (!res.ok) throw new HttpError(res.statusText, res.status);
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
 
     return v.parse(
       v.looseObject({
@@ -70,7 +70,8 @@ export namespace EntraId {
     idToken: SessionTokens["idToken"],
   ): Promise<Oauth2.IdToken> {
     const payload = await Utils.parseJwt(idToken);
-    if (!payload) throw new InternalServerError("Empty id token payload");
+    if (!payload)
+      throw new HttpError.InternalServerError("Empty id token payload");
 
     const { tid, oid, preferred_username } = v.parse(
       v.object({
@@ -112,7 +113,7 @@ export namespace EntraId {
         )
         .then((rows) => rows.at(0)),
     );
-    if (!user) throw new NotFound("User not found");
+    if (!user) throw new HttpError.NotFound("User not found");
 
     const res = await fetch(
       `https://graph.microsoft.com/v1.0/users/${user.id}/photo/$value`,
@@ -122,7 +123,7 @@ export namespace EntraId {
         },
       },
     );
-    if (!res.ok) throw new HttpError(res.statusText, res.status);
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
 
     return res;
   }

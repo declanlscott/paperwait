@@ -1,11 +1,12 @@
-import { Unauthenticated as UnauthenticatedError } from "../errors/application";
+import { ApplicationError } from "@paperwait/core/utils/errors";
+
 import { Utils } from "../utils";
 
 import type { Authenticated, Unauthenticated } from "./shared";
 
 export type Auth = Authenticated | Unauthenticated;
 export type AuthContext = Auth;
-export const AuthContext = Utils.createContext<AuthContext>("Session");
+export const AuthContext = Utils.createContext<AuthContext>("Auth");
 
 export function useAuth(): AuthContext {
   try {
@@ -26,7 +27,7 @@ export const withAuth = <
 export function assertAuth() {
   const auth = useAuth();
 
-  if (!auth.isAuthed) throw new UnauthenticatedError();
+  if (!auth.isAuthed) throw new ApplicationError.Unauthenticated();
 
   return auth;
 }

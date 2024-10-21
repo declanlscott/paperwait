@@ -1,13 +1,9 @@
-import { ApplicationError } from "@paperwait/core/errors/application";
-import {
-  BadRequest,
-  Conflict,
-  Forbidden,
-  InternalServerError,
-  Unauthorized,
-} from "@paperwait/core/errors/http";
-import { UnrecoverableError } from "@paperwait/core/errors/replicache";
 import { Replicache } from "@paperwait/core/replicache";
+import {
+  ApplicationError,
+  HttpError,
+  ReplicacheError,
+} from "@paperwait/core/utils/errors";
 import { Hono } from "hono";
 
 import { authorization } from "~/api/middleware";
@@ -34,29 +30,29 @@ export default new Hono()
 function rethrowHttpError(error: Error): never {
   console.error(error);
 
-  if (error instanceof UnrecoverableError) {
+  if (error instanceof ReplicacheError.UnrecoverableError) {
     switch (error.name) {
       case "BadRequest":
-        throw new BadRequest(error.message);
+        throw new HttpError.BadRequest(error.message);
       case "Unauthorized":
-        throw new Unauthorized(error.message);
+        throw new HttpError.Unauthorized(error.message);
       case "MutationConflict":
-        throw new Conflict(error.message);
+        throw new HttpError.Conflict(error.message);
       default:
         error.name satisfies never;
-        throw new InternalServerError(error.message);
+        throw new HttpError.InternalServerError(error.message);
     }
   }
-  if (error instanceof ApplicationError) {
+  if (error instanceof ApplicationError.Error) {
     switch (error.name) {
       case "Unauthenticated":
-        throw new Unauthorized(error.message);
+        throw new HttpError.Unauthorized(error.message);
       case "AccessDenied":
-        throw new Forbidden(error.message);
+        throw new HttpError.Forbidden(error.message);
       default:
-        throw new InternalServerError(error.message);
+        throw new HttpError.InternalServerError(error.message);
     }
   }
 
-  throw new InternalServerError("An unexpected error occurred");
+  throw new HttpError.InternalServerError("An unexpected error occurred");
 }

@@ -1,12 +1,12 @@
 import { useContext } from "react";
-import { MissingContextProvider } from "@paperwait/core/errors/application";
+import { ApplicationError } from "@paperwait/core/utils/errors";
 
 import { SlotContext } from "~/app/lib/contexts";
 
 export function useSlot() {
   const context = useContext(SlotContext);
 
-  if (!context) throw new MissingContextProvider("Slot");
+  if (!context) throw new ApplicationError.MissingContextProvider("Slot");
 
   return context;
 }

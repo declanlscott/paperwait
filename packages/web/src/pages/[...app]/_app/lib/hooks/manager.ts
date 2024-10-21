@@ -1,4 +1,4 @@
-import { AccessDenied } from "@paperwait/core/errors/application";
+import { ApplicationError } from "@paperwait/core/utils/errors";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
@@ -10,7 +10,7 @@ export function useManager() {
   const { user } = useAuthenticated();
 
   if (user.profile.role !== "manager")
-    throw new AccessDenied("Manager role required");
+    throw new ApplicationError.AccessDenied("Manager role required");
 
   const papercutAccountIds = useQuery(
     queryFactory.managedPapercutAccountIds(user.id),

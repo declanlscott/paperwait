@@ -12,7 +12,6 @@
   "scripts": {
     "drizzle:push": "drizzle-kit push",
     "drizzle:studio": "drizzle-kit studio",
-    "tailscale:typegen": "pnpm dlx openapi-typescript https://api.tailscale.com/api/v2?outputOpenapiSchema=true -o ./src/tailscale/schema.d.ts",
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
@@ -27,15 +26,13 @@
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "@oslojs/jwt": "^0.2.0",
-    "@smithy/signature-v4": "^4.2.0",
+    "@smithy/signature-v4": "^4.2.1",
     "arctic": "next",
-    "date-fns": "^4.1.0",
     "nanoid": "^5.0.7",
-    "openapi-fetch": "^0.12.2",
     "postgres": "^3.4.4"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
-    "drizzle-kit": "^0.25.0"
+    "drizzle-kit": "^0.26.2"
   }
 }

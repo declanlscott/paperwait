@@ -1,14 +1,14 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 
-import { Constants } from "../constants";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { AccessDenied } from "../errors/application";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { mutationRbac } from "../replicache/shared";
 import { Sessions } from "../sessions";
 import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
+import { Constants } from "../utils/constants";
+import { ApplicationError } from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import { updateTenantMutationArgsSchema } from "./shared";
 import { licensesTable, tenantsTable } from "./sql";
@@ -42,7 +42,7 @@ export namespace Tenants {
     const { user, tenant } = useAuthenticated();
 
     enforceRbac(user, mutationRbac.updateTenant, {
-      Error: AccessDenied,
+      Error: ApplicationError.AccessDenied,
       args: [rbacErrorMessage(user, "update tenant mutator")],
     });
 
