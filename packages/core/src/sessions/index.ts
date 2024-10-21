@@ -5,6 +5,7 @@ import {
 } from "@oslojs/encoding";
 import { add, isAfter, sub } from "date-fns";
 import { and, eq, lte } from "drizzle-orm";
+import { Resource } from "sst";
 
 import { Constants } from "../constants";
 import { useTransaction } from "../drizzle/transaction";
@@ -40,7 +41,7 @@ export namespace Sessions {
     return token;
   }
 
-  const getId = (token: string) =>
+  const hashToken = (token: string) =>
     encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
   export async function create(
@@ -48,7 +49,7 @@ export namespace Sessions {
     oauth2Tokens: Oauth2.Tokens,
   ): Promise<{ session: Session; cookie: Cookie }> {
     const token = generateToken();
-    const id = getId(token);
+    const id = hashToken(token);
 
     const session = await useTransaction(async (tx) => {
       const session = await tx
@@ -94,7 +95,7 @@ export namespace Sessions {
   }
 
   export async function validateToken(token: string): Promise<Auth> {
-    const sessionId = getId(token);
+    const sessionId = hashToken(token);
 
     return useTransaction(async (tx) => {
       const result = await tx
@@ -180,7 +181,7 @@ export namespace Sessions {
         value: "",
         attributes: {
           httpOnly: true,
-          secure: true,
+          secure: !Resource.AppData.isDev,
           sameSite: "lax",
           path: "/",
           maxAge: 0,
@@ -192,7 +193,7 @@ export namespace Sessions {
       value: props.token,
       attributes: {
         httpOnly: true,
-        secure: true,
+        secure: !Resource.AppData.isDev,
         sameSite: "lax",
         path: "/",
         expires: props.expiresAt,
