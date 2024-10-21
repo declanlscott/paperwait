@@ -15,11 +15,10 @@ export default new Hono<{
   };
 }>()
   .use("/api/*", async (c, next) => {
-    const sessionId = getCookie(c, Constants.SESSION_COOKIE_NAME);
+    const token = getCookie(c, Constants.SESSION_COOKIE_NAME);
 
     let outcome: RateLimitOutcome;
-    if (sessionId)
-      outcome = await c.env.SESSION_RATE_LIMITER.limit({ key: sessionId });
+    if (token) outcome = await c.env.SESSION_RATE_LIMITER.limit({ key: token });
     else {
       const ip = getConnInfo(c).remote.address;
       if (!ip) throw new Error("Missing remote address");
