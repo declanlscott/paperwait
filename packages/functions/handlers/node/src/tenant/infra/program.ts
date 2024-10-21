@@ -10,9 +10,7 @@ import { Ssl } from "./components/ssl";
 import { Storage } from "./components/storage";
 import { useResource, withResource } from "./resource";
 
-import type { Tenant } from "@paperwait/core/tenants/sql";
-
-export const getProgram = (tenantId: Tenant["id"]) => async () =>
+export const getProgram = (tenantId: string) => async () =>
   withResource(() => {
     const account = Account.getInstance({ tenantId });
 
@@ -58,17 +56,17 @@ export const getProgram = (tenantId: Tenant["id"]) => async () =>
       { providers: [account.provider] },
     );
 
-    Events.getInstance(
-      {
-        userSync: {
-          functionArn: pulumi.output(useResource().UserSync.functionArn),
-          scheduleExpression: "TODO",
-          timezone: "TODO",
-        },
-        tailscaleAuthKeyRotation: {
-          functionArn: functions.tailscaleAuthKeyRotationArn,
-        },
-      },
-      { providers: [account.provider] },
-    );
+    // Events.getInstance(
+    //   {
+    //     tailscaleAuthKeyRotation: {
+    //       functionArn: functions.tailscaleAuthKeyRotationArn,
+    //     },
+    //     userSync: {
+    //       functionArn: pulumi.output(useResource().UserSync.functionArn),
+    //       scheduleExpression: "TODO",
+    //       timezone: "TODO",
+    //     },
+    //   },
+    //   { providers: [account.provider] },
+    // );
   });

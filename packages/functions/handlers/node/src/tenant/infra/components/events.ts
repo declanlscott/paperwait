@@ -4,13 +4,16 @@ import * as pulumi from "@pulumi/pulumi";
 import { useResource } from "../resource";
 
 export interface EventsArgs {
-  userSync: {
-    functionArn: aws.lambda.Function["arn"];
-    scheduleExpression: pulumi.Input<string>;
-    timezone: pulumi.Input<string>;
-  };
-  tailscaleAuthKeyRotation: {
-    functionArn: aws.lambda.Function["arn"];
+  tenantId: pulumi.Input<string>;
+  events: {
+    tailscaleAuthKeyRotation: {
+      functionArn: aws.lambda.Function["arn"];
+    };
+    userSync: {
+      functionArn: aws.lambda.Function["arn"];
+      scheduleExpression: pulumi.Input<string>;
+      timezone: pulumi.Input<string>;
+    };
   };
 }
 
@@ -35,15 +38,31 @@ export class Events extends pulumi.ComponentResource {
 
     this.events.push(
       new ScheduledEvent(
-        "ScheduledUserSync",
+        "ScheduledTailscaleAuthKeyRotation",
         {
-          functionArn: args.userSync.functionArn,
-          scheduleExpression: args.userSync.scheduleExpression,
+          scheduleExpression: "rate(60 days)",
           flexibleTimeWindow: {
-            mode: "FLEXIBLE",
-            maximumWindowInMinutes: 15,
+            mode: "OFF",
           },
-          timezone: args.userSync.timezone,
+          functionTarget: {
+            arn: args.events.tailscaleAuthKeyRotation.functionArn,
+          },
+        },
+        { parent: this },
+      ),
+    );
+
+    this.events.push(
+      new PatternedEvent(
+        "PatternedTailscaleAuthKeyRotation",
+        {
+          pattern: pulumi.jsonStringify({
+            "detail-type": ["Patterned Event"],
+          }),
+          functionTarget: {
+            arn: args.events.tailscaleAuthKeyRotation.functionArn,
+            createPermission: true,
+          },
         },
         { parent: this },
       ),
@@ -51,12 +70,34 @@ export class Events extends pulumi.ComponentResource {
 
     this.events.push(
       new ScheduledEvent(
-        "ScheduledTailscaleAuthKeyRotation",
+        "ScheduledUserSync",
         {
-          functionArn: args.tailscaleAuthKeyRotation.functionArn,
-          scheduleExpression: "rate(60 days)",
+          scheduleExpression: args.events.userSync.scheduleExpression,
           flexibleTimeWindow: {
-            mode: "OFF",
+            mode: "FLEXIBLE",
+            maximumWindowInMinutes: 15,
+          },
+          timezone: args.events.userSync.timezone,
+          functionTarget: {
+            arn: args.events.userSync.functionArn,
+            input: pulumi.jsonStringify({ tenantId: args.tenantId }),
+          },
+        },
+        { parent: this },
+      ),
+    );
+
+    this.events.push(
+      new PatternedEvent(
+        "PatternedUserSync",
+        {
+          pattern: pulumi.jsonStringify({
+            "detail-type": "Patterned Event",
+          }),
+          functionTarget: {
+            arn: args.events.userSync.functionArn,
+            input: pulumi.jsonStringify({ tenantId: args.tenantId }),
+            createPermission: false,
           },
         },
         { parent: this },
@@ -66,10 +107,13 @@ export class Events extends pulumi.ComponentResource {
 }
 
 interface ScheduledEventArgs {
-  functionArn: aws.lambda.Function["arn"];
   scheduleExpression: pulumi.Input<string>;
   flexibleTimeWindow: aws.types.input.scheduler.ScheduleFlexibleTimeWindow;
   timezone?: pulumi.Input<string>;
+  functionTarget: {
+    arn: aws.lambda.Function["arn"];
+    input?: pulumi.Input<string>;
+  };
 }
 
 class ScheduledEvent extends pulumi.ComponentResource {
@@ -113,7 +157,7 @@ class ScheduledEvent extends pulumi.ComponentResource {
           statements: [
             {
               actions: ["lambda:InvokeFunction"],
-              resources: [args.functionArn],
+              resources: [args.functionTarget.arn],
             },
           ],
         }).json,
@@ -124,13 +168,14 @@ class ScheduledEvent extends pulumi.ComponentResource {
     this.schedule = new aws.scheduler.Schedule(
       `${name}Schedule`,
       {
-        target: {
-          arn: args.functionArn,
-          roleArn: this.role.arn,
-        },
         scheduleExpression: args.scheduleExpression,
         flexibleTimeWindow: args.flexibleTimeWindow,
         scheduleExpressionTimezone: args.timezone ?? "UTC",
+        target: {
+          arn: args.functionTarget.arn,
+          roleArn: this.role.arn,
+          input: args.functionTarget.input,
+        },
       },
       { parent: this },
     );
@@ -143,14 +188,18 @@ class ScheduledEvent extends pulumi.ComponentResource {
 }
 
 interface PatternedEventArgs {
-  functionArn: pulumi.Input<string>;
   pattern: pulumi.Input<string>;
+  functionTarget: {
+    arn: aws.lambda.Function["arn"];
+    input?: pulumi.Input<string>;
+    createPermission: boolean;
+  };
 }
 
 class PatternedEvent extends pulumi.ComponentResource {
   private rule: aws.cloudwatch.EventRule;
   private target: aws.cloudwatch.EventTarget;
-  private permission: aws.lambda.Permission;
+  private permission?: aws.lambda.Permission;
 
   public constructor(
     name: string,
@@ -170,27 +219,28 @@ class PatternedEvent extends pulumi.ComponentResource {
     this.target = new aws.cloudwatch.EventTarget(
       `${name}Target`,
       {
-        arn: args.functionArn,
+        arn: args.functionTarget.arn,
         rule: this.rule.name,
       },
       { parent: this },
     );
 
-    this.permission = new aws.lambda.Permission(
-      `${name}Permission`,
-      {
-        action: "lambda:InvokeFunction",
-        function: args.functionArn,
-        principal: "events.amazonaws.com",
-        sourceArn: this.rule.arn,
-      },
-      { parent: this },
-    );
+    if (args.functionTarget.createPermission)
+      this.permission = new aws.lambda.Permission(
+        `${name}Permission`,
+        {
+          action: "lambda:InvokeFunction",
+          function: args.functionTarget.arn,
+          principal: "events.amazonaws.com",
+          sourceArn: this.rule.arn,
+        },
+        { parent: this },
+      );
 
     this.registerOutputs({
       rule: this.rule.id,
       target: this.target.id,
-      permission: this.permission.id,
+      permission: this.permission?.id,
     });
   }
 }

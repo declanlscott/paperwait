@@ -1,4 +1,3 @@
-import { tenantSchema } from "@paperwait/core/tenants/shared";
 import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
 import * as pulumi from "@pulumi/pulumi";
@@ -28,12 +27,7 @@ export const handler: SQSHandler = async (event) =>
   });
 
 async function processRecord(record: SQSRecord) {
-  const { tenantId } = v.parse(
-    v.object({
-      tenantId: tenantSchema.entries.id,
-    }),
-    record.body,
-  );
+  const { tenantId } = v.parse(v.object({ tenantId: v.string() }), record.body);
 
   const { AppData, Cloud, PulumiBucket } = useResource();
 

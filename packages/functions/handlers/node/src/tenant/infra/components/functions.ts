@@ -1,7 +1,6 @@
-import { Ssm } from "@paperwait/core/aws/ssm";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import { getHandler as getTailscaleAuthKeyRotationHandler } from "src/tailscale-auth-key-rotation";
+import { getHandler as getTailscaleAuthKeyRotationHandler } from "src/tenant/tailscale-auth-key-rotation";
 
 import { useResource } from "../resource";
 
@@ -87,8 +86,8 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
             {
               actions: ["ssm:GetParameter"],
               resources: [
-                Ssm.buildParameterPath(AppData, "tailscale", "auth"),
-                Ssm.buildParameterPath(AppData, "papercut", "web-services"),
+                pulumi.interpolate`/${AppData.name}/${AppData.stage}/tailscale/auth`,
+                pulumi.interpolate`/${AppData.name}/${AppData.stage}/papercut/web-services`,
               ].map(
                 (parameter) =>
                   pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${parameter}`,
@@ -185,8 +184,8 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
             {
               actions: ["ssm:GetParameter"],
               resources: [
-                Ssm.buildParameterPath(AppData, "tailscale", "oauth-client"),
-                Ssm.buildParameterPath(AppData, "tailscale", "tailnet"),
+                pulumi.interpolate`/${AppData.name}/${AppData.stage}/tailscale/oauth-client`,
+                pulumi.interpolate`/${AppData.name}/${AppData.stage}/tailscale/tailnet`,
               ].map(
                 (parameter) =>
                   pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${parameter}`,
@@ -195,7 +194,7 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
             {
               actions: ["ssm:PutParameter"],
               resources: [
-                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter${Ssm.buildParameterPath(AppData, "tailscale", "auth")}`,
+                pulumi.interpolate`arn:aws:ssm:${Cloud.aws.region}:${args.accountId}:parameter/${AppData.name}/${AppData.stage}/tailscale/auth`,
               ],
             },
           ],

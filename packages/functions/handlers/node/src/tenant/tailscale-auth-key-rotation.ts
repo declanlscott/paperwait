@@ -7,7 +7,7 @@ import type { EventBridgeHandler } from "aws-lambda";
 export const getHandler = () =>
   withResource(() => {
     const handler: EventBridgeHandler<string, unknown, void> = async (
-      _event,
+      event,
       _context,
     ) => {
       const { AppData } = useResource();

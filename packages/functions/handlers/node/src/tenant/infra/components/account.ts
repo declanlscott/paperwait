@@ -3,10 +3,8 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { useResource } from "../resource";
 
-import type { Tenant } from "@paperwait/core/tenants/sql";
-
 export interface AccountArgs {
-  tenantId: pulumi.Input<Tenant["id"]>;
+  tenantId: pulumi.Input<string>;
 }
 
 export class Account extends pulumi.ComponentResource {

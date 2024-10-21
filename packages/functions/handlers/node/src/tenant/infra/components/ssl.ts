@@ -4,10 +4,8 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { useResource } from "../resource";
 
-import type { Tenant } from "@paperwait/core/tenants/sql";
-
 export interface SslArgs {
-  tenantId: pulumi.Input<Tenant["id"]>;
+  tenantId: pulumi.Input<string>;
 }
 
 export class Ssl extends pulumi.ComponentResource {

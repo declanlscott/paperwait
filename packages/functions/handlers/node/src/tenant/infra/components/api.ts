@@ -70,7 +70,7 @@ export class Api extends pulumi.ComponentResource {
                         test: "StringLike",
                         variable: "aws:PrincipalArn",
                         values: [
-                          `arn:aws:iam::${Cloud.aws.identity.accountId}:role/*`,
+                          pulumi.interpolate`arn:aws.iam::${Cloud.aws.account.id}:role/*`,
                         ],
                       },
                     ]
