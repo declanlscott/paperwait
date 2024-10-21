@@ -9,20 +9,20 @@ importers:
   .:
     dependencies:
       drizzle-orm:
-        specifier: ^0.35.1
-        version: 0.35.1(@cloudflare/workers-types@4.20241011.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.11)(postgres@3.4.4)(react@18.3.1)
+        specifier: ^0.35.2
+        version: 0.35.2(@cloudflare/workers-types@4.20241011.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.11)(postgres@3.4.4)(react@18.3.1)
       hono:
         specifier: ^4.6.5
         version: 4.6.5
       remeda:
-        specifier: ^2.15.0
-        version: 2.15.0
+        specifier: ^2.15.2
+        version: 2.15.2
       replicache:
         specifier: ^15.0.1
         version: 15.0.1
       sst:
-        specifier: ^3.2.34
-        version: 3.2.34(hono@4.6.5)(valibot@1.0.0-beta.1(typescript@5.6.3))
+        specifier: ^3.2.38
+        version: 3.2.38(hono@4.6.5)(valibot@1.0.0-beta.1(typescript@5.6.3))
       valibot:
         specifier: beta
         version: 1.0.0-beta.1(typescript@5.6.3)
@@ -4310,8 +4310,8 @@ packages:
     resolution: {integrity: sha512-Rcf0nYCAKizwjWQCY+d3zytyuTbDb81NcaPor+8NebESlUz1+9W3uGl0+r9FhU4Qal5Zv9j/7neXCSCe7DHzjA==}
     hasBin: true
 
-  drizzle-orm@0.35.1:
-    resolution: {integrity: sha512-HQxDdYuXlZFuvDPztlUIzrX8TqWa/Ej6uN6L0hkbuGL4slexOUMc3u4nXVU15RQ5QYbk+uLQnR6v1+OIrdCTXQ==}
+  drizzle-orm@0.35.2:
+    resolution: {integrity: sha512-bLQtRchl8QvRo2MyG6kcZC90UDzR7Ubir4YwOHV3cZPdJbF+4jU/Yt0QOczsoXe25wLRt6CtCWLXtSDQKft3yg==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=3'
@@ -6348,8 +6348,8 @@ packages:
   remark-stringify@11.0.0:
     resolution: {integrity: sha512-1OSmLd3awB/t8qdoEOMazZkNsfVTeY4fTsgzcQFdXNq8ToTN4ZGwrMnlda4K6smTFKD+GRV6O48i6Z4iKgPPpw==}
 
-  remeda@2.15.0:
-    resolution: {integrity: sha512-Q0Xdg6z3pDKMGVCAI9wGZ+Yz0y0HOzaxxY3wc9gdjJyxqH93LywDUJ4PJ/zhweicYgcB4HbbOliR8HsIdse6mA==}
+  remeda@2.15.2:
+    resolution: {integrity: sha512-xcvVY/Xo5D5/s8SjLqEHcYOhmWtzmyyKW4BEaUZ6NVbIHsO03lyxnM5lfy1Mtytehkb9Zo+RJtIsRgkNOEDmEw==}
 
   remove-accents@0.5.0:
     resolution: {integrity: sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==}
@@ -6590,33 +6590,33 @@ packages:
     resolution: {integrity: sha512-MGrFH9Z4NP9Iyhqn16sDtBpRRNJ0Y2hNa6D65h736fVSaPCHr4DM4sWUNvVaSuC+0OBGhwsrydQwmgfg5LncqQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  sst-darwin-arm64@3.2.34:
-    resolution: {integrity: sha512-8kJmHhDAGCQBFZPWU48Lah0EeEyGuP8WcBFlvSNzfuHC7YxBEdYh1prQu3vThmiTbmx2hqU3587iXyYu8kuDLA==}
+  sst-darwin-arm64@3.2.38:
+    resolution: {integrity: sha512-NaGT9JWwOznJ1jZkN77Izo9CknXI6Ffgjn1UuSWlt8sleDvUMCiH27zTq7NKb2AIEmbM8APWGWt7ZHSUuQX3RA==}
     cpu: [arm64]
     os: [darwin]
 
-  sst-darwin-x64@3.2.34:
-    resolution: {integrity: sha512-VEYqfRKoSMJWpMwXcvdzTxuzKoc27yhbiMSdjGK8vmuaEww2ta52soBSgiFZqCuVumsYzFadhvQSBQHCPdVA8Q==}
+  sst-darwin-x64@3.2.38:
+    resolution: {integrity: sha512-BFnZOLVnBUSutu61ggP0Pa09YLPBhBEVxq/fC5FKxMBKPxyiV55Zbc3qkNc/b9esTbXz4P8Hz2hicG0FrcOczQ==}
     cpu: [x64]
     os: [darwin]
 
-  sst-linux-arm64@3.2.34:
-    resolution: {integrity: sha512-xw+riVwgnqN/ehpflEaQ5L7Q8QqmAB6fSMGqOJAWXATr/gGtMmN7ti6PCZfy7atXuWqOSVzS3IshQpy0SpmO0A==}
+  sst-linux-arm64@3.2.38:
+    resolution: {integrity: sha512-gRsvxFzU7CdcUe57rsoySonNViDEUV/5kUEnpiVgKLLn3YMXENHt6Ec1Wzap9XUDOUvWQasl9nz6J079lE2cgg==}
     cpu: [arm64]
     os: [linux]
 
-  sst-linux-x64@3.2.34:
-    resolution: {integrity: sha512-JixXBffv+XboLWhVdwI1pIOdjsu8QWSrCkXA34gZXULOdMtOvUi2DMo86hAFZmdJRLv9UMYBSWu80PzUgSvLHQ==}
+  sst-linux-x64@3.2.38:
+    resolution: {integrity: sha512-v25Hi/hN69tkiHPuB7Aha3WPExYFpHhLDLNzhdUS1xjHq9eOuClst08kTTX/LYc5sDAKe0CE0iD2q9PJD+clVQ==}
     cpu: [x64]
     os: [linux]
 
-  sst-linux-x86@3.2.34:
-    resolution: {integrity: sha512-jgJ9GX7Cl/6YZqpPu85ll1ku1BSu0PiqV+nrlM0BiqqXtmk+dbua4cT33Wq+ycWzM/MBKYCDnR8Pg6Kz8Y26pw==}
+  sst-linux-x86@3.2.38:
+    resolution: {integrity: sha512-C8Qug9l83TjH7jDzenut3B8A5AMWqPd86fvbUEjtDhahMLnXvcKgfDFU3rFFSYaB6S5gARUdGO/MsZIKGsFFDg==}
     cpu: [x86]
     os: [linux]
 
-  sst@3.2.34:
-    resolution: {integrity: sha512-5uCfTgA+fTsZr1lPUlyx+n9V1tmLfgBOTskpIraIoV7twtctIaMHZwaSmowKkdfsl247cWWc9cQC/R4HVEQcxA==}
+  sst@3.2.38:
+    resolution: {integrity: sha512-tJhKb9y2+k2H5ojVIR201eRjZtnrEcShjTPj3vA63b0kMPTrA6a4bKzgVM11J4xVEjrgcuQ5NhrrRj48lX6iUg==}
     hasBin: true
     peerDependencies:
       hono: 4.x
@@ -12379,7 +12379,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.35.1(@cloudflare/workers-types@4.20241011.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.11)(postgres@3.4.4)(react@18.3.1):
+  drizzle-orm@0.35.2(@cloudflare/workers-types@4.20241011.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.11)(postgres@3.4.4)(react@18.3.1):
     optionalDependencies:
       '@cloudflare/workers-types': 4.20241011.0
       '@opentelemetry/api': 1.9.0
@@ -14994,7 +14994,7 @@ snapshots:
       mdast-util-to-markdown: 2.1.0
       unified: 11.0.5
 
-  remeda@2.15.0:
+  remeda@2.15.2:
     dependencies:
       type-fest: 4.26.1
 
@@ -15288,33 +15288,33 @@ snapshots:
     dependencies:
       minipass: 7.1.2
 
-  sst-darwin-arm64@3.2.34:
+  sst-darwin-arm64@3.2.38:
     optional: true
 
-  sst-darwin-x64@3.2.34:
+  sst-darwin-x64@3.2.38:
     optional: true
 
-  sst-linux-arm64@3.2.34:
+  sst-linux-arm64@3.2.38:
     optional: true
 
-  sst-linux-x64@3.2.34:
+  sst-linux-x64@3.2.38:
     optional: true
 
-  sst-linux-x86@3.2.34:
+  sst-linux-x86@3.2.38:
     optional: true
 
-  sst@3.2.34(hono@4.6.5)(valibot@1.0.0-beta.1(typescript@5.6.3)):
+  sst@3.2.38(hono@4.6.5)(valibot@1.0.0-beta.1(typescript@5.6.3)):
     dependencies:
       aws4fetch: 1.0.20
       jose: 5.2.3
       openid-client: 5.6.4
     optionalDependencies:
       hono: 4.6.5
-      sst-darwin-arm64: 3.2.34
-      sst-darwin-x64: 3.2.34
-      sst-linux-arm64: 3.2.34
-      sst-linux-x64: 3.2.34
-      sst-linux-x86: 3.2.34
+      sst-darwin-arm64: 3.2.38
+      sst-darwin-x64: 3.2.38
+      sst-linux-arm64: 3.2.38
+      sst-linux-x64: 3.2.38
+      sst-linux-x86: 3.2.38
       valibot: 1.0.0-beta.1(typescript@5.6.3)
 
   stacktracey@2.1.8:

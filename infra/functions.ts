@@ -1,5 +1,6 @@
 import { db } from "./db";
-import { appData, cloud, customResourceCryptoParameter } from "./misc";
+import { appData, cloud } from "./misc";
+import { organization } from "./organization";
 import { realtime } from "./realtime";
 import { codeBucket, pulumiBucket } from "./storage";
 import { link, normalizePath } from "./utils";
@@ -9,6 +10,25 @@ export const userSync = new sst.aws.Function("UserSync", {
   handler: "packages/functions/handlers/node/src/user-sync.handler",
   timeout: "20 seconds",
   link: [db],
+});
+new aws.lambda.Permission("UserSyncSchedulePermission", {
+  function: userSync.name,
+  action: "lambda:InvokeFunction",
+  principal: "scheduler.amazonaws.com",
+  principalOrgId: organization.id,
+});
+new aws.lambda.Permission("UserSyncRulePermission", {
+  function: userSync.name,
+  action: "lambda:InvokeFunction",
+  principal: "events.amazonaws.com",
+  principalOrgId: organization.id,
+});
+
+export const userSyncLink = new sst.Linkable("UserSyncLink", {
+  properties: {
+    ...userSync.getSSTLink().properties,
+    arn: userSync.arn,
+  },
 });
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
@@ -106,79 +126,89 @@ export const code = new sst.Linkable("Code", {
 });
 
 const nodeHandlersPath = normalizePath("packages/functions/handlers/node");
-const infraHandlerSrc = await command.local.run({
+const tenantInfraHandlerSrc = await command.local.run({
   dir: nodeHandlersPath,
-  command: 'echo "Archiving infra handler source code..."',
-  archivePaths: ["src/infra/**", "!src/infra/dist/**", "package.json"],
+  command: 'echo "Archiving tenant infra handler source code..."',
+  archivePaths: [
+    "src/tenant/infra/**",
+    "!src/tenant/infra/dist/**",
+    "package.json",
+  ],
 });
-const infraHandlerBuilder = new command.local.Command("InfraHandlerBuilder", {
-  dir: nodeHandlersPath,
-  create: "pnpm run infra:build",
-  triggers: [infraHandlerSrc.archive],
-});
+const tenantInfraHandlerBuilder = new command.local.Command(
+  "TenantInfraHandlerBuilder",
+  {
+    dir: nodeHandlersPath,
+    create: "pnpm run infra:build",
+    triggers: [tenantInfraHandlerSrc.archive],
+  },
+);
 
 export const repository = new awsx.ecr.Repository("Repository", {
   forceDelete: true,
 });
 
-export const infraFunctionImage = new awsx.ecr.Image(
-  "InfraFunctionImage",
+export const tenantInfraFunctionImage = new awsx.ecr.Image(
+  "TenantInfraFunctionImage",
   {
     repositoryUrl: repository.url,
-    context: normalizePath("packages/functions/handlers/node/src/infra"),
+    context: normalizePath("packages/functions/handlers/node/src/tenant/infra"),
   },
-  { dependsOn: [infraHandlerBuilder] },
+  { dependsOn: [tenantInfraHandlerBuilder] },
 );
 
-export const infraFunctionRole = new aws.iam.Role("InfraFunctionRole", {
-  assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-    statements: [
-      {
-        principals: [
-          {
-            type: "Service",
-            identifiers: ["lambda.amazonaws.com"],
-          },
-        ],
-        actions: ["sts:AssumeRole"],
-      },
-    ],
-  }).json,
-});
+export const tenantInfraFunctionRole = new aws.iam.Role(
+  "TenantInfraFunctionRole",
+  {
+    assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+      statements: [
+        {
+          principals: [
+            {
+              type: "Service",
+              identifiers: ["lambda.amazonaws.com"],
+            },
+          ],
+          actions: ["sts:AssumeRole"],
+        },
+      ],
+    }).json,
+  },
+);
 
 new aws.iam.RolePolicyAttachment(
-  "InfraFunctionRoleBasicExecutionPolicyAttachment",
+  "TenantInfraFunctionRoleBasicExecutionPolicyAttachment",
   {
-    role: infraFunctionRole.name,
+    role: tenantInfraFunctionRole.name,
     policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
   },
 );
 
-new aws.iam.RolePolicy("InfraFunctionRoleInlinePolicy", {
-  role: infraFunctionRole.name,
+new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
+  role: tenantInfraFunctionRole.name,
   policy: aws.iam.getPolicyDocumentOutput({
     statements: [
       {
         actions: ["s3:*"],
         resources: [pulumiBucket.arn, $interpolate`${pulumiBucket.arn}/*`],
       },
-      {
-        actions: ["ssm:GetParameter"],
-        resources: [customResourceCryptoParameter.arn],
-      },
     ],
   }).json,
 });
 
-export const infraFunction = new aws.lambda.Function("InfraFunction", {
-  imageUri: infraFunctionImage.imageUri,
-  role: infraFunctionRole.arn,
-  ...link({
-    AppData: appData.properties,
-    Cloud: cloud.properties,
-    Code: code.properties,
-    PulumiBucket: pulumiBucket.getSSTLink().properties,
-    Realtime: realtime.properties,
-    WebOutputs: webOutputs.properties,
-  }),
-});
+export const tenantInfraFunction = new aws.lambda.Function(
+  "TenantInfraFunction",
+  {
+    imageUri: tenantInfraFunctionImage.imageUri,
+    role: tenantInfraFunctionRole.arn,
+    ...link({
+      AppData: appData.properties,
+      Cloud: cloud.properties,
+      Code: code.properties,
+      PulumiBucket: pulumiBucket.getSSTLink().properties,
+      Realtime: realtime.properties,
+      UserSync: userSync.getSSTLink().properties,
+      WebOutputs: webOutputs.properties,
+    }),
+  },
+);

@@ -8,11 +8,11 @@
     "format:write": "prettier --write ."
   },
   "dependencies": {
-    "drizzle-orm": "^0.35.1",
+    "drizzle-orm": "^0.35.2",
     "hono": "^4.6.5",
-    "remeda": "^2.15.0",
+    "remeda": "^2.15.2",
     "replicache": "^15.0.1",
-    "sst": "^3.2.34",
+    "sst": "^3.2.38",
     "valibot": "beta"
   },
   "devDependencies": {

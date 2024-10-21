@@ -129,6 +129,15 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "UserSync": {
+      "name": string
+      "type": "sst.aws.Function"
+    }
+    "UserSyncLink": {
+      "arn": string
+      "name": string
+      "type": "sst.sst.Linkable"
+    }
     "Web": {
       "type": "sst.aws.Astro"
       "url": string
