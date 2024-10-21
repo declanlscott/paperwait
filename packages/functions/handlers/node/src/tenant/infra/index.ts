@@ -4,8 +4,8 @@ import * as pulumi from "@pulumi/pulumi";
 import { version as tlsPluginVersion } from "@pulumi/tls/package.json";
 import * as v from "valibot";
 
-import { getProgram } from "./program";
-import { useResource, withResource } from "./resource";
+import { getProgram } from "./lib/program";
+import { useResource, withResource } from "./lib/resource";
 
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
 

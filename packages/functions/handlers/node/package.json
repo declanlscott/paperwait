@@ -2,6 +2,7 @@
   "name": "@paperwait/functions",
   "scripts": {
     "infra:build": "esbuild ./src/infra/index.ts --platform=node --target=es2020 --format=esm --bundle --outfile=./src/infra/dist/index.js",
+    "tailscale:typegen": "pnpm dlx openapi-typescript https://api.tailscale.com/api/v2?outputOpenapiSchema=true -o ./src/tenant/tailscale-auth-key-rotation/lib/tailscale/schema.d.ts",
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
@@ -9,7 +10,8 @@
     "@pulumi/aws": "^6.56.1",
     "@pulumi/cloudflare": "^5.41.0",
     "@pulumi/pulumi": "^3.137.0",
-    "@pulumi/tls": "^5.0.9"
+    "@pulumi/tls": "^5.0.9",
+    "openapi-fetch": "^0.12.2"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
