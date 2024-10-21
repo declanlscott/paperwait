@@ -6,6 +6,20 @@ import { codeBucket, pulumiBucket } from "./storage";
 import { link, normalizePath } from "./utils";
 import { webOutputs } from "./web";
 
+sst.Linkable.wrap(sst.aws.Function, (fn) => ({
+  properties: {
+    name: fn.name,
+    arn: fn.arn,
+  },
+  include: [
+    {
+      type: "aws.permission",
+      actions: ["lambda:InvokeFunction"],
+      resources: [fn.arn],
+    },
+  ],
+}));
+
 export const userSync = new sst.aws.Function("UserSync", {
   handler: "packages/functions/handlers/node/src/user-sync.handler",
   timeout: "20 seconds",
@@ -22,13 +36,6 @@ new aws.lambda.Permission("UserSyncRulePermission", {
   action: "lambda:InvokeFunction",
   principal: "events.amazonaws.com",
   principalOrgId: organization.id,
-});
-
-export const userSyncLink = new sst.Linkable("UserSyncLink", {
-  properties: {
-    ...userSync.getSSTLink().properties,
-    arn: userSync.arn,
-  },
 });
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {

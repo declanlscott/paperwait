@@ -130,13 +130,9 @@ declare module "sst" {
       "url": string
     }
     "UserSync": {
-      "name": string
-      "type": "sst.aws.Function"
-    }
-    "UserSyncLink": {
       "arn": string
       "name": string
-      "type": "sst.sst.Linkable"
+      "type": "sst.aws.Function"
     }
     "Web": {
       "type": "sst.aws.Astro"
