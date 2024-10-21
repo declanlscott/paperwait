@@ -5,23 +5,20 @@ import {
   PutParameterCommand,
   SSMClient,
 } from "@aws-sdk/client-ssm";
+import { Resource } from "sst";
 
 import type {
   DeleteParameterCommandInput,
   GetParameterCommandInput,
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
-import type { Resource } from "sst";
 
 export namespace Ssm {
   export const Client = SSMClient;
   export type Client = SSMClient;
 
-  export const buildParameterPath = (
-    appData?: Pick<Resource["AppData"], "name" | "stage">,
-    ...segments: Array<string>
-  ) =>
-    `/${[appData?.name, appData?.stage, ...segments].filter(Boolean).join("/")}`;
+  export const buildParameterPath = (...segments: Array<string>) =>
+    `/${[Resource.AppData.name, Resource.AppData.stage, ...segments].join("/")}`;
 
   export async function putParameter(
     client: SSMClient,
