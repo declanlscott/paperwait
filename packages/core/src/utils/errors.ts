@@ -173,7 +173,7 @@ export namespace HttpError {
 }
 
 export namespace MiscellaneousError {
-  export class NonExhaustiveValue extends Error {
+  export class NonExhaustiveValue extends globalThis.Error {
     constructor(value: never) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       super(`Non-exhaustive value: ${value}`);
