@@ -30,6 +30,17 @@ const basicAuth = $output([webUsername.value, webPassword.value]).apply(
     Buffer.from(`${username}:${password}`).toString("base64"),
 );
 
+sst.Linkable.wrap(sst.aws.Astro, (astro) => ({
+  properties: {
+    url: astro.url,
+    server: {
+      role: {
+        principal: astro.nodes.server?.nodes.role.arn ?? "*",
+      },
+    },
+  },
+}));
+
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
@@ -72,14 +83,8 @@ export const web = new sst.aws.Astro("Web", {
   },
 });
 
-export const webOutputs = new sst.Linkable("WebOutputs", {
-  properties: {
-    server: {
-      role: {
-        principal: web.nodes.server?.nodes.role.arn ?? "*",
-      },
-    },
-  },
+Object.entries(web.getSSTLink().properties).forEach(([key, value]) => {
+  $util.output(value).apply((value) => console.log(key, value));
 });
 
 export const outputs = {

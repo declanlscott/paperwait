@@ -39,7 +39,7 @@ export class Api extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Api.getInstance>) {
-    const { AppData, Cloud, WebOutputs } = useResource();
+    const { AppData, Cloud, UserSync, Web } = useResource();
 
     super(`${AppData.name}:tenant:aws:Api`, "Api", args, opts);
 
@@ -103,13 +103,13 @@ export class Api extends pulumi.ComponentResource {
               principals: [
                 {
                   type: "AWS",
-                  identifiers: [WebOutputs.server.role.principal],
+                  identifiers: [UserSync.roleArn, Web.server.role.principal],
                 },
               ],
               actions: ["execute-api:Invoke"],
               resources: [pulumi.interpolate`${this.api.executionArn}/*`],
               conditions:
-                WebOutputs.server.role.principal === "*"
+                Web.server.role.principal === "*"
                   ? [
                       {
                         test: "StringLike",

@@ -4,12 +4,13 @@ import { organization } from "./organization";
 import { realtime } from "./realtime";
 import { codeBucket, pulumiBucket } from "./storage";
 import { link, normalizePath } from "./utils";
-import { webOutputs } from "./web";
+import { web } from "./web";
 
 sst.Linkable.wrap(sst.aws.Function, (fn) => ({
   properties: {
     name: fn.name,
     arn: fn.arn,
+    roleArn: fn.nodes.role.arn,
   },
   include: [
     {
@@ -208,7 +209,7 @@ export const tenantInfraFunction = new aws.lambda.Function(
       PulumiBucket: pulumiBucket.getSSTLink().properties,
       Realtime: realtime.properties,
       UserSync: userSync.getSSTLink().properties,
-      WebOutputs: webOutputs.properties,
+      Web: web.getSSTLink().properties,
     }),
   },
 );

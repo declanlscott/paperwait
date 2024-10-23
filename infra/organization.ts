@@ -114,7 +114,11 @@ new aws.iam.RolePolicyAttachment(
                   test: "ForAnyValue:StringEquals",
                   variable: "aws:PrincipalOrgPaths",
                   values: [
-                    $interpolate`${organization.id}/${organizationRoot.id}/${tenantsOrganizationalUnit.id}/`,
+                    $resolve([
+                      organization.id,
+                      organizationRoot.id,
+                      tenantsOrganizationalUnit.id,
+                    ]).apply((segments) => `${segments.join("/")}/`),
                   ],
                 },
               ],

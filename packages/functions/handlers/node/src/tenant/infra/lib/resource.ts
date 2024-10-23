@@ -14,7 +14,7 @@ export type CustomResource = {
     | "PulumiBucket"
     | "Realtime"
     | "UserSync"
-    | "WebOutputs"
+    | "Web"
   >]: Omit<Resource[TKey], "type">;
 };
 
