@@ -1,12 +1,13 @@
 import { Ssm } from "@paperwait/core/utils/aws";
 import { Constants } from "@paperwait/core/utils/constants";
-import { Http } from "@paperwait/core/utils/errors";
+import { HttpError } from "@paperwait/core/utils/errors";
 import { add, isBefore } from "date-fns";
 import createClient from "openapi-fetch";
 import * as v from "valibot";
 
-import { useResource } from "../resource";
-import { useSsm } from "../ssm";
+import { useContext } from "../context";
+
+import type { components, operations, paths } from "./schema";
 
 export const tailscaleOauthCredentialsSchema = v.object({
   id: v.string(),
@@ -23,11 +24,10 @@ export const tailscaleAuthKeySchema = v.object({
 export type TailscaleAuthKey = v.InferOutput<typeof tailscaleAuthKeySchema>;
 
 export async function getTailnet() {
-  const { AppData } = useResource();
-  const ssm = useSsm();
+  const { resource, ssm } = useContext();
 
   const parameter = await Ssm.getParameter(ssm, {
-    Name: `/${AppData.name}/${AppData.stage}/tailscale/tailnet`,
+    Name: `/${resource.AppData.name}/${resource.AppData.stage}/tailscale/tailnet`,
     WithDecryption: true,
   });
 
@@ -35,11 +35,10 @@ export async function getTailnet() {
 }
 
 export async function getOauthCredentials(): Promise<TailscaleOauthCredentials> {
-  const { AppData } = useResource();
-  const ssm = useSsm();
+  const { resource, ssm } = useContext();
 
   const parameter = await Ssm.getParameter(ssm, {
-    Name: `/${AppData.name}/${AppData.stage}/tailscale/oauth-client`,
+    Name: `/${resource.AppData.name}/${resource.AppData.stage}/tailscale/oauth-client`,
     WithDecryption: true,
   });
 
@@ -53,7 +52,7 @@ export async function getAccessToken({ id, key }: TailscaleOauthCredentials) {
       Authorization: `Basic ${Buffer.from(`${id}:${key}`).toString("base64")}`,
     },
   });
-  if (!res.ok) throw new Http.Error(res.statusText, res.status);
+  if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
 
   return v.parse(
     v.looseObject({
@@ -82,15 +81,8 @@ export const client = createClient<
   }
 >({ baseUrl: Constants.TAILSCALE_API_BASE_URL });
 
-export async function createAuthKey(
-  props: {
-    tailnet: string;
-    accessToken: string;
-  },
-  ssm: Ssm.Client,
-  appData: Pick<Resource["AppData"], "name" | "stage">,
-) {
-  const { tailnet, accessToken } = props;
+export async function createAuthKey(tailnet: string, accessToken: string) {
+  const { resource, ssm } = useContext();
 
   const result = await client.POST("/tailnet/{tailnet}/keys", {
     params: {
@@ -110,17 +102,17 @@ export async function createAuthKey(
         },
       },
       expirySeconds: Constants.TAILSCALE_AUTH_KEY_LIFETIME.days * 24 * 60 * 60,
-      description: `${appData.name} papercut secure bridge - ${appData.stage}`,
+      description: `${resource.AppData.name} papercut secure bridge - ${resource.AppData.stage}`,
     },
   });
   if (result.error)
-    throw new HttpError(result.error.message, result.response.status);
+    throw new HttpError.Error(result.error.message, result.response.status);
 
   if (!result.data.id) throw new Error("Missing 'id' field");
   if (!result.data.key) throw new Error("Missing 'key' field");
 
   await Ssm.putParameter(ssm, {
-    Name: Ssm.buildParameterPath(appData, "tailscale", "auth"),
+    Name: `/${[resource.AppData.name, resource.AppData.stage, "tailscale", "auth"].join("/")}`,
     Type: "SecureString",
     Value: JSON.stringify({ id: result.data.id, key: result.data.key }),
     Overwrite: true,
@@ -166,7 +158,7 @@ export async function verifyAuthKey(props: {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (result.error)
-    throw new HttpError(result.error.message, result.response.status);
+    throw new HttpError.Error(result.error.message, result.response.status);
 
   const expires = result.data.expires;
   if (expires === undefined) throw new Error("Missing 'expires' field");
@@ -230,30 +222,37 @@ export async function listKeys(props: {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (result.error)
-    throw new HttpError(result.error.message, result.response.status);
+    throw new HttpError.Error(result.error.message, result.response.status);
 
   return result.data;
 }
 
 export async function deleteAuthKey(
-  props: {
-    tailnet: string;
-    keyId: string;
-    accessToken: string;
-  },
-  ssm: Ssm.Client,
-  appData: Pick<Resource["AppData"], "name" | "stage">,
+  tailnet: string,
+  keyId: string,
+  accessToken: string,
 ) {
-  const { tailnet, keyId, accessToken } = props;
+  const { resource, ssm } = useContext();
 
   const result = await client.DELETE("/tailnet/{tailnet}/keys/{keyId}", {
     params: { path: { tailnet, keyId } },
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (result.error)
-    throw new HttpError(result.error.message, result.response.status);
+    throw new HttpError.Error(result.error.message, result.response.status);
 
   await Ssm.deleteParameter(ssm, {
-    Name: Ssm.buildParameterPath(appData, "tailscale", "auth"),
+    Name: `/${[resource.AppData.name, resource.AppData.stage, "tailscale", "auth"].join("/")}`,
   });
+}
+
+export async function rotateAuthKey() {
+  const [tailnet, oauthCredentials] = await Promise.all([
+    getTailnet(),
+    getOauthCredentials(),
+  ]);
+
+  const accessToken = await getAccessToken(oauthCredentials);
+
+  await createAuthKey(tailnet, accessToken);
 }

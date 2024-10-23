@@ -1,6 +1,9 @@
 import { Utils } from "@paperwait/core/utils";
+import * as pulumi from "@pulumi/pulumi";
 
 import type { Resource } from "sst";
+
+export const resourcePrefix = "CUSTOM_RESOURCE_";
 
 export type CustomResource = {
   [TKey in keyof Pick<
@@ -24,6 +27,29 @@ export const withResource = <TCallback extends () => ReturnType<TCallback>>(
   callback: TCallback,
 ) =>
   ResourceContext.with(
-    Utils.parseResource<CustomResource>("CUSTOM_RESOURCE_", process.env),
+    Utils.parseResource<CustomResource>(resourcePrefix, process.env),
     callback,
+  );
+
+export const link = (...params: Parameters<typeof injectLinkables>) => ({
+  environment: {
+    variables: injectLinkables(...params),
+  },
+});
+
+export const injectLinkables = (
+  linkables: {
+    [TKey in keyof Resource]?: pulumi.Input<Record<string, unknown>>;
+  },
+  prefix = resourcePrefix,
+) =>
+  Object.entries(linkables).reduce(
+    (vars, [name, props]) => {
+      vars[`${prefix}${name}`] = pulumi
+        .output(props)
+        .apply((props) => JSON.stringify(props));
+
+      return vars;
+    },
+    {} as Record<string, pulumi.Output<string>>,
   );

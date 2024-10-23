@@ -2,7 +2,7 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import { handler as tailscaleAuthKeyRotationHandler } from "src/tenant/tailscale-auth-key-rotation";
 
-import { useResource } from "../resource";
+import { link, useResource } from "../resource";
 
 export interface FunctionsArgs {
   accountId: aws.organizations.Account["id"];
@@ -123,11 +123,7 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
         architectures: ["arm64"],
         layers: [this.tailscaleLayer.arn],
         role: this.role.arn,
-        environment: {
-          variables: {
-            CUSTOM_RESOURCE_AppData: JSON.stringify(AppData),
-          },
-        },
+        ...link({ AppData }),
       },
       { parent: this },
     );
@@ -165,7 +161,7 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
   private constructor(
     ...[args, opts]: Parameters<typeof TailscaleAuthKeyRotation.getInstance>
   ) {
-    const { AppData, Cloud } = useResource();
+    const { AppData, Cloud, Realtime } = useResource();
 
     super(
       `${AppData.name}:tenant:aws:TailscaleAuthKeyRotation`,
@@ -210,6 +206,7 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
         runtime: aws.lambda.Runtime.NodeJS20dX,
         architectures: ["arm64"],
         role: this.role.arn,
+        ...link({ AppData, Realtime }),
       },
       { parent: this },
     );

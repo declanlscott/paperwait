@@ -4,7 +4,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { version as tlsPluginVersion } from "@pulumi/tls/package.json";
 import * as v from "valibot";
 
-import { getProgram } from "./lib/program";
+import { getProgram, programInputSchema } from "./lib/program";
 import { useResource, withResource } from "./lib/resource";
 
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
@@ -27,16 +27,16 @@ export const handler: SQSHandler = async (event) =>
   });
 
 async function processRecord(record: SQSRecord) {
-  const { tenantId } = v.parse(v.object({ tenantId: v.string() }), record.body);
-
   const { AppData, Cloud, PulumiBucket } = useResource();
+
+  const programInput = v.parse(programInputSchema, record.body);
 
   const projectName = `${AppData.name}-${AppData.stage}-tenants`;
   const stack = await pulumi.automation.LocalWorkspace.createOrSelectStack(
     {
       projectName,
-      stackName: `${AppData.name}-${AppData.stage}-tenant-${tenantId}`,
-      program: getProgram(tenantId),
+      stackName: `${AppData.name}-${AppData.stage}-tenant-${programInput.tenantId}`,
+      program: getProgram(programInput),
     },
     {
       projectSettings: {

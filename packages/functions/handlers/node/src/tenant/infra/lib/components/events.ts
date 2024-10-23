@@ -57,7 +57,7 @@ export class Events extends pulumi.ComponentResource {
         "PatternedTailscaleAuthKeyRotation",
         {
           pattern: pulumi.jsonStringify({
-            "detail-type": ["Patterned Event"],
+            "detail-type": ["tailscale-auth-key-rotation"],
           }),
           functionTarget: {
             arn: args.events.tailscaleAuthKeyRotation.functionArn,
@@ -92,7 +92,7 @@ export class Events extends pulumi.ComponentResource {
         "PatternedUserSync",
         {
           pattern: pulumi.jsonStringify({
-            "detail-type": "Patterned Event",
+            "detail-type": ["user-sync"],
           }),
           functionTarget: {
             arn: args.events.userSync.functionArn,

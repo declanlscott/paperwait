@@ -1,8 +1,6 @@
-// import { Tailscale } from "@paperwait/core/tailscale";
-
-import { withSsm } from "src/tenant/tailscale-auth-key-rotation/lib/ssm";
-
-import { withResource } from "./lib/resource";
+import { withContext } from "./lib/context";
+import { send } from "./lib/realtime";
+import { rotateAuthKey } from "./lib/tailscale";
 
 import type { EventBridgeHandler } from "aws-lambda";
 
@@ -10,31 +8,20 @@ export const handler: EventBridgeHandler<string, unknown, void> = async (
   event,
   context,
 ) =>
-  withResource(() =>
-    withSsm(async () => {
-      //
-    }),
-  );
+  withContext(context, async () => {
+    const channel = `event_${event.id}`;
 
-// export const getHandler = () =>
-//   withResource(() => {
-//     const handler: EventBridgeHandler<string, unknown, void> = async (
-//       event,
-//       _context,
-//     ) => {
-//       const { AppData } = useResource();
+    try {
+      await rotateAuthKey();
+    } catch (e) {
+      console.error(e);
 
-//       const ssm = new Ssm.Client();
+      if (event["detail-type"] !== "Scheduled Event")
+        await send(channel, JSON.stringify({ success: false }));
 
-//       const [tailnet, oauthCredentials] = await Promise.all([
-//         Tailscale.getTailnet(ssm, AppData),
-//         Tailscale.getOauthCredentials(ssm, AppData),
-//       ]);
+      throw e;
+    }
 
-//       const accessToken = await Tailscale.getAccessToken(oauthCredentials);
-
-//       await Tailscale.createAuthKey({ tailnet, accessToken }, ssm, AppData);
-//     };
-
-//     return handler;
-//   });
+    if (event["detail-type"] !== "Scheduled Event")
+      await send(channel, JSON.stringify({ success: true }));
+  });
