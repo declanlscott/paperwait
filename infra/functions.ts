@@ -180,14 +180,7 @@ export const tenantInfraFunctionRole = new aws.iam.Role(
         },
       ],
     }).json,
-  },
-);
-
-new aws.iam.RolePolicyAttachment(
-  "TenantInfraFunctionRoleBasicExecutionPolicyAttachment",
-  {
-    role: tenantInfraFunctionRole.name,
-    policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+    managedPolicyArns: [aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole],
   },
 );
 

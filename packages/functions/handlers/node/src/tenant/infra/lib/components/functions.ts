@@ -248,15 +248,7 @@ class FunctionRole extends pulumi.ComponentResource {
             },
           ],
         }).json,
-      },
-      { parent: this },
-    );
-
-    new aws.iam.RolePolicyAttachment(
-      `${name}BasicExecutionPolicyAttachment`,
-      {
-        role: this.role,
-        policyArn: aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole,
+        managedPolicyArns: [aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole],
       },
       { parent: this },
     );
