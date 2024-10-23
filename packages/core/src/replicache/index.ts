@@ -1,14 +1,14 @@
 import { sub } from "date-fns";
 import { and, eq, lt, sql } from "drizzle-orm";
 import * as R from "remeda";
-import { Resource } from "sst";
 import * as v from "valibot";
 
 import { serializable, useTransaction } from "../drizzle/transaction";
+import { Realtime } from "../realtime";
 import { useAuthenticated } from "../sessions/context";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
-import { HttpError, ReplicacheError } from "../utils/errors";
+import { ReplicacheError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import {
@@ -37,7 +37,6 @@ import type {
   PushResponse,
 } from "replicache";
 import type { OmitTimestamps } from "../drizzle/columns";
-import type { Realtime } from "../realtime";
 import type {
   ClientViewRecord,
   ClientViewRecordEntries,
@@ -150,18 +149,7 @@ export namespace Replicache {
     if (uniqueChannels.length === 0) return;
 
     const results = await Promise.allSettled(
-      uniqueChannels.map(async (channel) => {
-        const res = await fetch(`${Resource.Realtime.url}/party/${channel}`, {
-          method: "POST",
-          headers: { "x-api-key": Resource.Realtime.apiKey },
-          body: Constants.POKE,
-        });
-
-        if (!res.ok) {
-          console.log(`Failed to poke channel "${channel}"`);
-          throw new HttpError.Error(res.statusText, res.status);
-        }
-      }),
+      uniqueChannels.map((channel) => Realtime.send(channel, Constants.POKE)),
     );
 
     results
