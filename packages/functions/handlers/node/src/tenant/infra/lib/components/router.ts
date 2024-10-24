@@ -15,23 +15,23 @@ export interface RouterArgs {
 }
 
 export class Router extends pulumi.ComponentResource {
-  private static instance: Router;
+  static #instance: Router;
 
-  private cachePolicy: aws.cloudfront.CachePolicy;
-  private _privateKey: tls.PrivateKey;
-  private publicKey: aws.cloudfront.PublicKey;
-  private keyGroup: aws.cloudfront.KeyGroup;
-  private s3AccessControl: aws.cloudfront.OriginAccessControl;
-  private distribution: aws.cloudfront.Distribution;
-  private cname: cloudflare.Record;
+  #cachePolicy: aws.cloudfront.CachePolicy;
+  #privateKey: tls.PrivateKey;
+  #publicKey: aws.cloudfront.PublicKey;
+  #keyGroup: aws.cloudfront.KeyGroup;
+  #s3AccessControl: aws.cloudfront.OriginAccessControl;
+  #distribution: aws.cloudfront.Distribution;
+  #cname: cloudflare.Record;
 
-  public static getInstance(
+  static getInstance(
     args: RouterArgs,
     opts: pulumi.ComponentResourceOptions,
   ): Router {
-    if (!this.instance) this.instance = new Router(args, opts);
+    if (!this.#instance) this.#instance = new Router(args, opts);
 
-    return this.instance;
+    return this.#instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Router.getInstance>) {
@@ -39,7 +39,7 @@ export class Router extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Router`, "Router", args, opts);
 
-    this.cachePolicy = new aws.cloudfront.CachePolicy(
+    this.#cachePolicy = new aws.cloudfront.CachePolicy(
       "CachePolicy",
       {
         defaultTtl: 0,
@@ -62,24 +62,24 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this._privateKey = new tls.PrivateKey(
+    this.#privateKey = new tls.PrivateKey(
       "PrivateKey",
       { algorithm: "RSA" },
       { parent: this },
     );
 
-    this.publicKey = new aws.cloudfront.PublicKey(
+    this.#publicKey = new aws.cloudfront.PublicKey(
       "PublicKey",
       {
-        encodedKey: this._privateKey.publicKeyPem,
+        encodedKey: this.#privateKey.publicKeyPem,
       },
       { parent: this },
     );
 
-    this.keyGroup = new aws.cloudfront.KeyGroup(
+    this.#keyGroup = new aws.cloudfront.KeyGroup(
       "KeyGroup",
       {
-        items: [this.publicKey.id],
+        items: [this.#publicKey.id],
       },
       { parent: this },
     );
@@ -92,7 +92,7 @@ export class Router extends pulumi.ComponentResource {
       originSslProtocols: ["TLSv1.2"],
     } satisfies CustomOriginConfig;
 
-    this.s3AccessControl = new aws.cloudfront.OriginAccessControl(
+    this.#s3AccessControl = new aws.cloudfront.OriginAccessControl(
       "S3AccessControl",
       {
         originAccessControlOriginType: "s3",
@@ -116,7 +116,7 @@ export class Router extends pulumi.ComponentResource {
       cachedMethods: ["GET", "HEAD"],
       defaultTtl: 0,
       compress: true,
-      cachePolicyId: this.cachePolicy.id,
+      cachePolicyId: this.#cachePolicy.id,
       originRequestPolicyId: aws.cloudfront
         .getOriginRequestPolicy(
           { name: allViewerExceptHostHeaderPolicyName },
@@ -130,7 +130,7 @@ export class Router extends pulumi.ComponentResource {
 
           return policy.id;
         }),
-      trustedKeyGroups: [this.keyGroup.id],
+      trustedKeyGroups: [this.#keyGroup.id],
     } satisfies BehaviorConfig;
 
     const bucketCacheBehaviorConfig = {
@@ -151,10 +151,10 @@ export class Router extends pulumi.ComponentResource {
 
           return policy.id;
         }),
-      trustedKeyGroups: [this.keyGroup.id],
+      trustedKeyGroups: [this.#keyGroup.id],
     } satisfies BehaviorConfig;
 
-    this.distribution = new aws.cloudfront.Distribution(
+    this.#distribution = new aws.cloudfront.Distribution(
       "Distribution",
       {
         enabled: true,
@@ -169,12 +169,12 @@ export class Router extends pulumi.ComponentResource {
           {
             originId: "/assets/*",
             domainName: new URL(args.routes.assets.url).hostname,
-            originAccessControlId: this.s3AccessControl.id,
+            originAccessControlId: this.#s3AccessControl.id,
           },
           {
             originId: "/documents/*",
             domainName: new URL(args.routes.documents.url).hostname,
-            originAccessControlId: this.s3AccessControl.id,
+            originAccessControlId: this.#s3AccessControl.id,
           },
           {
             originId: "/*",
@@ -211,14 +211,14 @@ export class Router extends pulumi.ComponentResource {
         viewerCertificate: {
           acmCertificateArn: args.certificateArn,
           sslSupportMethod: "sni-only",
-          minimumProtocolVersion: "TLSv1.2_2021",
+          minimumProtocolVersion: "TLSv1.2#2021",
         },
         waitForDeployment: false,
       },
       { parent: this },
     );
 
-    this.cname = new cloudflare.Record(
+    this.#cname = new cloudflare.Record(
       "Cname",
       {
         zoneId: cloudflare.getZoneOutput({
@@ -226,29 +226,29 @@ export class Router extends pulumi.ComponentResource {
         }).id,
         name: args.domainName,
         type: "CNAME",
-        value: this.distribution.domainName,
+        value: this.#distribution.domainName,
         proxied: true,
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      cachePolicy: this.cachePolicy.id,
-      privateKey: this._privateKey.id,
-      publicKey: this.publicKey.id,
-      keyGroup: this.keyGroup.id,
-      s3AccessControl: this.s3AccessControl.id,
-      distribution: this.distribution.id,
-      cname: this.cname.id,
+      cachePolicy: this.#cachePolicy.id,
+      privateKey: this.#privateKey.id,
+      publicKey: this.#publicKey.id,
+      keyGroup: this.#keyGroup.id,
+      s3AccessControl: this.#s3AccessControl.id,
+      distribution: this.#distribution.id,
+      cname: this.#cname.id,
     });
   }
 
-  public get keyPairId() {
-    return this.publicKey.id;
+  get keyPairId() {
+    return this.#publicKey.id;
   }
 
-  public get privateKey() {
-    return this._privateKey.privateKeyPem;
+  get privateKey() {
+    return this.#privateKey.privateKeyPem;
   }
 }
 

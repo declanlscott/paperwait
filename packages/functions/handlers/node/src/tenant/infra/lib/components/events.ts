@@ -18,17 +18,14 @@ export interface EventsArgs {
 }
 
 export class Events extends pulumi.ComponentResource {
-  private static instance: Events;
+  static #instance: Events;
 
-  private events: Array<ScheduledEvent | PatternedEvent> = [];
+  #events: Array<ScheduledEvent | PatternedEvent> = [];
 
-  public static getInstance(
-    args: EventsArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ) {
-    if (!this.instance) this.instance = new Events(args, opts);
+  static getInstance(args: EventsArgs, opts: pulumi.ComponentResourceOptions) {
+    if (!this.#instance) this.#instance = new Events(args, opts);
 
-    return this.instance;
+    return this.#instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Events.getInstance>) {
@@ -36,7 +33,7 @@ export class Events extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Events`, "Events", args, opts);
 
-    this.events.push(
+    this.#events.push(
       new ScheduledEvent(
         "ScheduledTailscaleAuthKeyRotation",
         {
@@ -52,7 +49,7 @@ export class Events extends pulumi.ComponentResource {
       ),
     );
 
-    this.events.push(
+    this.#events.push(
       new PatternedEvent(
         "PatternedTailscaleAuthKeyRotation",
         {
@@ -68,7 +65,7 @@ export class Events extends pulumi.ComponentResource {
       ),
     );
 
-    this.events.push(
+    this.#events.push(
       new ScheduledEvent(
         "ScheduledUserSync",
         {
@@ -87,7 +84,7 @@ export class Events extends pulumi.ComponentResource {
       ),
     );
 
-    this.events.push(
+    this.#events.push(
       new PatternedEvent(
         "PatternedUserSync",
         {
@@ -117,10 +114,10 @@ interface ScheduledEventArgs {
 }
 
 class ScheduledEvent extends pulumi.ComponentResource {
-  private role: aws.iam.Role;
-  private schedule: aws.scheduler.Schedule;
+  #role: aws.iam.Role;
+  #schedule: aws.scheduler.Schedule;
 
-  public constructor(
+  constructor(
     name: string,
     args: ScheduledEventArgs,
     opts: pulumi.ComponentResourceOptions,
@@ -129,7 +126,7 @@ class ScheduledEvent extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:ScheduledEvent`, name, args, opts);
 
-    this.role = new aws.iam.Role(
+    this.#role = new aws.iam.Role(
       `${name}Role`,
       {
         assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
@@ -152,7 +149,7 @@ class ScheduledEvent extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       `${name}InlinePolicy`,
       {
-        role: this.role.name,
+        role: this.#role.name,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
@@ -165,7 +162,7 @@ class ScheduledEvent extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.schedule = new aws.scheduler.Schedule(
+    this.#schedule = new aws.scheduler.Schedule(
       `${name}Schedule`,
       {
         scheduleExpression: args.scheduleExpression,
@@ -173,7 +170,7 @@ class ScheduledEvent extends pulumi.ComponentResource {
         scheduleExpressionTimezone: args.timezone ?? "UTC",
         target: {
           arn: args.functionTarget.arn,
-          roleArn: this.role.arn,
+          roleArn: this.#role.arn,
           input: args.functionTarget.input,
         },
       },
@@ -181,8 +178,8 @@ class ScheduledEvent extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      role: this.role.id,
-      schedule: this.schedule.id,
+      role: this.#role.id,
+      schedule: this.#schedule.id,
     });
   }
 }
@@ -197,11 +194,11 @@ interface PatternedEventArgs {
 }
 
 class PatternedEvent extends pulumi.ComponentResource {
-  private rule: aws.cloudwatch.EventRule;
-  private target: aws.cloudwatch.EventTarget;
-  private permission?: aws.lambda.Permission;
+  #rule: aws.cloudwatch.EventRule;
+  #target: aws.cloudwatch.EventTarget;
+  #permission?: aws.lambda.Permission;
 
-  public constructor(
+  constructor(
     name: string,
     args: PatternedEventArgs,
     opts: pulumi.ComponentResourceOptions,
@@ -210,37 +207,37 @@ class PatternedEvent extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:PatternedEvent`, name, args, opts);
 
-    this.rule = new aws.cloudwatch.EventRule(
+    this.#rule = new aws.cloudwatch.EventRule(
       `${name}Rule`,
       { eventPattern: args.pattern },
       { parent: this },
     );
 
-    this.target = new aws.cloudwatch.EventTarget(
+    this.#target = new aws.cloudwatch.EventTarget(
       `${name}Target`,
       {
         arn: args.functionTarget.arn,
-        rule: this.rule.name,
+        rule: this.#rule.name,
       },
       { parent: this },
     );
 
     if (args.functionTarget.createPermission)
-      this.permission = new aws.lambda.Permission(
+      this.#permission = new aws.lambda.Permission(
         `${name}Permission`,
         {
           action: "lambda:InvokeFunction",
           function: args.functionTarget.arn,
           principal: "events.amazonaws.com",
-          sourceArn: this.rule.arn,
+          sourceArn: this.#rule.arn,
         },
         { parent: this },
       );
 
     this.registerOutputs({
-      rule: this.rule.id,
-      target: this.target.id,
-      permission: this.permission?.id,
+      rule: this.#rule.id,
+      target: this.#target.id,
+      permission: this.#permission?.id,
     });
   }
 }

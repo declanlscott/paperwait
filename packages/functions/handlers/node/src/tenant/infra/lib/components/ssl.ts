@@ -9,18 +9,18 @@ export interface SslArgs {
 }
 
 export class Ssl extends pulumi.ComponentResource {
-  private static instance: Ssl;
+  static #instance: Ssl;
 
-  private certificate: aws.acm.Certificate;
-  private records: Array<cloudflare.Record> = [];
+  #certificate: aws.acm.Certificate;
+  #records: Array<cloudflare.Record> = [];
 
-  public static getInstance(
+  static getInstance(
     args: SslArgs,
     opts: pulumi.ComponentResourceOptions,
   ): Ssl {
-    if (!this.instance) this.instance = new Ssl(args, opts);
+    if (!this.#instance) this.#instance = new Ssl(args, opts);
 
-    return this.instance;
+    return this.#instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Ssl.getInstance>) {
@@ -34,7 +34,7 @@ export class Ssl extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.certificate = new aws.acm.Certificate(
+    this.#certificate = new aws.acm.Certificate(
       "Certificate",
       {
         domainName: pulumi.interpolate`${args.tenantId}.${AppData.domainName.fullyQualified}`,
@@ -43,9 +43,9 @@ export class Ssl extends pulumi.ComponentResource {
       { provider: usEast1Provider, parent: this },
     );
 
-    this.certificate.domainValidationOptions.apply((options) =>
+    this.#certificate.domainValidationOptions.apply((options) =>
       options.forEach((option, index) =>
-        this.records.push(
+        this.#records.push(
           new cloudflare.Record(
             `CertificateValidationRecord${index}`,
             {
@@ -63,16 +63,16 @@ export class Ssl extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      certificate: this.certificate.id,
-      records: this.records.map((record) => record.id),
+      certificate: this.#certificate.id,
+      records: this.#records.map((record) => record.id),
     });
   }
 
-  public get domainName() {
-    return this.certificate.domainName;
+  get domainName() {
+    return this.#certificate.domainName;
   }
 
-  public get certificateArn() {
-    return this.certificate.arn;
+  get certificateArn() {
+    return this.#certificate.arn;
   }
 }

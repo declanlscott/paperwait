@@ -11,18 +11,18 @@ export interface ConfigArgs {
 }
 
 export class Config extends pulumi.ComponentResource {
-  private static instance: Config;
+  static #instance: Config;
 
-  private cloudfrontKeyPairId: aws.ssm.Parameter;
-  private cloudfrontPrivateKey: aws.ssm.Parameter;
+  #cloudfrontKeyPairId: aws.ssm.Parameter;
+  #cloudfrontPrivateKey: aws.ssm.Parameter;
 
-  public static getInstance(
+  static getInstance(
     args: ConfigArgs,
     opts: pulumi.ComponentResourceOptions,
   ): Config {
-    if (!this.instance) this.instance = new Config(args, opts);
+    if (!this.#instance) this.#instance = new Config(args, opts);
 
-    return this.instance;
+    return this.#instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Config.getInstance>) {
@@ -30,7 +30,7 @@ export class Config extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Config`, "Config", args, opts);
 
-    this.cloudfrontKeyPairId = new aws.ssm.Parameter(
+    this.#cloudfrontKeyPairId = new aws.ssm.Parameter(
       "CloudfrontKeyPairId",
       {
         name: "/paperwait/cloudfront/key-pair-id",
@@ -40,15 +40,15 @@ export class Config extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.cloudfrontPrivateKey = new aws.ssm.Parameter("CloudfrontPrivateKey", {
+    this.#cloudfrontPrivateKey = new aws.ssm.Parameter("CloudfrontPrivateKey", {
       name: "/paperwait/cloudfront/private-key",
       type: "SecureString",
       value: args.cloudfrontPrivateKey,
     });
 
     this.registerOutputs({
-      cloudfrontKeyPairId: this.cloudfrontKeyPairId.id,
-      cloudfrontPrivateKey: this.cloudfrontPrivateKey.id,
+      cloudfrontKeyPairId: this.#cloudfrontKeyPairId.id,
+      cloudfrontPrivateKey: this.#cloudfrontPrivateKey.id,
     });
   }
 }
