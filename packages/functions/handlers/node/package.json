@@ -10,7 +10,6 @@
     "@pulumi/aws": "^6.56.1",
     "@pulumi/cloudflare": "^5.41.0",
     "@pulumi/pulumi": "^3.137.0",
-    "@pulumi/tls": "^5.0.9",
     "openapi-fetch": "^0.12.2"
   },
   "devDependencies": {
