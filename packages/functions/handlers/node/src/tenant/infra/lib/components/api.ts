@@ -1,3 +1,4 @@
+import { Utils } from "@paperwait/core/utils";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -7,6 +8,7 @@ export interface ApiArgs {
   tenantId: pulumi.Input<string>;
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
+  cloudfrontKeyPairId: pulumi.Input<string>;
   papercutSecureBridgeFunctionArn: aws.lambda.Function["arn"];
 }
 
@@ -18,7 +20,12 @@ export class Api extends pulumi.ComponentResource {
   #apiPolicy: aws.apigateway.RestApiPolicy;
   #domainName: aws.apigateway.DomainName;
 
-  #cloudfrontKeyPairIdRoute: CloudfrontKeyPairIdRoute;
+  // NOTE: The well-known app-specific resources are following the registered IANA specification:
+  // https://www.github.com/Vroo/well-known-uri-appspecific/blob/main/well-known-uri-for-application-specific-purposes.txt
+  // https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml
+  #wellKnownResource: aws.apigateway.Resource;
+  #appSpecificResource: aws.apigateway.Resource;
+  #wellKnownAppSpecificRoutes: Array<WellKnownAppSpecificRoute> = [];
 
   #papercutResource: aws.apigateway.Resource;
   #secureBridgeResource: aws.apigateway.Resource;
@@ -139,12 +146,42 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#cloudfrontKeyPairIdRoute = CloudfrontKeyPairIdRoute.getInstance(
+    this.#wellKnownResource = new aws.apigateway.Resource(
+      "WellKnownResource",
       {
-        apiId: this.#api.id,
+        restApi: this.#api.id,
         parentId: this.#api.rootResourceId,
+        pathPart: ".well-known",
       },
       { parent: this },
+    );
+
+    this.#appSpecificResource = new aws.apigateway.Resource(
+      "AppSpecificResource",
+      {
+        restApi: this.#api.id,
+        parentId: this.#wellKnownResource.id,
+        pathPart: "appspecific",
+      },
+      { parent: this },
+    );
+
+    this.#wellKnownAppSpecificRoutes.push(
+      new WellKnownAppSpecificRoute(
+        "CloudfrontKeyPairIdRoute",
+        {
+          apiId: this.#api.id,
+          parentId: this.#appSpecificResource.id,
+          pathPart: args.domainName.apply(
+            (domainName) =>
+              `${Utils.reverseDns(domainName)}.cloudfront-key-pair-id.txt`,
+          ),
+          responseTemplates: {
+            "text/plain": args.cloudfrontKeyPairId,
+          },
+        },
+        { parent: this },
+      ),
     );
 
     this.#papercutResource = new aws.apigateway.Resource(
@@ -445,67 +482,48 @@ export class Api extends pulumi.ComponentResource {
   get invokeUrl() {
     return this.#deployment.invokeUrl;
   }
-
-  get cloudfrontKeyPairId() {
-    return this.#cloudfrontKeyPairIdRoute.keyPairId;
-  }
 }
 
-interface CloudfrontKeyPairIdRouteArgs {
+interface WellKnownAppSpecificRouteArgs {
   apiId: aws.apigateway.RestApi["id"];
   parentId: pulumi.Input<string>;
+  pathPart: pulumi.Input<string>;
+  responseTemplates: pulumi.Input<Record<string, pulumi.Input<string>>>;
 }
 
-class CloudfrontKeyPairIdRoute extends pulumi.ComponentResource {
-  static #instance: CloudfrontKeyPairIdRoute;
-
-  #publicKey: aws.cloudfront.PublicKey;
+class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
   #resource: aws.apigateway.Resource;
   #method: aws.apigateway.Method;
   #integration: aws.apigateway.Integration;
   #methodResponse: aws.apigateway.MethodResponse;
   #integrationResponse: aws.apigateway.IntegrationResponse;
 
-  static getInstance(
-    args: CloudfrontKeyPairIdRouteArgs,
+  constructor(
+    name: string,
+    args: WellKnownAppSpecificRouteArgs,
     opts: pulumi.ComponentResourceOptions,
-  ): CloudfrontKeyPairIdRoute {
-    if (!this.#instance)
-      this.#instance = new CloudfrontKeyPairIdRoute(args, opts);
-
-    return this.#instance;
-  }
-
-  private constructor(
-    ...[args, opts]: Parameters<typeof CloudfrontKeyPairIdRoute.getInstance>
   ) {
-    const { AppData, CloudfrontPublicKeyPem } = useResource();
+    const { AppData } = useResource();
 
     super(
-      `${AppData.name}:tenant:aws:CloudfrontKeyPairIdRoute`,
-      "CloudfrontKeyPairIdRoute",
+      `${AppData.name}:tenant:aws:WellKnownAppSpecificRoute`,
+      name,
       args,
       opts,
     );
 
-    this.#publicKey = new aws.cloudfront.PublicKey(
-      "PublicKey",
-      { encodedKey: CloudfrontPublicKeyPem.value },
-      { parent: this },
-    );
-
     this.#resource = new aws.apigateway.Resource(
-      "Resource",
+      `${name}Resource`,
       {
         restApi: args.apiId,
         parentId: args.parentId,
-        pathPart: "cloudfront-key-pair-id",
+        pathPart: args.pathPart,
       },
       { parent: this },
     );
 
     this.#method = new aws.apigateway.Method(
-      "Method",
+      `${name}Method`,
       {
         restApi: args.apiId,
         resourceId: this.#resource.id,
@@ -516,7 +534,7 @@ class CloudfrontKeyPairIdRoute extends pulumi.ComponentResource {
     );
 
     this.#integration = new aws.apigateway.Integration(
-      "Integration",
+      `${name}Integration`,
       {
         restApi: args.apiId,
         resourceId: this.#resource.id,
@@ -527,7 +545,7 @@ class CloudfrontKeyPairIdRoute extends pulumi.ComponentResource {
     );
 
     this.#methodResponse = new aws.apigateway.MethodResponse(
-      "MethodResponse",
+      `${name}MethodResponse`,
       {
         restApi: args.apiId,
         resourceId: this.#resource.id,
@@ -538,33 +556,24 @@ class CloudfrontKeyPairIdRoute extends pulumi.ComponentResource {
     );
 
     this.#integrationResponse = new aws.apigateway.IntegrationResponse(
-      "IntegrationResponse",
+      `${name}IntegrationResponse`,
       {
         restApi: args.apiId,
         resourceId: this.#resource.id,
         httpMethod: this.#method.httpMethod,
         statusCode: this.#methodResponse.statusCode,
-        responseTemplates: {
-          "application/json": pulumi.jsonStringify({
-            keyPairId: this.#publicKey.id,
-          }),
-        },
+        responseTemplates: args.responseTemplates,
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      publicKey: this.#publicKey.id,
       resource: this.#resource.id,
       method: this.#method.id,
       integration: this.#integration.id,
       methodResponse: this.#methodResponse.id,
       integrationResponse: this.#integrationResponse.id,
     });
-  }
-
-  get keyPairId() {
-    return this.#publicKey.id;
   }
 }
 

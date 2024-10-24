@@ -25,6 +25,9 @@ import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { SignatureV4 as _SignatureV4 } from "@smithy/signature-v4";
 
+import { Utils } from ".";
+import { HttpError } from "./errors";
+
 import type {
   DeleteObjectCommandInput,
   GetObjectCommandInput,
@@ -40,10 +43,24 @@ import type { AssumeRoleCommandInput, Credentials } from "@aws-sdk/client-sts";
 import type { SignatureV4Init } from "@smithy/signature-v4";
 
 export namespace Cloudfront {
-  export const getSignedUrl = _getSignedUrl;
+  export const buildUrl = (fqdn: string, pathSegments: Array<string>) =>
+    `https://${fqdn}/${pathSegments.join("/")}`;
 
-  export const buildUrl = (domainName: string, path: string) =>
-    `https://${domainName}/${path}`;
+  export async function getKeyPairId(tenantFqdn: string) {
+    const res = await fetch(
+      buildUrl(tenantFqdn, [
+        ".well-known",
+        "appspecific",
+        `${Utils.reverseDns(tenantFqdn)}.cloudfront-key-pair-id.txt`,
+      ]),
+      { method: "GET" },
+    );
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+
+    return res.text();
+  }
+
+  export const getSignedUrl = _getSignedUrl;
 }
 
 export namespace S3 {

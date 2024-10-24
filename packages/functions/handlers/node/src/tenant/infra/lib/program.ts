@@ -1,4 +1,5 @@
 import { nanoIdSchema } from "@paperwait/core/utils/shared";
+import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as v from "valibot";
 
@@ -23,7 +24,15 @@ export const getProgram = (input: ProgramInput) => async () =>
   withResource(() => {
     const { tenantId, userSyncSchedule, timezone } = input;
 
+    const { CloudfrontPublicKeyPem, UserSync } = useResource();
+
     const account = Account.getInstance({ tenantId });
+
+    const cloudfrontPublicKey = new aws.cloudfront.PublicKey(
+      "CloudfrontPublicKey",
+      { encodedKey: CloudfrontPublicKeyPem.value },
+      { provider: account.provider },
+    );
 
     const ssl = Ssl.getInstance(
       { tenantId },
@@ -40,6 +49,7 @@ export const getProgram = (input: ProgramInput) => async () =>
         tenantId,
         domainName: ssl.domainName,
         certificateArn: ssl.certificateArn,
+        cloudfrontKeyPairId: cloudfrontPublicKey.id,
         papercutSecureBridgeFunctionArn: functions.papercutSecureBridgeArn,
       },
       { providers: [account.provider] },
@@ -51,7 +61,7 @@ export const getProgram = (input: ProgramInput) => async () =>
       {
         domainName: ssl.domainName,
         certificateArn: ssl.certificateArn,
-        keyPairId: api.cloudfrontKeyPairId,
+        keyPairId: cloudfrontPublicKey.id,
         routes: {
           api: { url: api.invokeUrl },
           assets: { url: storage.buckets.assets.url },
@@ -69,7 +79,7 @@ export const getProgram = (input: ProgramInput) => async () =>
             functionArn: functions.tailscaleAuthKeyRotationArn,
           },
           userSync: {
-            functionArn: pulumi.output(useResource().UserSync.arn),
+            functionArn: pulumi.output(UserSync.arn),
             scheduleExpression: `cron(${userSyncSchedule})`,
             timezone,
           },

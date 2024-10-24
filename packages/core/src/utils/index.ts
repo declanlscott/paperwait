@@ -74,4 +74,8 @@ export namespace Utils {
       },
     }) as TResource;
   }
+
+  export function reverseDns(domainName: string) {
+    return domainName.split(".").reverse().join(".");
+  }
 }

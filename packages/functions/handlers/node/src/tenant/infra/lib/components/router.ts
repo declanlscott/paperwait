@@ -171,6 +171,14 @@ export class Router extends pulumi.ComponentResource {
         orderedCacheBehaviors: [
           {
             targetOriginId: "/api/*",
+            pathPattern: "/api/.well-known/*",
+            ...urlCacheBehaviorConfig,
+            allowedMethods: ["GET", "HEAD", "OPTIONS"],
+            defaultTtl: 31536000, // 1 year
+            trustedKeyGroups: undefined,
+          },
+          {
+            targetOriginId: "/api/*",
             pathPattern: "/api/*",
             ...urlCacheBehaviorConfig,
           },
