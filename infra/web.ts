@@ -83,10 +83,6 @@ export const web = new sst.aws.Astro("Web", {
   },
 });
 
-Object.entries(web.getSSTLink().properties).forEach(([key, value]) => {
-  $util.output(value).apply((value) => console.log(key, value));
-});
-
 export const outputs = {
   url: reverseProxy.url,
 };
