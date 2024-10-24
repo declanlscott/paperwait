@@ -154,9 +154,6 @@ importers:
       '@pulumi/pulumi':
         specifier: ^3.137.0
         version: 3.137.0(typescript@5.6.3)
-      '@pulumi/tls':
-        specifier: ^5.0.9
-        version: 5.0.9(typescript@5.6.3)
       openapi-fetch:
         specifier: ^0.12.2
         version: 0.12.2
@@ -2261,9 +2258,6 @@ packages:
 
   '@pulumi/query@0.3.0':
     resolution: {integrity: sha512-xfo+yLRM2zVjVEA4p23IjQWzyWl1ZhWOGobsBqRpIarzLvwNH/RAGaoehdxlhx4X92302DrpdIFgTICMN4P38w==}
-
-  '@pulumi/tls@5.0.9':
-    resolution: {integrity: sha512-AdER41itiGasBtDGk7zUQ7mAODPfqsCjsC3VTMcQBLiPSl7fdaABs4r0HFLq/9tC5VB6KN7uESLCsHf3GI4ZJg==}
 
   '@radix-ui/primitive@1.0.1':
     resolution: {integrity: sha512-yQ8oGX2GVsEYMWGxcovu1uGWPCxV5BFfeeYxqPmuAzUyLT9qmaMXSAhXpb0WrspIeqYzdJpkh2vHModJPgRIaw==}
@@ -9632,15 +9626,6 @@ snapshots:
       - supports-color
 
   '@pulumi/query@0.3.0': {}
-
-  '@pulumi/tls@5.0.9(typescript@5.6.3)':
-    dependencies:
-      '@pulumi/pulumi': 3.137.0(typescript@5.6.3)
-    transitivePeerDependencies:
-      - bluebird
-      - supports-color
-      - ts-node
-      - typescript
 
   '@radix-ui/primitive@1.0.1':
     dependencies:

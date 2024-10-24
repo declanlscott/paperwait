@@ -1,7 +1,6 @@
 import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
 import * as pulumi from "@pulumi/pulumi";
-import { version as tlsPluginVersion } from "@pulumi/tls/package.json";
 import * as v from "valibot";
 
 import { getProgram, programInputSchema } from "./lib/program";
@@ -55,7 +54,6 @@ async function processRecord(record: SQSRecord) {
   await Promise.all([
     stack.workspace.installPlugin("aws", `v${awsPluginVersion}`),
     stack.workspace.installPlugin("cloudflare", `v${cloudflarePluginVersion}`),
-    stack.workspace.installPlugin("tls", `v${tlsPluginVersion}`),
   ]);
   console.log("Successfully installed plugins");
 
