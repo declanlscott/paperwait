@@ -1,7 +1,6 @@
 import * as aws from "@pulumi/aws";
 import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
-import * as tls from "@pulumi/tls";
 
 import { useResource } from "../resource";
 
@@ -11,6 +10,7 @@ const cachingOptimizedPolicyName = "Managed-CachingOptimized";
 export interface RouterArgs {
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
+  keyPairId: pulumi.Input<string>;
   routes: Record<"api" | "assets" | "documents", { url: pulumi.Input<string> }>;
 }
 
@@ -18,8 +18,6 @@ export class Router extends pulumi.ComponentResource {
   static #instance: Router;
 
   #cachePolicy: aws.cloudfront.CachePolicy;
-  #privateKey: tls.PrivateKey;
-  #publicKey: aws.cloudfront.PublicKey;
   #keyGroup: aws.cloudfront.KeyGroup;
   #s3AccessControl: aws.cloudfront.OriginAccessControl;
   #distribution: aws.cloudfront.Distribution;
@@ -62,25 +60,9 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#privateKey = new tls.PrivateKey(
-      "PrivateKey",
-      { algorithm: "RSA" },
-      { parent: this },
-    );
-
-    this.#publicKey = new aws.cloudfront.PublicKey(
-      "PublicKey",
-      {
-        encodedKey: this.#privateKey.publicKeyPem,
-      },
-      { parent: this },
-    );
-
     this.#keyGroup = new aws.cloudfront.KeyGroup(
       "KeyGroup",
-      {
-        items: [this.#publicKey.id],
-      },
+      { items: [args.keyPairId] },
       { parent: this },
     );
 
@@ -234,21 +216,11 @@ export class Router extends pulumi.ComponentResource {
 
     this.registerOutputs({
       cachePolicy: this.#cachePolicy.id,
-      privateKey: this.#privateKey.id,
-      publicKey: this.#publicKey.id,
       keyGroup: this.#keyGroup.id,
       s3AccessControl: this.#s3AccessControl.id,
       distribution: this.#distribution.id,
       cname: this.#cname.id,
     });
-  }
-
-  get keyPairId() {
-    return this.#publicKey.id;
-  }
-
-  get privateKey() {
-    return this.#privateKey.privateKeyPem;
   }
 }
 

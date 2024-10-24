@@ -52,6 +52,14 @@ declare module "sst" {
       }
       "type": "sst.sst.Linkable"
     }
+    "CloudfrontPrivateKeyPem": {
+      "type": "sst.sst.Linkable"
+      "value": string
+    }
+    "CloudfrontPublicKeyPem": {
+      "type": "sst.sst.Linkable"
+      "value": string
+    }
     "Code": {
       "bucket": {
         "name": string

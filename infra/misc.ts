@@ -56,3 +56,26 @@ export const cloud = new sst.Linkable("Cloud", {
     },
   },
 });
+
+export const cloudfrontPrivateKey = new tls.PrivateKey("CloudfrontPrivateKey", {
+  algorithm: "RSA",
+  rsaBits: 2048,
+});
+
+export const cloudfrontPrivateKeyPem = new sst.Linkable(
+  "CloudfrontPrivateKeyPem",
+  {
+    properties: {
+      value: cloudfrontPrivateKey.privateKeyPem,
+    },
+  },
+);
+
+export const cloudfrontPublicKeyPem = new sst.Linkable(
+  "CloudfrontPublicKeyPem",
+  {
+    properties: {
+      value: cloudfrontPrivateKey.publicKeyPem,
+    },
+  },
+);

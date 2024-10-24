@@ -18,6 +18,8 @@ export class Api extends pulumi.ComponentResource {
   #apiPolicy: aws.apigateway.RestApiPolicy;
   #domainName: aws.apigateway.DomainName;
 
+  #cloudfrontKeyPairIdRoute: CloudfrontKeyPairIdRoute;
+
   #papercutResource: aws.apigateway.Resource;
   #secureBridgeResource: aws.apigateway.Resource;
   #papercutSecureBridgeRoutes: Array<PapercutSecureBridgeRoute> = [];
@@ -133,6 +135,14 @@ export class Api extends pulumi.ComponentResource {
         domainName: args.domainName,
         endpointConfiguration: this.#api.endpointConfiguration,
         regionalCertificateArn: args.certificateArn,
+      },
+      { parent: this },
+    );
+
+    this.#cloudfrontKeyPairIdRoute = CloudfrontKeyPairIdRoute.getInstance(
+      {
+        apiId: this.#api.id,
+        parentId: this.#api.rootResourceId,
       },
       { parent: this },
     );
@@ -434,6 +444,127 @@ export class Api extends pulumi.ComponentResource {
 
   get invokeUrl() {
     return this.#deployment.invokeUrl;
+  }
+
+  get cloudfrontKeyPairId() {
+    return this.#cloudfrontKeyPairIdRoute.keyPairId;
+  }
+}
+
+interface CloudfrontKeyPairIdRouteArgs {
+  apiId: aws.apigateway.RestApi["id"];
+  parentId: pulumi.Input<string>;
+}
+
+class CloudfrontKeyPairIdRoute extends pulumi.ComponentResource {
+  static #instance: CloudfrontKeyPairIdRoute;
+
+  #publicKey: aws.cloudfront.PublicKey;
+  #resource: aws.apigateway.Resource;
+  #method: aws.apigateway.Method;
+  #integration: aws.apigateway.Integration;
+  #methodResponse: aws.apigateway.MethodResponse;
+  #integrationResponse: aws.apigateway.IntegrationResponse;
+
+  static getInstance(
+    args: CloudfrontKeyPairIdRouteArgs,
+    opts: pulumi.ComponentResourceOptions,
+  ): CloudfrontKeyPairIdRoute {
+    if (!this.#instance)
+      this.#instance = new CloudfrontKeyPairIdRoute(args, opts);
+
+    return this.#instance;
+  }
+
+  private constructor(
+    ...[args, opts]: Parameters<typeof CloudfrontKeyPairIdRoute.getInstance>
+  ) {
+    const { AppData, CloudfrontPublicKeyPem } = useResource();
+
+    super(
+      `${AppData.name}:tenant:aws:CloudfrontKeyPairIdRoute`,
+      "CloudfrontKeyPairIdRoute",
+      args,
+      opts,
+    );
+
+    this.#publicKey = new aws.cloudfront.PublicKey(
+      "PublicKey",
+      { encodedKey: CloudfrontPublicKeyPem.value },
+      { parent: this },
+    );
+
+    this.#resource = new aws.apigateway.Resource(
+      "Resource",
+      {
+        restApi: args.apiId,
+        parentId: args.parentId,
+        pathPart: "cloudfront-key-pair-id",
+      },
+      { parent: this },
+    );
+
+    this.#method = new aws.apigateway.Method(
+      "Method",
+      {
+        restApi: args.apiId,
+        resourceId: this.#resource.id,
+        httpMethod: "GET",
+        authorization: "AWS_IAM",
+      },
+      { parent: this },
+    );
+
+    this.#integration = new aws.apigateway.Integration(
+      "Integration",
+      {
+        restApi: args.apiId,
+        resourceId: this.#resource.id,
+        httpMethod: this.#method.httpMethod,
+        type: "MOCK",
+      },
+      { parent: this },
+    );
+
+    this.#methodResponse = new aws.apigateway.MethodResponse(
+      "MethodResponse",
+      {
+        restApi: args.apiId,
+        resourceId: this.#resource.id,
+        httpMethod: this.#method.httpMethod,
+        statusCode: "200",
+      },
+      { parent: this },
+    );
+
+    this.#integrationResponse = new aws.apigateway.IntegrationResponse(
+      "IntegrationResponse",
+      {
+        restApi: args.apiId,
+        resourceId: this.#resource.id,
+        httpMethod: this.#method.httpMethod,
+        statusCode: this.#methodResponse.statusCode,
+        responseTemplates: {
+          "application/json": pulumi.jsonStringify({
+            keyPairId: this.#publicKey.id,
+          }),
+        },
+      },
+      { parent: this },
+    );
+
+    this.registerOutputs({
+      publicKey: this.#publicKey.id,
+      resource: this.#resource.id,
+      method: this.#method.id,
+      integration: this.#integration.id,
+      methodResponse: this.#methodResponse.id,
+      integrationResponse: this.#integrationResponse.id,
+    });
+  }
+
+  get keyPairId() {
+    return this.#publicKey.id;
   }
 }
 

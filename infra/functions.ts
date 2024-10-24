@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { appData, cloud } from "./misc";
+import { appData, cloud, cloudfrontPublicKeyPem } from "./misc";
 import { organization } from "./organization";
 import { realtime } from "./realtime";
 import { codeBucket, pulumiBucket } from "./storage";
@@ -205,6 +205,7 @@ export const tenantInfraFunction = new aws.lambda.Function(
     ...link({
       AppData: appData.properties,
       Cloud: cloud.properties,
+      CloudfrontPublicKeyPem: cloudfrontPublicKeyPem.properties,
       Code: code.properties,
       PulumiBucket: pulumiBucket.getSSTLink().properties,
       Realtime: realtime.properties,

@@ -4,7 +4,6 @@ import * as v from "valibot";
 
 import { Account } from "./components/account";
 import { Api } from "./components/api";
-import { Config } from "./components/config";
 import { Events } from "./components/events";
 import { Functions } from "./components/functions";
 import { Router } from "./components/router";
@@ -48,23 +47,16 @@ export const getProgram = (input: ProgramInput) => async () =>
 
     const storage = Storage.getInstance({ providers: [account.provider] });
 
-    const router = Router.getInstance(
+    Router.getInstance(
       {
         domainName: ssl.domainName,
         certificateArn: ssl.certificateArn,
+        keyPairId: api.cloudfrontKeyPairId,
         routes: {
           api: { url: api.invokeUrl },
           assets: { url: storage.buckets.assets.url },
           documents: { url: storage.buckets.documents.url },
         },
-      },
-      { providers: [account.provider] },
-    );
-
-    Config.getInstance(
-      {
-        cloudfrontKeyPairId: router.keyPairId,
-        cloudfrontPrivateKey: router.privateKey,
       },
       { providers: [account.provider] },
     );

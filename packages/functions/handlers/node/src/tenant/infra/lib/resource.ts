@@ -11,6 +11,7 @@ export type CustomResource = {
     | "AppData"
     | "Code"
     | "Cloud"
+    | "CloudfrontPublicKeyPem"
     | "PulumiBucket"
     | "Realtime"
     | "UserSync"
