@@ -508,7 +508,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
         restApi: args.restApiId,
         resourceId: this.#resource.id,
         httpMethod: "POST",
-        authorization: "AWS#IAM",
+        authorization: "AWS_IAM",
         requestValidatorId: this.#requestValidator.id,
         requestModels: {
           "application/json": this.#requestModel.id,
@@ -524,7 +524,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
         resourceId: this.#resource.id,
         httpMethod: this.#method.httpMethod,
         integrationHttpMethod: "POST",
-        type: "AWS#PROXY",
+        type: "AWS_PROXY",
         uri: args.functionArn,
         credentials: args.executionRoleArn,
       },
@@ -579,7 +579,7 @@ class EventRoute extends pulumi.ComponentResource {
         restApi: args.restApiId,
         resourceId: this.#resource.id,
         httpMethod: "POST",
-        authorization: "AWS#IAM",
+        authorization: "AWS_IAM",
       },
       { parent: this },
     );
@@ -589,7 +589,7 @@ class EventRoute extends pulumi.ComponentResource {
       {
         restApi: args.restApiId,
         resourceId: this.#resource.id,
-        httpMethod: "POST",
+        httpMethod: this.#method.httpMethod,
         type: "AWS",
         requestTemplates: args.requestTemplate
           ? { "application/json": args.requestTemplate }
