@@ -366,7 +366,8 @@ export class Api extends pulumi.ComponentResource {
           parentId: this.#eventsResource.id,
           pathPart: "tailscale-auth-key-rotation",
           executionRoleArn: this.#role.arn,
-          requestTemplate: pulumi.interpolate`
+          requestTemplate: args.domainName.apply(
+            (domainName) => `
 #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
 #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
 {
@@ -375,11 +376,11 @@ export class Api extends pulumi.ComponentResource {
     "Detail": "{}",
     "DetailType": "tailscale-auth-key-rotation",
     "EventBusName": "default",
-    "Source":"com.${AppData.name}.tenant"
+    "Source":"${Utils.reverseDns(domainName)}"
   }
 ]
-}
-          `,
+}`,
+          ),
         },
         { parent: this },
       ),
@@ -393,20 +394,21 @@ export class Api extends pulumi.ComponentResource {
           parentId: this.#eventsResource.id,
           pathPart: "user-sync",
           executionRoleArn: this.#role.arn,
-          requestTemplate: pulumi.interpolate`
+          requestTemplate: pulumi.all([args.tenantId, args.domainName]).apply(
+            ([tenantId, domainName]) => `
 #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
 #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
 {
 "Entries": [
   {
-    "Detail": "{\"tenantId\":\"${args.tenantId}\"}",
+    "Detail": "{\\"tenantId\\":\\"${tenantId}\\"}",
     "DetailType": "user-sync",
     "EventBusName": "default",
-    "Source":"com.${AppData.name}.tenant"
+    "Source":"${Utils.reverseDns(domainName)}"
   }
 ]
-}
-          `,
+}`,
+          ),
         },
         { parent: this },
       ),
