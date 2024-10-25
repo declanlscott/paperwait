@@ -46,9 +46,7 @@ export const injectLinkables = (
 ) =>
   Object.entries(linkables).reduce(
     (vars, [name, props]) => {
-      vars[`${prefix}${name}`] = pulumi
-        .output(props)
-        .apply((props) => JSON.stringify(props));
+      vars[`${prefix}${name}`] = pulumi.jsonStringify(pulumi.output(props));
 
       return vars;
     },

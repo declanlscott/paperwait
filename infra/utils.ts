@@ -19,9 +19,7 @@ export const injectLinkables = (
 ) =>
   Object.entries(linkables).reduce(
     (vars, [name, props]) => {
-      vars[`${prefix}${name}`] = $output(props).apply((props) =>
-        JSON.stringify(props),
-      );
+      vars[`${prefix}${name}`] = $jsonStringify($output(props));
 
       return vars;
     },
