@@ -13,7 +13,7 @@
     "hono": "^4.6.6",
     "remeda": "^2.16.0",
     "replicache": "^15.0.1",
-    "sst": "^3.2.48",
+    "sst": "^3.2.60",
     "valibot": "beta"
   },
   "devDependencies": {

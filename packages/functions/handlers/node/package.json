@@ -10,7 +10,7 @@
     "@pulumi/aws": "^6.56.1",
     "@pulumi/cloudflare": "^5.41.0",
     "@pulumi/pulumi": "^3.137.0",
-    "openapi-fetch": "^0.12.2"
+    "openapi-fetch": "^0.12.5"
   },
   "devDependencies": {
     "@paperwait/eslint-config": "workspace:*",
