@@ -19,7 +19,6 @@ export namespace Constants {
   export const AUTH_CALLBACK_PATH = "/api/auth/callback";
 
   export const PAPERCUT_API_PAGINATION_LIMIT = 1000;
-  export const PAPERCUT_API_TIMEOUT_MS = 8000;
 
   export const POKE = "poke";
 
