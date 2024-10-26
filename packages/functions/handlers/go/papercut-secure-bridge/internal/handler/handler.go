@@ -175,7 +175,6 @@ func Bridge(
 				methodName,
 				&papercut.ListUserAccountsArgs{
 					AuthToken: credentials.AuthToken,
-					Username:  reqBody.Username,
 					Offset:    reqBody.Offset,
 					Limit:     reqBody.Limit,
 				},

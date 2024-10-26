@@ -63,13 +63,11 @@ type ListSharedAccountsReply struct {
 }
 
 type ListUserAccountsRequestBody struct {
-	Username string `json:"username"`
-	Offset   int    `json:"offset"`
-	Limit    int    `json:"limit"`
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
 }
 type ListUserAccountsArgs struct {
 	AuthToken string
-	Username  string
 	Offset    int
 	Limit     int
 }
