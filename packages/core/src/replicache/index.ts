@@ -41,7 +41,12 @@ import type {
   ClientViewRecord,
   ClientViewRecordEntries,
 } from "./client-view-record";
-import type { TableData, TableMetadata } from "./data";
+import type {
+  SyncedTable,
+  TableData,
+  TableMetadata,
+  TablePatchData,
+} from "./data";
 import type { ReplicacheClient, ReplicacheClientGroup } from "./sql";
 
 export namespace Replicache {
@@ -257,19 +262,26 @@ export namespace Replicache {
         const data = await Promise.all(
           syncedTables.map(async (table) => {
             const name = table._.name;
-            const ids = diff[name].puts;
 
-            if (ids.length === 0)
+            if (diff[name].puts.length === 0)
               return [
                 name,
                 { puts: [], dels: diff[name].dels },
               ] as const satisfies TableData;
 
-            const data = await dataQueryFactory[name](diff[name].puts);
+            const puts: TablePatchData<SyncedTable>["puts"] = [];
+            for (const ids of R.chunk(
+              diff[name].puts,
+              Constants.REPLICACHE_PULL_CHUNK_SIZE,
+            )) {
+              const data = await dataQueryFactory[name](ids);
+
+              puts.push(...data);
+            }
 
             return [
               name,
-              { puts: data, dels: diff[name].dels },
+              { puts, dels: diff[name].dels },
             ] as const satisfies TableData;
           }),
         );

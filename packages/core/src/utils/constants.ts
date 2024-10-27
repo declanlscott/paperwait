@@ -44,6 +44,8 @@ export namespace Constants {
 
   export const SESSION_COOKIE_NAME = "auth_session";
 
+  export const REPLICACHE_PULL_CHUNK_SIZE = 200;
+
   export const SESSION_LIFETIME = {
     days: 30,
   } as const satisfies Duration;
