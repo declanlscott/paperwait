@@ -4,11 +4,6 @@ import { nanoIdSchema, tenantTableSchema } from "../utils/shared";
 
 export const usersTableName = "users";
 
-export const userSyncResponseSchema = v.object({
-  userAccounts: v.array(v.string()),
-});
-export type UserSyncResponse = v.InferOutput<typeof userSyncResponseSchema>;
-
 export const userRoles = [
   "administrator",
   "operator",

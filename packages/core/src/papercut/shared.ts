@@ -67,3 +67,10 @@ export type DeletePapercutAccountManagerAuthorizationMutationArgs =
   v.InferOutput<
     typeof deletePapercutAccountManagerAuthorizationMutationArgsSchema
   >;
+
+export const listUserAccountsResponseSchema = v.object({
+  userAccounts: v.array(v.string()),
+});
+export type ListUserAccountsResponse = v.InferOutput<
+  typeof listUserAccountsResponseSchema
+>;
