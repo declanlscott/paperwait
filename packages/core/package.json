@@ -28,7 +28,7 @@
     "@oslojs/jwt": "^0.2.0",
     "@smithy/signature-v4": "^4.2.1",
     "arctic": "next",
-    "nanoid": "^5.0.7",
+    "nanoid": "^5.0.8",
     "postgres": "^3.4.5"
   },
   "devDependencies": {
