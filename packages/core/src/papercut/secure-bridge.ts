@@ -5,11 +5,40 @@ import * as v from "valibot";
 import { Cloudfront } from "../utils/aws";
 import { Constants } from "../utils/constants";
 import { HttpError } from "../utils/errors";
-import { listUserAccountsResponseSchema } from "./shared";
+import {
+  getTaskStatusResponseSchema,
+  listUserAccountsResponseSchema,
+} from "./shared";
 
 import type { Tenant } from "../tenants/sql";
 
 export namespace SecureBridge {
+  export async function getTaskStatus(tenantId: Tenant["id"]) {
+    const tenantFqdn = `${tenantId}.${Resource.AppData.domainName.fullyQualified}`;
+
+    const signedUrl = Cloudfront.getSignedUrl({
+      keyPairId: await Cloudfront.getKeyPairId(tenantFqdn),
+      privateKey: Resource.CloudfrontPrivateKey.pem,
+      url: Cloudfront.buildUrl(tenantFqdn, [
+        "api",
+        "papercut",
+        "secure-bridge",
+        "getTaskStatus",
+      ]),
+      dateLessThan: addMinutes(Date.now(), 1).toISOString(),
+    });
+
+    const res = await fetch(signedUrl, { method: "GET" });
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+
+    const taskStatus = v.parse(
+      getTaskStatusResponseSchema,
+      await res.json(),
+    ).struct;
+
+    return taskStatus;
+  }
+
   export async function listUserAccounts(tenantId: Tenant["id"]) {
     const tenantFqdn = `${tenantId}.${Resource.AppData.domainName.fullyQualified}`;
 

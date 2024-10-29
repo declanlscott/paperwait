@@ -68,7 +68,8 @@ export namespace HttpError {
     | "Conflict"
     | "TooManyRequests"
     | "InternalServerError"
-    | "NotImplemented";
+    | "NotImplemented"
+    | "ServiceUnavailable";
 
   export class Error extends globalThis.Error {
     public declare readonly name: ErrorName;
@@ -168,6 +169,15 @@ export namespace HttpError {
 
     constructor(message = "Not implemented") {
       super(message, 501);
+    }
+  }
+
+  export class ServiceUnavailable extends HttpError.Error {
+    public readonly name = "ServiceUnavailable";
+    public readonly statusCode = 503;
+
+    constructor(message = "Service unavailable") {
+      super(message, 503);
     }
   }
 }

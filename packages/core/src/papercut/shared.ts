@@ -68,6 +68,16 @@ export type DeletePapercutAccountManagerAuthorizationMutationArgs =
     typeof deletePapercutAccountManagerAuthorizationMutationArgsSchema
   >;
 
+export const getTaskStatusResponseSchema = v.object({
+  struct: v.object({
+    completed: v.boolean(),
+    message: v.string(),
+  }),
+});
+export type GetTaskStatusResponse = v.InferOutput<
+  typeof getTaskStatusResponseSchema
+>;
+
 export const listUserAccountsResponseSchema = v.object({
   userAccounts: v.array(v.string()),
 });

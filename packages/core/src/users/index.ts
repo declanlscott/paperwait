@@ -19,7 +19,11 @@ import { mutationRbac } from "../replicache/shared";
 import { Sessions } from "../sessions";
 import { useAuthenticated } from "../sessions/context";
 import { Constants } from "../utils/constants";
-import { ApplicationError, MiscellaneousError } from "../utils/errors";
+import {
+  ApplicationError,
+  HttpError,
+  MiscellaneousError,
+} from "../utils/errors";
 import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
 import {
   deleteUserProfileMutationArgsSchema,
@@ -36,6 +40,11 @@ import type { User, UserProfilesTable } from "./sql";
 
 export namespace Users {
   export async function sync(tenantId: Tenant["id"]) {
+    // Avoid syncing with papercut if papercut itself is still syncing
+    const taskStatus = await SecureBridge.getTaskStatus(tenantId);
+    if (!taskStatus.completed)
+      throw new HttpError.ServiceUnavailable(taskStatus.message);
+
     const next = new Set(await SecureBridge.listUserAccounts(tenantId));
 
     await serializable(async (tx) => {
