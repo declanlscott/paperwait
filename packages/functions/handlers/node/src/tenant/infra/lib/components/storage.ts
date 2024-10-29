@@ -4,12 +4,13 @@ import * as pulumi from "@pulumi/pulumi";
 import { useResource } from "../resource";
 
 type Buckets = Record<"assets" | "documents", Bucket>;
+type Queues = Record<"orderProcessor", Queue>;
 
 export class Storage extends pulumi.ComponentResource {
   static #instance: Storage;
 
   #buckets: Buckets = {} as Buckets;
-  // TODO: Add queues
+  #queues: Queues = {} as Queues;
 
   static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
     if (!this.#instance) this.#instance = new Storage(opts);
@@ -25,10 +26,23 @@ export class Storage extends pulumi.ComponentResource {
     this.#buckets.assets = new Bucket("Assets", { parent: this });
 
     this.#buckets.documents = new Bucket("Documents", { parent: this });
+
+    this.#queues.orderProcessor = new Queue(
+      "OrderProcessor",
+      {
+        withDlq: true,
+        fifo: { enabled: true, deduplication: true },
+      },
+      { parent: this },
+    );
   }
 
   get buckets() {
     return this.#buckets;
+  }
+
+  get queues() {
+    return this.#queues;
   }
 }
 
@@ -131,5 +145,64 @@ class Bucket extends pulumi.ComponentResource {
 
   get arn() {
     return this.#bucket.arn;
+  }
+}
+
+interface QueueArgs {
+  withDlq?: boolean;
+  fifo: { enabled: false } | { enabled: true; deduplication: boolean };
+}
+
+class Queue extends pulumi.ComponentResource {
+  #dlq?: aws.sqs.Queue;
+  #queue: aws.sqs.Queue;
+
+  constructor(
+    name: string,
+    args: QueueArgs,
+    opts: pulumi.ComponentResourceOptions,
+  ) {
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Queue`, name, args, opts);
+
+    if (args.withDlq)
+      this.#dlq = new aws.sqs.Queue(`${name}Dlq`, {}, { parent: this });
+
+    this.#queue = new aws.sqs.Queue(
+      `${name}Queue`,
+      {
+        fifoQueue: args.fifo.enabled,
+        contentBasedDeduplication: args.fifo.enabled
+          ? args.fifo.deduplication
+          : undefined,
+        visibilityTimeoutSeconds: 30,
+        redrivePolicy:
+          args.withDlq && this.#dlq
+            ? pulumi.jsonStringify({
+                deadLetterTargetArn: this.#dlq.arn,
+                maxReceiveCount: 3,
+              })
+            : undefined,
+      },
+      { parent: this },
+    );
+
+    this.registerOutputs({
+      dlq: this.#dlq?.id,
+      queue: this.#queue.id,
+    });
+  }
+
+  get arn() {
+    return this.#queue.arn;
+  }
+
+  get name() {
+    return this.#queue.name;
+  }
+
+  get url() {
+    return this.#queue.url;
   }
 }

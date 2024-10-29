@@ -42,12 +42,12 @@ export class Functions extends pulumi.ComponentResource {
     );
   }
 
-  get papercutSecureBridgeArn() {
-    return this.#papercutSecureBridge.functionArn;
+  get papercutSecureBridge() {
+    return this.#papercutSecureBridge;
   }
 
-  get tailscaleAuthKeyRotationArn() {
-    return this.#tailscaleAuthKeyRotation.functionArn;
+  get tailscaleAuthKeyRotation() {
+    return this.#tailscaleAuthKeyRotation;
   }
 }
 
@@ -140,6 +140,10 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
   get functionArn() {
     return this.#function.arn;
   }
+
+  get invokeArn() {
+    return this.#function.invokeArn;
+  }
 }
 
 class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
@@ -221,6 +225,10 @@ class TailscaleAuthKeyRotation extends pulumi.ComponentResource {
 
   get functionArn() {
     return this.#function.arn;
+  }
+
+  get invokeArn() {
+    return this.#function.invokeArn;
   }
 }
 

@@ -9,7 +9,14 @@ export interface ApiArgs {
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
   cloudfrontKeyPairId: pulumi.Input<string>;
-  papercutSecureBridgeFunctionArn: aws.lambda.Function["arn"];
+  papercutSecureBridgeFunction: {
+    invokeArn: aws.lambda.Function["invokeArn"];
+  };
+  orderProcessorQueue: {
+    arn: aws.sqs.Queue["arn"];
+    name: aws.sqs.Queue["name"];
+    url: aws.sqs.Queue["url"];
+  };
 }
 
 export class Api extends pulumi.ComponentResource {
@@ -27,12 +34,18 @@ export class Api extends pulumi.ComponentResource {
   #appSpecificResource: aws.apigateway.Resource;
   #wellKnownAppSpecificRoutes: Array<WellKnownAppSpecificRoute> = [];
 
+  #eventsResource: aws.apigateway.Resource;
+  #eventRoutes: Array<EventRoute> = [];
+
   #papercutResource: aws.apigateway.Resource;
   #secureBridgeResource: aws.apigateway.Resource;
   #papercutSecureBridgeRoutes: Array<PapercutSecureBridgeRoute> = [];
 
-  #eventsResource: aws.apigateway.Resource;
-  #eventRoutes: Array<EventRoute> = [];
+  #ordersResource: aws.apigateway.Resource;
+  #enqueueOrderRequestValidator: aws.apigateway.RequestValidator;
+  #enqueueOrderRequestModel: aws.apigateway.Model;
+  #enqueueOrderMethod: aws.apigateway.Method;
+  #enqueueOrderIntegration: aws.apigateway.Integration;
 
   #logGroup: aws.cloudwatch.LogGroup;
   #deployment: aws.apigateway.Deployment;
@@ -85,6 +98,10 @@ export class Api extends pulumi.ComponentResource {
               resources: [
                 aws.cloudwatch.getEventBusOutput({ name: "default" }).arn,
               ],
+            },
+            {
+              actions: ["sqs:SendMessage"],
+              resources: [args.orderProcessorQueue.arn],
             },
           ],
         }).json,
@@ -184,6 +201,68 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
+    this.#eventsResource = new aws.apigateway.Resource(
+      "EventsResource",
+      {
+        restApi: this.#api.id,
+        parentId: this.#api.rootResourceId,
+        pathPart: "events",
+      },
+      { parent: this },
+    );
+
+    this.#eventRoutes.push(
+      new EventRoute(
+        "TailscaleAuthKeyRotationRoute",
+        {
+          restApiId: this.#api.id,
+          parentId: this.#eventsResource.id,
+          pathPart: "tailscale-auth-key-rotation",
+          executionRoleArn: this.#role.arn,
+          requestTemplate: args.domainName.apply(
+            (domainName) => `
+{
+"Entries": [
+  {
+    "Detail": "{}",
+    "DetailType": "tailscale-auth-key-rotation",
+    "EventBusName": "default",
+    "Source":"${Utils.reverseDns(domainName)}"
+  }
+]
+}`,
+          ),
+        },
+        { parent: this },
+      ),
+    );
+
+    this.#eventRoutes.push(
+      new EventRoute(
+        "UserSyncRoute",
+        {
+          restApiId: this.#api.id,
+          parentId: this.#eventsResource.id,
+          pathPart: "user-sync",
+          executionRoleArn: this.#role.arn,
+          requestTemplate: pulumi.all([args.tenantId, args.domainName]).apply(
+            ([tenantId, domainName]) => `
+{
+"Entries": [
+  {
+    "Detail": "{\\"tenantId\\":\\"${tenantId}\\"}",
+    "DetailType": "user-sync",
+    "EventBusName": "default",
+    "Source":"${Utils.reverseDns(domainName)}"
+  }
+]
+}`,
+          ),
+        },
+        { parent: this },
+      ),
+    );
+
     this.#papercutResource = new aws.apigateway.Resource(
       "PapercutResource",
       {
@@ -222,7 +301,7 @@ export class Api extends pulumi.ComponentResource {
               type: "string",
             },
           },
-          functionArn: args.papercutSecureBridgeFunctionArn,
+          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
           executionRoleArn: this.#role.arn,
         },
         { parent: this },
@@ -247,7 +326,21 @@ export class Api extends pulumi.ComponentResource {
               },
             },
           },
-          functionArn: args.papercutSecureBridgeFunctionArn,
+          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
+          executionRoleArn: this.#role.arn,
+        },
+        { parent: this },
+      ),
+    );
+
+    this.#papercutSecureBridgeRoutes.push(
+      new PapercutSecureBridgeRoute(
+        "GetTaskStatusRoute",
+        {
+          restApiId: this.#api.id,
+          parentId: this.#secureBridgeResource.id,
+          pathPart: "getTaskStatus",
+          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
           executionRoleArn: this.#role.arn,
         },
         { parent: this },
@@ -266,7 +359,7 @@ export class Api extends pulumi.ComponentResource {
               type: "string",
             },
           },
-          functionArn: args.papercutSecureBridgeFunctionArn,
+          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
           executionRoleArn: this.#role.arn,
         },
         { parent: this },
@@ -288,7 +381,7 @@ export class Api extends pulumi.ComponentResource {
               type: "integer",
             },
           },
-          functionArn: args.papercutSecureBridgeFunctionArn,
+          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
           executionRoleArn: this.#role.arn,
         },
         { parent: this },
@@ -313,7 +406,7 @@ export class Api extends pulumi.ComponentResource {
               type: "integer",
             },
           },
-          functionArn: args.papercutSecureBridgeFunctionArn,
+          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
           executionRoleArn: this.#role.arn,
         },
         { parent: this },
@@ -341,77 +434,92 @@ export class Api extends pulumi.ComponentResource {
               type: "boolean",
             },
           },
-          functionArn: args.papercutSecureBridgeFunctionArn,
+          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
           executionRoleArn: this.#role.arn,
         },
         { parent: this },
       ),
     );
 
-    this.#eventsResource = new aws.apigateway.Resource(
-      "EventsResource",
+    this.#ordersResource = new aws.apigateway.Resource(
+      "OrdersResource",
       {
         restApi: this.#api.id,
         parentId: this.#api.rootResourceId,
-        pathPart: "events",
+        pathPart: "orders",
       },
       { parent: this },
     );
 
-    this.#eventRoutes.push(
-      new EventRoute(
-        "TailscaleAuthKeyRotationRoute",
-        {
-          restApiId: this.#api.id,
-          parentId: this.#eventsResource.id,
-          pathPart: "tailscale-auth-key-rotation",
-          executionRoleArn: this.#role.arn,
-          requestTemplate: args.domainName.apply(
-            (domainName) => `
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-"Entries": [
-  {
-    "Detail": "{}",
-    "DetailType": "tailscale-auth-key-rotation",
-    "EventBusName": "default",
-    "Source":"${Utils.reverseDns(domainName)}"
-  }
-]
-}`,
-          ),
-        },
-        { parent: this },
-      ),
+    this.#enqueueOrderRequestValidator = new aws.apigateway.RequestValidator(
+      "EnqueueOrderRequestValidator",
+      {
+        restApi: this.#api.id,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      },
+      { parent: this },
     );
 
-    this.#eventRoutes.push(
-      new EventRoute(
-        "UserSyncRoute",
-        {
-          restApiId: this.#api.id,
-          parentId: this.#eventsResource.id,
-          pathPart: "user-sync",
-          executionRoleArn: this.#role.arn,
-          requestTemplate: pulumi.all([args.tenantId, args.domainName]).apply(
-            ([tenantId, domainName]) => `
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-"Entries": [
-  {
-    "Detail": "{\\"tenantId\\":\\"${tenantId}\\"}",
-    "DetailType": "user-sync",
-    "EventBusName": "default",
-    "Source":"${Utils.reverseDns(domainName)}"
-  }
-]
-}`,
-          ),
+    this.#enqueueOrderRequestModel = new aws.apigateway.Model(
+      "EnqueueOrderRequestModel",
+      {
+        restApi: this.#api.id,
+        contentType: "application/json",
+        schema: JSON.stringify({
+          $schema: "http://json-schema.org/draft-04/schema#",
+          title: "EnqueueOrderRequestModel",
+          type: "object",
+          properties: {
+            orderId: {
+              type: "string",
+            },
+          },
+        }),
+      },
+      { parent: this },
+    );
+
+    this.#enqueueOrderMethod = new aws.apigateway.Method(
+      "EnqueueOrderMethod",
+      {
+        restApi: this.#api.id,
+        resourceId: this.#ordersResource.id,
+        httpMethod: "POST",
+        authorization: "AWS_IAM",
+        requestValidatorId: this.#enqueueOrderRequestValidator.id,
+        requestModels: {
+          "application/json": this.#enqueueOrderRequestModel.id,
         },
-        { parent: this },
-      ),
+      },
+      { parent: this },
+    );
+
+    this.#enqueueOrderIntegration = new aws.apigateway.Integration(
+      "EnqueueOrderIntegration",
+      {
+        restApi: this.#api.id,
+        resourceId: this.#ordersResource.id,
+        httpMethod: this.#enqueueOrderMethod.httpMethod,
+        type: "AWS",
+        integrationHttpMethod: "POST",
+        requestParameters: {
+          "integration.request.header.Content-Type":
+            "'application/x-amz-json-1.1'",
+          "integration.request.header.X-Amz-Target": "'SQS.SendMessage'",
+        },
+        requestTemplates: {
+          "application/json": pulumi.interpolate`
+{
+  "QueueUrl": "${args.orderProcessorQueue.url}",
+  "MessageBody": "{\"orderId\":\"$input.path('$.orderId')\",\"tenantId\":\"${args.tenantId}\"}"
+}`,
+        },
+        passthroughBehavior: "NEVER",
+        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:sqs:path/${args.orderProcessorQueue.name}`,
+        credentials: this.#role.arn,
+      },
+      { parent: this },
     );
 
     this.#logGroup = new aws.cloudwatch.LogGroup(
@@ -469,12 +577,23 @@ export class Api extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
+      role: this.#role.id,
       api: this.#api.id,
-      policy: this.#apiPolicy.id,
+      apiPolicy: this.#apiPolicy.id,
       domainName: this.#domainName.id,
+
+      wellKnownResource: this.#wellKnownResource.id,
+      appSpecificResource: this.#appSpecificResource.id,
+
+      eventsResource: this.#eventsResource.id,
+
       papercutResource: this.#papercutResource.id,
       secureBridgeResource: this.#secureBridgeResource.id,
-      eventsResource: this.#eventsResource.id,
+
+      ordersResource: this.#ordersResource.id,
+      enqueueOrderMethod: this.#enqueueOrderMethod.id,
+      enqueueOrderIntegration: this.#enqueueOrderIntegration.id,
+
       logGroup: this.#logGroup.id,
       deployment: this.#deployment.id,
       stage: this.#stage.id,
@@ -579,110 +698,6 @@ class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
   }
 }
 
-interface PapercutSecureBridgeRouteArgs {
-  restApiId: aws.apigateway.RestApi["id"];
-  parentId: aws.apigateway.Resource["id"];
-  pathPart: pulumi.Input<string>;
-  requestSchema: pulumi.Input<Record<string, unknown>>;
-  executionRoleArn: aws.iam.Role["arn"];
-  functionArn: aws.lambda.Function["arn"];
-}
-
-class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
-  #resource: aws.apigateway.Resource;
-  #requestValidator: aws.apigateway.RequestValidator;
-  #requestModel: aws.apigateway.Model;
-  #method: aws.apigateway.Method;
-  #integration: aws.apigateway.Integration;
-
-  constructor(
-    name: string,
-    args: PapercutSecureBridgeRouteArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ) {
-    const { AppData } = useResource();
-
-    super(
-      `${AppData.name}:tenant:aws:PapercutSecureBridgeRoute`,
-      name,
-      args,
-      opts,
-    );
-
-    this.#resource = new aws.apigateway.Resource(
-      `${name}Resource`,
-      {
-        restApi: args.restApiId,
-        parentId: args.parentId,
-        pathPart: args.pathPart,
-      },
-      { parent: this },
-    );
-
-    this.#requestValidator = new aws.apigateway.RequestValidator(
-      `${name}RequestValidator`,
-      {
-        restApi: args.restApiId,
-        validateRequestBody: true,
-        validateRequestParameters: false,
-      },
-      { parent: this },
-    );
-
-    this.#requestModel = new aws.apigateway.Model(
-      `${name}RequestModel`,
-      {
-        restApi: args.restApiId,
-        contentType: "application/json",
-        schema: pulumi.jsonStringify({
-          $schema: "http://json-schema.org/draft-04/schema#",
-          title: `${name}RequestModel`,
-          type: "object",
-          properties: args.requestSchema,
-        }),
-      },
-      { parent: this },
-    );
-
-    this.#method = new aws.apigateway.Method(
-      `${name}Method`,
-      {
-        restApi: args.restApiId,
-        resourceId: this.#resource.id,
-        httpMethod: "POST",
-        authorization: "AWS_IAM",
-        requestValidatorId: this.#requestValidator.id,
-        requestModels: {
-          "application/json": this.#requestModel.id,
-        },
-      },
-      { parent: this },
-    );
-
-    this.#integration = new aws.apigateway.Integration(
-      `${name}Integration`,
-      {
-        restApi: args.restApiId,
-        resourceId: this.#resource.id,
-        httpMethod: this.#method.httpMethod,
-        integrationHttpMethod: "POST",
-        type: "AWS_PROXY",
-        uri: args.functionArn,
-        credentials: args.executionRoleArn,
-      },
-      { parent: this },
-    );
-
-    this.registerOutputs({
-      resource: this.#resource.id,
-      requestValidator: this.#requestValidator.id,
-      requestModel: this.#requestModel.id,
-      method: this.#method.id,
-      integration: this.#integration.id,
-    });
-  }
-}
-
 interface EventRouteArgs {
   restApiId: aws.apigateway.RestApi["id"];
   parentId: aws.apigateway.Resource["id"];
@@ -701,7 +716,7 @@ class EventRoute extends pulumi.ComponentResource {
     args: EventRouteArgs,
     opts: pulumi.ComponentResourceOptions,
   ) {
-    const { AppData } = useResource();
+    const { AppData, Cloud } = useResource();
 
     super(`${AppData.name}:tenant:aws:EventRoute`, name, args, opts);
 
@@ -733,9 +748,17 @@ class EventRoute extends pulumi.ComponentResource {
         resourceId: this.#resource.id,
         httpMethod: this.#method.httpMethod,
         type: "AWS",
+        integrationHttpMethod: "POST",
+        requestParameters: {
+          "integration.request.header.Content-Type":
+            "'application/x-amz-json-1.1'",
+          "integration.request.header.X-Amz-Target": "'AWSEvents.PutEvents'",
+        },
         requestTemplates: args.requestTemplate
           ? { "application/json": args.requestTemplate }
           : undefined,
+        passthroughBehavior: "NEVER",
+        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:events:action/PutEvents`,
         credentials: args.executionRoleArn,
       },
       { parent: this },
@@ -743,6 +766,116 @@ class EventRoute extends pulumi.ComponentResource {
 
     this.registerOutputs({
       resource: this.#resource.id,
+      method: this.#method.id,
+      integration: this.#integration.id,
+    });
+  }
+}
+
+interface PapercutSecureBridgeRouteArgs {
+  restApiId: aws.apigateway.RestApi["id"];
+  parentId: aws.apigateway.Resource["id"];
+  pathPart: pulumi.Input<string>;
+  requestSchema?: pulumi.Input<Record<string, unknown>>;
+  executionRoleArn: aws.iam.Role["arn"];
+  invokeArn: aws.lambda.Function["invokeArn"];
+}
+
+class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
+  #resource: aws.apigateway.Resource;
+  #requestValidator?: aws.apigateway.RequestValidator;
+  #requestModel?: aws.apigateway.Model;
+  #method: aws.apigateway.Method;
+  #integration: aws.apigateway.Integration;
+
+  constructor(
+    name: string,
+    args: PapercutSecureBridgeRouteArgs,
+    opts: pulumi.ComponentResourceOptions,
+  ) {
+    const { AppData } = useResource();
+
+    super(
+      `${AppData.name}:tenant:aws:PapercutSecureBridgeRoute`,
+      name,
+      args,
+      opts,
+    );
+
+    this.#resource = new aws.apigateway.Resource(
+      `${name}Resource`,
+      {
+        restApi: args.restApiId,
+        parentId: args.parentId,
+        pathPart: args.pathPart,
+      },
+      { parent: this },
+    );
+
+    if (args.requestSchema) {
+      this.#requestValidator = new aws.apigateway.RequestValidator(
+        `${name}RequestValidator`,
+        {
+          restApi: args.restApiId,
+          validateRequestBody: true,
+          validateRequestParameters: false,
+        },
+        { parent: this },
+      );
+
+      this.#requestModel = new aws.apigateway.Model(
+        `${name}RequestModel`,
+        {
+          restApi: args.restApiId,
+          contentType: "application/json",
+          schema: pulumi.jsonStringify({
+            $schema: "http://json-schema.org/draft-04/schema#",
+            title: `${name}RequestModel`,
+            type: "object",
+            properties: args.requestSchema,
+          }),
+        },
+        { parent: this },
+      );
+    }
+
+    this.#method = new aws.apigateway.Method(
+      `${name}Method`,
+      {
+        restApi: args.restApiId,
+        resourceId: this.#resource.id,
+        httpMethod: "POST",
+        authorization: "AWS_IAM",
+        requestValidatorId:
+          args.requestSchema && this.#requestValidator
+            ? this.#requestValidator.id
+            : undefined,
+        requestModels:
+          args.requestSchema && this.#requestModel
+            ? { "application/json": this.#requestModel.id }
+            : undefined,
+      },
+      { parent: this },
+    );
+
+    this.#integration = new aws.apigateway.Integration(
+      `${name}Integration`,
+      {
+        restApi: args.restApiId,
+        resourceId: this.#resource.id,
+        httpMethod: this.#method.httpMethod,
+        integrationHttpMethod: "POST",
+        type: "AWS_PROXY",
+        uri: args.invokeArn,
+        credentials: args.executionRoleArn,
+      },
+      { parent: this },
+    );
+
+    this.registerOutputs({
+      resource: this.#resource.id,
+      requestValidator: this.#requestValidator?.id,
+      requestModel: this.#requestModel?.id,
       method: this.#method.id,
       integration: this.#integration.id,
     });

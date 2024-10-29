@@ -44,18 +44,25 @@ export const getProgram = (input: ProgramInput) => async () =>
       { providers: [account.provider] },
     );
 
+    const storage = Storage.getInstance({ providers: [account.provider] });
+
     const api = Api.getInstance(
       {
         tenantId,
         domainName: ssl.domainName,
         certificateArn: ssl.certificateArn,
         cloudfrontKeyPairId: cloudfrontPublicKey.id,
-        papercutSecureBridgeFunctionArn: functions.papercutSecureBridgeArn,
+        papercutSecureBridgeFunction: {
+          invokeArn: functions.papercutSecureBridge.invokeArn,
+        },
+        orderProcessorQueue: {
+          arn: storage.queues.orderProcessor.arn,
+          name: storage.queues.orderProcessor.name,
+          url: storage.queues.orderProcessor.url,
+        },
       },
       { providers: [account.provider] },
     );
-
-    const storage = Storage.getInstance({ providers: [account.provider] });
 
     Router.getInstance(
       {
@@ -76,7 +83,7 @@ export const getProgram = (input: ProgramInput) => async () =>
         tenantId,
         events: {
           tailscaleAuthKeyRotation: {
-            functionArn: functions.tailscaleAuthKeyRotationArn,
+            functionArn: functions.tailscaleAuthKeyRotation.functionArn,
           },
           userSync: {
             functionArn: pulumi.output(UserSync.arn),
