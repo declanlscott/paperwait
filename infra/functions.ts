@@ -45,6 +45,12 @@ new aws.lambda.Permission("UserSyncRulePermission", {
   principalOrgId: organization.id,
 });
 
+export const orderProcessor = new sst.aws.Function("OrderProcessor", {
+  handler: "packages/functions/handlers/node/src/order-processor.handler",
+  timeout: "20 seconds",
+  link: [appData, cloudfrontPrivateKey, db],
+});
+
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
   job: {
     handler:

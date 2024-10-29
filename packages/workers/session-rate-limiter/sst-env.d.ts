@@ -114,6 +114,13 @@ declare module "sst" {
       }
       "type": "sst.sst.Linkable"
     }
+    "OrderProcessor": {
+      "arn": string
+      "invokeArn": string
+      "name": string
+      "roleArn": string
+      "type": "sst.aws.Function"
+    }
     "PartyKitUrl": {
       "type": "sst.sst.Secret"
       "value": string
