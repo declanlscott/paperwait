@@ -24,13 +24,13 @@ export const getProgram = (input: ProgramInput) => async () =>
   withResource(() => {
     const { tenantId, userSyncSchedule, timezone } = input;
 
-    const { CloudfrontPublicKeyPem, UserSync } = useResource();
+    const { CloudfrontPublicKey, UserSync } = useResource();
 
     const account = Account.getInstance({ tenantId });
 
     const cloudfrontPublicKey = new aws.cloudfront.PublicKey(
       "CloudfrontPublicKey",
-      { encodedKey: CloudfrontPublicKeyPem.value },
+      { encodedKey: CloudfrontPublicKey.pem },
       { provider: account.provider },
     );
 

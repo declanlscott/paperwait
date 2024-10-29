@@ -15,7 +15,7 @@ export namespace SecureBridge {
 
     const signedUrl = Cloudfront.getSignedUrl({
       keyPairId: await Cloudfront.getKeyPairId(tenantFqdn),
-      privateKey: Resource.CloudfrontPrivateKeyPem.value,
+      privateKey: Resource.CloudfrontPrivateKey.pem,
       url: Cloudfront.buildUrl(tenantFqdn, [
         "api",
         "papercut",

@@ -1,5 +1,10 @@
 import { db } from "./db";
-import { appData, cloud, cloudfrontPublicKeyPem } from "./misc";
+import {
+  appData,
+  cloud,
+  cloudfrontPrivateKey,
+  cloudfrontPublicKey,
+} from "./misc";
 import { organization } from "./organization";
 import { realtime } from "./realtime";
 import { codeBucket, pulumiBucket } from "./storage";
@@ -24,7 +29,7 @@ sst.Linkable.wrap(sst.aws.Function, (fn) => ({
 export const userSync = new sst.aws.Function("UserSync", {
   handler: "packages/functions/handlers/node/src/user-sync.handler",
   timeout: "20 seconds",
-  link: [db],
+  link: [appData, cloudfrontPrivateKey, db],
 });
 new aws.lambda.Permission("UserSyncSchedulePermission", {
   function: userSync.name,
@@ -205,7 +210,7 @@ export const tenantInfraFunction = new aws.lambda.Function(
     ...link({
       AppData: appData.properties,
       Cloud: cloud.properties,
-      CloudfrontPublicKeyPem: cloudfrontPublicKeyPem.properties,
+      CloudfrontPublicKey: cloudfrontPublicKey.properties,
       Code: code.properties,
       PulumiBucket: pulumiBucket.getSSTLink().properties,
       Realtime: realtime.properties,

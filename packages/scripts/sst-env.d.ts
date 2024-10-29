@@ -52,13 +52,13 @@ declare module "sst" {
       }
       "type": "sst.sst.Linkable"
     }
-    "CloudfrontPrivateKeyPem": {
-      "type": "sst.sst.Linkable"
-      "value": string
+    "CloudfrontPrivateKey": {
+      "pem": string
+      "type": "tls.index/privateKey.PrivateKey"
     }
-    "CloudfrontPublicKeyPem": {
+    "CloudfrontPublicKey": {
+      "pem": string
       "type": "sst.sst.Linkable"
-      "value": string
     }
     "Code": {
       "bucket": {
