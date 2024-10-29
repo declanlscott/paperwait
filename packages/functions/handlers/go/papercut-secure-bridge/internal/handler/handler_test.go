@@ -80,6 +80,37 @@ func TestBridge(t *testing.T) {
 			},
 		},
 		{
+			"getTaskStatus",
+			events.APIGatewayProxyRequest{
+				Path: "/papercut/secure-bridge/getTaskStatus",
+			},
+			`<?xml version="1.0"?>
+			<methodResponse>
+				<params>
+					<param>
+						<value>
+							<struct>
+								<member>
+									<name>completed</name>
+									<value>
+										<boolean>1</boolean>
+									</value>
+								</member>
+								<member>
+									<name>message</name>
+									<value></value>
+								</member>
+							</struct>
+						</value>
+					</param>
+				</params>
+			</methodResponse>`,
+			events.APIGatewayProxyResponse{
+				StatusCode: http.StatusOK,
+				Body:       `{"struct":{"completed":true,"message":""}}`,
+			},
+		},
+		{
 			"isUserExists",
 			events.APIGatewayProxyRequest{
 				Path: "/papercut/secure-bridge/isUserExists",

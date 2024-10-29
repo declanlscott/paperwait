@@ -4,6 +4,7 @@ const (
 	MethodPrefix                      = "api."
 	AdjustSharedAccountAccountBalance = "adjustSharedAccountAccountBalance"
 	GetSharedAccountProperties        = "getSharedAccountProperties"
+	GetTaskStatus                     = "getTaskStatus"
 	IsUserExists                      = "isUserExists"
 	ListSharedAccounts                = "listSharedAccounts"
 	ListUserAccounts                  = "listUserAccounts"
@@ -36,6 +37,13 @@ type GetSharedAccountPropertiesArgs struct {
 }
 type GetSharedAccountPropertiesReply struct {
 	Properties []any `json:"properties"`
+}
+
+type GetTaskStatusReply struct {
+	Struct struct {
+		Completed bool `json:"completed"`
+		Message   any  `json:"message"`
+	} `json:"struct"`
 }
 
 type IsUserExistsRequestBody struct {

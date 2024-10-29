@@ -133,6 +133,13 @@ func Bridge(
 				},
 				&papercut.GetSharedAccountPropertiesReply{},
 			)
+		case papercut.GetTaskStatus:
+			data, err = papercut.Call(
+				client,
+				methodName,
+				nil,
+				&papercut.GetTaskStatusReply{},
+			)
 		case papercut.IsUserExists:
 			var reqBody papercut.IsUserExistsRequestBody
 			if err := json.Unmarshal([]byte(req.Body), &reqBody); err != nil {
