@@ -137,6 +137,7 @@ declare module "sst" {
     }
     "UserSync": {
       "arn": string
+      "invokeArn": string
       "name": string
       "roleArn": string
       "type": "sst.aws.Function"

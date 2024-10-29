@@ -15,6 +15,7 @@ sst.Linkable.wrap(sst.aws.Function, (fn) => ({
   properties: {
     name: fn.name,
     arn: fn.arn,
+    invokeArn: fn.nodes.function.invokeArn,
     roleArn: fn.nodes.role.arn,
   },
   include: [
