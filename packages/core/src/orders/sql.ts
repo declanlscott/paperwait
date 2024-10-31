@@ -1,4 +1,4 @@
-import { foreignKey, index } from "drizzle-orm/pg-core";
+import { foreignKey, index, jsonb } from "drizzle-orm/pg-core";
 
 import { bigintString, id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
@@ -8,6 +8,7 @@ import { usersTable } from "../users/sql";
 import { ordersTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";
+import type { OrderAttributes } from "./shared";
 
 export const ordersTable = tenantTable(
   ordersTableName,
@@ -17,6 +18,7 @@ export const ordersTable = tenantTable(
     operatorId: id("operator_id"),
     productId: id("product_id").notNull(),
     papercutAccountId: bigintString("papercut_account_id").notNull(),
+    attributes: jsonb("attributes").$type<OrderAttributes>().notNull(),
   },
   (table) => ({
     customerReference: foreignKey({
