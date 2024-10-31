@@ -6,6 +6,28 @@
 
 import { Sha256 } from "@aws-crypto/sha256-js";
 import {
+  AppSyncClient,
+  AssociateApiCommand,
+  CreateApiCommand,
+  CreateApiKeyCommand,
+  CreateChannelNamespaceCommand,
+  CreateDomainNameCommand,
+  DeleteApiCommand,
+  DeleteApiKeyCommand,
+  DeleteChannelNamespaceCommand,
+  DeleteDomainNameCommand,
+  DisassociateApiCommand,
+  GetApiAssociationCommand,
+  GetApiCommand,
+  GetChannelNamespaceCommand,
+  GetDomainNameCommand,
+  ListApiKeysCommand,
+  UpdateApiCommand,
+  UpdateApiKeyCommand,
+  UpdateChannelNamespaceCommand,
+  UpdateDomainNameCommand,
+} from "@aws-sdk/client-appsync";
+import {
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
@@ -19,7 +41,6 @@ import {
   PutParameterCommand,
   SSMClient,
 } from "@aws-sdk/client-ssm";
-import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { getSignedUrl as _getSignedUrl } from "@aws-sdk/cloudfront-signer";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -28,6 +49,27 @@ import { SignatureV4 as _SignatureV4 } from "@smithy/signature-v4";
 import { Utils } from ".";
 import { HttpError } from "./errors";
 
+import type {
+  AssociateApiCommandInput,
+  CreateApiCommandInput,
+  CreateApiKeyCommandInput,
+  CreateChannelNamespaceCommandInput,
+  CreateDomainNameCommandInput,
+  DeleteApiCommandInput,
+  DeleteApiKeyCommandInput,
+  DeleteChannelNamespaceCommandInput,
+  DeleteDomainNameCommandInput,
+  DisassociateApiCommandInput,
+  GetApiAssociationCommandInput,
+  GetApiCommandInput,
+  GetChannelNamespaceCommandInput,
+  GetDomainNameCommandInput,
+  ListApiKeysCommandInput,
+  UpdateApiCommandInput,
+  UpdateApiKeyCommandInput,
+  UpdateChannelNamespaceCommandInput,
+  UpdateDomainNameCommandInput,
+} from "@aws-sdk/client-appsync";
 import type {
   DeleteObjectCommandInput,
   GetObjectCommandInput,
@@ -39,8 +81,111 @@ import type {
   GetParameterCommandInput,
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
-import type { AssumeRoleCommandInput, Credentials } from "@aws-sdk/client-sts";
 import type { SignatureV4Init } from "@smithy/signature-v4";
+
+type CommandInput<TCommandInput> = {
+  [TKey in keyof TCommandInput]: NonNullable<TCommandInput[TKey]>;
+};
+
+export namespace Appsync {
+  export const Client = AppSyncClient;
+  export type Client = AppSyncClient;
+
+  export const createApi = async (
+    client: Client,
+    input: CommandInput<CreateApiCommandInput>,
+  ) => client.send(new CreateApiCommand(input));
+
+  export const getApi = async (
+    client: Client,
+    input: CommandInput<GetApiCommandInput>,
+  ) => client.send(new GetApiCommand(input));
+
+  export const updateApi = async (
+    client: Client,
+    input: CommandInput<UpdateApiCommandInput>,
+  ) => client.send(new UpdateApiCommand(input));
+
+  export const deleteApi = async (
+    client: Client,
+    input: CommandInput<DeleteApiCommandInput>,
+  ) => client.send(new DeleteApiCommand(input));
+
+  export const createDomainName = async (
+    client: Client,
+    input: CommandInput<CreateDomainNameCommandInput>,
+  ) => client.send(new CreateDomainNameCommand(input));
+
+  export const getDomainName = async (
+    client: Client,
+    input: CommandInput<GetDomainNameCommandInput>,
+  ) => client.send(new GetDomainNameCommand(input));
+
+  export const updateDomainName = async (
+    client: Client,
+    input: CommandInput<UpdateDomainNameCommandInput>,
+  ) => client.send(new UpdateDomainNameCommand(input));
+
+  export const deleteDomainName = async (
+    client: Client,
+    input: CommandInput<DeleteDomainNameCommandInput>,
+  ) => client.send(new DeleteDomainNameCommand(input));
+
+  export const associateApi = async (
+    client: Client,
+    input: CommandInput<AssociateApiCommandInput>,
+  ) => client.send(new AssociateApiCommand(input));
+
+  export const getApiAssociation = async (
+    client: Client,
+    input: CommandInput<GetApiAssociationCommandInput>,
+  ) => client.send(new GetApiAssociationCommand(input));
+
+  export const disassociateApi = async (
+    client: Client,
+    input: CommandInput<DisassociateApiCommandInput>,
+  ) => client.send(new DisassociateApiCommand(input));
+
+  export const createChannelNamespace = async (
+    client: Client,
+    input: CommandInput<CreateChannelNamespaceCommandInput>,
+  ) => client.send(new CreateChannelNamespaceCommand(input));
+
+  export const getChannelNamespace = async (
+    client: Client,
+    input: CommandInput<GetChannelNamespaceCommandInput>,
+  ) => client.send(new GetChannelNamespaceCommand(input));
+
+  export const updateChannelNamespace = async (
+    client: Client,
+    input: CommandInput<UpdateChannelNamespaceCommandInput>,
+  ) => client.send(new UpdateChannelNamespaceCommand(input));
+
+  export const deleteChannelNamespace = async (
+    client: Client,
+    input: CommandInput<DeleteChannelNamespaceCommandInput>,
+  ) => client.send(new DeleteChannelNamespaceCommand(input));
+
+  export const createApiKey = async (
+    client: Client,
+    input: CommandInput<CreateApiKeyCommandInput>,
+  ) => client.send(new CreateApiKeyCommand(input));
+
+  export const updateApiKey = async (
+    client: Client,
+    input: CommandInput<UpdateApiKeyCommandInput>,
+  ) => client.send(new UpdateApiKeyCommand(input));
+
+  export const listApiKeys = async (
+    client: Client,
+    input: CommandInput<ListApiKeysCommandInput>,
+  ) => client.send(new ListApiKeysCommand(input));
+
+  export const deleteApiKey = async (
+    client: Client,
+    input: CommandInput<DeleteApiKeyCommandInput>,
+  ) => client.send(new DeleteApiKeyCommand(input));
+}
 
 export namespace Cloudfront {
   export const buildUrl = (fqdn: string, pathSegments: Array<string>) =>
@@ -70,23 +215,21 @@ export namespace S3 {
   export type Client = S3Client;
 
   export const getSignedPutUrl = (
-    client: S3Client,
-    input: PutObjectCommandInput,
+    client: Client,
+    input: CommandInput<PutObjectCommandInput>,
     args?: RequestPresigningArguments,
   ) => getSignedUrl(client, new PutObjectCommand(input), args);
 
   export const getSignedGetUrl = (
-    client: S3Client,
-    input: GetObjectCommandInput,
+    client: Client,
+    input: CommandInput<GetObjectCommandInput>,
     args?: RequestPresigningArguments,
   ) => getSignedUrl(client, new GetObjectCommand(input), args);
 
-  export async function deleteObject(
-    client: S3Client,
-    input: DeleteObjectCommandInput,
-  ) {
-    await client.send(new DeleteObjectCommand(input));
-  }
+  export const deleteObject = async (
+    client: Client,
+    input: CommandInput<DeleteObjectCommandInput>,
+  ) => client.send(new DeleteObjectCommand(input));
 }
 
 export namespace SignatureV4 {
@@ -109,40 +252,24 @@ export namespace Sqs {
   export const Client = SQSClient;
   export type Client = SQSClient;
 
-  export async function sendMessage(
-    client: SQSClient,
-    input: {
-      [TKey in keyof SendMessageCommandInput]: NonNullable<
-        SendMessageCommandInput[TKey]
-      >;
-    },
-  ) {
-    await client.send(new SendMessageCommand(input));
-  }
+  export const sendMessage = async (
+    client: Client,
+    input: CommandInput<SendMessageCommandInput>,
+  ) => client.send(new SendMessageCommand(input));
 }
 
 export namespace Ssm {
   export const Client = SSMClient;
   export type Client = SSMClient;
 
-  export async function putParameter(
-    client: SSMClient,
-    input: {
-      [TKey in keyof PutParameterCommandInput]: NonNullable<
-        PutParameterCommandInput[TKey]
-      >;
-    },
-  ) {
-    await client.send(new PutParameterCommand(input));
-  }
+  export const putParameter = async (
+    client: Client,
+    input: CommandInput<PutParameterCommandInput>,
+  ) => client.send(new PutParameterCommand(input));
 
   export async function getParameter(
-    client: SSMClient,
-    input: {
-      [TKey in keyof GetParameterCommandInput]: NonNullable<
-        GetParameterCommandInput[TKey]
-      >;
-    },
+    client: Client,
+    input: CommandInput<GetParameterCommandInput>,
   ) {
     const { Parameter, $metadata } = await client.send(
       new GetParameterCommand(input),
@@ -156,32 +283,8 @@ export namespace Ssm {
     return Parameter.Value;
   }
 
-  export async function deleteParameter(
-    client: SSMClient,
-    input: {
-      [TKey in keyof DeleteParameterCommandInput]: NonNullable<
-        DeleteParameterCommandInput[TKey]
-      >;
-    },
-  ) {
-    await client.send(new DeleteParameterCommand(input));
-  }
-}
-
-export namespace Sts {
-  export const Client = STSClient;
-  export type Client = STSClient;
-
-  export type NonNullableCredentials = {
-    [TKey in keyof Credentials]: NonNullable<Credentials[TKey]>;
-  };
-
-  export const assumeRole = async (
-    client: STSClient,
-    input: {
-      [TKey in keyof AssumeRoleCommandInput]: NonNullable<
-        AssumeRoleCommandInput[TKey]
-      >;
-    },
-  ) => client.send(new AssumeRoleCommand(input));
+  export const deleteParameter = async (
+    client: Client,
+    input: CommandInput<DeleteParameterCommandInput>,
+  ) => client.send(new DeleteParameterCommand(input));
 }
