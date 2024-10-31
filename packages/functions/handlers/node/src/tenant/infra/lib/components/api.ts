@@ -316,7 +316,7 @@ export class Api extends pulumi.ComponentResource {
           restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "adjustSharedAccountAccountBalance",
-          requestSchema: {
+          requestSchemaProperties: {
             sharedAccountName: {
               type: "string",
             },
@@ -341,7 +341,7 @@ export class Api extends pulumi.ComponentResource {
           restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "getSharedAccountProperties",
-          requestSchema: {
+          requestSchemaProperties: {
             sharedAccountName: {
               type: "string",
             },
@@ -380,7 +380,7 @@ export class Api extends pulumi.ComponentResource {
           restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "isUserExists",
-          requestSchema: {
+          requestSchemaProperties: {
             username: {
               type: "string",
             },
@@ -399,7 +399,7 @@ export class Api extends pulumi.ComponentResource {
           restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "listSharedAccounts",
-          requestSchema: {
+          requestSchemaProperties: {
             offset: {
               type: "integer",
             },
@@ -421,7 +421,7 @@ export class Api extends pulumi.ComponentResource {
           restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "listUserAccounts",
-          requestSchema: {
+          requestSchemaProperties: {
             username: {
               type: "string",
             },
@@ -446,7 +446,7 @@ export class Api extends pulumi.ComponentResource {
           restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "listUserSharedAccounts",
-          requestSchema: {
+          requestSchemaProperties: {
             username: {
               type: "string",
             },
@@ -501,6 +501,8 @@ export class Api extends pulumi.ComponentResource {
               type: "string",
             },
           },
+          required: ["orderId"],
+          additionalProperties: false,
         }),
       },
       { parent: this },
@@ -600,6 +602,7 @@ export class Api extends pulumi.ComponentResource {
               },
             },
           },
+          required: ["paths"],
           additionalProperties: false,
         }),
       },
@@ -911,7 +914,8 @@ interface PapercutSecureBridgeRouteArgs {
   restApiId: aws.apigateway.RestApi["id"];
   parentId: aws.apigateway.Resource["id"];
   pathPart: pulumi.Input<string>;
-  requestSchema?: pulumi.Input<Record<string, unknown>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  requestSchemaProperties?: pulumi.Input<Record<string, any>>;
   executionRoleArn: aws.iam.Role["arn"];
   invokeArn: aws.lambda.Function["invokeArn"];
 }
@@ -947,7 +951,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    if (args.requestSchema) {
+    if (args.requestSchemaProperties) {
       this.#requestValidator = new aws.apigateway.RequestValidator(
         `${name}RequestValidator`,
         {
@@ -963,12 +967,18 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
         {
           restApi: args.restApiId,
           contentType: "application/json",
-          schema: pulumi.jsonStringify({
-            $schema: "http://json-schema.org/draft-04/schema#",
-            title: `${name}RequestModel`,
-            type: "object",
-            properties: args.requestSchema,
-          }),
+          schema: pulumi
+            .output(args.requestSchemaProperties)
+            .apply((properties) =>
+              JSON.stringify({
+                $schema: "http://json-schema.org/draft-04/schema#",
+                title: `${name}RequestModel`,
+                type: "object",
+                properties,
+                required: Object.keys(properties),
+                additionalProperties: false,
+              }),
+            ),
         },
         { parent: this },
       );
@@ -982,11 +992,11 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
         httpMethod: "POST",
         authorization: "AWS_IAM",
         requestValidatorId:
-          args.requestSchema && this.#requestValidator
+          args.requestSchemaProperties && this.#requestValidator
             ? this.#requestValidator.id
             : undefined,
         requestModels:
-          args.requestSchema && this.#requestModel
+          args.requestSchemaProperties && this.#requestModel
             ? { "application/json": this.#requestModel.name }
             : undefined,
       },
