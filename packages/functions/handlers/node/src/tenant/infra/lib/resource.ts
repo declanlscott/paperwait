@@ -13,8 +13,9 @@ export type CustomResource = {
     | "Cloud"
     | "CloudfrontPublicKey"
     | "PulumiBucket"
+    | "OrdersProcessor"
     | "Realtime"
-    | "UserSync"
+    | "UsersSync"
     | "Web"
   >]: Omit<Resource[TKey], "type">;
 };

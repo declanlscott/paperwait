@@ -29,9 +29,26 @@ export const codeBucket = new sst.aws.Bucket("CodeBucket", {
 
 export const pulumiBucket = new sst.aws.Bucket("PulumiBucket");
 
-export const infraDeadLetterQueue = new sst.aws.Queue("InfraDeadLetterQueue");
+export const infraDeadLetterQueue = new sst.aws.Queue("InfraDeadLetterQueue", {
+  transform: {
+    queue: {
+      messageRetentionSeconds: 1209600, // 14 days
+    },
+  },
+});
 
 export const tenantInfraQueue = new sst.aws.Queue("TenantInfraQueue", {
   dlq: infraDeadLetterQueue.arn,
-  visibilityTimeout: "5 minutes",
+  visibilityTimeout: "15 minutes",
 });
+
+export const ordersProcessorDeadLetterQueue = new sst.aws.Queue(
+  "OrdersProcessorDeadLetterQueue",
+  {
+    transform: {
+      queue: {
+        messageRetentionSeconds: 1209600, // 14 days
+      },
+    },
+  },
+);

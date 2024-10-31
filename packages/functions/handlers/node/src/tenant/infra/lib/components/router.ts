@@ -201,7 +201,7 @@ export class Router extends pulumi.ComponentResource {
         viewerCertificate: {
           acmCertificateArn: args.certificateArn,
           sslSupportMethod: "sni-only",
-          minimumProtocolVersion: "TLSv1.2#2021",
+          minimumProtocolVersion: "TLSv1.2_2021",
         },
         waitForDeployment: false,
       },
@@ -229,6 +229,10 @@ export class Router extends pulumi.ComponentResource {
       distribution: this.#distribution.id,
       cname: this.#cname.id,
     });
+  }
+
+  get distributionId() {
+    return this.#distribution.id;
   }
 }
 

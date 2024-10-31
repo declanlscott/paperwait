@@ -1,3 +1,4 @@
+import { Utils } from "@paperwait/core/utils";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -5,14 +6,19 @@ import { useResource } from "../resource";
 
 export interface EventsArgs {
   tenantId: pulumi.Input<string>;
+  domainName: aws.acm.Certificate["domainName"];
   events: {
     tailscaleAuthKeyRotation: {
       functionArn: aws.lambda.Function["arn"];
     };
-    userSync: {
+    usersSync: {
       functionArn: aws.lambda.Function["arn"];
       scheduleExpression: pulumi.Input<string>;
       timezone: pulumi.Input<string>;
+    };
+    ordersProcessor: {
+      queueArn: aws.sqs.Queue["arn"];
+      functionArn: aws.lambda.Function["arn"];
     };
   };
 }
@@ -21,6 +27,8 @@ export class Events extends pulumi.ComponentResource {
   static #instance: Events;
 
   #events: Array<ScheduledEvent | PatternedEvent> = [];
+  #ordersProcessorPipeRole: aws.iam.Role;
+  #ordersProcessorPipe: aws.pipes.Pipe;
 
   static getInstance(args: EventsArgs, opts: pulumi.ComponentResourceOptions) {
     if (!this.#instance) this.#instance = new Events(args, opts);
@@ -54,7 +62,10 @@ export class Events extends pulumi.ComponentResource {
         "PatternedTailscaleAuthKeyRotation",
         {
           pattern: pulumi.jsonStringify({
-            "detail-type": ["tailscale-auth-key-rotation"],
+            "detail-type": ["TailscaleAuthKeyRotation"],
+            source: args.domainName.apply((domainName) =>
+              Utils.reverseDns(domainName),
+            ),
           }),
           functionTarget: {
             arn: args.events.tailscaleAuthKeyRotation.functionArn,
@@ -67,16 +78,16 @@ export class Events extends pulumi.ComponentResource {
 
     this.#events.push(
       new ScheduledEvent(
-        "ScheduledUserSync",
+        "ScheduledUsersSync",
         {
-          scheduleExpression: args.events.userSync.scheduleExpression,
+          scheduleExpression: args.events.usersSync.scheduleExpression,
           flexibleTimeWindow: {
             mode: "FLEXIBLE",
             maximumWindowInMinutes: 15,
           },
-          timezone: args.events.userSync.timezone,
+          timezone: args.events.usersSync.timezone,
           functionTarget: {
-            arn: args.events.userSync.functionArn,
+            arn: args.events.usersSync.functionArn,
             input: pulumi.jsonStringify({ tenantId: args.tenantId }),
           },
         },
@@ -86,20 +97,112 @@ export class Events extends pulumi.ComponentResource {
 
     this.#events.push(
       new PatternedEvent(
-        "PatternedUserSync",
+        "PatternedUsersSync",
         {
           pattern: pulumi.jsonStringify({
-            "detail-type": ["user-sync"],
+            "detail-type": ["UsersSync"],
+            source: args.domainName.apply((domainName) =>
+              Utils.reverseDns(domainName),
+            ),
           }),
           functionTarget: {
-            arn: args.events.userSync.functionArn,
-            input: pulumi.jsonStringify({ tenantId: args.tenantId }),
+            arn: args.events.usersSync.functionArn,
             createPermission: false,
           },
         },
         { parent: this },
       ),
     );
+
+    this.#ordersProcessorPipeRole = new aws.iam.Role(
+      "OrdersProcessorPipeRole",
+      {
+        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
+          statements: [
+            {
+              actions: ["sts:AssumeRole"],
+              principals: [
+                {
+                  type: "Service",
+                  identifiers: ["pipes.amazonaws.com"],
+                },
+              ],
+            },
+          ],
+        }).json,
+      },
+      { parent: this },
+    );
+    new aws.iam.RolePolicy(
+      "OrdersProcessorPipeInlinePolicy",
+      {
+        role: this.#ordersProcessorPipeRole.name,
+        policy: aws.iam.getPolicyDocumentOutput({
+          statements: [
+            {
+              actions: [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+              ],
+              resources: [args.events.ordersProcessor.queueArn],
+            },
+            {
+              actions: ["events:PutEvents"],
+              resources: [
+                aws.cloudwatch.getEventBusOutput({ name: "default" }).arn,
+              ],
+            },
+          ],
+        }).json,
+      },
+      { parent: this },
+    );
+
+    this.#ordersProcessorPipe = new aws.pipes.Pipe(
+      "OrdersProcessorPipe",
+      {
+        roleArn: this.#ordersProcessorPipeRole.arn,
+        source: args.events.ordersProcessor.queueArn,
+        sourceParameters: {
+          sqsQueueParameters: {
+            batchSize: 10,
+            maximumBatchingWindowInSeconds: 60,
+          },
+        },
+        target: args.events.ordersProcessor.functionArn,
+        targetParameters: {
+          eventbridgeEventBusParameters: {
+            detailType: "OrdersProcessor",
+            source: args.events.ordersProcessor.queueArn,
+          },
+        },
+      },
+      { parent: this },
+    );
+
+    this.#events.push(
+      new PatternedEvent(
+        "PatternedOrdersProcessor",
+        {
+          pattern: pulumi.jsonStringify({
+            "detail-type": ["OrdersProcessor"],
+            source: [args.events.ordersProcessor.queueArn],
+          }),
+          functionTarget: {
+            arn: args.events.ordersProcessor.functionArn,
+            createPermission: false,
+          },
+          withDeadLetterQueue: true,
+        },
+        { parent: this },
+      ),
+    );
+
+    this.registerOutputs({
+      ordersProcessorPipeRole: this.#ordersProcessorPipeRole.id,
+      ordersProcessorPipe: this.#ordersProcessorPipe.id,
+    });
   }
 }
 
@@ -188,13 +291,14 @@ interface PatternedEventArgs {
   pattern: pulumi.Input<string>;
   functionTarget: {
     arn: aws.lambda.Function["arn"];
-    input?: pulumi.Input<string>;
     createPermission: boolean;
   };
+  withDeadLetterQueue?: boolean;
 }
 
 class PatternedEvent extends pulumi.ComponentResource {
   #rule: aws.cloudwatch.EventRule;
+  #deadLetterQueue?: aws.sqs.Queue;
   #target: aws.cloudwatch.EventTarget;
   #permission?: aws.lambda.Permission;
 
@@ -213,11 +317,24 @@ class PatternedEvent extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    if (args.withDeadLetterQueue)
+      this.#deadLetterQueue = new aws.sqs.Queue(
+        "DeadLetterQueue",
+        {
+          messageRetentionSeconds: 1209600, // 14 days
+        },
+        { parent: this },
+      );
+
     this.#target = new aws.cloudwatch.EventTarget(
       `${name}Target`,
       {
         arn: args.functionTarget.arn,
         rule: this.#rule.name,
+        deadLetterConfig:
+          args.withDeadLetterQueue && this.#deadLetterQueue
+            ? { arn: this.#deadLetterQueue.arn }
+            : undefined,
       },
       { parent: this },
     );

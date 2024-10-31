@@ -5,6 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { useResource } from "../resource";
 
 export interface ApiArgs {
+  gateway: aws.apigateway.RestApi;
   tenantId: pulumi.Input<string>;
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
@@ -12,18 +13,18 @@ export interface ApiArgs {
   papercutSecureBridgeFunction: {
     invokeArn: aws.lambda.Function["invokeArn"];
   };
-  orderProcessorQueue: {
+  ordersProcessorQueue: {
     arn: aws.sqs.Queue["arn"];
     name: aws.sqs.Queue["name"];
     url: aws.sqs.Queue["url"];
   };
+  distributionId: pulumi.Input<string>;
 }
 
 export class Api extends pulumi.ComponentResource {
   static #instance: Api;
 
   #role: aws.iam.Role;
-  #api: aws.apigateway.RestApi;
   #apiPolicy: aws.apigateway.RestApiPolicy;
   #domainName: aws.apigateway.DomainName;
 
@@ -34,8 +35,12 @@ export class Api extends pulumi.ComponentResource {
   #appSpecificResource: aws.apigateway.Resource;
   #wellKnownAppSpecificRoutes: Array<WellKnownAppSpecificRoute> = [];
 
-  #eventsResource: aws.apigateway.Resource;
-  #eventRoutes: Array<EventRoute> = [];
+  #tailscaleResource: aws.apigateway.Resource;
+  #tailscaleAuthKeyResource: aws.apigateway.Resource;
+  #tailscaleAuthKeyRotationRoute: EventRoute;
+
+  #usersResource: aws.apigateway.Resource;
+  #usersSyncRoute: EventRoute;
 
   #papercutResource: aws.apigateway.Resource;
   #secureBridgeResource: aws.apigateway.Resource;
@@ -46,6 +51,13 @@ export class Api extends pulumi.ComponentResource {
   #enqueueOrderRequestModel: aws.apigateway.Model;
   #enqueueOrderMethod: aws.apigateway.Method;
   #enqueueOrderIntegration: aws.apigateway.Integration;
+
+  #cdnResource: aws.apigateway.Resource;
+  #invalidationResource: aws.apigateway.Resource;
+  #invalidationRequestValidator: aws.apigateway.RequestValidator;
+  #invalidationRequestModel: aws.apigateway.Model;
+  #invalidationMethod: aws.apigateway.Method;
+  #invalidationIntegration: aws.apigateway.Integration;
 
   #logGroup: aws.cloudwatch.LogGroup;
   #deployment: aws.apigateway.Deployment;
@@ -61,7 +73,7 @@ export class Api extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Api.getInstance>) {
-    const { AppData, Cloud, UserSync, Web } = useResource();
+    const { AppData, Cloud, UsersSync, Web } = useResource();
 
     super(`${AppData.name}:tenant:aws:Api`, "Api", args, opts);
 
@@ -101,7 +113,15 @@ export class Api extends pulumi.ComponentResource {
             },
             {
               actions: ["sqs:SendMessage"],
-              resources: [args.orderProcessorQueue.arn],
+              resources: [args.ordersProcessorQueue.arn],
+            },
+            {
+              actions: ["cloudfront:CreateInvalidation"],
+              resources: [
+                aws.cloudfront.getDistributionOutput({
+                  id: args.distributionId,
+                }).arn,
+              ],
             },
           ],
         }).json,
@@ -109,31 +129,21 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#api = new aws.apigateway.RestApi(
-      "Api",
-      {
-        endpointConfiguration: {
-          types: "REGIONAL",
-        },
-      },
-      { parent: this },
-    );
-
     this.#apiPolicy = new aws.apigateway.RestApiPolicy(
       "ApiPolicy",
       {
-        restApiId: this.#api.id,
+        restApiId: args.gateway.id,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
               principals: [
                 {
                   type: "AWS",
-                  identifiers: [UserSync.roleArn, Web.server.role.principal],
+                  identifiers: [UsersSync.roleArn, Web.server.role.principal],
                 },
               ],
               actions: ["execute-api:Invoke"],
-              resources: [pulumi.interpolate`${this.#api.executionArn}/*`],
+              resources: [pulumi.interpolate`${args.gateway.executionArn}/*`],
               conditions:
                 Web.server.role.principal === "*"
                   ? [
@@ -157,7 +167,7 @@ export class Api extends pulumi.ComponentResource {
       "DomainName",
       {
         domainName: args.domainName,
-        endpointConfiguration: this.#api.endpointConfiguration,
+        endpointConfiguration: args.gateway.endpointConfiguration,
         regionalCertificateArn: args.certificateArn,
       },
       { parent: this },
@@ -166,8 +176,8 @@ export class Api extends pulumi.ComponentResource {
     this.#wellKnownResource = new aws.apigateway.Resource(
       "WellKnownResource",
       {
-        restApi: this.#api.id,
-        parentId: this.#api.rootResourceId,
+        restApi: args.gateway.id,
+        parentId: args.gateway.rootResourceId,
         pathPart: ".well-known",
       },
       { parent: this },
@@ -176,7 +186,7 @@ export class Api extends pulumi.ComponentResource {
     this.#appSpecificResource = new aws.apigateway.Resource(
       "AppSpecificResource",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         parentId: this.#wellKnownResource.id,
         pathPart: "appspecific",
       },
@@ -187,7 +197,7 @@ export class Api extends pulumi.ComponentResource {
       new WellKnownAppSpecificRoute(
         "CloudfrontKeyPairIdRoute",
         {
-          apiId: this.#api.id,
+          apiId: args.gateway.id,
           parentId: this.#appSpecificResource.id,
           pathPart: args.domainName.apply(
             (domainName) =>
@@ -201,73 +211,89 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
-    this.#eventsResource = new aws.apigateway.Resource(
-      "EventsResource",
+    this.#tailscaleResource = new aws.apigateway.Resource(
+      "TailscaleResource",
       {
-        restApi: this.#api.id,
-        parentId: this.#api.rootResourceId,
-        pathPart: "events",
+        restApi: args.gateway.id,
+        parentId: args.gateway.rootResourceId,
+        pathPart: "tailscale",
       },
       { parent: this },
     );
 
-    this.#eventRoutes.push(
-      new EventRoute(
-        "TailscaleAuthKeyRotationRoute",
-        {
-          restApiId: this.#api.id,
-          parentId: this.#eventsResource.id,
-          pathPart: "tailscale-auth-key-rotation",
-          executionRoleArn: this.#role.arn,
-          requestTemplate: args.domainName.apply(
-            (domainName) => `
+    this.#tailscaleAuthKeyResource = new aws.apigateway.Resource(
+      "TailscaleAuthKeyResource",
+      {
+        restApi: args.gateway.id,
+        parentId: this.#tailscaleResource.id,
+        pathPart: "auth-key",
+      },
+      { parent: this },
+    );
+
+    this.#tailscaleAuthKeyRotationRoute = new EventRoute(
+      "TailscaleAuthKeyRotationRoute",
+      {
+        restApiId: args.gateway.id,
+        parentId: this.#tailscaleAuthKeyResource.id,
+        pathPart: "rotation",
+        executionRoleArn: this.#role.arn,
+        requestTemplate: args.domainName.apply(
+          (domainName) => `
 {
 "Entries": [
   {
     "Detail": "{}",
-    "DetailType": "tailscale-auth-key-rotation",
+    "DetailType": "TailscaleAuthKeyRotation",
     "EventBusName": "default",
     "Source":"${Utils.reverseDns(domainName)}"
   }
 ]
 }`,
-          ),
-        },
-        { parent: this },
-      ),
+        ),
+      },
+      { parent: this },
     );
 
-    this.#eventRoutes.push(
-      new EventRoute(
-        "UserSyncRoute",
-        {
-          restApiId: this.#api.id,
-          parentId: this.#eventsResource.id,
-          pathPart: "user-sync",
-          executionRoleArn: this.#role.arn,
-          requestTemplate: pulumi.all([args.tenantId, args.domainName]).apply(
-            ([tenantId, domainName]) => `
+    this.#usersResource = new aws.apigateway.Resource(
+      "UsersResource",
+      {
+        restApi: args.gateway.id,
+        parentId: args.gateway.rootResourceId,
+        pathPart: "users",
+      },
+      { parent: this },
+    );
+
+    this.#usersSyncRoute = new EventRoute(
+      "UsersSyncRoute",
+      {
+        restApiId: args.gateway.id,
+        parentId: this.#usersResource.id,
+        pathPart: "sync",
+        executionRoleArn: this.#role.arn,
+        requestTemplate: pulumi.all([args.tenantId, args.domainName]).apply(
+          ([tenantId, domainName]) => `
 {
 "Entries": [
   {
     "Detail": "{\\"tenantId\\":\\"${tenantId}\\"}",
-    "DetailType": "user-sync",
+    "DetailType": "UsersSync",
     "EventBusName": "default",
     "Source":"${Utils.reverseDns(domainName)}"
   }
 ]
 }`,
-          ),
-        },
-        { parent: this },
-      ),
+        ),
+      },
+      { parent: this },
     );
 
     this.#papercutResource = new aws.apigateway.Resource(
       "PapercutResource",
       {
-        restApi: this.#api.id,
-        parentId: this.#api.rootResourceId,
+        restApi: args.gateway.id,
+        parentId: args.gateway.rootResourceId,
         pathPart: "papercut",
       },
       { parent: this },
@@ -276,7 +302,7 @@ export class Api extends pulumi.ComponentResource {
     this.#secureBridgeResource = new aws.apigateway.Resource(
       "SecureBridgeResource",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         parentId: this.#papercutResource.id,
         pathPart: "secure-bridge",
       },
@@ -287,7 +313,7 @@ export class Api extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "AdjustSharedAccountAccountBalanceRoute",
         {
-          restApiId: this.#api.id,
+          restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "adjustSharedAccountAccountBalance",
           requestSchema: {
@@ -312,7 +338,7 @@ export class Api extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "GetSharedAccountPropertiesRoute",
         {
-          restApiId: this.#api.id,
+          restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "getSharedAccountProperties",
           requestSchema: {
@@ -337,7 +363,7 @@ export class Api extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "GetTaskStatusRoute",
         {
-          restApiId: this.#api.id,
+          restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "getTaskStatus",
           invokeArn: args.papercutSecureBridgeFunction.invokeArn,
@@ -351,7 +377,7 @@ export class Api extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "IsUserExistsRoute",
         {
-          restApiId: this.#api.id,
+          restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "isUserExists",
           requestSchema: {
@@ -370,7 +396,7 @@ export class Api extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "ListSharedAccountsRoute",
         {
-          restApiId: this.#api.id,
+          restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "listSharedAccounts",
           requestSchema: {
@@ -392,7 +418,7 @@ export class Api extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "ListUserAccounts",
         {
-          restApiId: this.#api.id,
+          restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "listUserAccounts",
           requestSchema: {
@@ -417,7 +443,7 @@ export class Api extends pulumi.ComponentResource {
       new PapercutSecureBridgeRoute(
         "ListUserSharedAccountsRoute",
         {
-          restApiId: this.#api.id,
+          restApiId: args.gateway.id,
           parentId: this.#secureBridgeResource.id,
           pathPart: "listUserSharedAccounts",
           requestSchema: {
@@ -444,8 +470,8 @@ export class Api extends pulumi.ComponentResource {
     this.#ordersResource = new aws.apigateway.Resource(
       "OrdersResource",
       {
-        restApi: this.#api.id,
-        parentId: this.#api.rootResourceId,
+        restApi: args.gateway.id,
+        parentId: args.gateway.rootResourceId,
         pathPart: "orders",
       },
       { parent: this },
@@ -454,7 +480,7 @@ export class Api extends pulumi.ComponentResource {
     this.#enqueueOrderRequestValidator = new aws.apigateway.RequestValidator(
       "EnqueueOrderRequestValidator",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         validateRequestBody: true,
         validateRequestParameters: false,
       },
@@ -464,7 +490,7 @@ export class Api extends pulumi.ComponentResource {
     this.#enqueueOrderRequestModel = new aws.apigateway.Model(
       "EnqueueOrderRequestModel",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         contentType: "application/json",
         schema: JSON.stringify({
           $schema: "http://json-schema.org/draft-04/schema#",
@@ -483,7 +509,7 @@ export class Api extends pulumi.ComponentResource {
     this.#enqueueOrderMethod = new aws.apigateway.Method(
       "EnqueueOrderMethod",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         resourceId: this.#ordersResource.id,
         httpMethod: "POST",
         authorization: "AWS_IAM",
@@ -498,7 +524,7 @@ export class Api extends pulumi.ComponentResource {
     this.#enqueueOrderIntegration = new aws.apigateway.Integration(
       "EnqueueOrderIntegration",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         resourceId: this.#ordersResource.id,
         httpMethod: this.#enqueueOrderMethod.httpMethod,
         type: "AWS",
@@ -511,12 +537,121 @@ export class Api extends pulumi.ComponentResource {
         requestTemplates: {
           "application/json": pulumi.interpolate`
 {
-  "QueueUrl": "${args.orderProcessorQueue.url}",
+  "QueueUrl": "${args.ordersProcessorQueue.url}",
   "MessageBody": "{\"orderId\":\"$input.path('$.orderId')\",\"tenantId\":\"${args.tenantId}\"}"
 }`,
         },
         passthroughBehavior: "NEVER",
-        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:sqs:path/${args.orderProcessorQueue.name}`,
+        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:sqs:path/${args.ordersProcessorQueue.name}`,
+        credentials: this.#role.arn,
+      },
+      { parent: this },
+    );
+
+    this.#cdnResource = new aws.apigateway.Resource(
+      "CdnResource",
+      {
+        restApi: args.gateway.id,
+        parentId: args.gateway.rootResourceId,
+        pathPart: "cdn",
+      },
+      { parent: this },
+    );
+
+    this.#invalidationResource = new aws.apigateway.Resource(
+      "InvalidationResource",
+      {
+        restApi: args.gateway.id,
+        parentId: this.#cdnResource.id,
+        pathPart: "invalidation",
+      },
+      { parent: this },
+    );
+
+    this.#invalidationRequestValidator = new aws.apigateway.RequestValidator(
+      "InvalidationRequestValidator",
+      {
+        restApi: args.gateway.id,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      },
+      { parent: this },
+    );
+
+    this.#invalidationRequestModel = new aws.apigateway.Model(
+      "InvalidationRequestModel",
+      {
+        restApi: args.gateway.id,
+        contentType: "application/json",
+        schema: JSON.stringify({
+          $schema: "http://json-schema.org/draft-04/schema#",
+          title: "invalidationRequestModel",
+          type: "object",
+          properties: {
+            paths: {
+              type: "array",
+              minItems: 1,
+              maxItems: 100,
+              items: {
+                type: "string",
+                pattern: "^/.*$",
+                minLength: 1,
+                maxLength: 4096,
+              },
+            },
+          },
+          additionalProperties: false,
+        }),
+      },
+      { parent: this },
+    );
+
+    this.#invalidationMethod = new aws.apigateway.Method(
+      "InvalidationMethod",
+      {
+        restApi: args.gateway.id,
+        resourceId: this.#invalidationResource.id,
+        httpMethod: "POST",
+        authorization: "AWS_IAM",
+        requestValidatorId: this.#invalidationRequestValidator.id,
+        requestModels: {
+          "application/json": this.#invalidationRequestModel.name,
+        },
+      },
+      { parent: this },
+    );
+
+    this.#invalidationIntegration = new aws.apigateway.Integration(
+      "InvalidationIntegration",
+      {
+        restApi: args.gateway.id,
+        resourceId: this.#invalidationResource.id,
+        httpMethod: this.#invalidationMethod.httpMethod,
+        type: "AWS",
+        integrationHttpMethod: "POST",
+        requestParameters: {
+          "integration.request.header.Content-Type": "'application/xml'",
+        },
+        requestTemplates: {
+          "application/json": pulumi.interpolate`
+#set($paths = $input.path('$.paths'))
+#set($quantity = $paths.size())
+<?xml version="1.0" encoding="UTF-8"?>
+<InvalidationBatch xmlns="http://cloudfront.amazonaws.com/doc/2020-05-31/">
+  <CallerReference>$context.requestId</CallerReference>
+  <Paths>
+    <Quantity>$quantity</Quantity>
+    <Items>
+      #foreach($path in $paths)
+        <Path>$path</Path>
+      #end
+    </Items>
+  </Paths>
+</InvalidationBatch>
+`,
+        },
+        passthroughBehavior: "NEVER",
+        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:cloudfront:path/${args.distributionId}/invalidation`,
         credentials: this.#role.arn,
       },
       { parent: this },
@@ -525,7 +660,7 @@ export class Api extends pulumi.ComponentResource {
     this.#logGroup = new aws.cloudwatch.LogGroup(
       "LogGroup",
       {
-        name: pulumi.interpolate`/aws/vendedlogs/apis/${this.#api.name}`,
+        name: pulumi.interpolate`/aws/vendedlogs/apis/${args.gateway.name}`,
         retentionInDays: 14,
       },
       { parent: this },
@@ -534,7 +669,7 @@ export class Api extends pulumi.ComponentResource {
     this.#deployment = new aws.apigateway.Deployment(
       "Deployment",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         // TODO: Better triggers based on above resources
         triggers: {
           deployedAt: new Date().toISOString(),
@@ -546,7 +681,7 @@ export class Api extends pulumi.ComponentResource {
     this.#stage = new aws.apigateway.Stage(
       "Stage",
       {
-        restApi: this.#api.id,
+        restApi: args.gateway.id,
         stageName: AppData.stage,
         deployment: this.#deployment.id,
         accessLogSettings: {
@@ -578,14 +713,11 @@ export class Api extends pulumi.ComponentResource {
 
     this.registerOutputs({
       role: this.#role.id,
-      api: this.#api.id,
       apiPolicy: this.#apiPolicy.id,
       domainName: this.#domainName.id,
 
       wellKnownResource: this.#wellKnownResource.id,
       appSpecificResource: this.#appSpecificResource.id,
-
-      eventsResource: this.#eventsResource.id,
 
       papercutResource: this.#papercutResource.id,
       secureBridgeResource: this.#secureBridgeResource.id,
@@ -594,14 +726,17 @@ export class Api extends pulumi.ComponentResource {
       enqueueOrderMethod: this.#enqueueOrderMethod.id,
       enqueueOrderIntegration: this.#enqueueOrderIntegration.id,
 
+      cdnResource: this.#cdnResource.id,
+      invalidationResource: this.#invalidationResource.id,
+      invalidationRequestValidator: this.#invalidationRequestValidator.id,
+      invalidationRequestModel: this.#invalidationRequestModel.id,
+      invalidationMethod: this.#invalidationMethod.id,
+      invalidationIntegration: this.#invalidationIntegration.id,
+
       logGroup: this.#logGroup.id,
       deployment: this.#deployment.id,
       stage: this.#stage.id,
     });
-  }
-
-  get invokeUrl() {
-    return this.#deployment.invokeUrl;
   }
 }
 
@@ -852,7 +987,7 @@ class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
             : undefined,
         requestModels:
           args.requestSchema && this.#requestModel
-            ? { "application/json": this.#requestModel.id }
+            ? { "application/json": this.#requestModel.name }
             : undefined,
       },
       { parent: this },

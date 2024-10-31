@@ -114,12 +114,16 @@ declare module "sst" {
       }
       "type": "sst.sst.Linkable"
     }
-    "OrderProcessor": {
+    "OrdersProcessor": {
       "arn": string
       "invokeArn": string
       "name": string
       "roleArn": string
       "type": "sst.aws.Function"
+    }
+    "OrdersProcessorDeadLetterQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
     }
     "PartyKitUrl": {
       "type": "sst.sst.Secret"
@@ -142,7 +146,7 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
-    "UserSync": {
+    "UsersSync": {
       "arn": string
       "invokeArn": string
       "name": string

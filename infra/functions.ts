@@ -7,7 +7,11 @@ import {
 } from "./misc";
 import { organization } from "./organization";
 import { realtime } from "./realtime";
-import { codeBucket, pulumiBucket } from "./storage";
+import {
+  codeBucket,
+  ordersProcessorDeadLetterQueue,
+  pulumiBucket,
+} from "./storage";
 import { link, normalizePath } from "./utils";
 import { web } from "./web";
 
@@ -27,28 +31,34 @@ sst.Linkable.wrap(sst.aws.Function, (fn) => ({
   ],
 }));
 
-export const userSync = new sst.aws.Function("UserSync", {
-  handler: "packages/functions/handlers/node/src/user-sync.handler",
+export const usersSync = new sst.aws.Function("UsersSync", {
+  handler: "packages/functions/handlers/node/src/users-sync.handler",
   timeout: "20 seconds",
   link: [appData, cloudfrontPrivateKey, db],
 });
-new aws.lambda.Permission("UserSyncSchedulePermission", {
-  function: userSync.name,
+new aws.lambda.Permission("UsersSyncSchedulePermission", {
+  function: usersSync.name,
   action: "lambda:InvokeFunction",
   principal: "scheduler.amazonaws.com",
   principalOrgId: organization.id,
 });
-new aws.lambda.Permission("UserSyncRulePermission", {
-  function: userSync.name,
+new aws.lambda.Permission("UsersSyncRulePermission", {
+  function: usersSync.name,
   action: "lambda:InvokeFunction",
   principal: "events.amazonaws.com",
   principalOrgId: organization.id,
 });
 
-export const orderProcessor = new sst.aws.Function("OrderProcessor", {
-  handler: "packages/functions/handlers/node/src/order-processor.handler",
+export const ordersProcessor = new sst.aws.Function("OrdersProcessor", {
+  handler: "packages/functions/handlers/node/src/orders-processor.handler",
   timeout: "20 seconds",
-  link: [appData, cloudfrontPrivateKey, db],
+  link: [appData, cloudfrontPrivateKey, db, ordersProcessorDeadLetterQueue],
+});
+new aws.lambda.Permission("OrdersProcessorRulePermission", {
+  function: ordersProcessor.name,
+  action: "lambda:InvokeFunction",
+  principal: "events.amazonaws.com",
+  principalOrgId: organization.id,
 });
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
@@ -219,9 +229,10 @@ export const tenantInfraFunction = new aws.lambda.Function(
       Cloud: cloud.properties,
       CloudfrontPublicKey: cloudfrontPublicKey.properties,
       Code: code.properties,
+      OrdersProcessor: ordersProcessor.getSSTLink().properties,
       PulumiBucket: pulumiBucket.getSSTLink().properties,
       Realtime: realtime.properties,
-      UserSync: userSync.getSSTLink().properties,
+      UsersSync: usersSync.getSSTLink().properties,
       Web: web.getSSTLink().properties,
     }),
   },

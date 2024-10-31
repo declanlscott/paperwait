@@ -14,7 +14,7 @@ import { useResource, withResource } from "./resource";
 
 export const programInputSchema = v.object({
   tenantId: nanoIdSchema,
-  userSyncSchedule: v.optional(v.string(), "55 1 * * ? *"),
+  usersSyncSchedule: v.optional(v.string(), "55 1 * * ? *"),
   timezone: v.picklist(Intl.supportedValuesOf("timeZone")),
 });
 
@@ -22,9 +22,10 @@ export type ProgramInput = v.InferOutput<typeof programInputSchema>;
 
 export const getProgram = (input: ProgramInput) => async () =>
   withResource(() => {
-    const { tenantId, userSyncSchedule, timezone } = input;
+    const { tenantId, usersSyncSchedule, timezone } = input;
 
-    const { CloudfrontPublicKey, UserSync } = useResource();
+    const { AppData, Cloud, CloudfrontPublicKey, OrdersProcessor, UsersSync } =
+      useResource();
 
     const account = Account.getInstance({ tenantId });
 
@@ -46,31 +47,21 @@ export const getProgram = (input: ProgramInput) => async () =>
 
     const storage = Storage.getInstance({ providers: [account.provider] });
 
-    const api = Api.getInstance(
-      {
-        tenantId,
-        domainName: ssl.domainName,
-        certificateArn: ssl.certificateArn,
-        cloudfrontKeyPairId: cloudfrontPublicKey.id,
-        papercutSecureBridgeFunction: {
-          invokeArn: functions.papercutSecureBridge.invokeArn,
-        },
-        orderProcessorQueue: {
-          arn: storage.queues.orderProcessor.arn,
-          name: storage.queues.orderProcessor.name,
-          url: storage.queues.orderProcessor.url,
-        },
-      },
-      { providers: [account.provider] },
+    const gateway = new aws.apigateway.RestApi(
+      "Gateway",
+      { endpointConfiguration: { types: "REGIONAL" } },
+      { provider: account.provider },
     );
 
-    Router.getInstance(
+    const router = Router.getInstance(
       {
         domainName: ssl.domainName,
         certificateArn: ssl.certificateArn,
         keyPairId: cloudfrontPublicKey.id,
         routes: {
-          api: { url: api.invokeUrl },
+          api: {
+            url: pulumi.interpolate`https://${gateway.id}.execute-api.${Cloud.aws.region}.amazonaws.com/${AppData.stage}`,
+          },
           assets: { url: storage.buckets.assets.url },
           documents: { url: storage.buckets.documents.url },
         },
@@ -78,17 +69,42 @@ export const getProgram = (input: ProgramInput) => async () =>
       { providers: [account.provider] },
     );
 
+    Api.getInstance(
+      {
+        gateway,
+        tenantId,
+        domainName: ssl.domainName,
+        certificateArn: ssl.certificateArn,
+        cloudfrontKeyPairId: cloudfrontPublicKey.id,
+        papercutSecureBridgeFunction: {
+          invokeArn: functions.papercutSecureBridge.invokeArn,
+        },
+        ordersProcessorQueue: {
+          arn: storage.queues.ordersProcessor.arn,
+          name: storage.queues.ordersProcessor.name,
+          url: storage.queues.ordersProcessor.url,
+        },
+        distributionId: router.distributionId,
+      },
+      { providers: [account.provider] },
+    );
+
     Events.getInstance(
       {
         tenantId,
+        domainName: ssl.domainName,
         events: {
           tailscaleAuthKeyRotation: {
             functionArn: functions.tailscaleAuthKeyRotation.functionArn,
           },
-          userSync: {
-            functionArn: pulumi.output(UserSync.arn),
-            scheduleExpression: `cron(${userSyncSchedule})`,
+          usersSync: {
+            functionArn: pulumi.output(UsersSync.arn),
+            scheduleExpression: `cron(${usersSyncSchedule})`,
             timezone,
+          },
+          ordersProcessor: {
+            queueArn: storage.queues.ordersProcessor.arn,
+            functionArn: pulumi.output(OrdersProcessor.arn),
           },
         },
       },
