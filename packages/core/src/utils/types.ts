@@ -13,3 +13,7 @@ export type CustomError<TError extends AnyError> = {
 
 export type InferCustomError<TCustomError> =
   TCustomError extends CustomError<infer TError> ? CustomError<TError> : never;
+
+export type NonNullableProperties<TInput> = {
+  [TKey in keyof TInput]: NonNullable<TInput[TKey]>;
+};

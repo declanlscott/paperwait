@@ -34,7 +34,7 @@ async function processRecord(record: SQSRecord) {
   const stack = await pulumi.automation.LocalWorkspace.createOrSelectStack(
     {
       projectName,
-      stackName: `${AppData.name}-${AppData.stage}-tenant-${programInput.tenantId}`,
+      stackName: `tenant-${programInput.tenantId}`,
       program: getProgram(programInput),
     },
     {

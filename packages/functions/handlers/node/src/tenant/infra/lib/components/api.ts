@@ -19,6 +19,7 @@ export interface ApiArgs {
     url: aws.sqs.Queue["url"];
   };
   distributionId: pulumi.Input<string>;
+  realtimeApiId: pulumi.Input<string>;
 }
 
 export class Api extends pulumi.ComponentResource {

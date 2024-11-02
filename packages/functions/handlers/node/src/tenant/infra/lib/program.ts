@@ -7,6 +7,7 @@ import { Account } from "./components/account";
 import { Api } from "./components/api";
 import { Events } from "./components/events";
 import { Functions } from "./components/functions";
+import { Realtime } from "./components/realtime";
 import { Router } from "./components/router";
 import { Ssl } from "./components/ssl";
 import { Storage } from "./components/storage";
@@ -47,6 +48,10 @@ export const getProgram = (input: ProgramInput) => async () =>
 
     const storage = Storage.getInstance({ providers: [account.provider] });
 
+    const realtime = Realtime.getInstance({
+      roleArn: account.roleArn,
+    });
+
     const gateway = new aws.apigateway.RestApi(
       "Gateway",
       { endpointConfiguration: { types: "REGIONAL" } },
@@ -85,6 +90,7 @@ export const getProgram = (input: ProgramInput) => async () =>
           url: storage.queues.ordersProcessor.url,
         },
         distributionId: router.distributionId,
+        realtimeApiId: realtime.apiId,
       },
       { providers: [account.provider] },
     );

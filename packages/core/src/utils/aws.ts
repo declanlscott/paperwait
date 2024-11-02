@@ -41,6 +41,7 @@ import {
   PutParameterCommand,
   SSMClient,
 } from "@aws-sdk/client-ssm";
+import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { getSignedUrl as _getSignedUrl } from "@aws-sdk/cloudfront-signer";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -81,11 +82,9 @@ import type {
   GetParameterCommandInput,
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
+import type { AssumeRoleCommandInput, Credentials } from "@aws-sdk/client-sts";
 import type { SignatureV4Init } from "@smithy/signature-v4";
-
-type CommandInput<TCommandInput> = {
-  [TKey in keyof TCommandInput]: NonNullable<TCommandInput[TKey]>;
-};
+import type { NonNullableProperties } from "./types";
 
 export namespace Appsync {
   export const Client = AppSyncClient;
@@ -93,97 +92,97 @@ export namespace Appsync {
 
   export const createApi = async (
     client: Client,
-    input: CommandInput<CreateApiCommandInput>,
+    input: NonNullableProperties<CreateApiCommandInput>,
   ) => client.send(new CreateApiCommand(input));
 
   export const getApi = async (
     client: Client,
-    input: CommandInput<GetApiCommandInput>,
+    input: NonNullableProperties<GetApiCommandInput>,
   ) => client.send(new GetApiCommand(input));
 
   export const updateApi = async (
     client: Client,
-    input: CommandInput<UpdateApiCommandInput>,
+    input: NonNullableProperties<UpdateApiCommandInput>,
   ) => client.send(new UpdateApiCommand(input));
 
   export const deleteApi = async (
     client: Client,
-    input: CommandInput<DeleteApiCommandInput>,
+    input: NonNullableProperties<DeleteApiCommandInput>,
   ) => client.send(new DeleteApiCommand(input));
 
   export const createDomainName = async (
     client: Client,
-    input: CommandInput<CreateDomainNameCommandInput>,
+    input: NonNullableProperties<CreateDomainNameCommandInput>,
   ) => client.send(new CreateDomainNameCommand(input));
 
   export const getDomainName = async (
     client: Client,
-    input: CommandInput<GetDomainNameCommandInput>,
+    input: NonNullableProperties<GetDomainNameCommandInput>,
   ) => client.send(new GetDomainNameCommand(input));
 
   export const updateDomainName = async (
     client: Client,
-    input: CommandInput<UpdateDomainNameCommandInput>,
+    input: NonNullableProperties<UpdateDomainNameCommandInput>,
   ) => client.send(new UpdateDomainNameCommand(input));
 
   export const deleteDomainName = async (
     client: Client,
-    input: CommandInput<DeleteDomainNameCommandInput>,
+    input: NonNullableProperties<DeleteDomainNameCommandInput>,
   ) => client.send(new DeleteDomainNameCommand(input));
 
   export const associateApi = async (
     client: Client,
-    input: CommandInput<AssociateApiCommandInput>,
+    input: NonNullableProperties<AssociateApiCommandInput>,
   ) => client.send(new AssociateApiCommand(input));
 
   export const getApiAssociation = async (
     client: Client,
-    input: CommandInput<GetApiAssociationCommandInput>,
+    input: NonNullableProperties<GetApiAssociationCommandInput>,
   ) => client.send(new GetApiAssociationCommand(input));
 
   export const disassociateApi = async (
     client: Client,
-    input: CommandInput<DisassociateApiCommandInput>,
+    input: NonNullableProperties<DisassociateApiCommandInput>,
   ) => client.send(new DisassociateApiCommand(input));
 
   export const createChannelNamespace = async (
     client: Client,
-    input: CommandInput<CreateChannelNamespaceCommandInput>,
+    input: NonNullableProperties<CreateChannelNamespaceCommandInput>,
   ) => client.send(new CreateChannelNamespaceCommand(input));
 
   export const getChannelNamespace = async (
     client: Client,
-    input: CommandInput<GetChannelNamespaceCommandInput>,
+    input: NonNullableProperties<GetChannelNamespaceCommandInput>,
   ) => client.send(new GetChannelNamespaceCommand(input));
 
   export const updateChannelNamespace = async (
     client: Client,
-    input: CommandInput<UpdateChannelNamespaceCommandInput>,
+    input: NonNullableProperties<UpdateChannelNamespaceCommandInput>,
   ) => client.send(new UpdateChannelNamespaceCommand(input));
 
   export const deleteChannelNamespace = async (
     client: Client,
-    input: CommandInput<DeleteChannelNamespaceCommandInput>,
+    input: NonNullableProperties<DeleteChannelNamespaceCommandInput>,
   ) => client.send(new DeleteChannelNamespaceCommand(input));
 
   export const createApiKey = async (
     client: Client,
-    input: CommandInput<CreateApiKeyCommandInput>,
+    input: NonNullableProperties<CreateApiKeyCommandInput>,
   ) => client.send(new CreateApiKeyCommand(input));
 
   export const updateApiKey = async (
     client: Client,
-    input: CommandInput<UpdateApiKeyCommandInput>,
+    input: NonNullableProperties<UpdateApiKeyCommandInput>,
   ) => client.send(new UpdateApiKeyCommand(input));
 
   export const listApiKeys = async (
     client: Client,
-    input: CommandInput<ListApiKeysCommandInput>,
+    input: NonNullableProperties<ListApiKeysCommandInput>,
   ) => client.send(new ListApiKeysCommand(input));
 
   export const deleteApiKey = async (
     client: Client,
-    input: CommandInput<DeleteApiKeyCommandInput>,
+    input: NonNullableProperties<DeleteApiKeyCommandInput>,
   ) => client.send(new DeleteApiKeyCommand(input));
 }
 
@@ -216,19 +215,19 @@ export namespace S3 {
 
   export const getSignedPutUrl = (
     client: Client,
-    input: CommandInput<PutObjectCommandInput>,
+    input: NonNullableProperties<PutObjectCommandInput>,
     args?: RequestPresigningArguments,
   ) => getSignedUrl(client, new PutObjectCommand(input), args);
 
   export const getSignedGetUrl = (
     client: Client,
-    input: CommandInput<GetObjectCommandInput>,
+    input: NonNullableProperties<GetObjectCommandInput>,
     args?: RequestPresigningArguments,
   ) => getSignedUrl(client, new GetObjectCommand(input), args);
 
   export const deleteObject = async (
     client: Client,
-    input: CommandInput<DeleteObjectCommandInput>,
+    input: NonNullableProperties<DeleteObjectCommandInput>,
   ) => client.send(new DeleteObjectCommand(input));
 }
 
@@ -254,7 +253,7 @@ export namespace Sqs {
 
   export const sendMessage = async (
     client: Client,
-    input: CommandInput<SendMessageCommandInput>,
+    input: NonNullableProperties<SendMessageCommandInput>,
   ) => client.send(new SendMessageCommand(input));
 }
 
@@ -264,12 +263,12 @@ export namespace Ssm {
 
   export const putParameter = async (
     client: Client,
-    input: CommandInput<PutParameterCommandInput>,
+    input: NonNullableProperties<PutParameterCommandInput>,
   ) => client.send(new PutParameterCommand(input));
 
   export async function getParameter(
     client: Client,
-    input: CommandInput<GetParameterCommandInput>,
+    input: NonNullableProperties<GetParameterCommandInput>,
   ) {
     const { Parameter, $metadata } = await client.send(
       new GetParameterCommand(input),
@@ -285,6 +284,18 @@ export namespace Ssm {
 
   export const deleteParameter = async (
     client: Client,
-    input: CommandInput<DeleteParameterCommandInput>,
+    input: NonNullableProperties<DeleteParameterCommandInput>,
   ) => client.send(new DeleteParameterCommand(input));
+}
+
+export namespace Sts {
+  export const Client = STSClient;
+  export type Client = STSClient;
+
+  export type NonNullableCredentials = NonNullableProperties<Credentials>;
+
+  export const assumeRole = async (
+    client: Client,
+    input: NonNullableProperties<AssumeRoleCommandInput>,
+  ) => client.send(new AssumeRoleCommand(input));
 }
