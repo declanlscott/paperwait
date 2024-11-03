@@ -58,7 +58,12 @@ export namespace Orders {
           rowVersion: sql<number>`"${ordersTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(ordersTable)
-        .where(eq(ordersTable.tenantId, tenant.id))
+        .where(
+          and(
+            eq(ordersTable.tenantId, tenant.id),
+            isNull(ordersTable.deletedAt),
+          ),
+        )
         .$dynamic();
 
       const customerOrdersQuery = baseQuery.where(

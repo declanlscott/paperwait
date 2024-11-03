@@ -111,7 +111,10 @@ export const roomMutationNames = [
   "restoreRoom",
 ] as const;
 
-export const createRoomMutationArgsSchema = roomSchema;
+export const createRoomMutationArgsSchema = v.object({
+  ...v.omit(roomSchema, ["deletedAt"]).entries,
+  deletedAt: v.null(),
+});
 export type CreateRoomMutationArgs = v.InferOutput<
   typeof createRoomMutationArgsSchema
 >;

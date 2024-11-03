@@ -236,7 +236,10 @@ export const productMutationNames = [
   "deleteProduct",
 ] as const;
 
-export const createProductMutationArgsSchema = productSchema;
+export const createProductMutationArgsSchema = v.object({
+  ...v.omit(productSchema, ["deletedAt"]).entries,
+  deletedAt: v.null(),
+});
 export type CreateProductMutationArgs = v.InferOutput<
   typeof createProductMutationArgsSchema
 >;

@@ -8,51 +8,6 @@ import {
 
 export const ordersTableName = "orders";
 
-export const orderSchema = v.object({
-  ...tenantTableSchema.entries,
-  customerId: nanoIdSchema,
-  managerId: v.nullable(nanoIdSchema),
-  operatorId: v.nullable(nanoIdSchema),
-  productId: nanoIdSchema,
-  papercutAccountId: papercutAccountIdSchema,
-});
-
-export const orderMutationNames = [
-  "createOrder",
-  "updateOrder",
-  "deleteOrder",
-] as const;
-
-export const createOrderMutationArgsSchema = orderSchema;
-export type CreateOrderMutationArgs = v.InferOutput<
-  typeof createOrderMutationArgsSchema
->;
-
-export const updateOrderMutationArgsSchema = v.object({
-  id: nanoIdSchema,
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
-  ...v.partial(
-    v.omit(orderSchema, [
-      "id",
-      "tenantId",
-      "updatedAt",
-      "createdAt",
-      "deletedAt",
-    ]),
-  ).entries,
-});
-export type UpdateOrderMutationArgs = v.InferOutput<
-  typeof updateOrderMutationArgsSchema
->;
-
-export const deleteOrderMutationArgsSchema = v.object({
-  id: nanoIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
-});
-export type DeleteOrderMutationArgs = v.InferOutput<
-  typeof deleteOrderMutationArgsSchema
->;
-
 // Based on: https://www.papercut.com/help/manuals/job-ticketing/set-up/configure-costs/create-or-change-a-cost-script/configure-cost-script-reference/
 export const orderAttributesV1Schema = v.object({
   version: v.literal(1),
@@ -242,26 +197,51 @@ export const orderAttributesSchema = v.variant("version", [
 ]);
 export type OrderAttributes = v.InferOutput<typeof orderAttributesSchema>;
 
-export const lineItemSchema = v.object({
-  name: v.string(),
-  description: v.string(),
-  cost: v.number(),
-  style: v.picklist(["OPTION_1", "OPTION_2"]),
+export const orderSchema = v.object({
+  ...tenantTableSchema.entries,
+  customerId: nanoIdSchema,
+  managerId: v.nullable(nanoIdSchema),
+  operatorId: v.nullable(nanoIdSchema),
+  productId: nanoIdSchema,
+  papercutAccountId: papercutAccountIdSchema,
+  attributes: orderAttributesSchema,
 });
-export type LineItem = v.InferOutput<typeof lineItemSchema>;
 
-export const estimateSchema = v.object({
-  total: v.number(),
-  description: v.optional(v.string()),
-  items: v.array(lineItemSchema),
+export const orderMutationNames = [
+  "createOrder",
+  "updateOrder",
+  "deleteOrder",
+] as const;
+
+export const createOrderMutationArgsSchema = v.object({
+  ...v.omit(orderSchema, ["deletedAt"]).entries,
+  deletedAt: v.null(),
 });
-export type Estimate = v.InferOutput<typeof estimateSchema>;
+export type CreateOrderMutationArgs = v.InferOutput<
+  typeof createOrderMutationArgsSchema
+>;
 
-export const estimateCostFunctionSchema = v.pipe(
-  v.function(),
-  v.args(v.tuple([orderAttributesSchema])),
-  v.returns(estimateSchema),
-);
-export type EstimateCostFunction = v.InferOutput<
-  typeof estimateCostFunctionSchema
+export const updateOrderMutationArgsSchema = v.object({
+  id: nanoIdSchema,
+  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  ...v.partial(
+    v.omit(orderSchema, [
+      "id",
+      "tenantId",
+      "updatedAt",
+      "createdAt",
+      "deletedAt",
+    ]),
+  ).entries,
+});
+export type UpdateOrderMutationArgs = v.InferOutput<
+  typeof updateOrderMutationArgsSchema
+>;
+
+export const deleteOrderMutationArgsSchema = v.object({
+  id: nanoIdSchema,
+  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+});
+export type DeleteOrderMutationArgs = v.InferOutput<
+  typeof deleteOrderMutationArgsSchema
 >;

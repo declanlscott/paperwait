@@ -21,7 +21,10 @@ export const commentMutationNames = [
 ] as const;
 
 export const createCommentMutationArgsSchema = v.pipe(
-  commentSchema,
+  v.object({
+    ...v.omit(commentSchema, ["deletedAt"]).entries,
+    deletedAt: v.null(),
+  }),
   v.transform(({ visibleTo, ...rest }) => ({
     visibleTo: R.unique(visibleTo),
     ...rest,

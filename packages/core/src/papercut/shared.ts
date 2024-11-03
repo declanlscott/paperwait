@@ -52,7 +52,10 @@ export type DeletePapercutAccountMutationArgs = v.InferOutput<
 >;
 
 export const createPapercutAccountManagerAuthorizationMutationArgsSchema =
-  papercutAccountManagerAuthorizationSchema;
+  v.object({
+    ...v.omit(papercutAccountManagerAuthorizationSchema, ["deletedAt"]).entries,
+    deletedAt: v.null(),
+  });
 export type CreatePapercutAccountManagerAuthorizationMutationArgs =
   v.InferOutput<
     typeof createPapercutAccountManagerAuthorizationMutationArgsSchema

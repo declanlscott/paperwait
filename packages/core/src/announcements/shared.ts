@@ -16,7 +16,10 @@ export const announcementMutationNames = [
   "deleteAnnouncement",
 ] as const;
 
-export const createAnnouncementMutationArgsSchema = announcementSchema;
+export const createAnnouncementMutationArgsSchema = v.object({
+  ...v.omit(announcementSchema, ["deletedAt"]).entries,
+  deletedAt: v.null(),
+});
 export type CreateAnnouncementMutationArgs = v.InferOutput<
   typeof createAnnouncementMutationArgsSchema
 >;
