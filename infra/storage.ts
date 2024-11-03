@@ -1,8 +1,4 @@
-import {
-  organization,
-  organizationRoot,
-  tenantsOrganizationalUnit,
-} from "./organization";
+import { tenantsPrincipalOrgPath } from "./organization";
 
 export const codeBucket = new sst.aws.Bucket("CodeBucket", {
   versioning: true,
@@ -16,9 +12,7 @@ export const codeBucket = new sst.aws.Bucket("CodeBucket", {
           Principal: "*",
           Condition: {
             "ForAnyValue:StringEquals": {
-              "aws:PrincipalOrgPaths": [
-                $interpolate`${organization.id}/${organizationRoot.id}/${tenantsOrganizationalUnit.id}/`,
-              ],
+              "aws:PrincipalOrgPaths": [tenantsPrincipalOrgPath],
             },
           },
         });
@@ -42,8 +36,8 @@ export const tenantInfraQueue = new sst.aws.Queue("TenantInfraQueue", {
   visibilityTimeout: "15 minutes",
 });
 
-export const ordersProcessorDeadLetterQueue = new sst.aws.Queue(
-  "OrdersProcessorDeadLetterQueue",
+export const invoicesProcessorDeadLetterQueue = new sst.aws.Queue(
+  "InvoicesProcessorDeadLetterQueue",
   {
     transform: {
       queue: {

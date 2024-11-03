@@ -4,7 +4,7 @@ import * as pulumi from "@pulumi/pulumi";
 import { useResource } from "../resource";
 
 type Buckets = Record<"assets" | "documents", Bucket>;
-type Queues = Record<"ordersProcessor", Queue>;
+type Queues = Record<"invoicesProcessor", Queue>;
 
 export class Storage extends pulumi.ComponentResource {
   static #instance: Storage;
@@ -27,8 +27,8 @@ export class Storage extends pulumi.ComponentResource {
 
     this.#buckets.documents = new Bucket("Documents", { parent: this });
 
-    this.#queues.ordersProcessor = new Queue(
-      "OrdersProcessor",
+    this.#queues.invoicesProcessor = new Queue(
+      "InvoicesProcessor",
       {
         withDlq: true,
         fifo: { enabled: true, deduplication: true },

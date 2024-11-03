@@ -9,7 +9,7 @@ import { organization } from "./organization";
 import { realtime } from "./realtime";
 import {
   codeBucket,
-  ordersProcessorDeadLetterQueue,
+  invoicesProcessorDeadLetterQueue,
   pulumiBucket,
 } from "./storage";
 import { link, normalizePath } from "./utils";
@@ -49,13 +49,13 @@ new aws.lambda.Permission("UsersSyncRulePermission", {
   principalOrgId: organization.id,
 });
 
-export const ordersProcessor = new sst.aws.Function("OrdersProcessor", {
-  handler: "packages/functions/handlers/node/src/orders-processor.handler",
+export const invoicesProcessor = new sst.aws.Function("InvoicesProcessor", {
+  handler: "packages/functions/handlers/node/src/invoices-processor.handler",
   timeout: "20 seconds",
-  link: [appData, cloudfrontPrivateKey, db, ordersProcessorDeadLetterQueue],
+  link: [appData, cloudfrontPrivateKey, db, invoicesProcessorDeadLetterQueue],
 });
-new aws.lambda.Permission("OrdersProcessorRulePermission", {
-  function: ordersProcessor.name,
+new aws.lambda.Permission("InvoicesProcessorRulePermission", {
+  function: invoicesProcessor.name,
   action: "lambda:InvokeFunction",
   principal: "events.amazonaws.com",
   principalOrgId: organization.id,
@@ -229,7 +229,7 @@ export const tenantInfraFunction = new aws.lambda.Function(
       Cloud: cloud.properties,
       CloudfrontPublicKey: cloudfrontPublicKey.properties,
       Code: code.properties,
-      OrdersProcessor: ordersProcessor.getSSTLink().properties,
+      InvoicesProcessor: invoicesProcessor.getSSTLink().properties,
       PulumiBucket: pulumiBucket.getSSTLink().properties,
       Realtime: realtime.properties,
       UsersSync: usersSync.getSSTLink().properties,

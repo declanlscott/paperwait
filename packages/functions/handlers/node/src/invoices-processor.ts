@@ -7,7 +7,7 @@ import type { EventBridgeHandler, SQSEvent, SQSRecord } from "aws-lambda";
 // TODO: Finish implementing orders processor
 
 export const handler: EventBridgeHandler<
-  "OrdersProcessor",
+  "InvoicesProcessor",
   string,
   void
 > = async (event) => {
@@ -31,12 +31,12 @@ export const handler: EventBridgeHandler<
     const sqs = new Sqs.Client();
     for (const failure of failures)
       await Sqs.sendMessage(sqs, {
-        QueueUrl: Resource.OrdersProcessorDeadLetterQueue.url,
+        QueueUrl: Resource.InvoicesProcessorDeadLetterQueue.url,
         MessageBody: JSON.stringify(failure),
       });
   } catch (e) {
     console.error(
-      "Failed to send orders processor failures to dead letter queue: ",
+      "Failed to send invoices processor failures to dead letter queue: ",
       e,
     );
   }

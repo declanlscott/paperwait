@@ -95,6 +95,12 @@ export const tenantsOrganizationalUnit =
 
 export const tenantAccountAccessRoleName = "TenantAccountAccessRole";
 
+export const tenantsPrincipalOrgPath = $resolve([
+  organization.id,
+  organizationRoot.id,
+  tenantsOrganizationalUnit.id,
+]).apply((segments) => `${segments.join("/")}/`);
+
 new aws.iam.RolePolicyAttachment(
   "AssumeTenantAccountAccessPolicyAttachment",
   {
@@ -113,13 +119,7 @@ new aws.iam.RolePolicyAttachment(
                 {
                   test: "ForAnyValue:StringEquals",
                   variable: "aws:PrincipalOrgPaths",
-                  values: [
-                    $resolve([
-                      organization.id,
-                      organizationRoot.id,
-                      tenantsOrganizationalUnit.id,
-                    ]).apply((segments) => `${segments.join("/")}/`),
-                  ],
+                  values: [tenantsPrincipalOrgPath],
                 },
               ],
             },

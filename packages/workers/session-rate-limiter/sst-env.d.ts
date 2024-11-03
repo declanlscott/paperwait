@@ -103,6 +103,17 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "InvoicesProcessor": {
+      "arn": string
+      "invokeArn": string
+      "name": string
+      "roleArn": string
+      "type": "sst.aws.Function"
+    }
+    "InvoicesProcessorDeadLetterQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
+    }
     "Oauth2": {
       "entraId": {
         "clientId": string
@@ -113,17 +124,6 @@ declare module "sst" {
         "clientSecret": string
       }
       "type": "sst.sst.Linkable"
-    }
-    "OrdersProcessor": {
-      "arn": string
-      "invokeArn": string
-      "name": string
-      "roleArn": string
-      "type": "sst.aws.Function"
-    }
-    "OrdersProcessorDeadLetterQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
     }
     "PartyKitUrl": {
       "type": "sst.sst.Secret"

@@ -13,7 +13,7 @@ export type CustomResource = {
     | "Cloud"
     | "CloudfrontPublicKey"
     | "PulumiBucket"
-    | "OrdersProcessor"
+    | "InvoicesProcessor"
     | "Realtime"
     | "UsersSync"
     | "Web"

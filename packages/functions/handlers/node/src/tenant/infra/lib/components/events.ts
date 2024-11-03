@@ -16,7 +16,7 @@ export interface EventsArgs {
       scheduleExpression: pulumi.Input<string>;
       timezone: pulumi.Input<string>;
     };
-    ordersProcessor: {
+    invoicesProcessor: {
       queueArn: aws.sqs.Queue["arn"];
       functionArn: aws.lambda.Function["arn"];
     };
@@ -27,8 +27,8 @@ export class Events extends pulumi.ComponentResource {
   static #instance: Events;
 
   #events: Array<ScheduledEvent | PatternedEvent> = [];
-  #ordersProcessorPipeRole: aws.iam.Role;
-  #ordersProcessorPipe: aws.pipes.Pipe;
+  #invoicesProcessorPipeRole: aws.iam.Role;
+  #invoicesProcessorPipe: aws.pipes.Pipe;
 
   static getInstance(args: EventsArgs, opts: pulumi.ComponentResourceOptions) {
     if (!this.#instance) this.#instance = new Events(args, opts);
@@ -114,8 +114,8 @@ export class Events extends pulumi.ComponentResource {
       ),
     );
 
-    this.#ordersProcessorPipeRole = new aws.iam.Role(
-      "OrdersProcessorPipeRole",
+    this.#invoicesProcessorPipeRole = new aws.iam.Role(
+      "InvoicesProcessorPipeRole",
       {
         assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
           statements: [
@@ -134,9 +134,9 @@ export class Events extends pulumi.ComponentResource {
       { parent: this },
     );
     new aws.iam.RolePolicy(
-      "OrdersProcessorPipeInlinePolicy",
+      "InvoicesProcessorPipeInlinePolicy",
       {
-        role: this.#ordersProcessorPipeRole.name,
+        role: this.#invoicesProcessorPipeRole.name,
         policy: aws.iam.getPolicyDocumentOutput({
           statements: [
             {
@@ -145,7 +145,7 @@ export class Events extends pulumi.ComponentResource {
                 "sqs:DeleteMessage",
                 "sqs:GetQueueAttributes",
               ],
-              resources: [args.events.ordersProcessor.queueArn],
+              resources: [args.events.invoicesProcessor.queueArn],
             },
             {
               actions: ["events:PutEvents"],
@@ -159,22 +159,22 @@ export class Events extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#ordersProcessorPipe = new aws.pipes.Pipe(
-      "OrdersProcessorPipe",
+    this.#invoicesProcessorPipe = new aws.pipes.Pipe(
+      "InvoicesProcessorPipe",
       {
-        roleArn: this.#ordersProcessorPipeRole.arn,
-        source: args.events.ordersProcessor.queueArn,
+        roleArn: this.#invoicesProcessorPipeRole.arn,
+        source: args.events.invoicesProcessor.queueArn,
         sourceParameters: {
           sqsQueueParameters: {
             batchSize: 10,
             maximumBatchingWindowInSeconds: 60,
           },
         },
-        target: args.events.ordersProcessor.functionArn,
+        target: args.events.invoicesProcessor.functionArn,
         targetParameters: {
           eventbridgeEventBusParameters: {
-            detailType: "OrdersProcessor",
-            source: args.events.ordersProcessor.queueArn,
+            detailType: "InvoicesProcessor",
+            source: args.events.invoicesProcessor.queueArn,
           },
         },
       },
@@ -183,14 +183,14 @@ export class Events extends pulumi.ComponentResource {
 
     this.#events.push(
       new PatternedEvent(
-        "PatternedOrdersProcessor",
+        "PatternedInvoicesProcessor",
         {
           pattern: pulumi.jsonStringify({
-            "detail-type": ["OrdersProcessor"],
-            source: [args.events.ordersProcessor.queueArn],
+            "detail-type": ["InvoicesProcessor"],
+            source: [args.events.invoicesProcessor.queueArn],
           }),
           functionTarget: {
-            arn: args.events.ordersProcessor.functionArn,
+            arn: args.events.invoicesProcessor.functionArn,
             createPermission: false,
           },
           withDeadLetterQueue: true,
@@ -200,8 +200,8 @@ export class Events extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      ordersProcessorPipeRole: this.#ordersProcessorPipeRole.id,
-      ordersProcessorPipe: this.#ordersProcessorPipe.id,
+      invoicesProcessorPipeRole: this.#invoicesProcessorPipeRole.id,
+      invoicesProcessorPipe: this.#invoicesProcessorPipe.id,
     });
   }
 }

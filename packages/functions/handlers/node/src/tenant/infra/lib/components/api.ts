@@ -13,7 +13,7 @@ export interface ApiArgs {
   papercutSecureBridgeFunction: {
     invokeArn: aws.lambda.Function["invokeArn"];
   };
-  ordersProcessorQueue: {
+  invoicesProcessorQueue: {
     arn: aws.sqs.Queue["arn"];
     name: aws.sqs.Queue["name"];
     url: aws.sqs.Queue["url"];
@@ -47,11 +47,11 @@ export class Api extends pulumi.ComponentResource {
   #secureBridgeResource: aws.apigateway.Resource;
   #papercutSecureBridgeRoutes: Array<PapercutSecureBridgeRoute> = [];
 
-  #ordersResource: aws.apigateway.Resource;
-  #enqueueOrderRequestValidator: aws.apigateway.RequestValidator;
-  #enqueueOrderRequestModel: aws.apigateway.Model;
-  #enqueueOrderMethod: aws.apigateway.Method;
-  #enqueueOrderIntegration: aws.apigateway.Integration;
+  #invoicesResource: aws.apigateway.Resource;
+  #enqueueInvoiceRequestValidator: aws.apigateway.RequestValidator;
+  #enqueueInvoiceRequestModel: aws.apigateway.Model;
+  #enqueueInvoiceMethod: aws.apigateway.Method;
+  #enqueueInvoiceIntegration: aws.apigateway.Integration;
 
   #cdnResource: aws.apigateway.Resource;
   #invalidationResource: aws.apigateway.Resource;
@@ -114,7 +114,7 @@ export class Api extends pulumi.ComponentResource {
             },
             {
               actions: ["sqs:SendMessage"],
-              resources: [args.ordersProcessorQueue.arn],
+              resources: [args.invoicesProcessorQueue.arn],
             },
             {
               actions: ["cloudfront:CreateInvalidation"],
@@ -468,18 +468,18 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
-    this.#ordersResource = new aws.apigateway.Resource(
-      "OrdersResource",
+    this.#invoicesResource = new aws.apigateway.Resource(
+      "InvoicesResource",
       {
         restApi: args.gateway.id,
         parentId: args.gateway.rootResourceId,
-        pathPart: "orders",
+        pathPart: "invoices",
       },
       { parent: this },
     );
 
-    this.#enqueueOrderRequestValidator = new aws.apigateway.RequestValidator(
-      "EnqueueOrderRequestValidator",
+    this.#enqueueInvoiceRequestValidator = new aws.apigateway.RequestValidator(
+      "EnqueueInvoiceRequestValidator",
       {
         restApi: args.gateway.id,
         validateRequestBody: true,
@@ -488,48 +488,48 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#enqueueOrderRequestModel = new aws.apigateway.Model(
-      "EnqueueOrderRequestModel",
+    this.#enqueueInvoiceRequestModel = new aws.apigateway.Model(
+      "EnqueueInvoiceRequestModel",
       {
         restApi: args.gateway.id,
         contentType: "application/json",
         schema: JSON.stringify({
           $schema: "http://json-schema.org/draft-04/schema#",
-          title: "EnqueueOrderRequestModel",
+          title: "EnqueueInvoiceRequestModel",
           type: "object",
           properties: {
-            orderId: {
+            invoiceId: {
               type: "string",
             },
           },
-          required: ["orderId"],
+          required: ["invoiceId"],
           additionalProperties: false,
         }),
       },
       { parent: this },
     );
 
-    this.#enqueueOrderMethod = new aws.apigateway.Method(
-      "EnqueueOrderMethod",
+    this.#enqueueInvoiceMethod = new aws.apigateway.Method(
+      "EnqueueInvoiceMethod",
       {
         restApi: args.gateway.id,
-        resourceId: this.#ordersResource.id,
+        resourceId: this.#invoicesResource.id,
         httpMethod: "POST",
         authorization: "AWS_IAM",
-        requestValidatorId: this.#enqueueOrderRequestValidator.id,
+        requestValidatorId: this.#enqueueInvoiceRequestValidator.id,
         requestModels: {
-          "application/json": this.#enqueueOrderRequestModel.id,
+          "application/json": this.#enqueueInvoiceRequestModel.id,
         },
       },
       { parent: this },
     );
 
-    this.#enqueueOrderIntegration = new aws.apigateway.Integration(
-      "EnqueueOrderIntegration",
+    this.#enqueueInvoiceIntegration = new aws.apigateway.Integration(
+      "EnqueueInvoiceIntegration",
       {
         restApi: args.gateway.id,
-        resourceId: this.#ordersResource.id,
-        httpMethod: this.#enqueueOrderMethod.httpMethod,
+        resourceId: this.#invoicesResource.id,
+        httpMethod: this.#enqueueInvoiceMethod.httpMethod,
         type: "AWS",
         integrationHttpMethod: "POST",
         requestParameters: {
@@ -540,12 +540,12 @@ export class Api extends pulumi.ComponentResource {
         requestTemplates: {
           "application/json": pulumi.interpolate`
 {
-  "QueueUrl": "${args.ordersProcessorQueue.url}",
-  "MessageBody": "{\"orderId\":\"$input.path('$.orderId')\",\"tenantId\":\"${args.tenantId}\"}"
+  "QueueUrl": "${args.invoicesProcessorQueue.url}",
+  "MessageBody": "{\"invoiceId\":\"$input.path('$.invoiceId')\",\"tenantId\":\"${args.tenantId}\"}"
 }`,
         },
         passthroughBehavior: "NEVER",
-        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:sqs:path/${args.ordersProcessorQueue.name}`,
+        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:sqs:path/${args.invoicesProcessorQueue.name}`,
         credentials: this.#role.arn,
       },
       { parent: this },
@@ -726,9 +726,9 @@ export class Api extends pulumi.ComponentResource {
       papercutResource: this.#papercutResource.id,
       secureBridgeResource: this.#secureBridgeResource.id,
 
-      ordersResource: this.#ordersResource.id,
-      enqueueOrderMethod: this.#enqueueOrderMethod.id,
-      enqueueOrderIntegration: this.#enqueueOrderIntegration.id,
+      invoicesResource: this.#invoicesResource.id,
+      enqueueInvoiceMethod: this.#enqueueInvoiceMethod.id,
+      enqueueInvoiceIntegration: this.#enqueueInvoiceIntegration.id,
 
       cdnResource: this.#cdnResource.id,
       invalidationResource: this.#invalidationResource.id,

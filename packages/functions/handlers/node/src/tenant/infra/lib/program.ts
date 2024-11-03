@@ -25,8 +25,13 @@ export const getProgram = (input: ProgramInput) => async () =>
   withResource(() => {
     const { tenantId, usersSyncSchedule, timezone } = input;
 
-    const { AppData, Cloud, CloudfrontPublicKey, OrdersProcessor, UsersSync } =
-      useResource();
+    const {
+      AppData,
+      Cloud,
+      CloudfrontPublicKey,
+      InvoicesProcessor,
+      UsersSync,
+    } = useResource();
 
     const account = Account.getInstance({ tenantId });
 
@@ -41,16 +46,16 @@ export const getProgram = (input: ProgramInput) => async () =>
       { providers: [account.provider] },
     );
 
+    const realtime = Realtime.getInstance({
+      roleArn: account.roleArn,
+    });
+
+    const storage = Storage.getInstance({ providers: [account.provider] });
+
     const functions = Functions.getInstance(
       { accountId: account.id },
       { providers: [account.provider] },
     );
-
-    const storage = Storage.getInstance({ providers: [account.provider] });
-
-    const realtime = Realtime.getInstance({
-      roleArn: account.roleArn,
-    });
 
     const gateway = new aws.apigateway.RestApi(
       "Gateway",
@@ -84,10 +89,10 @@ export const getProgram = (input: ProgramInput) => async () =>
         papercutSecureBridgeFunction: {
           invokeArn: functions.papercutSecureBridge.invokeArn,
         },
-        ordersProcessorQueue: {
-          arn: storage.queues.ordersProcessor.arn,
-          name: storage.queues.ordersProcessor.name,
-          url: storage.queues.ordersProcessor.url,
+        invoicesProcessorQueue: {
+          arn: storage.queues.invoicesProcessor.arn,
+          name: storage.queues.invoicesProcessor.name,
+          url: storage.queues.invoicesProcessor.url,
         },
         distributionId: router.distributionId,
         realtimeApiId: realtime.apiId,
@@ -108,9 +113,9 @@ export const getProgram = (input: ProgramInput) => async () =>
             scheduleExpression: `cron(${usersSyncSchedule})`,
             timezone,
           },
-          ordersProcessor: {
-            queueArn: storage.queues.ordersProcessor.arn,
-            functionArn: pulumi.output(OrdersProcessor.arn),
+          invoicesProcessor: {
+            queueArn: storage.queues.invoicesProcessor.arn,
+            functionArn: pulumi.output(InvoicesProcessor.arn),
           },
         },
       },
