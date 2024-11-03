@@ -3,6 +3,8 @@ import { Announcements } from "../announcements";
 import { announcementsTable } from "../announcements/sql";
 import { Comments } from "../comments";
 import { commentsTable } from "../comments/sql";
+import { Invoices } from "../invoices";
+import { invoicesTable } from "../invoices/sql";
 import { Orders } from "../orders";
 import { ordersTable } from "../orders/sql";
 import { Papercut } from "../papercut";
@@ -27,6 +29,7 @@ import type { MutationName } from "./shared";
 export const syncedTables = [
   announcementsTable,
   commentsTable,
+  invoicesTable,
   ordersTable,
   papercutAccountsTable,
   papercutAccountCustomerAuthorizationsTable,
@@ -77,6 +80,7 @@ export type MetadataQueryFactory = {
 export const metadataQueryFactory = {
   announcements: Announcements.metadata,
   comments: Comments.metadata,
+  invoices: Invoices.metadata,
   orders: Orders.metadata,
   papercut_accounts: Papercut.accountsMetadata,
   papercut_account_customer_authorizations:
@@ -105,6 +109,7 @@ export type DataQueryFactory = {
 export const dataQueryFactory = {
   announcements: Announcements.fromIds,
   comments: Comments.fromIds,
+  invoices: Invoices.fromIds,
   orders: Orders.fromIds,
   papercut_accounts: Papercut.accountsFromIds,
   papercut_account_customer_authorizations:
@@ -143,6 +148,7 @@ export const authoritativeMutatorFactory = {
   createComment: Comments.create,
   updateComment: Comments.update,
   deleteComment: Comments.delete_,
+  createInvoice: Invoices.create,
   createOrder: Orders.create,
   updateOrder: Orders.update,
   deleteOrder: Orders.delete_,

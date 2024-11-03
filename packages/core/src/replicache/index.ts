@@ -362,15 +362,14 @@ export namespace Replicache {
       const patch: Array<PatchOperation> = [];
       if (result.cvr.prev.value === undefined) patch.push({ op: "clear" });
       for (const [name, { puts, dels }] of result.data) {
-        dels.forEach((id) => patch.push({ op: "del", key: `${name}/${id}` }));
-
-        puts.forEach((value) => {
+        for (const value of puts)
           patch.push({
             op: "put",
             key: `${name}/${value.id}`,
             value,
           });
-        });
+
+        for (const id of dels) patch.push({ op: "del", key: `${name}/${id}` });
       }
 
       // 18(ii): Construct cookie

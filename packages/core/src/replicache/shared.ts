@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { announcementMutationNames } from "../announcements/shared";
 import { commentMutationNames } from "../comments/shared";
+import { invoiceMutationNames } from "../invoices/shared";
 import { orderMutationNames } from "../orders/shared";
 import { papercutMutationNames } from "../papercut/shared";
 import { productMutationNames } from "../products/shared";
@@ -28,6 +29,7 @@ export type GenericMutation = v.InferOutput<typeof genericMutationSchema>;
 export const mutationNameSchema = v.picklist([
   ...announcementMutationNames,
   ...commentMutationNames,
+  ...invoiceMutationNames,
   ...orderMutationNames,
   ...tenantMutationNames,
   ...papercutMutationNames,
@@ -72,6 +74,7 @@ export const mutationRbac = {
   createComment: ["administrator", "operator"],
   updateComment: ["administrator"],
   deleteComment: ["administrator"],
+  createInvoice: ["administrator", "operator"],
   createOrder: ["administrator", "operator", "manager", "customer"],
   updateOrder: ["administrator", "operator"],
   deleteOrder: ["administrator", "operator"],
