@@ -10,7 +10,7 @@
   "dependencies": {
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.35.3",
-    "hono": "^4.6.8",
+    "hono": "^4.6.9",
     "remeda": "^2.16.0",
     "replicache": "^15.0.1",
     "sst": "^3.2.73",
