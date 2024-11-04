@@ -8,6 +8,7 @@ import { productsTableName } from "@paperwait/core/products/shared";
 import { roomsTableName } from "@paperwait/core/rooms/shared";
 import { tenantsTableName } from "@paperwait/core/tenants/shared";
 import { usersTableName } from "@paperwait/core/users/shared";
+import * as R from "remeda";
 
 import { useApi } from "~/app/lib/hooks/api";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
@@ -29,13 +30,11 @@ export const useQuery = <TData, TDefaultData = undefined>(
 ) => useSubscribe(...params);
 
 export const queryFactory = {
-  tenant: () => async (tx) => {
-    const tenants = await tx
+  tenant: () => async (tx) =>
+    tx
       .scan<Tenant>({ prefix: `${tenantsTableName}/` })
-      .toArray();
-
-    return tenants.at(0);
-  },
+      .toArray()
+      .then((tenants) => tenants.at(0)),
   users: () => (tx) =>
     tx.scan<UserWithProfile>({ prefix: `${usersTableName}/` }).toArray(),
   user: (userId: User["id"]) => (tx) =>
@@ -46,19 +45,16 @@ export const queryFactory = {
       .toArray(),
   papercutAccount: (accountId: PapercutAccount["id"]) => (tx) =>
     tx.get<PapercutAccount>(`${papercutAccountsTableName}/${accountId}`),
-  managedPapercutAccountIds: (managerId: User["id"]) => async (tx) => {
-    const managerAuthorizations = await tx
-      .scan<PapercutAccountManagerAuthorization>({
-        prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-      })
-      .toArray();
-
-    const managedPapercutAccountIds = managerAuthorizations
-      .filter((a) => a.managerId === managerId)
-      .map(({ papercutAccountId }) => papercutAccountId);
-
-    return managedPapercutAccountIds;
-  },
+  managedPapercutAccountIds: (managerId: User["id"]) => async (tx) =>
+    R.pipe(
+      await tx
+        .scan<PapercutAccountManagerAuthorization>({
+          prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
+        })
+        .toArray(),
+      R.filter((a) => a.managerId === managerId),
+      R.map(R.prop("papercutAccountId")),
+    ),
   papercutAccountCustomerAuthorizations: () => (tx) =>
     tx
       .scan<PapercutAccountCustomerAuthorization>({
@@ -71,29 +67,28 @@ export const queryFactory = {
         prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
       })
       .toArray(),
-  managedCustomerIds: (managerId: User["id"]) => async (tx) => {
-    const managerAuthorizations = await tx
-      .scan<PapercutAccountManagerAuthorization>({
-        prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-      })
-      .toArray();
-
-    const managedPapercutAccountIds = managerAuthorizations
-      .filter((a) => a.managerId === managerId)
-      .map(({ papercutAccountId }) => papercutAccountId);
-
-    const customerAuthorizations = await tx
-      .scan<PapercutAccountCustomerAuthorization>({
-        prefix: `${papercutAccountCustomerAuthorizationsTableName}/`,
-      })
-      .toArray();
-
-    const managedCustomerIds = customerAuthorizations
-      .filter((a) => managedPapercutAccountIds.includes(a.papercutAccountId))
-      .map(({ customerId }) => customerId);
-
-    return managedCustomerIds;
-  },
+  managedCustomerIds: (managerId: User["id"]) => async (tx) =>
+    R.pipe(
+      await tx
+        .scan<PapercutAccountManagerAuthorization>({
+          prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
+        })
+        .toArray(),
+      R.filter((a) => a.managerId === managerId),
+      R.map(R.prop("papercutAccountId")),
+      async (managedPapercutAccountIds) =>
+        R.pipe(
+          await tx
+            .scan<PapercutAccountCustomerAuthorization>({
+              prefix: `${papercutAccountCustomerAuthorizationsTableName}/`,
+            })
+            .toArray(),
+          R.filter((a) =>
+            managedPapercutAccountIds.includes(a.papercutAccountId),
+          ),
+          R.map(R.prop("customerId")),
+        ),
+    ),
   rooms: () => (tx) =>
     tx.scan<Room>({ prefix: `${roomsTableName}/` }).toArray(),
   room: (roomId: Room["id"]) => (tx) =>

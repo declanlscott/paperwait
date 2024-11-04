@@ -103,15 +103,13 @@ export default new Hono()
         }
       }
 
-      (
-        [
-          ["provider", tenant.oauth2ProviderVariant],
-          ["state", state],
-          ["code_verifier", codeVerifier],
-          ["tenantId", tenant.id],
-          ["redirect", redirect],
-        ] as const
-      ).forEach(([name, value]) => {
+      for (const [name, value] of [
+        ["provider", tenant.oauth2ProviderVariant],
+        ["state", state],
+        ["code_verifier", codeVerifier],
+        ["tenantId", tenant.id],
+        ["redirect", redirect],
+      ] as const)
         if (value)
           setCookie(c, name, value, {
             path: "/",
@@ -120,7 +118,6 @@ export default new Hono()
             maxAge: 60 * 10, // 10 minutes
             sameSite: "lax",
           });
-      });
 
       return c.redirect(authorizationUrl.toString());
     },

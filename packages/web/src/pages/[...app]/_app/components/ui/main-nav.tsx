@@ -78,10 +78,7 @@ function RoomSelector() {
   const rooms = useQuery(queryFactory.rooms(), {
     defaultData: initialRooms,
     onData: (rooms) => {
-      if (
-        selectedRoomId &&
-        !rooms.map(({ id }) => id).includes(selectedRoomId.toString())
-      )
+      if (selectedRoomId && !rooms.some((room) => room.id === selectedRoomId))
         setSelectedRoomId(null);
     },
   });

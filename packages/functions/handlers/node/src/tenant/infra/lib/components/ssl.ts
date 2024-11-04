@@ -1,6 +1,7 @@
 import * as aws from "@pulumi/aws";
 import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
+import * as R from "remeda";
 
 import { useResource } from "../resource";
 
@@ -64,7 +65,7 @@ export class Ssl extends pulumi.ComponentResource {
 
     this.registerOutputs({
       certificate: this.#certificate.id,
-      records: this.#records.map((record) => record.id),
+      records: R.map(this.#records, R.prop("id")),
     });
   }
 
