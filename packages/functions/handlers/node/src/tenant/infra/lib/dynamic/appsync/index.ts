@@ -1,16 +1,10 @@
 import * as pulumi from "@pulumi/pulumi";
 
 import { ApiProvider } from "./providers/api";
-import { ApiAssociationProvider } from "./providers/api-association";
 import { ApiKeyProvider } from "./providers/api-key";
 import { ChannelNamespaceProvider } from "./providers/channel-namespace";
-import { DomainNameProvider } from "./providers/domain-name";
 
 import type { ApiProviderInputs, ApiProviderOutputs } from "./providers/api";
-import type {
-  ApiAssociationProviderInputs,
-  ApiAssociationProviderOutputs,
-} from "./providers/api-association";
 import type {
   ApiKeyProviderInputs,
   ApiKeyProviderOutputs,
@@ -19,10 +13,6 @@ import type {
   ChannelNamespaceProviderInputs,
   ChannelNamespaceProviderOutputs,
 } from "./providers/channel-namespace";
-import type {
-  DomainNameProviderInputs,
-  DomainNameProviderOutputs,
-} from "./providers/domain-name";
 
 export type ApiInputs = {
   [TKey in keyof ApiProviderInputs]: pulumi.Input<ApiProviderInputs[TKey]>;
@@ -139,75 +129,6 @@ export class ApiKey extends pulumi.dynamic.Resource {
         description: undefined,
         expires: undefined,
         deletes: undefined,
-      },
-      opts,
-    );
-  }
-}
-
-export type DomainNameInputs = {
-  [TKey in keyof DomainNameProviderInputs]: pulumi.Input<
-    DomainNameProviderInputs[TKey]
-  >;
-};
-
-export type DomainNameOutputs = {
-  [TKey in keyof DomainNameProviderOutputs]: pulumi.Output<
-    DomainNameProviderOutputs[TKey]
-  >;
-};
-
-export class DomainName extends pulumi.dynamic.Resource {
-  readonly domainName!: DomainNameOutputs["domainName"];
-  readonly description!: DomainNameOutputs["description"];
-  readonly certificateArn!: DomainNameOutputs["certificateArn"];
-  readonly appsyncDomainName!: DomainNameOutputs["appsyncDomainName"];
-  readonly hostedZoneId!: DomainNameOutputs["hostedZoneId"];
-
-  constructor(
-    name: string,
-    props: DomainNameInputs,
-    opts?: pulumi.CustomResourceOptions,
-  ) {
-    super(
-      new DomainNameProvider(),
-      name,
-      { ...props, appsyncDomainName: undefined, hostedZoneId: undefined },
-      opts,
-    );
-  }
-}
-
-export type ApiAssociationInputs = {
-  [TKey in keyof ApiAssociationProviderInputs]: pulumi.Input<
-    ApiAssociationProviderInputs[TKey]
-  >;
-};
-
-export type ApiAssociationOutputs = {
-  [TKey in keyof ApiAssociationProviderOutputs]: pulumi.Output<
-    ApiAssociationProviderOutputs[TKey]
-  >;
-};
-
-export class ApiAssociation extends pulumi.dynamic.Resource {
-  readonly domainName!: ApiAssociationOutputs["domainName"];
-  readonly apiId!: ApiAssociationOutputs["apiId"];
-  readonly associationStatus!: ApiAssociationOutputs["associationStatus"];
-  readonly deploymentDetail!: ApiAssociationOutputs["deploymentDetail"];
-
-  constructor(
-    name: string,
-    props: ApiAssociationInputs,
-    opts?: pulumi.CustomResourceOptions,
-  ) {
-    super(
-      new ApiAssociationProvider(),
-      name,
-      {
-        ...props,
-        associationStatus: undefined,
-        deploymentDetail: undefined,
       },
       opts,
     );

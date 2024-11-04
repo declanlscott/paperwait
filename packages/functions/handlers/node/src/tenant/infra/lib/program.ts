@@ -46,36 +46,49 @@ export const getProgram = (input: ProgramInput) => async () =>
       { providers: [account.provider] },
     );
 
-    const realtime = Realtime.getInstance({
-      roleArn: account.roleArn,
-    });
-
-    const storage = Storage.getInstance({ providers: [account.provider] });
-
-    const functions = Functions.getInstance(
-      { accountId: account.id },
-      { providers: [account.provider] },
-    );
-
     const gateway = new aws.apigateway.RestApi(
       "Gateway",
       { endpointConfiguration: { types: "REGIONAL" } },
       { provider: account.provider },
     );
 
+    const storage = Storage.getInstance({ providers: [account.provider] });
+
+    const realtime = Realtime.getInstance({
+      roleArn: account.roleArn,
+    });
+
     const router = Router.getInstance(
       {
         domainName: ssl.domainName,
         certificateArn: ssl.certificateArn,
         keyPairId: cloudfrontPublicKey.id,
-        routes: {
+        origins: {
           api: {
-            url: pulumi.interpolate`https://${gateway.id}.execute-api.${Cloud.aws.region}.amazonaws.com/${AppData.stage}`,
+            domainName: pulumi.interpolate`${gateway.id}.execute-api.${Cloud.aws.region}.amazonaws.com`,
+            originPath: `/${AppData.stage}`,
           },
-          assets: { url: storage.buckets.assets.url },
-          documents: { url: storage.buckets.documents.url },
+          assets: {
+            domainName: storage.buckets.assets.regionalDomainName,
+          },
+          documents: {
+            domainName: storage.buckets.documents.regionalDomainName,
+          },
+          realtimeHttp: {
+            domainName: pulumi.interpolate`${realtime.apiId}.appsync-api.${Cloud.aws.region}.amazonaws.com`,
+            originPath: "/event",
+          },
+          realtimeWebsocket: {
+            domainName: pulumi.interpolate`${realtime.apiId}.appsync-realtime-api.${Cloud.aws.region}.amazonaws.com`,
+            originPath: "/event/realtime",
+          },
         },
       },
+      { providers: [account.provider] },
+    );
+
+    const functions = Functions.getInstance(
+      { accountId: account.id },
       { providers: [account.provider] },
     );
 

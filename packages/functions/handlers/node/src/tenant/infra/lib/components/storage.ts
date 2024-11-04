@@ -135,8 +135,8 @@ class Bucket extends pulumi.ComponentResource {
     });
   }
 
-  get url() {
-    return pulumi.interpolate`https://${this.#bucket.bucketRegionalDomainName}`;
+  get regionalDomainName() {
+    return this.#bucket.bucketRegionalDomainName;
   }
 
   get name() {

@@ -7,25 +7,18 @@
 import { Sha256 } from "@aws-crypto/sha256-js";
 import {
   AppSyncClient,
-  AssociateApiCommand,
   CreateApiCommand,
   CreateApiKeyCommand,
   CreateChannelNamespaceCommand,
-  CreateDomainNameCommand,
   DeleteApiCommand,
   DeleteApiKeyCommand,
   DeleteChannelNamespaceCommand,
-  DeleteDomainNameCommand,
-  DisassociateApiCommand,
-  GetApiAssociationCommand,
   GetApiCommand,
   GetChannelNamespaceCommand,
-  GetDomainNameCommand,
   ListApiKeysCommand,
   UpdateApiCommand,
   UpdateApiKeyCommand,
   UpdateChannelNamespaceCommand,
-  UpdateDomainNameCommand,
 } from "@aws-sdk/client-appsync";
 import {
   DeleteObjectCommand,
@@ -51,25 +44,18 @@ import { Utils } from ".";
 import { HttpError } from "./errors";
 
 import type {
-  AssociateApiCommandInput,
   CreateApiCommandInput,
   CreateApiKeyCommandInput,
   CreateChannelNamespaceCommandInput,
-  CreateDomainNameCommandInput,
   DeleteApiCommandInput,
   DeleteApiKeyCommandInput,
   DeleteChannelNamespaceCommandInput,
-  DeleteDomainNameCommandInput,
-  DisassociateApiCommandInput,
-  GetApiAssociationCommandInput,
   GetApiCommandInput,
   GetChannelNamespaceCommandInput,
-  GetDomainNameCommandInput,
   ListApiKeysCommandInput,
   UpdateApiCommandInput,
   UpdateApiKeyCommandInput,
   UpdateChannelNamespaceCommandInput,
-  UpdateDomainNameCommandInput,
 } from "@aws-sdk/client-appsync";
 import type {
   DeleteObjectCommandInput,
@@ -109,41 +95,6 @@ export namespace Appsync {
     client: Client,
     input: NonNullableProperties<DeleteApiCommandInput>,
   ) => client.send(new DeleteApiCommand(input));
-
-  export const createDomainName = async (
-    client: Client,
-    input: NonNullableProperties<CreateDomainNameCommandInput>,
-  ) => client.send(new CreateDomainNameCommand(input));
-
-  export const getDomainName = async (
-    client: Client,
-    input: NonNullableProperties<GetDomainNameCommandInput>,
-  ) => client.send(new GetDomainNameCommand(input));
-
-  export const updateDomainName = async (
-    client: Client,
-    input: NonNullableProperties<UpdateDomainNameCommandInput>,
-  ) => client.send(new UpdateDomainNameCommand(input));
-
-  export const deleteDomainName = async (
-    client: Client,
-    input: NonNullableProperties<DeleteDomainNameCommandInput>,
-  ) => client.send(new DeleteDomainNameCommand(input));
-
-  export const associateApi = async (
-    client: Client,
-    input: NonNullableProperties<AssociateApiCommandInput>,
-  ) => client.send(new AssociateApiCommand(input));
-
-  export const getApiAssociation = async (
-    client: Client,
-    input: NonNullableProperties<GetApiAssociationCommandInput>,
-  ) => client.send(new GetApiAssociationCommand(input));
-
-  export const disassociateApi = async (
-    client: Client,
-    input: NonNullableProperties<DisassociateApiCommandInput>,
-  ) => client.send(new DisassociateApiCommand(input));
 
   export const createChannelNamespace = async (
     client: Client,

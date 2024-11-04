@@ -6,20 +6,25 @@ import { useResource } from "../resource";
 
 const allViewerExceptHostHeaderPolicyName = "Managed-AllViewerExceptHostHeader";
 const cachingOptimizedPolicyName = "Managed-CachingOptimized";
+const cachingDisabledPolicyName = "Managed-CachingDisabled";
 
 export interface RouterArgs {
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
   keyPairId: pulumi.Input<string>;
-  routes: Record<"api" | "assets" | "documents", { url: pulumi.Input<string> }>;
+  origins: Record<
+    "api" | "assets" | "documents" | "realtimeHttp" | "realtimeWebsocket",
+    { domainName: pulumi.Input<string>; originPath?: pulumi.Input<string> }
+  >;
 }
 
 export class Router extends pulumi.ComponentResource {
   static #instance: Router;
 
-  #cachePolicy: aws.cloudfront.CachePolicy;
   #keyGroup: aws.cloudfront.KeyGroup;
+  #apiCachePolicy: aws.cloudfront.CachePolicy;
   #s3AccessControl: aws.cloudfront.OriginAccessControl;
+  #websocketOriginRequestPolicy: aws.cloudfront.OriginRequestPolicy;
   #distribution: aws.cloudfront.Distribution;
   #cname: cloudflare.Record;
 
@@ -37,8 +42,14 @@ export class Router extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Router`, "Router", args, opts);
 
-    this.#cachePolicy = new aws.cloudfront.CachePolicy(
-      "CachePolicy",
+    this.#keyGroup = new aws.cloudfront.KeyGroup(
+      "KeyGroup",
+      { items: [args.keyPairId] },
+      { parent: this },
+    );
+
+    this.#apiCachePolicy = new aws.cloudfront.CachePolicy(
+      "ApiCachePolicy",
       {
         defaultTtl: 0,
         minTtl: 0,
@@ -60,12 +71,6 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#keyGroup = new aws.cloudfront.KeyGroup(
-      "KeyGroup",
-      { items: [args.keyPairId] },
-      { parent: this },
-    );
-
     const customOriginConfig = {
       httpPort: 80,
       httpsPort: 443,
@@ -84,6 +89,25 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    this.#websocketOriginRequestPolicy = new aws.cloudfront.OriginRequestPolicy(
+      "WebsocketOriginRequestPolicy",
+      {
+        cookiesConfig: {
+          cookieBehavior: "none",
+        },
+        headersConfig: {
+          headerBehavior: "whitelist",
+          headers: {
+            items: ["Sec-WebSocket-Key", "Sec-WebSocket-Version"],
+          },
+        },
+        queryStringsConfig: {
+          queryStringBehavior: "none",
+        },
+      },
+      { parent: this },
+    );
+
     const urlCacheBehaviorConfig = {
       viewerProtocolPolicy: "redirect-to-https",
       allowedMethods: [
@@ -98,7 +122,7 @@ export class Router extends pulumi.ComponentResource {
       cachedMethods: ["GET", "HEAD"],
       defaultTtl: 0,
       compress: true,
-      cachePolicyId: this.#cachePolicy.id,
+      cachePolicyId: this.#apiCachePolicy.id,
       originRequestPolicyId: aws.cloudfront
         .getOriginRequestPolicy(
           { name: allViewerExceptHostHeaderPolicyName },
@@ -107,7 +131,7 @@ export class Router extends pulumi.ComponentResource {
         .then((policy) => {
           if (!policy.id)
             throw new Error(
-              `${allViewerExceptHostHeaderPolicyName} origin request policy not found`,
+              `"${allViewerExceptHostHeaderPolicyName}" origin request policy not found`,
             );
 
           return policy.id;
@@ -136,6 +160,28 @@ export class Router extends pulumi.ComponentResource {
       trustedKeyGroups: [this.#keyGroup.id],
     } satisfies BehaviorConfig;
 
+    const websocketCacheBehaviorConfig = {
+      viewerProtocolPolicy: "redirect-to-https",
+      allowedMethods: ["GET", "HEAD", "OPTIONS"],
+      cachedMethods: [],
+      compress: false,
+      defaultTtl: 0,
+      cachePolicyId: aws.cloudfront
+        .getCachePolicy({
+          name: cachingDisabledPolicyName,
+        })
+        .then((policy) => {
+          if (!policy.id)
+            throw new Error(
+              `"${cachingDisabledPolicyName}" cache policy not found`,
+            );
+
+          return policy.id;
+        }),
+      originRequestPolicyId: this.#websocketOriginRequestPolicy.id,
+      trustedKeyGroups: [this.#keyGroup.id],
+    } satisfies BehaviorConfig;
+
     this.#distribution = new aws.cloudfront.Distribution(
       "Distribution",
       {
@@ -144,19 +190,28 @@ export class Router extends pulumi.ComponentResource {
         origins: [
           {
             originId: "/api/*",
-            domainName: new URL(args.routes.api.url).hostname,
             customOriginConfig,
-            originPath: `/${AppData.stage}`,
+            ...args.origins.api,
           },
           {
             originId: "/assets/*",
-            domainName: new URL(args.routes.assets.url).hostname,
             originAccessControlId: this.#s3AccessControl.id,
+            ...args.origins.assets,
           },
           {
             originId: "/documents/*",
-            domainName: new URL(args.routes.documents.url).hostname,
             originAccessControlId: this.#s3AccessControl.id,
+            ...args.origins.documents,
+          },
+          {
+            originId: "/realtime/http",
+            customOriginConfig,
+            ...args.origins.realtimeHttp,
+          },
+          {
+            originId: "/realtime/websocket",
+            customOriginConfig,
+            ...args.origins.realtimeWebsocket,
           },
           {
             originId: "/*",
@@ -192,6 +247,16 @@ export class Router extends pulumi.ComponentResource {
             pathPattern: "/documents/*",
             ...bucketCacheBehaviorConfig,
           },
+          {
+            targetOriginId: "/realtime/http",
+            pathPattern: "/realtime/http",
+            ...urlCacheBehaviorConfig,
+          },
+          {
+            targetOriginId: "/realtime/websocket",
+            pathPattern: "/realtime/websocket",
+            ...websocketCacheBehaviorConfig,
+          },
         ],
         restrictions: {
           geoRestriction: {
@@ -223,9 +288,10 @@ export class Router extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      cachePolicy: this.#cachePolicy.id,
       keyGroup: this.#keyGroup.id,
+      apiCachePolicy: this.#apiCachePolicy.id,
       s3AccessControl: this.#s3AccessControl.id,
+      websocketOriginRequestPolicy: this.#websocketOriginRequestPolicy.id,
       distribution: this.#distribution.id,
       cname: this.#cname.id,
     });
