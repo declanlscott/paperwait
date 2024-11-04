@@ -1,4 +1,10 @@
-import { foreignKey, index, jsonb, varchar } from "drizzle-orm/pg-core";
+import {
+  foreignKey,
+  index,
+  jsonb,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 import { bigintString, id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
@@ -27,6 +33,7 @@ export const ordersTable = tenantTable(
     deliverTo: varchar("deliver_to", {
       length: Constants.VARCHAR_LENGTH,
     }).notNull(),
+    approvedAt: timestamp("approved_at", { mode: "string" }),
   },
   (table) => ({
     customerReference: foreignKey({

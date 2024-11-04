@@ -216,6 +216,7 @@ export const orderSchema = v.object({
     v.trim(),
     v.maxLength(Constants.VARCHAR_LENGTH),
   ),
+  approvedAt: v.nullable(v.pipe(v.string(), v.isoTimestamp())),
 });
 
 export const orderMutationNames = [
