@@ -62,4 +62,6 @@ export namespace Constants {
   export const REALTIME_API_KEY_LIFETIME = {
     days: 90,
   } as const satisfies Duration;
+
+  export const WORKFLOW_PENDING_APPROVAL = "Pending Approval";
 }

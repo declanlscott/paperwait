@@ -242,7 +242,7 @@ export namespace Replicache {
 
             const metadata = R.uniqueBy(
               await metadataQueryFactory[name](baseClientGroup.id),
-              (m) => m.id,
+              R.prop("id"),
             );
 
             return [name, metadata] satisfies TableMetadata;

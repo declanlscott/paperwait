@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import {
+  costSchema,
   nanoIdSchema,
   papercutAccountIdSchema,
   tenantTableSchema,
@@ -17,10 +18,12 @@ export const papercutAccountSchema = v.object({
   id: papercutAccountIdSchema,
   tenantId: nanoIdSchema,
   name: v.string(),
+  approvalThreshold: v.nullable(v.pipe(costSchema, v.transform(String))),
   ...timestampsSchema.entries,
 });
 
 export const papercutMutationNames = [
+  "updatePapercutAccountApprovalThreshold",
   "deletePapercutAccount",
   "createPapercutAccountManagerAuthorization",
   "deletePapercutAccountManagerAuthorization",
@@ -42,6 +45,11 @@ export const syncPapercutAccountsMutationArgsSchema = v.undefined_();
 export type SyncPapercutAccountsMutationArgs = v.InferOutput<
   typeof syncPapercutAccountsMutationArgsSchema
 >;
+
+export const updatePapercutAccountApprovalThresholdMutationArgsSchema = v.pick(
+  papercutAccountSchema,
+  ["id", "approvalThreshold"],
+);
 
 export const deletePapercutAccountMutationArgsSchema = v.object({
   id: papercutAccountIdSchema,

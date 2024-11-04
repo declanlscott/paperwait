@@ -1,6 +1,7 @@
 import {
   foreignKey,
   index,
+  numeric,
   pgTable,
   primaryKey,
   text,
@@ -24,6 +25,7 @@ export const papercutAccountsTable = pgTable(
     id: bigintString("id").notNull(),
     tenantId: tenantIdColumns.tenantId,
     name: text("name").notNull(),
+    approvalThreshold: numeric("approval_threshold"),
     ...timestamps,
   },
   (table) => ({

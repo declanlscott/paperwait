@@ -16,7 +16,11 @@ import {
 import { Products } from "../products";
 import { productsTable } from "../products/sql";
 import { Rooms } from "../rooms";
-import { roomsTable } from "../rooms/sql";
+import {
+  deliveryOptionsTable,
+  roomsTable,
+  workflowStatusesTable,
+} from "../rooms/sql";
 import { Tenants } from "../tenants";
 import { tenantsTable } from "../tenants/sql";
 import { Users } from "../users";
@@ -29,6 +33,7 @@ import type { MutationName } from "./shared";
 export const syncedTables = [
   announcementsTable,
   commentsTable,
+  deliveryOptionsTable,
   invoicesTable,
   ordersTable,
   papercutAccountsTable,
@@ -38,6 +43,7 @@ export const syncedTables = [
   roomsTable,
   tenantsTable,
   usersTable,
+  workflowStatusesTable,
 ];
 export const nonSyncedTables = [replicacheClientsTable];
 export const tables = [...syncedTables, ...nonSyncedTables];
@@ -80,6 +86,7 @@ export type MetadataQueryFactory = {
 export const metadataQueryFactory = {
   announcements: Announcements.metadata,
   comments: Comments.metadata,
+  delivery_options: Rooms.deliveryOptionsMetadata,
   invoices: Invoices.metadata,
   orders: Orders.metadata,
   papercut_accounts: Papercut.accountsMetadata,
@@ -92,6 +99,7 @@ export const metadataQueryFactory = {
   rooms: Rooms.metadata,
   tenants: Tenants.metadata,
   users: Users.metadata,
+  workflow_statuses: Rooms.workflowStatusesMetadata,
 } satisfies MetadataQueryFactory;
 
 export type DataQueryFactory = {
@@ -109,6 +117,7 @@ export type DataQueryFactory = {
 export const dataQueryFactory = {
   announcements: Announcements.fromIds,
   comments: Comments.fromIds,
+  delivery_options: Rooms.deliveryOptionsFromIds,
   invoices: Invoices.fromIds,
   orders: Orders.fromIds,
   papercut_accounts: Papercut.accountsFromIds,
@@ -120,6 +129,7 @@ export const dataQueryFactory = {
   rooms: Rooms.fromIds,
   tenants: Tenants.fromId,
   users: Users.fromIds,
+  workflow_statuses: Rooms.workflowStatusesFromIds,
 } satisfies DataQueryFactory;
 
 export type TablePatchData<TTable extends SyncedTable> = {
@@ -148,13 +158,16 @@ export const authoritativeMutatorFactory = {
   createComment: Comments.create,
   updateComment: Comments.update,
   deleteComment: Comments.delete_,
+  setDeliveryOptions: Rooms.setDeliveryOptions,
   createInvoice: Invoices.create,
   createOrder: Orders.create,
   updateOrder: Orders.update,
   deleteOrder: Orders.delete_,
+  updatePapercutAccountApprovalThreshold:
+    Papercut.updateAccountApprovalThreshold,
+  deletePapercutAccount: Papercut.deleteAccount,
   createPapercutAccountManagerAuthorization:
     Papercut.createAccountManagerAuthorization,
-  deletePapercutAccount: Papercut.deleteAccount,
   deletePapercutAccountManagerAuthorization:
     Papercut.deleteAccountManagerAuthorization,
   createProduct: Products.create,
@@ -168,4 +181,5 @@ export const authoritativeMutatorFactory = {
   updateUserProfileRole: Users.updateProfileRole,
   deleteUserProfile: Users.deleteProfile,
   restoreUserProfile: Users.restoreProfile,
+  setWorkflow: Rooms.setWorkflow,
 } satisfies AuthoritativeMutatorFactory;

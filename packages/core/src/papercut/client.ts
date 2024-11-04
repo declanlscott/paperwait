@@ -1,4 +1,5 @@
 import { mutationRbac } from "../replicache/shared";
+import { Users } from "../users/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import { enforceRbac, rbacErrorMessage } from "../utils/shared";
@@ -8,6 +9,7 @@ import {
   deletePapercutAccountMutationArgsSchema,
   papercutAccountManagerAuthorizationsTableName,
   papercutAccountsTableName,
+  updatePapercutAccountApprovalThresholdMutationArgsSchema,
 } from "./shared";
 
 import type { DeepReadonlyObject } from "replicache";
@@ -38,6 +40,47 @@ export namespace Papercut {
         `${papercutAccountManagerAuthorizationsTableName}/${values.id}`,
         values,
       ),
+  );
+
+  export const updateAccountApprovalThreshold = Utils.optimisticMutator(
+    updatePapercutAccountApprovalThresholdMutationArgsSchema,
+    async (user, tx, { id }) => {
+      const managers = await Users.withManagerAuthorization(tx, id);
+
+      if (
+        managers.some((u) => u.id === user.id) ||
+        enforceRbac(user, mutationRbac.updatePapercutAccountApprovalThreshold, {
+          Error: ApplicationError.AccessDenied,
+          args: [
+            rbacErrorMessage(
+              user,
+              "update papercut account approval threshold mutator",
+            ),
+          ],
+        })
+      )
+        return true;
+
+      throw new ApplicationError.AccessDenied();
+    },
+    () =>
+      async (tx, { id, ...values }) => {
+        const prev = await tx.get<PapercutAccount>(
+          `${papercutAccountsTableName}/${id}`,
+        );
+        if (!prev)
+          throw new ApplicationError.EntityNotFound(
+            papercutAccountsTableName,
+            id,
+          );
+
+        const next = {
+          ...prev,
+          ...values,
+        } satisfies DeepReadonlyObject<PapercutAccount>;
+
+        return tx.set(`${papercutAccountsTableName}/${id}`, next);
+      },
   );
 
   export const deleteAccount = Utils.optimisticMutator(

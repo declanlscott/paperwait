@@ -1,10 +1,12 @@
-import { foreignKey, index, jsonb } from "drizzle-orm/pg-core";
+import { foreignKey, index, jsonb, varchar } from "drizzle-orm/pg-core";
 
 import { bigintString, id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
 import { papercutAccountsTable } from "../papercut/sql";
 import { productsTable } from "../products/sql";
+import { deliveryOptionsTable, workflowStatusesTable } from "../rooms/sql";
 import { usersTable } from "../users/sql";
+import { Constants } from "../utils/constants";
 import { ordersTableName } from "./shared";
 
 import type { InferSelectModel } from "drizzle-orm";
@@ -19,6 +21,12 @@ export const ordersTable = tenantTable(
     productId: id("product_id").notNull(),
     papercutAccountId: bigintString("papercut_account_id").notNull(),
     attributes: jsonb("attributes").$type<OrderAttributes>().notNull(),
+    workflowStatus: varchar("workflow_status", {
+      length: Constants.VARCHAR_LENGTH,
+    }).notNull(),
+    deliverTo: varchar("deliver_to", {
+      length: Constants.VARCHAR_LENGTH,
+    }).notNull(),
   },
   (table) => ({
     customerReference: foreignKey({
@@ -48,6 +56,19 @@ export const ordersTable = tenantTable(
         papercutAccountsTable.tenantId,
       ],
       name: "papercut_account_fk",
+    }),
+    workflowStatusReference: foreignKey({
+      columns: [table.workflowStatus, table.tenantId],
+      foreignColumns: [
+        workflowStatusesTable.id,
+        workflowStatusesTable.tenantId,
+      ],
+      name: "workflow_status_fk",
+    }),
+    deliverToReference: foreignKey({
+      columns: [table.deliverTo, table.tenantId],
+      foreignColumns: [deliveryOptionsTable.id, deliveryOptionsTable.tenantId],
+      name: "deliver_to_fk",
     }),
     customerIdIndex: index("customer_id_idx").on(table.customerId),
     papercutAccountIdIndex: index("papercut_account_id_idx").on(

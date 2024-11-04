@@ -1,5 +1,6 @@
 import * as v from "valibot";
 
+import { Constants } from "../utils/constants";
 import {
   nanoIdSchema,
   papercutAccountIdSchema,
@@ -205,6 +206,16 @@ export const orderSchema = v.object({
   productId: nanoIdSchema,
   papercutAccountId: papercutAccountIdSchema,
   attributes: orderAttributesSchema,
+  workflowStatus: v.pipe(
+    v.string(),
+    v.trim(),
+    v.maxLength(Constants.VARCHAR_LENGTH),
+  ),
+  deliverTo: v.pipe(
+    v.string(),
+    v.trim(),
+    v.maxLength(Constants.VARCHAR_LENGTH),
+  ),
 });
 
 export const orderMutationNames = [

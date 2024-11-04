@@ -13,6 +13,7 @@ import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
   deletePapercutAccountManagerAuthorizationMutationArgsSchema,
   deletePapercutAccountMutationArgsSchema,
+  updatePapercutAccountApprovalThresholdMutationArgsSchema,
 } from "./shared";
 import {
   papercutAccountCustomerAuthorizationsTable,
@@ -207,6 +208,54 @@ export namespace Papercut {
           ),
         );
     });
+
+  export const updateAccountApprovalThreshold = fn(
+    updatePapercutAccountApprovalThresholdMutationArgsSchema,
+    async ({ id, ...values }) => {
+      const { user, tenant } = useAuthenticated();
+
+      const managers = await Users.withManagerAuthorization(id);
+      if (
+        !enforceRbac(
+          user,
+          mutationRbac.updatePapercutAccountApprovalThreshold,
+        ) ||
+        !managers.some(({ managerId }) => managerId === user.id)
+      )
+        throw new ApplicationError.AccessDenied(
+          `User "${user.id}" cannot update papercut account approval threshold for account "${id}", access denied.`,
+        );
+
+      return useTransaction(async (tx) => {
+        await tx
+          .update(papercutAccountsTable)
+          .set(values)
+          .where(
+            and(
+              eq(papercutAccountsTable.id, id),
+              eq(papercutAccountsTable.tenantId, tenant.id),
+            ),
+          );
+
+        const [adminsOps, customers] = await Promise.all([
+          Users.fromRoles(["administrator", "operator"]),
+          Users.withCustomerAuthorization(id),
+        ]);
+
+        await afterTransaction(() =>
+          Replicache.poke([
+            ...adminsOps.map((u) => Realtime.formatChannel("user", u.id)),
+            ...managers.map(({ managerId }) =>
+              Realtime.formatChannel("user", managerId),
+            ),
+            ...customers.map(({ customerId }) =>
+              Realtime.formatChannel("user", customerId),
+            ),
+          ]),
+        );
+      });
+    },
+  );
 
   export const deleteAccount = fn(
     deletePapercutAccountMutationArgsSchema,

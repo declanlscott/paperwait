@@ -1,6 +1,7 @@
 import * as R from "remeda";
 
 import { ordersTableName } from "../orders/shared";
+import { papercutAccountManagerAuthorizationsTableName } from "../papercut/shared";
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
@@ -14,7 +15,11 @@ import {
 
 import type { DeepReadonlyObject, WriteTransaction } from "replicache";
 import type { Order } from "../orders/sql";
-import type { PapercutAccountManagerAuthorization } from "../papercut/sql";
+import type {
+  PapercutAccount,
+  PapercutAccountCustomerAuthorization,
+  PapercutAccountManagerAuthorization,
+} from "../papercut/sql";
 import type { UserRole } from "./shared";
 import type { UserWithProfile } from "./sql";
 
@@ -35,42 +40,63 @@ export namespace Users {
         users.filter((user) => roles.includes(user.profile.role)),
       );
 
-  export const withOrderAccess = async (
+  export async function withOrderAccess(
     tx: WriteTransaction,
     orderId: Order["id"],
-  ) => {
+  ) {
     const order = await tx.get<Order>(`${ordersTableName}/${orderId}`);
     if (!order)
       throw new ApplicationError.EntityNotFound(ordersTableName, orderId);
 
     const [adminsOps, managers, customer] = await Promise.all([
       fromRoles(tx, ["administrator", "operator"]),
-      tx
-        .scan<PapercutAccountManagerAuthorization>({
-          prefix: "papercutAccountManagerAuthorization/",
-        })
-        .toArray()
-        .then((papercutAccountManagerAuthorizations) =>
-          papercutAccountManagerAuthorizations.filter(
-            ({ papercutAccountId }) =>
-              order.papercutAccountId === papercutAccountId,
-          ),
-        )
-        .then((authorizations) =>
-          Promise.all(
-            authorizations.map(({ managerId }) =>
-              tx.get<UserWithProfile>(`${usersTableName}/${managerId}`),
-            ),
-          ),
-        ),
+      withManagerAuthorization(tx, order.papercutAccountId),
       tx.get<UserWithProfile>(`${usersTableName}/${order.customerId}`),
     ]);
 
     return R.uniqueBy(
       [...adminsOps, ...managers, customer].filter(Boolean),
-      ({ id }) => id,
+      R.prop("id"),
     );
-  };
+  }
+
+  export const withManagerAuthorization = async (
+    tx: WriteTransaction,
+    accountId: PapercutAccount["id"],
+  ) =>
+    R.pipe(
+      await tx
+        .scan<PapercutAccountManagerAuthorization>({
+          prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
+        })
+        .toArray(),
+      R.filter(({ papercutAccountId }) => papercutAccountId === accountId),
+      async (authorizations) =>
+        Promise.all(
+          authorizations.map(({ managerId }) =>
+            tx.get<UserWithProfile>(`${usersTableName}/${managerId}`),
+          ),
+        ).then((users) => users.filter(Boolean)),
+    );
+
+  export const withCustomerAuthorization = async (
+    tx: WriteTransaction,
+    accountId: PapercutAccount["id"],
+  ) =>
+    R.pipe(
+      await tx
+        .scan<PapercutAccountCustomerAuthorization>({
+          prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
+        })
+        .toArray(),
+      R.filter(({ papercutAccountId }) => papercutAccountId === accountId),
+      async (authorizations) =>
+        Promise.all(
+          authorizations.map(({ customerId }) =>
+            tx.get<UserWithProfile>(`${usersTableName}/${customerId}`),
+          ),
+        ).then((users) => users.filter(Boolean)),
+    );
 
   export const updateProfileRole = Utils.optimisticMutator(
     updateUserProfileRoleMutationArgsSchema,

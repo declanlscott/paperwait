@@ -2,15 +2,11 @@ import * as v from "valibot";
 
 import { Constants } from "../utils/constants";
 import {
-  isUniqueByName,
+  costSchema,
+  isUniqueByKey,
   nanoIdSchema,
   tenantTableSchema,
 } from "../utils/shared";
-
-export const costSchema = v.pipe(
-  v.union([v.number(), v.pipe(v.string(), v.decimal())]),
-  v.transform(Number),
-);
 
 export const optionSchema = v.object({
   name: v.pipe(v.string(), v.trim()),
@@ -24,7 +20,10 @@ export const fieldSchema = v.object({
   required: v.boolean(),
   options: v.pipe(
     v.array(optionSchema),
-    v.check(isUniqueByName, "Field option names must be unique"),
+    v.check(
+      (input) => isUniqueByKey("name", input),
+      "Field option names must be unique",
+    ),
   ),
 });
 
@@ -47,7 +46,10 @@ export const productAttributesV1Schema = v.object({
     v.object({
       options: v.pipe(
         v.array(optionSchema),
-        v.check(isUniqueByName, "Paper stock option names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Paper stock option names must be unique",
+        ),
       ),
     }),
   ),
@@ -56,7 +58,10 @@ export const productAttributesV1Schema = v.object({
       name: v.pipe(v.string(), v.trim()),
       fields: v.pipe(
         v.array(fieldSchema),
-        v.check(isUniqueByName, "Custom field names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Custom field names must be unique",
+        ),
       ),
     }),
   ),
@@ -66,7 +71,7 @@ export const productAttributesV1Schema = v.object({
       fields: v.pipe(
         v.array(fieldSchema),
         v.check(
-          isUniqueByName,
+          (input) => isUniqueByKey("name", input),
           "Custom operator only field names must be unique",
         ),
       ),
@@ -76,7 +81,10 @@ export const productAttributesV1Schema = v.object({
     v.object({
       options: v.pipe(
         v.array(optionSchema),
-        v.check(isUniqueByName, "Collating option names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Collating option names must be unique",
+        ),
       ),
     }),
   ),
@@ -89,7 +97,10 @@ export const productAttributesV1Schema = v.object({
             printable: v.boolean(),
           }),
         ),
-        v.check(isUniqueByName, "Front cover option names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Front cover option names must be unique",
+        ),
       ),
     }),
   ),
@@ -97,7 +108,10 @@ export const productAttributesV1Schema = v.object({
     v.object({
       options: v.pipe(
         v.array(optionSchema),
-        v.check(isUniqueByName, "Back cover option names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Back cover option names must be unique",
+        ),
       ),
     }),
   ),
@@ -105,7 +119,10 @@ export const productAttributesV1Schema = v.object({
     v.object({
       options: v.pipe(
         v.array(optionSchema),
-        v.check(isUniqueByName, "Cutting option names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Cutting option names must be unique",
+        ),
       ),
     }),
   ),
@@ -123,39 +140,51 @@ export const productAttributesV1Schema = v.object({
                   options: v.pipe(
                     v.array(optionSchema),
                     v.check(
-                      isUniqueByName,
+                      (input) => isUniqueByKey("name", input),
                       "Binding sub-attribute option names must be unique",
                     ),
                   ),
                 }),
               ),
               v.check(
-                isUniqueByName,
+                (input) => isUniqueByKey("name", input),
                 "Binding sub-attribute names must be unique",
               ),
             ),
           }),
         ),
-        v.check(isUniqueByName, "Binding option names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Binding option names must be unique",
+        ),
       ),
     }),
   ),
   holePunching: v.optional(
     v.pipe(
       v.array(optionSchema),
-      v.check(isUniqueByName, "Hole punching option names must be unique"),
+      v.check(
+        (input) => isUniqueByKey("name", input),
+        "Hole punching option names must be unique",
+      ),
     ),
   ),
   folding: v.optional(
     v.pipe(
       v.array(optionSchema),
-      v.check(isUniqueByName, "Folding option names must be unique"),
+      v.check(
+        (input) => isUniqueByKey("name", input),
+        "Folding option names must be unique",
+      ),
     ),
   ),
   laminating: v.optional(
     v.pipe(
       v.array(optionSchema),
-      v.check(isUniqueByName, "Laminating option names must be unique"),
+      v.check(
+        (input) => isUniqueByKey("name", input),
+        "Laminating option names must be unique",
+      ),
     ),
   ),
   packaging: v.optional(
@@ -185,7 +214,10 @@ export const productAttributesV1Schema = v.object({
             description: v.optional(v.string()),
           }),
         ),
-        v.check(isUniqueByName, "Proof required option names must be unique"),
+        v.check(
+          (input) => isUniqueByKey("name", input),
+          "Proof required option names must be unique",
+        ),
       ),
     }),
   ),

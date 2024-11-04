@@ -49,12 +49,16 @@ export const fn =
     return callback(output);
   };
 
-export const isUniqueByName = <TInput extends Array<{ name: string }>>(
+export const isUniqueByKey = <
+  TKey extends keyof TInput[number],
+  TInput extends Array<Record<TKey, string>>,
+>(
+  key: TKey,
   input: TInput,
 ) =>
   R.pipe(
     input,
-    R.uniqueBy(({ name }) => name),
+    R.uniqueBy(R.prop(key)),
     R.length(),
     R.isDeepEqual(input.length),
   );
@@ -80,6 +84,11 @@ export const tenantTableSchema = v.object({
 export const papercutAccountIdSchema = v.pipe(
   v.string(),
   v.transform((input) => BigInt(input).toString()),
+);
+
+export const costSchema = v.pipe(
+  v.union([v.number(), v.pipe(v.string(), v.decimal())]),
+  v.transform(Number),
 );
 
 type EnforceRbacResult<TMaybeError extends AnyError | undefined> =

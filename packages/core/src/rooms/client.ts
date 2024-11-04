@@ -1,19 +1,27 @@
+import * as R from "remeda";
+
 import { productsTableName } from "../products/shared";
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
+import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
 import { enforceRbac, rbacErrorMessage } from "../utils/shared";
 import {
   createRoomMutationArgsSchema,
+  defaultWorkflow,
   deleteRoomMutationArgsSchema,
+  deliveryOptionsTableName,
   restoreRoomMutationArgsSchema,
   roomsTableName,
+  setDeliveryOptionsMutationArgsSchema,
+  setWorkflowMutationArgsSchema,
   updateRoomMutationArgsSchema,
+  workflowStatusesTableName,
 } from "./shared";
 
 import type { DeepReadonlyObject } from "replicache";
 import type { Product } from "../products/sql";
-import type { Room } from "./sql";
+import type { DeliveryOption, Room, WorkflowStatus } from "./sql";
 
 export namespace Rooms {
   export const create = Utils.optimisticMutator(
@@ -23,8 +31,31 @@ export namespace Rooms {
         Error: ApplicationError.AccessDenied,
         args: [rbacErrorMessage(user, "create room mutator")],
       }),
-    () => async (tx, values) =>
-      tx.set(`${roomsTableName}/${values.id}`, values),
+    () => async (tx, values) => {
+      await Promise.all([
+        tx.set(`${roomsTableName}/${values.id}`, values),
+        tx.set(
+          `${workflowStatusesTableName}/${Constants.WORKFLOW_PENDING_APPROVAL}`,
+          {
+            id: Constants.WORKFLOW_PENDING_APPROVAL,
+            type: "Pending",
+            charging: false,
+            color: null,
+            index: -1,
+            roomId: values.id,
+            tenantId: values.tenantId,
+          },
+        ),
+        ...defaultWorkflow.map(async (status, index) =>
+          tx.set(`${workflowStatusesTableName}/${status.id}`, {
+            ...status,
+            index,
+            roomId: values.id,
+            tenantId: values.tenantId,
+          }),
+        ),
+      ]);
+    },
   );
 
   export const update = Utils.optimisticMutator(
@@ -119,5 +150,59 @@ export namespace Rooms {
 
       return tx.set(`${roomsTableName}/${values.id}`, next);
     },
+  );
+
+  export const setWorkflow = Utils.optimisticMutator(
+    setWorkflowMutationArgsSchema,
+    (user) =>
+      enforceRbac(user, mutationRbac.setWorkflow, {
+        Error: ApplicationError.AccessDenied,
+        args: [rbacErrorMessage(user, "set workflow mutator")],
+      }),
+    () =>
+      async (tx, { workflow }) => {
+        for (const status of workflow)
+          await tx.set(`${workflowStatusesTableName}/${status.id}`, status);
+
+        await R.pipe(
+          await tx
+            .scan<WorkflowStatus>({ prefix: `${workflowStatusesTableName}/` })
+            .toArray(),
+          R.filter((status) => !workflow.some((s) => s.id === status.id)),
+          async (dels) =>
+            Promise.all(
+              dels.map((status) =>
+                tx.del(`${workflowStatusesTableName}/${status.id}`),
+              ),
+            ),
+        );
+      },
+  );
+
+  export const setDeliveryOptions = Utils.optimisticMutator(
+    setDeliveryOptionsMutationArgsSchema,
+    (user) =>
+      enforceRbac(user, mutationRbac.setDeliveryOptions, {
+        Error: ApplicationError.AccessDenied,
+        args: [rbacErrorMessage(user, "set delivery options mutator")],
+      }),
+    () =>
+      async (tx, { options }) => {
+        for (const option of options)
+          await tx.set(`${deliveryOptionsTableName}/${option.id}`, option);
+
+        await R.pipe(
+          await tx
+            .scan<DeliveryOption>({ prefix: `${deliveryOptionsTableName}/` })
+            .toArray(),
+          R.filter((option) => !options.some((o) => o.id === option.id)),
+          async (dels) =>
+            Promise.all(
+              dels.map((option) =>
+                tx.del(`${deliveryOptionsTableName}/${option.id}`),
+              ),
+            ),
+        );
+      },
   );
 }

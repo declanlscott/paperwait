@@ -6,7 +6,11 @@ import { invoiceMutationNames } from "../invoices/shared";
 import { orderMutationNames } from "../orders/shared";
 import { papercutMutationNames } from "../papercut/shared";
 import { productMutationNames } from "../products/shared";
-import { roomMutationNames } from "../rooms/shared";
+import {
+  deliveryOptionsMutationNames,
+  roomMutationNames,
+  workflowMutationNames,
+} from "../rooms/shared";
 import { tenantMutationNames } from "../tenants/shared";
 import { userProfileMutationNames } from "../users/shared";
 
@@ -29,6 +33,7 @@ export type GenericMutation = v.InferOutput<typeof genericMutationSchema>;
 export const mutationNameSchema = v.picklist([
   ...announcementMutationNames,
   ...commentMutationNames,
+  ...deliveryOptionsMutationNames,
   ...invoiceMutationNames,
   ...orderMutationNames,
   ...tenantMutationNames,
@@ -36,6 +41,7 @@ export const mutationNameSchema = v.picklist([
   ...productMutationNames,
   ...roomMutationNames,
   ...userProfileMutationNames,
+  ...workflowMutationNames,
 ]);
 export type MutationName = v.InferOutput<typeof mutationNameSchema>;
 
@@ -74,11 +80,13 @@ export const mutationRbac = {
   createComment: ["administrator", "operator"],
   updateComment: ["administrator"],
   deleteComment: ["administrator"],
+  setDeliveryOptions: ["administrator", "operator"],
   createInvoice: ["administrator", "operator"],
   createOrder: ["administrator", "operator", "manager", "customer"],
   updateOrder: ["administrator", "operator"],
   deleteOrder: ["administrator", "operator"],
   updateTenant: ["administrator"],
+  updatePapercutAccountApprovalThreshold: ["administrator", "operator"],
   deletePapercutAccount: ["administrator"],
   createPapercutAccountManagerAuthorization: ["administrator"],
   deletePapercutAccountManagerAuthorization: ["administrator"],
@@ -92,4 +100,5 @@ export const mutationRbac = {
   updateUserProfileRole: ["administrator"],
   deleteUserProfile: ["administrator"],
   restoreUserProfile: ["administrator"],
+  setWorkflow: ["administrator", "operator"],
 } as const satisfies Record<MutationName, Array<UserRole>>;

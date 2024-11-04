@@ -10,6 +10,7 @@ import {
 import { ordersTable } from "../orders/sql";
 import { SecureBridge } from "../papercut/secure-bridge";
 import {
+  papercutAccountCustomerAuthorizationsTable,
   papercutAccountManagerAuthorizationsTable,
   papercutAccountsTable,
 } from "../papercut/sql";
@@ -34,6 +35,7 @@ import { userProfilesTable, usersTable } from "./sql";
 
 import type { InferInsertModel } from "drizzle-orm";
 import type { Order } from "../orders/sql";
+import type { PapercutAccount } from "../papercut/sql";
 import type { Tenant } from "../tenants/sql";
 import type { UserRole } from "./shared";
 import type { User, UserProfilesTable } from "./sql";
@@ -54,7 +56,7 @@ export namespace Users {
         })
         .from(usersTable)
         .where(eq(usersTable.tenantId, tenantId))
-        .then((rows) => new Set(rows.map(({ username }) => username)));
+        .then((rows) => new Set(R.map(rows, R.prop("username"))));
 
       const puts: Array<User["username"]> = [];
       const dels: Array<User["username"]> = [];
@@ -261,8 +263,54 @@ export namespace Users {
           ),
       ]);
 
-      return R.uniqueBy([...adminsOps, ...managers, customer], ({ id }) => id);
+      return R.uniqueBy([...adminsOps, ...managers, customer], R.prop("id"));
     });
+  }
+
+  export async function withManagerAuthorization(
+    accountId: PapercutAccount["id"],
+  ) {
+    const { tenant } = useAuthenticated();
+
+    return useTransaction(async (tx) =>
+      tx
+        .select({
+          managerId: papercutAccountManagerAuthorizationsTable.managerId,
+        })
+        .from(papercutAccountManagerAuthorizationsTable)
+        .where(
+          and(
+            eq(
+              papercutAccountManagerAuthorizationsTable.papercutAccountId,
+              accountId,
+            ),
+            eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id),
+          ),
+        ),
+    );
+  }
+
+  export async function withCustomerAuthorization(
+    accountId: PapercutAccount["id"],
+  ) {
+    const { tenant } = useAuthenticated();
+
+    return useTransaction(async (tx) =>
+      tx
+        .select({
+          customerId: papercutAccountCustomerAuthorizationsTable.customerId,
+        })
+        .from(papercutAccountCustomerAuthorizationsTable)
+        .where(
+          and(
+            eq(
+              papercutAccountCustomerAuthorizationsTable.papercutAccountId,
+              accountId,
+            ),
+            eq(papercutAccountCustomerAuthorizationsTable.tenantId, tenant.id),
+          ),
+        ),
+    );
   }
 
   export async function exists(userId: User["id"]) {

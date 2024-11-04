@@ -42,7 +42,7 @@ export namespace Orders {
       const usersToPoke = await Users.withOrderAccess(order.id);
       await afterTransaction(() =>
         Replicache.poke(
-          usersToPoke.map(({ id }) => Realtime.formatChannel("user", id)),
+          usersToPoke.map((u) => Realtime.formatChannel("user", u.id)),
         ),
       );
     });

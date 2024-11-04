@@ -12,7 +12,7 @@ import type { LineItem } from "./shared";
 export const invoicesTable = tenantTable(
   invoicesTableName,
   {
-    lineItems: jsonb("line_items").$type<Array<LineItem>>().notNull(),
+    lineItems: jsonb("line_items").array().$type<Array<LineItem>>().notNull(),
     status: invoiceStatus("status").default("processing").notNull(),
     chargedAt: timestamp("charged_at", { mode: "string" }),
     orderId: id("order_id").notNull(),
