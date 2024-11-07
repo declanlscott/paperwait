@@ -13,11 +13,11 @@
     "hono": "^4.6.9",
     "remeda": "^2.16.0",
     "replicache": "^15.0.1",
-    "sst": "^3.3.2",
+    "sst": "^3.3.5",
     "valibot": "beta"
   },
   "devDependencies": {
-    "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
+    "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
     "@total-typescript/ts-reset": "^0.6.1",
     "@tsconfig/node20": "^20.1.4",
     "@types/aws-lambda": "8.10.141",
