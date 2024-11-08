@@ -13,7 +13,7 @@
     "@astrojs/starlight": "^0.28.6",
     "@astrojs/tailwind": "^5.1.2",
     "@hono/valibot-validator": "^0.4.1",
-    "@iconify-json/lucide": "^1.2.11",
+    "@iconify-json/lucide": "^1.2.12",
     "@internationalized/date": "^3.5.6",
     "@monaco-editor/react": "^4.6.0",
     "@paperwait/core": "workspace:*",
