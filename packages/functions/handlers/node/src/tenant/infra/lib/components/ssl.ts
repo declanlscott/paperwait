@@ -50,9 +50,10 @@ export class Ssl extends pulumi.ComponentResource {
           new cloudflare.Record(
             `CertificateValidationRecord${index}`,
             {
-              zoneId: cloudflare.getZoneOutput({
-                name: AppData.domainName.value,
-              }).id,
+              zoneId: cloudflare.getZoneOutput(
+                { name: AppData.domainName.value },
+                { parent: this },
+              ).id,
               type: option.resourceRecordType,
               name: option.resourceRecordName,
               value: option.resourceRecordValue,

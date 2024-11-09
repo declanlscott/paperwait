@@ -1,14 +1,9 @@
 import * as pulumi from "@pulumi/pulumi";
 
 import { ApiProvider } from "./providers/api";
-import { ApiKeyProvider } from "./providers/api-key";
 import { ChannelNamespaceProvider } from "./providers/channel-namespace";
 
 import type { ApiProviderInputs, ApiProviderOutputs } from "./providers/api";
-import type {
-  ApiKeyProviderInputs,
-  ApiKeyProviderOutputs,
-} from "./providers/api-key";
 import type {
   ChannelNamespaceProviderInputs,
   ChannelNamespaceProviderOutputs,
@@ -92,43 +87,6 @@ export class ChannelNamespace extends pulumi.dynamic.Resource {
         channelNamespaceArn: undefined,
         created: undefined,
         lastModified: undefined,
-      },
-      opts,
-    );
-  }
-}
-
-export type ApiKeyInputs = {
-  [TKey in keyof ApiKeyProviderInputs]: pulumi.Input<
-    ApiKeyProviderInputs[TKey]
-  >;
-};
-
-export type ApiKeyOutputs = {
-  [TKey in keyof ApiKeyProviderOutputs]: pulumi.Output<
-    ApiKeyProviderOutputs[TKey]
-  >;
-};
-
-export class ApiKey extends pulumi.dynamic.Resource {
-  readonly apiId!: ApiKeyOutputs["apiId"];
-  readonly description!: ApiKeyOutputs["description"];
-  readonly expires!: ApiKeyOutputs["expires"];
-  readonly deletes!: ApiKeyOutputs["deletes"];
-
-  constructor(
-    name: string,
-    props: ApiKeyInputs,
-    opts?: pulumi.CustomResourceOptions,
-  ) {
-    super(
-      new ApiKeyProvider(),
-      name,
-      {
-        ...props,
-        description: undefined,
-        expires: undefined,
-        deletes: undefined,
       },
       opts,
     );

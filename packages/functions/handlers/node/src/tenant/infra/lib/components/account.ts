@@ -11,7 +11,7 @@ export class Account extends pulumi.ComponentResource {
   static #instance: Account;
 
   #account: aws.organizations.Account;
-  #roleArn: pulumi.Output<string>;
+  #assumeRoleArn: pulumi.Output<string>;
   #provider: aws.Provider;
 
   static getInstance(
@@ -38,19 +38,19 @@ export class Account extends pulumi.ComponentResource {
         name: accountName,
         email: pulumi.interpolate`${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
         parentId: Cloud.aws.organization.tenantsOrganizationalUnit.id,
-        roleName: Cloud.aws.tenantAccountAccessRole.name,
+        roleName: Cloud.aws.tenant.accountAccessRole.name,
         iamUserAccessToBilling: "ALLOW",
       },
       { parent: this },
     );
 
-    this.#roleArn = pulumi.interpolate`arn:aws:iam::${this.#account.id}:role/${this.#account.roleName}`;
+    this.#assumeRoleArn = pulumi.interpolate`arn:aws:iam::${this.#account.id}:role/${this.#account.roleName}`;
 
     this.#provider = new aws.Provider(
       "Provider",
       {
         region: Cloud.aws.region as aws.Region,
-        assumeRole: { roleArn: this.#roleArn },
+        assumeRole: { roleArn: this.#assumeRoleArn },
       },
       { parent: this },
     );
@@ -65,8 +65,8 @@ export class Account extends pulumi.ComponentResource {
     return this.#account.id;
   }
 
-  get roleArn() {
-    return this.#roleArn;
+  get assumeRoleArn() {
+    return this.#assumeRoleArn;
   }
 
   get provider() {

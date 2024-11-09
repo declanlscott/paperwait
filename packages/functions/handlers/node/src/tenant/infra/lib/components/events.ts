@@ -117,19 +117,22 @@ export class Events extends pulumi.ComponentResource {
     this.#invoicesProcessorPipeRole = new aws.iam.Role(
       "InvoicesProcessorPipeRole",
       {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              actions: ["sts:AssumeRole"],
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["pipes.amazonaws.com"],
-                },
-              ],
-            },
-          ],
-        }).json,
+        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: ["sts:AssumeRole"],
+                principals: [
+                  {
+                    type: "Service",
+                    identifiers: ["pipes.amazonaws.com"],
+                  },
+                ],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );
@@ -137,24 +140,30 @@ export class Events extends pulumi.ComponentResource {
       "InvoicesProcessorPipeInlinePolicy",
       {
         role: this.#invoicesProcessorPipeRole.name,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              actions: [
-                "sqs:ReceiveMessage",
-                "sqs:DeleteMessage",
-                "sqs:GetQueueAttributes",
-              ],
-              resources: [args.events.invoicesProcessor.queueArn],
-            },
-            {
-              actions: ["events:PutEvents"],
-              resources: [
-                aws.cloudwatch.getEventBusOutput({ name: "default" }).arn,
-              ],
-            },
-          ],
-        }).json,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: [
+                  "sqs:ReceiveMessage",
+                  "sqs:DeleteMessage",
+                  "sqs:GetQueueAttributes",
+                ],
+                resources: [args.events.invoicesProcessor.queueArn],
+              },
+              {
+                actions: ["events:PutEvents"],
+                resources: [
+                  aws.cloudwatch.getEventBusOutput(
+                    { name: "default" },
+                    { parent: this },
+                  ).arn,
+                ],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );
@@ -232,19 +241,22 @@ class ScheduledEvent extends pulumi.ComponentResource {
     this.#role = new aws.iam.Role(
       `${name}Role`,
       {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              actions: ["sts:AssumeRole"],
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["scheduler.amazonaws.com"],
-                },
-              ],
-            },
-          ],
-        }).json,
+        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: ["sts:AssumeRole"],
+                principals: [
+                  {
+                    type: "Service",
+                    identifiers: ["scheduler.amazonaws.com"],
+                  },
+                ],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );
@@ -253,14 +265,17 @@ class ScheduledEvent extends pulumi.ComponentResource {
       `${name}InlinePolicy`,
       {
         role: this.#role.name,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              actions: ["lambda:InvokeFunction"],
-              resources: [args.functionTarget.arn],
-            },
-          ],
-        }).json,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: ["lambda:InvokeFunction"],
+                resources: [args.functionTarget.arn],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );

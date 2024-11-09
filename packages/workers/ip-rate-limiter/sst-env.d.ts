@@ -24,7 +24,6 @@ declare module "sst" {
     "Client": {
       "appFqdn": string
       "isDev": boolean
-      "realtimeUrl": string
       "replicacheLicenseKey": string
       "type": "sst.sst.Linkable"
     }
@@ -44,8 +43,16 @@ declare module "sst" {
           }
         }
         "region": string
-        "tenantAccountAccessRole": {
-          "name": string
+        "tenant": {
+          "accountAccessRole": {
+            "name": string
+          }
+          "realtimePublisherRole": {
+            "name": string
+          }
+          "realtimeSubscriberRole": {
+            "name": string
+          }
         }
       }
       "cloudflare": {
@@ -125,18 +132,9 @@ declare module "sst" {
       }
       "type": "sst.sst.Linkable"
     }
-    "PartyKitUrl": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "PulumiBucket": {
       "name": string
       "type": "sst.aws.Bucket"
-    }
-    "Realtime": {
-      "apiKey": string
-      "type": "sst.sst.Linkable"
-      "url": string
     }
     "ReplicacheLicenseKey": {
       "type": "sst.sst.Secret"

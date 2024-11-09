@@ -25,13 +25,8 @@ export const getProgram = (input: ProgramInput) => async () =>
   withResource(() => {
     const { tenantId, usersSyncSchedule, timezone } = input;
 
-    const {
-      AppData,
-      Cloud,
-      CloudfrontPublicKey,
-      InvoicesProcessor,
-      UsersSync,
-    } = useResource();
+    const { AppData, CloudfrontPublicKey, InvoicesProcessor, UsersSync } =
+      useResource();
 
     const account = Account.getInstance({ tenantId });
 
@@ -55,7 +50,7 @@ export const getProgram = (input: ProgramInput) => async () =>
     const storage = Storage.getInstance({ providers: [account.provider] });
 
     const realtime = Realtime.getInstance({
-      roleArn: account.roleArn,
+      assumeRoleArn: account.assumeRoleArn,
     });
 
     const router = Router.getInstance(
@@ -65,7 +60,7 @@ export const getProgram = (input: ProgramInput) => async () =>
         keyPairId: cloudfrontPublicKey.id,
         origins: {
           api: {
-            domainName: pulumi.interpolate`${gateway.id}.execute-api.${Cloud.aws.region}.amazonaws.com`,
+            domainName: pulumi.interpolate`${gateway.id}.execute-api.${aws.getRegionOutput({}, { provider: account.provider }).name}.amazonaws.com`,
             originPath: `/${AppData.stage}`,
           },
           assets: {
@@ -75,21 +70,17 @@ export const getProgram = (input: ProgramInput) => async () =>
             domainName: storage.buckets.documents.regionalDomainName,
           },
           appsyncHttp: {
-            domainName: pulumi.interpolate`${realtime.apiId}.appsync-api.${Cloud.aws.region}.amazonaws.com`,
+            domainName: realtime.httpDomainName,
           },
           appsyncRealtime: {
-            domainName: pulumi.interpolate`${realtime.apiId}.appsync-realtime-api.${Cloud.aws.region}.amazonaws.com`,
+            domainName: realtime.realtimeDomainName,
           },
         },
-        realtimeApiKey: realtime.apiKey,
       },
       { providers: [account.provider] },
     );
 
-    const functions = Functions.getInstance(
-      { accountId: account.id },
-      { providers: [account.provider] },
-    );
+    const functions = Functions.getInstance({ providers: [account.provider] });
 
     Api.getInstance(
       {
@@ -107,7 +98,6 @@ export const getProgram = (input: ProgramInput) => async () =>
           url: storage.queues.invoicesProcessor.url,
         },
         distributionId: router.distributionId,
-        realtimeApiId: realtime.apiId,
       },
       { providers: [account.provider] },
     );

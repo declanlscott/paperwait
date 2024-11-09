@@ -2,7 +2,6 @@ import { db } from "./db";
 import { appFqdn } from "./dns";
 import { appData, client, cloud } from "./misc";
 import { oauth2 } from "./oauth2";
-import { realtime } from "./realtime";
 import { webPassword, webUsername } from "./secrets";
 import { tenantInfraQueue } from "./storage";
 
@@ -44,13 +43,20 @@ sst.Linkable.wrap(sst.aws.Astro, (astro) => ({
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
-  link: [appData, client, db, oauth2, realtime, tenantInfraQueue],
+  link: [appData, client, db, oauth2, tenantInfraQueue],
   permissions: [
     {
       actions: ["execute-api:Invoke"],
       resources: [
         $interpolate`arn:aws:execute-api:${cloud.properties.aws.region}:*:${appData.properties.stage}/*`,
       ],
+    },
+    {
+      actions: ["sts:AssumeRole"],
+      resources: [
+        cloud.properties.aws.tenant.realtimeSubscriberRole.name,
+        cloud.properties.aws.tenant.realtimePublisherRole.name,
+      ].map((roleName) => $interpolate`arn:aws:iam::*:role/${roleName}`),
     },
   ],
   domain: {
@@ -63,18 +69,18 @@ export const web = new sst.aws.Astro("Web", {
         ? {
             viewerRequest: {
               injection: $interpolate`
-                if (
-                  !event.request.headers.authorization ||
-                  event.request.headers.authorization.value !== "Basic ${basicAuth}"
-                ) {
-                  return {
-                    statusCode: 401,
-                    headers: {
-                      "www-authenticate": { value: "Basic" }
-                    }
-                  };
-                }
-              `,
+if (
+  !event.request.headers.authorization ||
+  event.request.headers.authorization.value !== "Basic ${basicAuth}"
+) {
+  return {
+    statusCode: 401,
+    headers: {
+      "www-authenticate": { value: "Basic" }
+    }
+  };
+}
+`,
             },
           }
         : undefined,

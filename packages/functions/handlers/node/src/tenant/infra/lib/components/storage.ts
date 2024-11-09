@@ -78,36 +78,39 @@ class Bucket extends pulumi.ComponentResource {
       `${name}Policy`,
       {
         bucket: this.#bucket.bucket,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["cloudfront.amazonaws.com"],
-                },
-              ],
-              actions: ["s3:GetObject"],
-              resources: [pulumi.interpolate`${this.#bucket.arn}/*`],
-            },
-            {
-              effect: "Deny",
-              principals: [{ type: "*", identifiers: ["*"] }],
-              actions: ["s3:*"],
-              resources: [
-                this.#bucket.arn,
-                pulumi.interpolate`${this.#bucket.arn}/*`,
-              ],
-              conditions: [
-                {
-                  test: "Bool",
-                  variable: "aws:SecureTransport",
-                  values: ["false"],
-                },
-              ],
-            },
-          ],
-        }).json,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                principals: [
+                  {
+                    type: "Service",
+                    identifiers: ["cloudfront.amazonaws.com"],
+                  },
+                ],
+                actions: ["s3:GetObject"],
+                resources: [pulumi.interpolate`${this.#bucket.arn}/*`],
+              },
+              {
+                effect: "Deny",
+                principals: [{ type: "*", identifiers: ["*"] }],
+                actions: ["s3:*"],
+                resources: [
+                  this.#bucket.arn,
+                  pulumi.interpolate`${this.#bucket.arn}/*`,
+                ],
+                conditions: [
+                  {
+                    test: "Bool",
+                    variable: "aws:SecureTransport",
+                    values: ["false"],
+                  },
+                ],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this, dependsOn: this.#publicAccessBlock },
     );

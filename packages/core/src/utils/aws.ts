@@ -8,16 +8,12 @@ import { Sha256 } from "@aws-crypto/sha256-js";
 import {
   AppSyncClient,
   CreateApiCommand,
-  CreateApiKeyCommand,
   CreateChannelNamespaceCommand,
   DeleteApiCommand,
-  DeleteApiKeyCommand,
   DeleteChannelNamespaceCommand,
   GetApiCommand,
   GetChannelNamespaceCommand,
-  ListApiKeysCommand,
   UpdateApiCommand,
-  UpdateApiKeyCommand,
   UpdateChannelNamespaceCommand,
 } from "@aws-sdk/client-appsync";
 import {
@@ -45,16 +41,12 @@ import { HttpError } from "./errors";
 
 import type {
   CreateApiCommandInput,
-  CreateApiKeyCommandInput,
   CreateChannelNamespaceCommandInput,
   DeleteApiCommandInput,
-  DeleteApiKeyCommandInput,
   DeleteChannelNamespaceCommandInput,
   GetApiCommandInput,
   GetChannelNamespaceCommandInput,
-  ListApiKeysCommandInput,
   UpdateApiCommandInput,
-  UpdateApiKeyCommandInput,
   UpdateChannelNamespaceCommandInput,
 } from "@aws-sdk/client-appsync";
 import type {
@@ -115,26 +107,6 @@ export namespace Appsync {
     client: Client,
     input: NonNullableProperties<DeleteChannelNamespaceCommandInput>,
   ) => client.send(new DeleteChannelNamespaceCommand(input));
-
-  export const createApiKey = async (
-    client: Client,
-    input: NonNullableProperties<CreateApiKeyCommandInput>,
-  ) => client.send(new CreateApiKeyCommand(input));
-
-  export const updateApiKey = async (
-    client: Client,
-    input: NonNullableProperties<UpdateApiKeyCommandInput>,
-  ) => client.send(new UpdateApiKeyCommand(input));
-
-  export const listApiKeys = async (
-    client: Client,
-    input: NonNullableProperties<ListApiKeysCommandInput>,
-  ) => client.send(new ListApiKeysCommand(input));
-
-  export const deleteApiKey = async (
-    client: Client,
-    input: NonNullableProperties<DeleteApiKeyCommandInput>,
-  ) => client.send(new DeleteApiKeyCommand(input));
 }
 
 export namespace Cloudfront {

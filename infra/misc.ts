@@ -5,7 +5,7 @@ import {
   tenantAccountAccessRoleName,
   tenantsOrganizationalUnit,
 } from "./organization";
-import { partyKitUrl, replicacheLicenseKey } from "./secrets";
+import { replicacheLicenseKey } from "./secrets";
 
 export const isDev = $dev;
 
@@ -14,7 +14,6 @@ export const client = new sst.Linkable("Client", {
     appFqdn,
     isDev,
     replicacheLicenseKey: replicacheLicenseKey.value,
-    realtimeUrl: partyKitUrl.value,
   },
 });
 
@@ -47,8 +46,16 @@ export const cloud = new sst.Linkable("Cloud", {
         id: aws.getCallerIdentityOutput().accountId,
       },
       region: aws.getRegionOutput({}).name,
-      tenantAccountAccessRole: {
-        name: tenantAccountAccessRoleName,
+      tenant: {
+        accountAccessRole: {
+          name: tenantAccountAccessRoleName,
+        },
+        realtimeSubscriberRole: {
+          name: "TenantRealtimeSubscriberRole",
+        },
+        realtimePublisherRole: {
+          name: "TenantRealtimePublisherRole",
+        },
       },
     },
     cloudflare: {

@@ -19,7 +19,6 @@ export interface ApiArgs {
     url: aws.sqs.Queue["url"];
   };
   distributionId: pulumi.Input<string>;
-  realtimeApiId: pulumi.Input<string>;
 }
 
 export class Api extends pulumi.ComponentResource {
@@ -78,22 +77,27 @@ export class Api extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Api`, "Api", args, opts);
 
+    const region = aws.getRegionOutput({}, { parent: this });
+
     this.#role = new aws.iam.Role(
       "Role",
       {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              principals: [
-                {
-                  type: "Service",
-                  identifiers: ["apigateway.amazonaws.com"],
-                },
-              ],
-              actions: ["sts:AssumeRole"],
-            },
-          ],
-        }).json,
+        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                principals: [
+                  {
+                    type: "Service",
+                    identifiers: ["apigateway.amazonaws.com"],
+                  },
+                ],
+                actions: ["sts:AssumeRole"],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
         managedPolicyArns: [
           aws.iam.ManagedPolicy.AmazonAPIGatewayPushToCloudWatchLogs,
         ],
@@ -104,28 +108,35 @@ export class Api extends pulumi.ComponentResource {
       "RoleInlinePolicy",
       {
         role: this.#role,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              actions: ["events:PutEvents"],
-              resources: [
-                aws.cloudwatch.getEventBusOutput({ name: "default" }).arn,
-              ],
-            },
-            {
-              actions: ["sqs:SendMessage"],
-              resources: [args.invoicesProcessorQueue.arn],
-            },
-            {
-              actions: ["cloudfront:CreateInvalidation"],
-              resources: [
-                aws.cloudfront.getDistributionOutput({
-                  id: args.distributionId,
-                }).arn,
-              ],
-            },
-          ],
-        }).json,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: ["events:PutEvents"],
+                resources: [
+                  aws.cloudwatch.getEventBusOutput(
+                    { name: "default" },
+                    { parent: this },
+                  ).arn,
+                ],
+              },
+              {
+                actions: ["sqs:SendMessage"],
+                resources: [args.invoicesProcessorQueue.arn],
+              },
+              {
+                actions: ["cloudfront:CreateInvalidation"],
+                resources: [
+                  aws.cloudfront.getDistributionOutput(
+                    { id: args.distributionId },
+                    { parent: this },
+                  ).arn,
+                ],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );
@@ -134,32 +145,35 @@ export class Api extends pulumi.ComponentResource {
       "ApiPolicy",
       {
         restApiId: args.gateway.id,
-        policy: aws.iam.getPolicyDocumentOutput({
-          statements: [
-            {
-              principals: [
-                {
-                  type: "AWS",
-                  identifiers: [UsersSync.roleArn, Web.server.role.principal],
-                },
-              ],
-              actions: ["execute-api:Invoke"],
-              resources: [pulumi.interpolate`${args.gateway.executionArn}/*`],
-              conditions:
-                Web.server.role.principal === "*"
-                  ? [
-                      {
-                        test: "StringLike",
-                        variable: "aws:PrincipalArn",
-                        values: [
-                          pulumi.interpolate`arn:aws.iam::${Cloud.aws.account.id}:role/*`,
-                        ],
-                      },
-                    ]
-                  : undefined,
-            },
-          ],
-        }).json,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                principals: [
+                  {
+                    type: "AWS",
+                    identifiers: [UsersSync.roleArn, Web.server.role.principal],
+                  },
+                ],
+                actions: ["execute-api:Invoke"],
+                resources: [pulumi.interpolate`${args.gateway.executionArn}/*`],
+                conditions:
+                  Web.server.role.principal === "*"
+                    ? [
+                        {
+                          test: "StringLike",
+                          variable: "aws:PrincipalArn",
+                          values: [
+                            pulumi.interpolate`arn:aws.iam::${Cloud.aws.account.id}:role/*`,
+                          ],
+                        },
+                      ]
+                    : undefined,
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );
@@ -192,6 +206,24 @@ export class Api extends pulumi.ComponentResource {
         pathPart: "appspecific",
       },
       { parent: this },
+    );
+
+    this.#wellKnownAppSpecificRoutes.push(
+      new WellKnownAppSpecificRoute(
+        "AccountIdRoute",
+        {
+          apiId: args.gateway.id,
+          parentId: this.#appSpecificResource.id,
+          pathPart: args.domainName.apply(
+            (domainName) => `${Utils.reverseDns(domainName)}.account-id.txt`,
+          ),
+          responseTemplates: {
+            "text/plain": aws.getCallerIdentityOutput({}, { parent: this })
+              .accountId,
+          },
+        },
+        { parent: this },
+      ),
     );
 
     this.#wellKnownAppSpecificRoutes.push(
@@ -545,7 +577,7 @@ export class Api extends pulumi.ComponentResource {
 }`,
         },
         passthroughBehavior: "NEVER",
-        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:sqs:path/${args.invoicesProcessorQueue.name}`,
+        uri: pulumi.interpolate`arn:aws:apigateway:${region}:sqs:path/${args.invoicesProcessorQueue.name}`,
         credentials: this.#role.arn,
       },
       { parent: this },
@@ -655,7 +687,7 @@ export class Api extends pulumi.ComponentResource {
 `,
         },
         passthroughBehavior: "NEVER",
-        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:cloudfront:path/${args.distributionId}/invalidation`,
+        uri: pulumi.interpolate`arn:aws:apigateway:${region}:cloudfront:path/${args.distributionId}/invalidation`,
         credentials: this.#role.arn,
       },
       { parent: this },
@@ -855,7 +887,7 @@ class EventRoute extends pulumi.ComponentResource {
     args: EventRouteArgs,
     opts: pulumi.ComponentResourceOptions,
   ) {
-    const { AppData, Cloud } = useResource();
+    const { AppData } = useResource();
 
     super(`${AppData.name}:tenant:aws:EventRoute`, name, args, opts);
 
@@ -897,7 +929,7 @@ class EventRoute extends pulumi.ComponentResource {
           ? { "application/json": args.requestTemplate }
           : undefined,
         passthroughBehavior: "NEVER",
-        uri: pulumi.interpolate`arn:aws:apigateway:${Cloud.aws.region}:events:action/PutEvents`,
+        uri: pulumi.interpolate`arn:aws:apigateway:${aws.getRegionOutput({}, { parent: this }).name}:events:action/PutEvents`,
         credentials: args.executionRoleArn,
       },
       { parent: this },

@@ -19,7 +19,6 @@ export interface RouterArgs {
       originPath?: pulumi.Input<string>;
     }
   >;
-  realtimeApiKey: pulumi.Input<string>;
 }
 
 export class Router extends pulumi.ComponentResource {
@@ -28,7 +27,6 @@ export class Router extends pulumi.ComponentResource {
   #keyGroup: aws.cloudfront.KeyGroup;
   #apiCachePolicy: aws.cloudfront.CachePolicy;
   #s3AccessControl: aws.cloudfront.OriginAccessControl;
-  #realtimeViewerRequestFunction: aws.cloudfront.Function;
   #realtimeOriginRequestPolicy: aws.cloudfront.OriginRequestPolicy;
   #distribution: aws.cloudfront.Distribution;
   #cname: cloudflare.Record;
@@ -90,37 +88,6 @@ export class Router extends pulumi.ComponentResource {
         originAccessControlOriginType: "s3",
         signingBehavior: "always",
         signingProtocol: "sigv4",
-      },
-      { parent: this },
-    );
-
-    this.#realtimeViewerRequestFunction = new aws.cloudfront.Function(
-      "RealtimeViewerRequestFunction",
-      {
-        runtime: "cloudfront-js-2.0",
-        code: pulumi.interpolate`
-function handler(event) {
-  const request = event.request;
-
-  request.headers["Sec-Websocket-Protocol"] = {
-    value:
-      "aws-appsync-event-ws,header-" +
-      getBase64URLEncoded({
-        host: "${args.origins.appsyncHttp.domainName}",
-        "X-Api-Key": "${args.realtimeApiKey}",
-      }),
-  };
-
-  return request;
-}
-
-function getBase64URLEncoded(authorization) {
-  return btoa(JSON.stringify(authorization))
-    .replace(/\+/g, "-") // Convert '+' to '-'
-    .replace(/\//g, "_") // Convert '/' to '_'
-    .replace(/=+$/, ""); // Remove padding '='
-}
-`,
       },
       { parent: this },
     );
@@ -203,9 +170,7 @@ function getBase64URLEncoded(authorization) {
       compress: false,
       defaultTtl: 0,
       cachePolicyId: aws.cloudfront
-        .getCachePolicy({
-          name: cachingDisabledPolicyName,
-        })
+        .getCachePolicy({ name: cachingDisabledPolicyName }, { parent: this })
         .then((policy) => {
           if (!policy.id)
             throw new Error(
@@ -216,12 +181,6 @@ function getBase64URLEncoded(authorization) {
         }),
       originRequestPolicyId: this.#realtimeOriginRequestPolicy.id,
       trustedKeyGroups: [this.#keyGroup.id],
-      functionAssociations: [
-        {
-          functionArn: this.#realtimeViewerRequestFunction.arn,
-          eventType: "viewer-request",
-        },
-      ],
     } satisfies BehaviorConfig;
 
     this.#distribution = new aws.cloudfront.Distribution(
@@ -248,12 +207,6 @@ function getBase64URLEncoded(authorization) {
           {
             originId: "/event",
             customOriginConfig,
-            customHeaders: [
-              {
-                name: "X-Api-Key",
-                value: args.realtimeApiKey,
-              },
-            ],
             ...args.origins.appsyncHttp,
           },
           {
@@ -324,9 +277,10 @@ function getBase64URLEncoded(authorization) {
     this.#cname = new cloudflare.Record(
       "Cname",
       {
-        zoneId: cloudflare.getZoneOutput({
-          name: AppData.domainName.value,
-        }).id,
+        zoneId: cloudflare.getZoneOutput(
+          { name: AppData.domainName.value },
+          { parent: this },
+        ).id,
         name: args.domainName,
         type: "CNAME",
         value: this.#distribution.domainName,
@@ -339,7 +293,6 @@ function getBase64URLEncoded(authorization) {
       keyGroup: this.#keyGroup.id,
       apiCachePolicy: this.#apiCachePolicy.id,
       s3AccessControl: this.#s3AccessControl.id,
-      realtimeViewerRequestFunction: this.#realtimeViewerRequestFunction.id,
       realtimeOriginRequestPolicy: this.#realtimeOriginRequestPolicy.id,
       distribution: this.#distribution.id,
       cname: this.#cname.id,

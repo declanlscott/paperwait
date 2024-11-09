@@ -1,12 +1,11 @@
-import { Constants } from "@paperwait/core/utils/constants";
+import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import { add } from "date-fns";
 
 import * as appsync from "../dynamic/appsync";
 import { useResource } from "../resource";
 
 export interface RealtimeArgs {
-  roleArn: pulumi.Input<string>;
+  assumeRoleArn: pulumi.Input<string>;
 }
 
 export class Realtime extends pulumi.ComponentResource {
@@ -14,7 +13,8 @@ export class Realtime extends pulumi.ComponentResource {
 
   #api: appsync.Api;
   #channelNamespace: appsync.ChannelNamespace;
-  #apiKey: appsync.ApiKey;
+  #subscriberRole: aws.iam.Role;
+  #publisherRole: aws.iam.Role;
 
   static getInstance(
     args: RealtimeArgs,
@@ -28,7 +28,7 @@ export class Realtime extends pulumi.ComponentResource {
   private constructor(
     ...[args, opts]: Parameters<typeof Realtime.getInstance>
   ) {
-    const { AppData } = useResource();
+    const { AppData, Cloud, Web } = useResource();
 
     super(`${AppData.name}:tenant:aws:Realtime`, "Realtime", args, opts);
 
@@ -36,12 +36,12 @@ export class Realtime extends pulumi.ComponentResource {
       "Api",
       {
         eventConfig: {
-          authProviders: [{ authType: "API_KEY" }, { authType: "AWS_IAM" }],
-          connectionAuthModes: [{ authType: "API_KEY" }],
+          authProviders: [{ authType: "AWS_IAM" }],
+          connectionAuthModes: [{ authType: "AWS_IAM" }],
           defaultPublishAuthModes: [{ authType: "AWS_IAM" }],
-          defaultSubscribeAuthModes: [{ authType: "API_KEY" }],
+          defaultSubscribeAuthModes: [{ authType: "AWS_IAM" }],
         },
-        clientRoleArn: args.roleArn,
+        clientRoleArn: args.assumeRoleArn,
       },
       { parent: this },
     );
@@ -51,20 +51,84 @@ export class Realtime extends pulumi.ComponentResource {
       {
         apiId: this.#api.id,
         name: "default",
-        clientRoleArn: args.roleArn,
+        clientRoleArn: args.assumeRoleArn,
       },
       { parent: this },
     );
 
-    this.#apiKey = new appsync.ApiKey(
-      "ApiKey",
+    const assumeRolePolicy = aws.iam.getPolicyDocumentOutput(
       {
-        apiId: this.#api.id,
-        clientRoleArn: args.roleArn,
-        expires: add(
-          Date.now(),
-          Constants.REALTIME_API_KEY_LIFETIME,
-        ).getUTCSeconds(),
+        statements: [
+          {
+            principals: [
+              {
+                type: "AWS",
+                identifiers: [Web.server.role.principal],
+              },
+            ],
+            actions: ["sts:AssumeRole"],
+            conditions:
+              Web.server.role.principal === "*"
+                ? [
+                    {
+                      test: "StringLike",
+                      variable: "aws:PrincipalArn",
+                      values: [
+                        pulumi.interpolate`arn:aws:iam::${Cloud.aws.account.id}:role/*`,
+                      ],
+                    },
+                  ]
+                : undefined,
+          },
+        ],
+      },
+      { parent: this },
+    ).json;
+
+    this.#subscriberRole = new aws.iam.Role(
+      "SubscriberRole",
+      { name: Cloud.aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
+      { parent: this },
+    );
+    new aws.iam.RolePolicy(
+      "SubscriberRoleInlinePolicy",
+      {
+        role: this.#subscriberRole.name,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: ["appsync:EventConnect", "appsync:EventSubscribe"],
+                resources: [this.#api.apiArn],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
+      },
+      { parent: this },
+    );
+
+    this.#publisherRole = new aws.iam.Role(
+      "PublisherRole",
+      { name: Cloud.aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
+      { parent: this },
+    );
+    new aws.iam.RolePolicy(
+      "PublisherRoleInlinePolicy",
+      {
+        role: this.#publisherRole.name,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: ["appsync:EventPublish"],
+                resources: [this.#api.apiArn],
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );
@@ -72,15 +136,14 @@ export class Realtime extends pulumi.ComponentResource {
     this.registerOutputs({
       api: this.#api.id,
       channelNamespace: this.#channelNamespace.id,
-      apiKey: this.#apiKey.id,
     });
   }
 
-  get apiId() {
-    return this.#api.id;
+  get httpDomainName() {
+    return pulumi.interpolate`${this.#api.apiId}.appsync-api.${aws.getRegionOutput({}, { parent: this }).name}.amazonaws.com`;
   }
 
-  get apiKey() {
-    return this.#apiKey.id;
+  get realtimeDomainName() {
+    return pulumi.interpolate`${this.#api.apiId}.appsync-realtime-api.${aws.getRegionOutput({}, { parent: this }).name}.amazonaws.com`;
   }
 }

@@ -6,7 +6,6 @@ import {
   cloudfrontPublicKey,
 } from "./misc";
 import { organization } from "./organization";
-import { realtime } from "./realtime";
 import {
   codeBucket,
   invoicesProcessorDeadLetterQueue,
@@ -231,7 +230,6 @@ export const tenantInfraFunction = new aws.lambda.Function(
       Code: code.properties,
       InvoicesProcessor: invoicesProcessor.getSSTLink().properties,
       PulumiBucket: pulumiBucket.getSSTLink().properties,
-      Realtime: realtime.properties,
       UsersSync: usersSync.getSSTLink().properties,
       Web: web.getSSTLink().properties,
     }),
