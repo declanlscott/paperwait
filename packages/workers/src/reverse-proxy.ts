@@ -1,5 +1,5 @@
-import { Constants } from "@paperwait/core/utils/constants";
-import { HttpError } from "@paperwait/core/utils/errors";
+import { Constants } from "@printworks/core/utils/constants";
+import { HttpError } from "@printworks/core/utils/errors";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/cloudflare-workers";
 import { getCookie } from "hono/cookie";

@@ -1,4 +1,4 @@
-import { ApplicationError } from "@paperwait/core/utils/errors";
+import { ApplicationError } from "@printworks/core/utils/errors";
 
 import { Utils } from "../utils";
 

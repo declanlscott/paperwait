@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
-import { tenantStatuses } from "@paperwait/core/tenants/shared";
+import { tenantStatuses } from "@printworks/core/tenants/shared";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 
@@ -36,7 +36,7 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
 
-import type { TenantStatus } from "@paperwait/core/tenants/shared";
+import type { TenantStatus } from "@printworks/core/tenants/shared";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   component: Component,

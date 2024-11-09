@@ -1,5 +1,5 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "paperwait-ip-rate-limiter"
+name = "printworks-ip-rate-limiter"
 main = "src/index.js"
 compatibility_date = "2024-09-03"
 

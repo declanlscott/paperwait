@@ -1,4 +1,4 @@
-import { Realtime } from "@paperwait/core/realtime";
+import { Realtime } from "@printworks/core/realtime";
 import { Outlet } from "@tanstack/react-router";
 import { toast } from "sonner";
 

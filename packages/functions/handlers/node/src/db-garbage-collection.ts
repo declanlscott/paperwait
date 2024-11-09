@@ -1,5 +1,5 @@
-import { Replicache } from "@paperwait/core/replicache";
-import { Sessions } from "@paperwait/core/sessions";
+import { Replicache } from "@printworks/core/replicache";
+import { Sessions } from "@printworks/core/sessions";
 
 import type { EventBridgeHandler } from "aws-lambda";
 

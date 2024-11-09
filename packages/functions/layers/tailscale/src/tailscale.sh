@@ -61,7 +61,7 @@ TAILSCALE_AUTH_KEY=$(echo "$SSM_RESPONSE" | jq -r '.Parameter.Value | fromjson |
 # https://tailscale.com/kb/1112/userspace-networking/ and https://tailscale.com/kb/1113/aws-lambda/
 extecho "Starting Tailscale init process"
 /opt/bin/tailscaled --tun=userspace-networking --socks5-server=127.0.0.1:1055 --socket=/tmp/tailscale.sock --state /tmp/tailscale &
-/opt/bin/tailscale --socket=/tmp/tailscale.sock up --authkey="$TAILSCALE_AUTH_KEY" --shields-up --hostname=paperwait-papercut-secure-bridge
+/opt/bin/tailscale --socket=/tmp/tailscale.sock up --authkey="$TAILSCALE_AUTH_KEY" --shields-up --hostname=printworks-papercut-secure-bridge
 extecho "Tailscale started"
 ALL_PROXY=socks5://127.0.0.1:1055/
 NO_PROXY=$AWS_LAMBDA_RUNTIME_API

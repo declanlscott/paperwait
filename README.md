@@ -1,4 +1,4 @@
-# Paperwait
+# Printworks
 
 > [!WARNING]  
 > This project is still under active development.

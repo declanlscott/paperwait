@@ -1,7 +1,7 @@
 import { vValidator } from "@hono/valibot-validator";
-import { transact } from "@paperwait/core/drizzle/transaction";
-import { registrationSchema } from "@paperwait/core/tenants/shared";
-import { licensesTable, tenantsTable } from "@paperwait/core/tenants/sql";
+import { transact } from "@printworks/core/drizzle/transaction";
+import { registrationSchema } from "@printworks/core/tenants/shared";
+import { licensesTable, tenantsTable } from "@printworks/core/tenants/sql";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 

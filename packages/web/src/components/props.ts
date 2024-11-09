@@ -1,4 +1,4 @@
-import type { Registration } from "@paperwait/core/tenants/shared";
+import type { Registration } from "@printworks/core/tenants/shared";
 
 type Errors = Partial<Record<keyof Registration, Array<string>>>;
 

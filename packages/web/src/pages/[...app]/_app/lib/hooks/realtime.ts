@@ -1,4 +1,4 @@
-import { Constants } from "@paperwait/core/utils/constants";
+import { Constants } from "@printworks/core/utils/constants";
 import usePartySocket from "partysocket/react";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";

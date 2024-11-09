@@ -106,7 +106,7 @@ importers:
         specifier: ^3.4.5
         version: 3.4.5
     devDependencies:
-      '@paperwait/eslint-config':
+      '@printworks/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       drizzle-kit:
@@ -145,7 +145,7 @@ importers:
 
   packages/functions/handlers/node:
     dependencies:
-      '@paperwait/core':
+      '@printworks/core':
         specifier: workspace:*
         version: link:../../../core
       '@pulumi/aws':
@@ -161,7 +161,7 @@ importers:
         specifier: ^0.13.0
         version: 0.13.0
     devDependencies:
-      '@paperwait/eslint-config':
+      '@printworks/eslint-config':
         specifier: workspace:*
         version: link:../../../eslint-config
       '@types/aws-lambda':
@@ -173,11 +173,11 @@ importers:
 
   packages/scripts:
     dependencies:
-      '@paperwait/core':
+      '@printworks/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@paperwait/eslint-config':
+      '@printworks/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       tsx:
@@ -207,7 +207,7 @@ importers:
       '@monaco-editor/react':
         specifier: ^4.6.0
         version: 4.6.0(monaco-editor@0.52.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@paperwait/core':
+      '@printworks/core':
         specifier: workspace:*
         version: link:../core
       '@radix-ui/react-avatar':
@@ -304,7 +304,7 @@ importers:
       '@astrojs/check':
         specifier: ^0.9.4
         version: 0.9.4(prettier-plugin-astro@0.14.1)(prettier@3.3.3)(typescript@5.6.3)
-      '@paperwait/eslint-config':
+      '@printworks/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
       '@types/react':
@@ -322,14 +322,14 @@ importers:
 
   packages/workers:
     dependencies:
-      '@paperwait/core':
+      '@printworks/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20241106.0
         version: 4.20241106.0
-      '@paperwait/eslint-config':
+      '@printworks/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
 

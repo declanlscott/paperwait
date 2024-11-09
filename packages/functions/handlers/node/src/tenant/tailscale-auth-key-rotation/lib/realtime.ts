@@ -1,4 +1,4 @@
-import { HttpError } from "@paperwait/core/utils/errors";
+import { HttpError } from "@printworks/core/utils/errors";
 
 import { useContext } from "./context";
 

@@ -14,7 +14,7 @@ if (!SUPABASE_ACCESS_TOKEN) throw new Error("SUPABASE_ACCESS_TOKEN is not set");
 export default $config({
   app(input) {
     return {
-      name: "paperwait",
+      name: "printworks",
       removal: input?.stage === "production" ? "retain" : "remove",
       home: "aws",
       providers: {

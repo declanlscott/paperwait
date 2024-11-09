@@ -3,25 +3,25 @@ import {
   afterTransaction,
   useTransaction,
   withTransaction,
-} from "@paperwait/core/drizzle/transaction";
-import { Oauth2 } from "@paperwait/core/oauth2";
-import { EntraId } from "@paperwait/core/oauth2/entra-id";
-import { Google } from "@paperwait/core/oauth2/google";
+} from "@printworks/core/drizzle/transaction";
+import { Oauth2 } from "@printworks/core/oauth2";
+import { EntraId } from "@printworks/core/oauth2/entra-id";
+import { Google } from "@printworks/core/oauth2/google";
 import {
   ENTRA_ID,
   GOOGLE,
   oauth2ProviderVariants,
-} from "@paperwait/core/oauth2/shared";
-import { oauth2ProvidersTable } from "@paperwait/core/oauth2/sql";
-import { Realtime } from "@paperwait/core/realtime";
-import { Replicache } from "@paperwait/core/replicache";
-import { Sessions } from "@paperwait/core/sessions";
-import { useAuthenticated } from "@paperwait/core/sessions/context";
-import { tenantsTable } from "@paperwait/core/tenants/sql";
-import { Users } from "@paperwait/core/users";
-import { userProfilesTable, usersTable } from "@paperwait/core/users/sql";
-import { HttpError } from "@paperwait/core/utils/errors";
-import { nanoIdSchema } from "@paperwait/core/utils/shared";
+} from "@printworks/core/oauth2/shared";
+import { oauth2ProvidersTable } from "@printworks/core/oauth2/sql";
+import { Realtime } from "@printworks/core/realtime";
+import { Replicache } from "@printworks/core/replicache";
+import { Sessions } from "@printworks/core/sessions";
+import { useAuthenticated } from "@printworks/core/sessions/context";
+import { tenantsTable } from "@printworks/core/tenants/sql";
+import { Users } from "@printworks/core/users";
+import { userProfilesTable, usersTable } from "@printworks/core/users/sql";
+import { HttpError } from "@printworks/core/utils/errors";
+import { nanoIdSchema } from "@printworks/core/utils/shared";
 import { and, eq, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
@@ -31,7 +31,7 @@ import * as v from "valibot";
 
 import { authorization } from "~/api/middleware";
 
-import type { UserInfo } from "@paperwait/core/oauth2/shared";
+import type { UserInfo } from "@printworks/core/oauth2/shared";
 
 export default new Hono()
   // Login

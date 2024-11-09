@@ -1,12 +1,12 @@
-import { withTransaction } from "@paperwait/core/drizzle/transaction";
-import { Oauth2 } from "@paperwait/core/oauth2";
-import { withOauth2 } from "@paperwait/core/oauth2/context";
-import { useAuthenticated } from "@paperwait/core/sessions/context";
-import { HttpError } from "@paperwait/core/utils/errors";
-import { enforceRbac } from "@paperwait/core/utils/shared";
+import { withTransaction } from "@printworks/core/drizzle/transaction";
+import { Oauth2 } from "@printworks/core/oauth2";
+import { withOauth2 } from "@printworks/core/oauth2/context";
+import { useAuthenticated } from "@printworks/core/sessions/context";
+import { HttpError } from "@printworks/core/utils/errors";
+import { enforceRbac } from "@printworks/core/utils/shared";
 import { createMiddleware } from "hono/factory";
 
-import type { UserRole } from "@paperwait/core/users/shared";
+import type { UserRole } from "@printworks/core/users/shared";
 
 export const authorization = (
   roles: Array<UserRole> = ["administrator", "operator", "manager", "customer"],

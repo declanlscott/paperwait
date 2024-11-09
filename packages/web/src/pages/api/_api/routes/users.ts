@@ -1,10 +1,10 @@
 import { vValidator } from "@hono/valibot-validator";
-import { useOauth2 } from "@paperwait/core/oauth2/context";
-import { EntraId } from "@paperwait/core/oauth2/entra-id";
-import { Google } from "@paperwait/core/oauth2/google";
-import { ENTRA_ID, GOOGLE } from "@paperwait/core/oauth2/shared";
-import { HttpError } from "@paperwait/core/utils/errors";
-import { nanoIdSchema } from "@paperwait/core/utils/shared";
+import { useOauth2 } from "@printworks/core/oauth2/context";
+import { EntraId } from "@printworks/core/oauth2/entra-id";
+import { Google } from "@printworks/core/oauth2/google";
+import { ENTRA_ID, GOOGLE } from "@printworks/core/oauth2/shared";
+import { HttpError } from "@printworks/core/utils/errors";
+import { nanoIdSchema } from "@printworks/core/utils/shared";
 import { Hono } from "hono";
 import * as v from "valibot";
 

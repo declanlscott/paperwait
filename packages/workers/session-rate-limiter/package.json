@@ -1,5 +1,5 @@
 {
-  "name": "@paperwait/session-rate-limiter",
+  "name": "@printworks/session-rate-limiter",
   "version": "0.0.0",
   "private": true,
   "scripts": {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
-import { roomStatuses } from "@paperwait/core/rooms/shared";
+import { roomStatuses } from "@printworks/core/rooms/shared";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Delete, HousePlus, Lock, LockOpen, Pencil, Save } from "lucide-react";
 
@@ -29,7 +29,7 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
 
-import type { RoomStatus } from "@paperwait/core/rooms/shared";
+import type { RoomStatus } from "@printworks/core/rooms/shared";
 
 export const Route = createFileRoute("/_authenticated/settings/rooms/$roomId/")(
   {

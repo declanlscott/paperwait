@@ -1,5 +1,5 @@
 {
-  "name": "@paperwait/core",
+  "name": "@printworks/core",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": false,
@@ -33,7 +33,7 @@
     "postgres": "^3.4.5"
   },
   "devDependencies": {
-    "@paperwait/eslint-config": "workspace:*",
+    "@printworks/eslint-config": "workspace:*",
     "drizzle-kit": "^0.26.2"
   }
 }

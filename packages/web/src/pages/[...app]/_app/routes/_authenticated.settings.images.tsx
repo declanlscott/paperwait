@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Constants } from "@paperwait/core/utils/constants";
+import { Constants } from "@printworks/core/utils/constants";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Dropzone } from "~/app/components/ui/primitives/dropzone";

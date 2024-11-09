@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ApplicationError } from "@paperwait/core/utils/errors";
+import { ApplicationError } from "@printworks/core/utils/errors";
 import { useForm } from "@tanstack/react-form";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";

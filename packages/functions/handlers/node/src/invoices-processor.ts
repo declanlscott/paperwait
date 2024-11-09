@@ -1,4 +1,4 @@
-import { Sqs } from "@paperwait/core/utils/aws";
+import { Sqs } from "@printworks/core/utils/aws";
 import { Resource } from "sst";
 import * as v from "valibot";
 

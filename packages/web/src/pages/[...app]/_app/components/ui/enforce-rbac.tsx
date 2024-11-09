@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { enforceRbac } from "@paperwait/core/utils/shared";
+import { enforceRbac } from "@printworks/core/utils/shared";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 
 import type { PropsWithChildren } from "react";
-import type { UserRole } from "@paperwait/core/users/shared";
+import type { UserRole } from "@printworks/core/users/shared";
 
 export interface EnforceRbac extends PropsWithChildren {
   roles: Array<UserRole>;

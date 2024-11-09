@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ApplicationError } from "@paperwait/core/utils/errors";
+import { ApplicationError } from "@printworks/core/utils/errors";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 

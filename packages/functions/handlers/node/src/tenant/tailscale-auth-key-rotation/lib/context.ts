@@ -1,5 +1,5 @@
-import { Utils } from "@paperwait/core/utils";
-import { Ssm } from "@paperwait/core/utils/aws";
+import { Utils } from "@printworks/core/utils";
+import { Ssm } from "@printworks/core/utils/aws";
 
 import type { Context as LambdaContext } from "aws-lambda";
 import type { Resource } from "sst";

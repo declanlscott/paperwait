@@ -1,5 +1,5 @@
 import { useCallback, useContext } from "react";
-import { ApplicationError } from "@paperwait/core/utils/errors";
+import { ApplicationError } from "@printworks/core/utils/errors";
 import { useRouter } from "@tanstack/react-router";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -15,7 +15,7 @@ import { initialLoginSearchParams } from "~/app/lib/schemas";
 import type {
   Authenticated,
   Unauthenticated,
-} from "@paperwait/core/sessions/shared";
+} from "@printworks/core/sessions/shared";
 import type { AuthStore } from "~/app/lib/contexts";
 
 export function useAuthStore<TSlice>(selector: (store: AuthStore) => TSlice) {

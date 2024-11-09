@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ApplicationError, HttpError } from "@paperwait/core/utils/errors";
-import { enforceRbac, rbacErrorMessage } from "@paperwait/core/utils/shared";
+import { ApplicationError, HttpError } from "@printworks/core/utils/errors";
+import { enforceRbac, rbacErrorMessage } from "@printworks/core/utils/shared";
 import { redirect } from "@tanstack/react-router";
 import { createStore } from "zustand";
 
@@ -10,7 +10,7 @@ import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
-import type { Auth } from "@paperwait/core/sessions/shared";
+import type { Auth } from "@printworks/core/sessions/shared";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { AppRouter } from "~/app/types";
 

@@ -4,7 +4,7 @@ import {
   deliveryOptionsConfigurationSchema,
   workflowConfigurationSchema,
   workflowStatusTypes,
-} from "@paperwait/core/rooms/shared";
+} from "@printworks/core/rooms/shared";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { valibotValidator } from "@tanstack/valibot-form-adapter";
@@ -59,7 +59,7 @@ import type {
   RoomConfiguration,
   WorkflowConfiguration,
   WorkflowStatusType,
-} from "@paperwait/core/rooms/shared";
+} from "@printworks/core/rooms/shared";
 
 export const Route = createFileRoute(
   "/_authenticated/settings/rooms/$roomId/configuration",

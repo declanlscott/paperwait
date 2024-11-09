@@ -16,7 +16,7 @@ export default defineConfig({
   integrations: [
     react(),
     tailwind({ applyBaseStyles: false }),
-    starlight({ title: "Paperwait" }),
+    starlight({ title: "Printworks" }),
     icon(),
   ],
   vite: { plugins: [TanStackRouterVite()] },

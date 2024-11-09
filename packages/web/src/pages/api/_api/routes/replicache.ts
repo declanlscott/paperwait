@@ -1,9 +1,9 @@
-import { Replicache } from "@paperwait/core/replicache";
+import { Replicache } from "@printworks/core/replicache";
 import {
   ApplicationError,
   HttpError,
   ReplicacheError,
-} from "@paperwait/core/utils/errors";
+} from "@printworks/core/utils/errors";
 import { Hono } from "hono";
 
 import { authorization } from "~/api/middleware";

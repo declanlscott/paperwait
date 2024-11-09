@@ -1,5 +1,5 @@
 {
-  "name": "@paperwait/web",
+  "name": "@printworks/web",
   "version": "0.0.0",
   "scripts": {
     "dev": "sst dev astro dev",
@@ -16,7 +16,7 @@
     "@iconify-json/lucide": "^1.2.13",
     "@internationalized/date": "^3.5.6",
     "@monaco-editor/react": "^4.6.0",
-    "@paperwait/core": "workspace:*",
+    "@printworks/core": "workspace:*",
     "@radix-ui/react-avatar": "^1.1.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tanstack/match-sorter-utils": "^8.19.4",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
-    "@paperwait/eslint-config": "workspace:*",
+    "@printworks/eslint-config": "workspace:*",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "tailwindcss-react-aria-components": "^1.1.6",

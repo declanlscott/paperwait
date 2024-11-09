@@ -12,7 +12,7 @@ import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
-import type { Auth } from "@paperwait/core/sessions/context";
+import type { Auth } from "@printworks/core/sessions/context";
 import type { Resource } from "sst";
 import type { AppRouter, Slot } from "~/app/types";
 

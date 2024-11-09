@@ -1,11 +1,11 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { Announcements } from "@paperwait/core/announcements/client";
-import { ApplicationError } from "@paperwait/core/utils/errors";
+import { Announcements } from "@printworks/core/announcements/client";
+import { ApplicationError } from "@printworks/core/utils/errors";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 
-import type { Authenticated } from "@paperwait/core/sessions/shared";
+import type { Authenticated } from "@printworks/core/sessions/shared";
 import type {
   ReadTransaction,
   SubscribeOptions,

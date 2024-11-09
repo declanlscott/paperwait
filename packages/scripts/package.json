@@ -1,5 +1,5 @@
 {
-  "name": "@paperwait/scripts",
+  "name": "@printworks/scripts",
   "version": "0.0.0",
   "scripts": {
     "seed": "tsx ./src/seed.ts",
@@ -7,10 +7,10 @@
     "tsx": "tsx"
   },
   "dependencies": {
-    "@paperwait/core": "workspace:*"
+    "@printworks/core": "workspace:*"
   },
   "devDependencies": {
-    "@paperwait/eslint-config": "workspace:*",
+    "@printworks/eslint-config": "workspace:*",
     "tsx": "^4.19.2"
   }
 }

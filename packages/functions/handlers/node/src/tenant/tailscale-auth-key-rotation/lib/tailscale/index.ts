@@ -1,6 +1,6 @@
-import { Ssm } from "@paperwait/core/utils/aws";
-import { Constants } from "@paperwait/core/utils/constants";
-import { HttpError } from "@paperwait/core/utils/errors";
+import { Ssm } from "@printworks/core/utils/aws";
+import { Constants } from "@printworks/core/utils/constants";
+import { HttpError } from "@printworks/core/utils/errors";
 import { add, isBefore } from "date-fns";
 import createClient from "openapi-fetch";
 import * as v from "valibot";

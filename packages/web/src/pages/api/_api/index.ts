@@ -1,5 +1,5 @@
-import { Oauth2 } from "@paperwait/core/oauth2";
-import { HttpError } from "@paperwait/core/utils/errors";
+import { Oauth2 } from "@printworks/core/oauth2";
+import { HttpError } from "@printworks/core/utils/errors";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";

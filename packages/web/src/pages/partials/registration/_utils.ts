@@ -1,8 +1,8 @@
-import { registrationSchema } from "@paperwait/core/tenants/shared";
+import { registrationSchema } from "@printworks/core/tenants/shared";
 import * as R from "remeda";
 import * as v from "valibot";
 
-import type { Registration } from "@paperwait/core/tenants/shared";
+import type { Registration } from "@printworks/core/tenants/shared";
 
 export const getFormInput = (formData: FormData) =>
   R.keys(registrationSchema.entries).reduce(

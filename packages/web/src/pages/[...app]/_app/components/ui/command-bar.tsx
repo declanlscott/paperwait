@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
-import { enforceRbac } from "@paperwait/core/utils/shared";
+import { enforceRbac } from "@printworks/core/utils/shared";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { Check, CircleCheck, CircleDashed, Home, LogOut } from "lucide-react";
@@ -26,7 +26,7 @@ import {
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { linksFactory } from "~/app/lib/links";
 
-import type { Room } from "@paperwait/core/rooms/sql";
+import type { Room } from "@printworks/core/rooms/sql";
 import type { ToOptions } from "@tanstack/react-router";
 import type { CommandBarPage } from "~/app/types";
 

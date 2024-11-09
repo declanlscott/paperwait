@@ -1,8 +1,8 @@
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
   extends: [
-    "@paperwait/eslint-config/astro.cjs",
-    "@paperwait/eslint-config/react.cjs",
+    "@printworks/eslint-config/astro.cjs",
+    "@printworks/eslint-config/react.cjs",
   ],
   parserOptions: {
     project: true,

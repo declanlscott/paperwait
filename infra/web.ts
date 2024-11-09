@@ -13,11 +13,11 @@ export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
       serviceBindings: [
         {
           name: "SESSION_RATE_LIMITER",
-          service: "paperwait-session-rate-limiter",
+          service: "printworks-session-rate-limiter",
         },
         {
           name: "IP_RATE_LIMITER",
-          service: "paperwait-ip-rate-limiter",
+          service: "printworks-ip-rate-limiter",
         },
       ],
     },

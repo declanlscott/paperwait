@@ -11,8 +11,8 @@ import {
   Wrench,
 } from "lucide-react";
 
-import type { Product } from "@paperwait/core/products/sql";
-import type { Room } from "@paperwait/core/rooms/sql";
+import type { Product } from "@printworks/core/products/sql";
+import type { Room } from "@printworks/core/rooms/sql";
 import type { AppLink, AppLinksFactory } from "~/app/types";
 
 const dashboardLink = {

@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
-import { mutationRbac } from "@paperwait/core/replicache/shared";
-import { userRoles } from "@paperwait/core/users/shared";
-import { Utils } from "@paperwait/core/utils/client";
-import { enforceRbac } from "@paperwait/core/utils/shared";
+import { mutationRbac } from "@printworks/core/replicache/shared";
+import { userRoles } from "@printworks/core/users/shared";
+import { Utils } from "@printworks/core/utils/client";
+import { enforceRbac } from "@printworks/core/utils/shared";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   flexRender,
@@ -69,8 +69,8 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { useManager } from "~/app/lib/hooks/manager";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
-import type { UserRole } from "@paperwait/core/users/shared";
-import type { User, UserWithProfile } from "@paperwait/core/users/sql";
+import type { UserRole } from "@printworks/core/users/shared";
+import type { User, UserWithProfile } from "@printworks/core/users/sql";
 import type {
   ColumnDef,
   SortingState,

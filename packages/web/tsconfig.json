@@ -5,7 +5,7 @@
     "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
-      "@paperwait/core/*": ["../core/src/*"],
+      "@printworks/core/*": ["../core/src/*"],
       "~/api/*": ["src/pages/api/_api/*"],
       "~/app/*": ["src/pages/[...app]/_app/*"],
       "~/components/*": ["src/components/*"],

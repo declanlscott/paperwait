@@ -1,5 +1,5 @@
-import { Realtime } from "@paperwait/core/realtime";
-import { Users } from "@paperwait/core/users";
+import { Realtime } from "@printworks/core/realtime";
+import { Users } from "@printworks/core/users";
 import * as v from "valibot";
 
 import type { EventBridgeHandler } from "aws-lambda";

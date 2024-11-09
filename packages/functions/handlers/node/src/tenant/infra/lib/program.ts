@@ -1,4 +1,4 @@
-import { nanoIdSchema } from "@paperwait/core/utils/shared";
+import { nanoIdSchema } from "@printworks/core/utils/shared";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 import * as v from "valibot";

@@ -1,7 +1,7 @@
 import { createContext } from "react";
 
-import type { Auth, Authenticated } from "@paperwait/core/sessions/shared";
-import type { UserRole } from "@paperwait/core/users/shared";
+import type { Auth, Authenticated } from "@printworks/core/sessions/shared";
+import type { UserRole } from "@printworks/core/users/shared";
 import type { Replicache } from "replicache";
 import type { Resource } from "sst";
 import type { StoreApi } from "zustand";

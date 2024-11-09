@@ -1,4 +1,4 @@
-import { Appsync, Sts } from "@paperwait/core/utils/aws";
+import { Appsync, Sts } from "@printworks/core/utils/aws";
 
 import { logicalName, physicalName } from "../../../naming";
 

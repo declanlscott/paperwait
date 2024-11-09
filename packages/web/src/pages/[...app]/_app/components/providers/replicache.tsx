@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useAuth } from "@paperwait/core/sessions/context";
+import { useAuth } from "@printworks/core/sessions/context";
 import { Replicache } from "replicache";
 
 import { ReplicacheContext } from "~/app/lib/contexts";

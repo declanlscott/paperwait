@@ -1,10 +1,10 @@
-import { ApplicationError } from "@paperwait/core/utils/errors";
+import { ApplicationError } from "@printworks/core/utils/errors";
 
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 
-import type { PapercutAccount } from "@paperwait/core/papercut/sql";
-import type { User } from "@paperwait/core/users/sql";
+import type { PapercutAccount } from "@printworks/core/papercut/sql";
+import type { User } from "@printworks/core/users/sql";
 
 export function useManager() {
   const { user } = useAuthenticated();

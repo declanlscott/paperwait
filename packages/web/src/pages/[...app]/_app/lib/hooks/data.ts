@@ -3,11 +3,11 @@ import {
   papercutAccountCustomerAuthorizationsTableName,
   papercutAccountManagerAuthorizationsTableName,
   papercutAccountsTableName,
-} from "@paperwait/core/papercut/shared";
-import { productsTableName } from "@paperwait/core/products/shared";
-import { roomsTableName } from "@paperwait/core/rooms/shared";
-import { tenantsTableName } from "@paperwait/core/tenants/shared";
-import { usersTableName } from "@paperwait/core/users/shared";
+} from "@printworks/core/papercut/shared";
+import { productsTableName } from "@printworks/core/products/shared";
+import { roomsTableName } from "@printworks/core/rooms/shared";
+import { tenantsTableName } from "@printworks/core/tenants/shared";
+import { usersTableName } from "@printworks/core/users/shared";
 import * as R from "remeda";
 
 import { useApi } from "~/app/lib/hooks/api";
@@ -18,11 +18,11 @@ import type {
   PapercutAccount,
   PapercutAccountCustomerAuthorization,
   PapercutAccountManagerAuthorization,
-} from "@paperwait/core/papercut/sql";
-import type { Product } from "@paperwait/core/products/sql";
-import type { Room } from "@paperwait/core/rooms/sql";
-import type { Tenant } from "@paperwait/core/tenants/sql";
-import type { User, UserWithProfile } from "@paperwait/core/users/sql";
+} from "@printworks/core/papercut/sql";
+import type { Product } from "@printworks/core/products/sql";
+import type { Room } from "@printworks/core/rooms/sql";
+import type { Tenant } from "@printworks/core/tenants/sql";
+import type { User, UserWithProfile } from "@printworks/core/users/sql";
 import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
 
 export const useQuery = <TData, TDefaultData = undefined>(
