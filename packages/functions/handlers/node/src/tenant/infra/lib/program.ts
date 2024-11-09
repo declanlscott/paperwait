@@ -74,15 +74,14 @@ export const getProgram = (input: ProgramInput) => async () =>
           documents: {
             domainName: storage.buckets.documents.regionalDomainName,
           },
-          realtimeHttp: {
+          appsyncHttp: {
             domainName: pulumi.interpolate`${realtime.apiId}.appsync-api.${Cloud.aws.region}.amazonaws.com`,
-            originPath: "/event",
           },
-          realtimeWebsocket: {
+          appsyncRealtime: {
             domainName: pulumi.interpolate`${realtime.apiId}.appsync-realtime-api.${Cloud.aws.region}.amazonaws.com`,
-            originPath: "/event/realtime",
           },
         },
+        realtimeApiKey: realtime.apiKey,
       },
       { providers: [account.provider] },
     );

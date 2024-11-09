@@ -13,9 +13,13 @@ export interface RouterArgs {
   certificateArn: aws.acm.Certificate["arn"];
   keyPairId: pulumi.Input<string>;
   origins: Record<
-    "api" | "assets" | "documents" | "realtimeHttp" | "realtimeWebsocket",
-    { domainName: pulumi.Input<string>; originPath?: pulumi.Input<string> }
+    "api" | "assets" | "documents" | "appsyncHttp" | "appsyncRealtime",
+    {
+      domainName: pulumi.Input<string>;
+      originPath?: pulumi.Input<string>;
+    }
   >;
+  realtimeApiKey: pulumi.Input<string>;
 }
 
 export class Router extends pulumi.ComponentResource {
@@ -24,7 +28,8 @@ export class Router extends pulumi.ComponentResource {
   #keyGroup: aws.cloudfront.KeyGroup;
   #apiCachePolicy: aws.cloudfront.CachePolicy;
   #s3AccessControl: aws.cloudfront.OriginAccessControl;
-  #websocketOriginRequestPolicy: aws.cloudfront.OriginRequestPolicy;
+  #realtimeViewerRequestFunction: aws.cloudfront.Function;
+  #realtimeOriginRequestPolicy: aws.cloudfront.OriginRequestPolicy;
   #distribution: aws.cloudfront.Distribution;
   #cname: cloudflare.Record;
 
@@ -89,8 +94,39 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#websocketOriginRequestPolicy = new aws.cloudfront.OriginRequestPolicy(
-      "WebsocketOriginRequestPolicy",
+    this.#realtimeViewerRequestFunction = new aws.cloudfront.Function(
+      "RealtimeViewerRequestFunction",
+      {
+        runtime: "cloudfront-js-2.0",
+        code: pulumi.interpolate`
+function handler(event) {
+  const request = event.request;
+
+  request.headers["Sec-Websocket-Protocol"] = {
+    value:
+      "aws-appsync-event-ws,header-" +
+      getBase64URLEncoded({
+        host: "${args.origins.appsyncHttp.domainName}",
+        "X-Api-Key": "${args.realtimeApiKey}",
+      }),
+  };
+
+  return request;
+}
+
+function getBase64URLEncoded(authorization) {
+  return btoa(JSON.stringify(authorization))
+    .replace(/\+/g, "-") // Convert '+' to '-'
+    .replace(/\//g, "_") // Convert '/' to '_'
+    .replace(/=+$/, ""); // Remove padding '='
+}
+`,
+      },
+      { parent: this },
+    );
+
+    this.#realtimeOriginRequestPolicy = new aws.cloudfront.OriginRequestPolicy(
+      "RealtimeOriginRequestPolicy",
       {
         cookiesConfig: {
           cookieBehavior: "none",
@@ -111,13 +147,13 @@ export class Router extends pulumi.ComponentResource {
     const urlCacheBehaviorConfig = {
       viewerProtocolPolicy: "redirect-to-https",
       allowedMethods: [
-        "DELETE",
         "GET",
         "HEAD",
         "OPTIONS",
-        "PATCH",
-        "POST",
         "PUT",
+        "POST",
+        "PATCH",
+        "DELETE",
       ],
       cachedMethods: ["GET", "HEAD"],
       defaultTtl: 0,
@@ -160,7 +196,7 @@ export class Router extends pulumi.ComponentResource {
       trustedKeyGroups: [this.#keyGroup.id],
     } satisfies BehaviorConfig;
 
-    const websocketCacheBehaviorConfig = {
+    const realtimeCacheBehaviorConfig = {
       viewerProtocolPolicy: "redirect-to-https",
       allowedMethods: ["GET", "HEAD", "OPTIONS"],
       cachedMethods: [],
@@ -178,8 +214,14 @@ export class Router extends pulumi.ComponentResource {
 
           return policy.id;
         }),
-      originRequestPolicyId: this.#websocketOriginRequestPolicy.id,
+      originRequestPolicyId: this.#realtimeOriginRequestPolicy.id,
       trustedKeyGroups: [this.#keyGroup.id],
+      functionAssociations: [
+        {
+          functionArn: this.#realtimeViewerRequestFunction.arn,
+          eventType: "viewer-request",
+        },
+      ],
     } satisfies BehaviorConfig;
 
     this.#distribution = new aws.cloudfront.Distribution(
@@ -204,14 +246,20 @@ export class Router extends pulumi.ComponentResource {
             ...args.origins.documents,
           },
           {
-            originId: "/realtime/http",
+            originId: "/event",
             customOriginConfig,
-            ...args.origins.realtimeHttp,
+            customHeaders: [
+              {
+                name: "X-Api-Key",
+                value: args.realtimeApiKey,
+              },
+            ],
+            ...args.origins.appsyncHttp,
           },
           {
-            originId: "/realtime/websocket",
+            originId: "/event/realtime",
             customOriginConfig,
-            ...args.origins.realtimeWebsocket,
+            ...args.origins.appsyncRealtime,
           },
           {
             originId: "/*",
@@ -248,14 +296,14 @@ export class Router extends pulumi.ComponentResource {
             ...bucketCacheBehaviorConfig,
           },
           {
-            targetOriginId: "/realtime/http",
-            pathPattern: "/realtime/http",
+            targetOriginId: "/event",
+            pathPattern: "/event",
             ...urlCacheBehaviorConfig,
           },
           {
-            targetOriginId: "/realtime/websocket",
-            pathPattern: "/realtime/websocket",
-            ...websocketCacheBehaviorConfig,
+            targetOriginId: "/event/realtime",
+            pathPattern: "/event/realtime",
+            ...realtimeCacheBehaviorConfig,
           },
         ],
         restrictions: {
@@ -291,7 +339,8 @@ export class Router extends pulumi.ComponentResource {
       keyGroup: this.#keyGroup.id,
       apiCachePolicy: this.#apiCachePolicy.id,
       s3AccessControl: this.#s3AccessControl.id,
-      websocketOriginRequestPolicy: this.#websocketOriginRequestPolicy.id,
+      realtimeViewerRequestFunction: this.#realtimeViewerRequestFunction.id,
+      realtimeOriginRequestPolicy: this.#realtimeOriginRequestPolicy.id,
       distribution: this.#distribution.id,
       cname: this.#cname.id,
     });

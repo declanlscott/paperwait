@@ -79,4 +79,8 @@ export class Realtime extends pulumi.ComponentResource {
   get apiId() {
     return this.#api.id;
   }
+
+  get apiKey() {
+    return this.#apiKey.id;
+  }
 }

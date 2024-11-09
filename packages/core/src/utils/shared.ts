@@ -118,3 +118,11 @@ export const rbacErrorMessage = (
   resourceName?: string,
 ) =>
   `User "${user.id}" does not have the required role to access ${resourceName ? `"${resourceName}"` : "this resource"}.`;
+
+export const getBase64UrlEncoded = <TValue extends Record<string, unknown>>(
+  input: TValue,
+) =>
+  btoa(JSON.stringify(input))
+    .replace(/\+/g, "-") // Convert '+' to '-'
+    .replace(/\//g, "_") // Convert '/' to '_'
+    .replace(/=+$/, ""); // Remove padding '='
