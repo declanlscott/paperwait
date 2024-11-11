@@ -17,6 +17,34 @@ declare module "sst" {
       "stage": string
       "type": "sst.sst.Linkable"
     }
+    "Aws": {
+      "account": {
+        "id": string
+      }
+      "organization": {
+        "email": string
+        "id": string
+        "managementRole": {
+          "arn": string
+        }
+        "tenantsOrganizationalUnit": {
+          "id": string
+        }
+      }
+      "region": string
+      "tenant": {
+        "accountAccessRole": {
+          "name": string
+        }
+        "realtimePublisherRole": {
+          "name": string
+        }
+        "realtimeSubscriberRole": {
+          "name": string
+        }
+      }
+      "type": "sst.sst.Linkable"
+    }
     "BootstrapRoleArn": {
       "type": "sst.sst.Secret"
       "value": string
@@ -25,39 +53,6 @@ declare module "sst" {
       "appFqdn": string
       "isDev": boolean
       "replicacheLicenseKey": string
-      "type": "sst.sst.Linkable"
-    }
-    "Cloud": {
-      "aws": {
-        "account": {
-          "id": string
-        }
-        "organization": {
-          "email": string
-          "id": string
-          "managementRole": {
-            "arn": string
-          }
-          "tenantsOrganizationalUnit": {
-            "id": string
-          }
-        }
-        "region": string
-        "tenant": {
-          "accountAccessRole": {
-            "name": string
-          }
-          "realtimePublisherRole": {
-            "name": string
-          }
-          "realtimeSubscriberRole": {
-            "name": string
-          }
-        }
-      }
-      "cloudflare": {
-        "apiToken": string
-      }
       "type": "sst.sst.Linkable"
     }
     "CloudfrontPrivateKey": {

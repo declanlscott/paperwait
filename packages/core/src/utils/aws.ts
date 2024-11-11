@@ -198,7 +198,7 @@ export namespace Ssm {
     );
     if (!Parameter?.Value)
       throw new ParameterNotFound({
-        message: "Parameter not found or has no value",
+        message: `Parameter of name "${input.Name}" not found or has no value`,
         $metadata,
       });
 

@@ -73,7 +73,7 @@ export class Api extends pulumi.ComponentResource {
   }
 
   private constructor(...[args, opts]: Parameters<typeof Api.getInstance>) {
-    const { AppData, Cloud, UsersSync, Web } = useResource();
+    const { AppData, Aws, UsersSync, Web } = useResource();
 
     super(`${AppData.name}:tenant:aws:Api`, "Api", args, opts);
 
@@ -164,7 +164,7 @@ export class Api extends pulumi.ComponentResource {
                           test: "StringLike",
                           variable: "aws:PrincipalArn",
                           values: [
-                            pulumi.interpolate`arn:aws.iam::${Cloud.aws.account.id}:role/*`,
+                            pulumi.interpolate`arn:aws.iam::${Aws.account.id}:role/*`,
                           ],
                         },
                       ]

@@ -1,7 +1,8 @@
 import { db } from "./db";
 import {
   appData,
-  cloud,
+  aws_,
+  cloudflareApiTokenParameter,
   cloudfrontPrivateKey,
   cloudfrontPublicKey,
 } from "./misc";
@@ -214,6 +215,10 @@ new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
         actions: ["s3:*"],
         resources: [pulumiBucket.arn, $interpolate`${pulumiBucket.arn}/*`],
       },
+      {
+        actions: ["ssm:GetParameter"],
+        resources: [cloudflareApiTokenParameter.arn],
+      },
     ],
   }).json,
 });
@@ -225,7 +230,7 @@ export const tenantInfraFunction = new aws.lambda.Function(
     role: tenantInfraFunctionRole.arn,
     ...link({
       AppData: appData.properties,
-      Cloud: cloud.properties,
+      Aws: aws_.properties,
       CloudfrontPublicKey: cloudfrontPublicKey.properties,
       Code: code.properties,
       InvoicesProcessor: invoicesProcessor.getSSTLink().properties,

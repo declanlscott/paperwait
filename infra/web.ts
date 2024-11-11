@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { appFqdn } from "./dns";
-import { appData, client, cloud } from "./misc";
+import { appData, aws_, client } from "./misc";
 import { oauth2 } from "./oauth2";
 import { webPassword, webUsername } from "./secrets";
 import { tenantInfraQueue } from "./storage";
@@ -48,14 +48,14 @@ export const web = new sst.aws.Astro("Web", {
     {
       actions: ["execute-api:Invoke"],
       resources: [
-        $interpolate`arn:aws:execute-api:${cloud.properties.aws.region}:*:${appData.properties.stage}/*`,
+        $interpolate`arn:aws:execute-api:${aws_.properties.region}:*:${appData.properties.stage}/*`,
       ],
     },
     {
       actions: ["sts:AssumeRole"],
       resources: [
-        cloud.properties.aws.tenant.realtimeSubscriberRole.name,
-        cloud.properties.aws.tenant.realtimePublisherRole.name,
+        aws_.properties.tenant.realtimeSubscriberRole.name,
+        aws_.properties.tenant.realtimePublisherRole.name,
       ].map((roleName) => $interpolate`arn:aws:iam::*:role/${roleName}`),
     },
   ],
@@ -79,8 +79,7 @@ if (
       "www-authenticate": { value: "Basic" }
     }
   };
-}
-`,
+}`,
             },
           }
         : undefined,

@@ -1,3 +1,4 @@
+import { Ssm } from "@printworks/core/utils/aws";
 import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
 import * as pulumi from "@pulumi/pulumi";
@@ -26,10 +27,13 @@ export const handler: SQSHandler = async (event) =>
   });
 
 async function processRecord(record: SQSRecord) {
-  const { AppData, Cloud, PulumiBucket } = useResource();
+  const { AppData, Aws, PulumiBucket } = useResource();
 
+  console.log("Parsing program input...");
   const programInput = v.parse(programInputSchema, record.body);
+  console.log("Successfully parsed program input");
 
+  console.log("Initializing stack...");
   const projectName = `${AppData.name}-${AppData.stage}-tenants`;
   const stack = await pulumi.automation.LocalWorkspace.createOrSelectStack(
     {
@@ -57,12 +61,19 @@ async function processRecord(record: SQSRecord) {
   ]);
   console.log("Successfully installed plugins");
 
+  console.log("Retrieving Cloudflare API token...");
+  const cloudflareApiToken = await Ssm.getParameter(new Ssm.Client(), {
+    Name: `/${AppData.name}/${AppData.stage}/cloudflare/api-token`,
+    WithDecryption: true,
+  });
+  console.log("Successfully retrieved Cloudflare API token");
+
   console.log("Setting stack configuration...");
   await stack.setAllConfig({
-    "aws:region": { value: Cloud.aws.region },
-    "aws:assumeRole": { value: Cloud.aws.organization.managementRole.arn },
+    "aws:region": { value: Aws.region },
+    "aws:assumeRole": { value: Aws.organization.managementRole.arn },
     "cloudflare:apiToken": {
-      value: Cloud.cloudflare.apiToken,
+      value: cloudflareApiToken,
       secret: true,
     },
   });

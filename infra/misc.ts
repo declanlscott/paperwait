@@ -29,37 +29,32 @@ export const appData = new sst.Linkable("AppData", {
   },
 });
 
-export const cloud = new sst.Linkable("Cloud", {
+export const aws_ = new sst.Linkable("Aws", {
   properties: {
-    aws: {
-      organization: {
-        id: organization.id,
-        email: organization.masterAccountEmail,
-        managementRole: {
-          arn: organizationManagementRole.arn,
-        },
-        tenantsOrganizationalUnit: {
-          id: tenantsOrganizationalUnit.id,
-        },
+    organization: {
+      id: organization.id,
+      email: organization.masterAccountEmail,
+      managementRole: {
+        arn: organizationManagementRole.arn,
       },
-      account: {
-        id: aws.getCallerIdentityOutput().accountId,
-      },
-      region: aws.getRegionOutput({}).name,
-      tenant: {
-        accountAccessRole: {
-          name: tenantAccountAccessRoleName,
-        },
-        realtimeSubscriberRole: {
-          name: "TenantRealtimeSubscriberRole",
-        },
-        realtimePublisherRole: {
-          name: "TenantRealtimePublisherRole",
-        },
+      tenantsOrganizationalUnit: {
+        id: tenantsOrganizationalUnit.id,
       },
     },
-    cloudflare: {
-      apiToken: process.env.CLOUDFLARE_API_TOKEN!,
+    account: {
+      id: aws.getCallerIdentityOutput().accountId,
+    },
+    region: aws.getRegionOutput({}).name,
+    tenant: {
+      accountAccessRole: {
+        name: tenantAccountAccessRoleName,
+      },
+      realtimeSubscriberRole: {
+        name: "TenantRealtimeSubscriberRole",
+      },
+      realtimePublisherRole: {
+        name: "TenantRealtimePublisherRole",
+      },
     },
   },
 });
@@ -80,3 +75,12 @@ export const cloudfrontPublicKey = new sst.Linkable("CloudfrontPublicKey", {
     pem: cloudfrontPrivateKey.publicKeyPem,
   },
 });
+
+export const cloudflareApiTokenParameter = new aws.ssm.Parameter(
+  "CloudflareApiToken",
+  {
+    name: `/${$app.name}/${$app.stage}/cloudflare/api-token`,
+    type: aws.ssm.ParameterType.SecureString,
+    value: process.env.CLOUDFLARE_API_TOKEN!,
+  },
+);

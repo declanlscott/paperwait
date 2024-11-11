@@ -9,11 +9,11 @@ export type CustomResource = {
   [TKey in keyof Pick<
     Resource,
     | "AppData"
-    | "Code"
-    | "Cloud"
+    | "Aws"
     | "CloudfrontPublicKey"
-    | "PulumiBucket"
+    | "Code"
     | "InvoicesProcessor"
+    | "PulumiBucket"
     | "UsersSync"
     | "Web"
   >]: Omit<Resource[TKey], "type">;

@@ -28,9 +28,7 @@ export default $config({
         awsx: true,
         cloudflare: true,
         azuread: true,
-        supabase: {
-          accessToken: SUPABASE_ACCESS_TOKEN,
-        },
+        supabase: { accessToken: SUPABASE_ACCESS_TOKEN },
         "@pulumiverse/time": true,
         tls: true,
         random: true,

@@ -28,7 +28,7 @@ export class Realtime extends pulumi.ComponentResource {
   private constructor(
     ...[args, opts]: Parameters<typeof Realtime.getInstance>
   ) {
-    const { AppData, Cloud, Web } = useResource();
+    const { AppData, Aws, Web } = useResource();
 
     super(`${AppData.name}:tenant:aws:Realtime`, "Realtime", args, opts);
 
@@ -74,7 +74,7 @@ export class Realtime extends pulumi.ComponentResource {
                       test: "StringLike",
                       variable: "aws:PrincipalArn",
                       values: [
-                        pulumi.interpolate`arn:aws:iam::${Cloud.aws.account.id}:role/*`,
+                        pulumi.interpolate`arn:aws:iam::${Aws.account.id}:role/*`,
                       ],
                     },
                   ]
@@ -87,7 +87,7 @@ export class Realtime extends pulumi.ComponentResource {
 
     this.#subscriberRole = new aws.iam.Role(
       "SubscriberRole",
-      { name: Cloud.aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
+      { name: Aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
       { parent: this },
     );
     new aws.iam.RolePolicy(
@@ -111,7 +111,7 @@ export class Realtime extends pulumi.ComponentResource {
 
     this.#publisherRole = new aws.iam.Role(
       "PublisherRole",
-      { name: Cloud.aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
+      { name: Aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
       { parent: this },
     );
     new aws.iam.RolePolicy(
