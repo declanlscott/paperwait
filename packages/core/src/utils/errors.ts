@@ -30,16 +30,26 @@ export namespace ApplicationError {
   export class EntityNotFound extends ApplicationError.Error {
     public readonly name = "EntityNotFound";
 
-    constructor(domain?: string, id?: string | number) {
-      super(`Entity "${id}" not found in "${domain}".`);
+    constructor(entity?: { name: string; id: string }) {
+      super(
+        entity
+          ? `Entity "${entity.name}" not found with id "${entity.id}".`
+          : "Entity not found.",
+      );
     }
   }
 
   export class AccessDenied extends ApplicationError.Error {
     public readonly name = "AccessDenied";
 
-    constructor(message = "Access denied") {
-      super(message);
+    constructor(resource?: { name: string; id?: string }) {
+      super(
+        resource
+          ? `Access denied to resource "${resource.name}"${
+              resource.id ? ` with id "${resource.id}"` : ""
+            }.`
+          : "Access denied.",
+      );
     }
   }
 

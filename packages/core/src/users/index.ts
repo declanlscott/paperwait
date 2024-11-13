@@ -25,11 +25,12 @@ import {
   HttpError,
   MiscellaneousError,
 } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac, fn } from "../utils/shared";
 import {
   deleteUserProfileMutationArgsSchema,
   restoreUserProfileMutationArgsSchema,
   updateUserProfileRoleMutationArgsSchema,
+  usersTableName,
 } from "./shared";
 import { userProfilesTable, usersTable } from "./sql";
 
@@ -335,7 +336,7 @@ export namespace Users {
 
       enforceRbac(user, mutationRbac.updateUserProfileRole, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "update user profile role mutator")],
+        args: [{ name: usersTableName, id }],
       });
 
       return useTransaction(async (tx) => {
@@ -365,7 +366,7 @@ export namespace Users {
         id === user.id ||
         enforceRbac(user, mutationRbac.deleteUserProfile, {
           Error: ApplicationError.AccessDenied,
-          args: [rbacErrorMessage(user, "delete user profile mutator")],
+          args: [{ name: usersTableName, id }],
         })
       ) {
         return useTransaction(async (tx) => {
@@ -394,7 +395,7 @@ export namespace Users {
 
       enforceRbac(user, mutationRbac.restoreUserProfile, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "restore user profile mutator")],
+        args: [{ name: usersTableName, id }],
       });
 
       return useTransaction(async (tx) => {

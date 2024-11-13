@@ -5,7 +5,7 @@ import { papercutAccountManagerAuthorizationsTableName } from "../papercut/share
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac } from "../utils/shared";
 import {
   deleteUserProfileMutationArgsSchema,
   restoreUserProfileMutationArgsSchema,
@@ -46,7 +46,10 @@ export namespace Users {
   ) {
     const order = await tx.get<Order>(`${ordersTableName}/${orderId}`);
     if (!order)
-      throw new ApplicationError.EntityNotFound(ordersTableName, orderId);
+      throw new ApplicationError.EntityNotFound({
+        name: ordersTableName,
+        id: orderId,
+      });
 
     const [adminsOps, managers, customer] = await Promise.all([
       fromRoles(tx, ["administrator", "operator"]),
@@ -100,16 +103,19 @@ export namespace Users {
 
   export const updateProfileRole = Utils.optimisticMutator(
     updateUserProfileRoleMutationArgsSchema,
-    (user) =>
+    (user, _tx, { id }) =>
       enforceRbac(user, mutationRbac.updateUserProfileRole, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "update user profile role mutator")],
+        args: [{ name: usersTableName, id }],
       }),
     () =>
       async (tx, { id, ...values }) => {
         const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
         if (!prev)
-          throw new ApplicationError.EntityNotFound(usersTableName, id);
+          throw new ApplicationError.EntityNotFound({
+            name: usersTableName,
+            id,
+          });
 
         const next = {
           ...prev,
@@ -129,7 +135,7 @@ export namespace Users {
       id === user.id ||
       enforceRbac(user, mutationRbac.deleteUserProfile, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "delete user profile mutator")],
+        args: [{ name: usersTableName, id }],
       }),
     ({ user }) =>
       async (tx, { id, ...values }) => {
@@ -137,7 +143,10 @@ export namespace Users {
         if (enforceRbac(user, ["administrator"])) {
           const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
           if (!prev)
-            throw new ApplicationError.EntityNotFound(usersTableName, id);
+            throw new ApplicationError.EntityNotFound({
+              name: usersTableName,
+              id,
+            });
 
           const next = {
             ...prev,
@@ -152,22 +161,28 @@ export namespace Users {
 
         const success = await tx.del(`${usersTableName}/${id}`);
         if (!success)
-          throw new ApplicationError.EntityNotFound(usersTableName, id);
+          throw new ApplicationError.EntityNotFound({
+            name: usersTableName,
+            id,
+          });
       },
   );
 
   export const restoreProfile = Utils.optimisticMutator(
     restoreUserProfileMutationArgsSchema,
-    (user) =>
+    (user, _tx, { id }) =>
       enforceRbac(user, mutationRbac.restoreUserProfile, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "restore user profile mutator")],
+        args: [{ name: usersTableName, id }],
       }),
     () =>
       async (tx, { id }) => {
         const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
         if (!prev)
-          throw new ApplicationError.EntityNotFound(usersTableName, id);
+          throw new ApplicationError.EntityNotFound({
+            name: usersTableName,
+            id,
+          });
 
         const next = {
           ...prev,

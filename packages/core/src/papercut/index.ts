@@ -8,11 +8,13 @@ import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
 import { Constants } from "../utils/constants";
 import { ApplicationError, MiscellaneousError } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac, fn } from "../utils/shared";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
   deletePapercutAccountManagerAuthorizationMutationArgsSchema,
   deletePapercutAccountMutationArgsSchema,
+  papercutAccountManagerAuthorizationsTableName,
+  papercutAccountsTableName,
   updatePapercutAccountApprovalThresholdMutationArgsSchema,
 } from "./shared";
 import {
@@ -38,12 +40,7 @@ export namespace Papercut {
         mutationRbac.createPapercutAccountManagerAuthorization,
         {
           Error: ApplicationError.AccessDenied,
-          args: [
-            rbacErrorMessage(
-              user,
-              "create papercut account manager authorization mutator",
-            ),
-          ],
+          args: [{ name: papercutAccountManagerAuthorizationsTableName }],
         },
       );
 
@@ -222,9 +219,10 @@ export namespace Papercut {
         ) ||
         !managers.some(({ managerId }) => managerId === user.id)
       )
-        throw new ApplicationError.AccessDenied(
-          `User "${user.id}" cannot update papercut account approval threshold for account "${id}", access denied.`,
-        );
+        throw new ApplicationError.AccessDenied({
+          name: papercutAccountsTableName,
+          id,
+        });
 
       return useTransaction(async (tx) => {
         await tx
@@ -264,7 +262,7 @@ export namespace Papercut {
 
       enforceRbac(user, mutationRbac.deletePapercutAccount, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "delete papercut account mutator")],
+        args: [{ name: papercutAccountsTableName, id }],
       });
 
       return useTransaction(async (tx) => {
@@ -340,12 +338,7 @@ export namespace Papercut {
         mutationRbac.deletePapercutAccountManagerAuthorization,
         {
           Error: ApplicationError.AccessDenied,
-          args: [
-            rbacErrorMessage(
-              user,
-              "delete papercut account manager authorization mutator",
-            ),
-          ],
+          args: [{ name: papercutAccountManagerAuthorizationsTableName, id }],
         },
       );
 

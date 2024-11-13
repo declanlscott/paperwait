@@ -1,6 +1,7 @@
 import { and, arrayOverlaps, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { ordersTableName } from "../orders/shared";
 import { ordersTable } from "../orders/sql";
 import {
   papercutAccountManagerAuthorizationsTable,
@@ -28,9 +29,10 @@ export namespace Comments {
 
     const users = await Users.withOrderAccess(values.orderId);
     if (!users.some((u) => u.id === user.id))
-      throw new ApplicationError.AccessDenied(
-        `User "${user.id}" cannot create a comment on order "${values.orderId}", order access denied.`,
-      );
+      throw new ApplicationError.AccessDenied({
+        name: ordersTableName,
+        id: values.orderId,
+      });
 
     return useTransaction(async (tx) => {
       await tx.insert(commentsTable).values(values);
@@ -148,9 +150,10 @@ export namespace Comments {
 
       const users = await Users.withOrderAccess(values.orderId);
       if (!users.some((u) => u.id === user.id))
-        throw new ApplicationError.AccessDenied(
-          `User "${user.id}" cannot update comment "${id}" on order "${values.orderId}", order access denied.`,
-        );
+        throw new ApplicationError.AccessDenied({
+          name: ordersTableName,
+          id: values.orderId,
+        });
 
       return useTransaction(async (tx) => {
         await tx
@@ -179,9 +182,10 @@ export namespace Comments {
 
       const users = await Users.withOrderAccess(values.orderId);
       if (!users.some((u) => u.id === user.id))
-        throw new ApplicationError.AccessDenied(
-          `User "${user.id}" cannot delete comment "${id}" on order "${values.orderId}", order access denied.`,
-        );
+        throw new ApplicationError.AccessDenied({
+          name: ordersTableName,
+          id: values.orderId,
+        });
 
       return useTransaction(async (tx) => {
         await tx

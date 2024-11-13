@@ -7,8 +7,9 @@ import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac, fn } from "../utils/shared";
 import {
+  announcementsTableName,
   createAnnouncementMutationArgsSchema,
   deleteAnnouncementMutationArgsSchema,
   updateAnnouncementMutationArgsSchema,
@@ -25,7 +26,7 @@ export namespace Announcements {
 
       enforceRbac(user, mutationRbac.createAnnouncement, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "create announcement mutator")],
+        args: [{ name: announcementsTableName }],
       });
 
       return useTransaction(async (tx) => {
@@ -75,7 +76,7 @@ export namespace Announcements {
 
       enforceRbac(user, mutationRbac.updateAnnouncement, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "update announcement mutator")],
+        args: [{ name: announcementsTableName, id }],
       });
 
       return useTransaction(async (tx) => {
@@ -103,7 +104,7 @@ export namespace Announcements {
 
       enforceRbac(user, mutationRbac.deleteAnnouncement, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "delete announcement mutator")],
+        args: [{ name: announcementsTableName, id }],
       });
 
       return useTransaction(async (tx) => {

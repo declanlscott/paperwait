@@ -13,8 +13,8 @@ import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
 import { Constants } from "../utils/constants";
 import { ApplicationError, MiscellaneousError } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
-import { createInvoiceMutationArgsSchema } from "./shared";
+import { enforceRbac, fn } from "../utils/shared";
+import { createInvoiceMutationArgsSchema, invoicesTableName } from "./shared";
 import { invoicesTable } from "./sql";
 
 import type { Invoice } from "./sql";
@@ -25,7 +25,7 @@ export namespace Invoices {
 
     enforceRbac(user, mutationRbac.createInvoice, {
       Error: ApplicationError.AccessDenied,
-      args: [rbacErrorMessage(user, "create invoice mutator")],
+      args: [{ name: invoicesTableName }],
     });
 
     return useTransaction(async (tx) => {

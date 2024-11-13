@@ -7,10 +7,11 @@ import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
 import { Constants } from "../utils/constants";
 import { ApplicationError, MiscellaneousError } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac, fn } from "../utils/shared";
 import {
   createProductMutationArgsSchema,
   deleteProductMutationArgsSchema,
+  productsTableName,
   updateProductMutationArgsSchema,
 } from "./shared";
 import { productsTable } from "./sql";
@@ -23,7 +24,7 @@ export namespace Products {
 
     enforceRbac(user, mutationRbac.createProduct, {
       Error: ApplicationError.AccessDenied,
-      args: [rbacErrorMessage(user, "create product mutator")],
+      args: [{ name: productsTableName }],
     });
 
     return useTransaction(async (tx) => {
@@ -96,7 +97,7 @@ export namespace Products {
 
       enforceRbac(user, mutationRbac.updateProduct, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "update product mutator")],
+        args: [{ name: productsTableName, id }],
       });
 
       return useTransaction(async (tx) => {
@@ -124,7 +125,7 @@ export namespace Products {
 
       enforceRbac(user, mutationRbac.deleteProduct, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "delete product mutator")],
+        args: [{ name: productsTableName, id }],
       });
 
       return useTransaction(async (tx) => {

@@ -12,10 +12,11 @@ import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
 import { Constants } from "../utils/constants";
 import { ApplicationError, MiscellaneousError } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac, fn } from "../utils/shared";
 import {
   createOrderMutationArgsSchema,
   deleteOrderMutationArgsSchema,
+  ordersTableName,
   updateOrderMutationArgsSchema,
 } from "./shared";
 import { ordersTable } from "./sql";
@@ -28,7 +29,7 @@ export namespace Orders {
 
     enforceRbac(user, mutationRbac.createOrder, {
       Error: ApplicationError.AccessDenied,
-      args: [rbacErrorMessage(user, "create order mutator")],
+      args: [{ name: ordersTableName }],
     });
 
     return useTransaction(async (tx) => {
@@ -135,9 +136,7 @@ export namespace Orders {
 
       const users = await Users.withOrderAccess(id);
       if (!users.some((u) => u.id === user.id))
-        throw new ApplicationError.AccessDenied(
-          `User "${user.id}" cannot update order "${id}", order access denied.`,
-        );
+        throw new ApplicationError.AccessDenied({ name: ordersTableName, id });
 
       return useTransaction(async (tx) => {
         await tx
@@ -163,9 +162,7 @@ export namespace Orders {
 
       const users = await Users.withOrderAccess(id);
       if (!users.some((u) => u.id === user.id))
-        throw new ApplicationError.AccessDenied(
-          `User "${user.id}" cannot delete order "${id}", order access denied.`,
-        );
+        throw new ApplicationError.AccessDenied({ name: ordersTableName, id });
 
       return useTransaction(async (tx) => {
         await tx

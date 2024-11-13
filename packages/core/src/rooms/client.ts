@@ -5,7 +5,7 @@ import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac } from "../utils/shared";
 import {
   createRoomMutationArgsSchema,
   defaultWorkflow,
@@ -29,7 +29,7 @@ export namespace Rooms {
     (user) =>
       enforceRbac(user, mutationRbac.createRoom, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "create room mutator")],
+        args: [{ name: roomsTableName }],
       }),
     () => async (tx, values) => {
       await Promise.all([
@@ -60,16 +60,19 @@ export namespace Rooms {
 
   export const update = Utils.optimisticMutator(
     updateRoomMutationArgsSchema,
-    (user) =>
+    (user, _tx, { id }) =>
       enforceRbac(user, mutationRbac.updateRoom, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "update room mutator")],
+        args: [{ name: roomsTableName, id }],
       }),
     () =>
       async (tx, { id, ...values }) => {
         const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
         if (!prev)
-          throw new ApplicationError.EntityNotFound(roomsTableName, id);
+          throw new ApplicationError.EntityNotFound({
+            name: roomsTableName,
+            id,
+          });
 
         const next = {
           ...prev,
@@ -82,10 +85,10 @@ export namespace Rooms {
 
   export const delete_ = Utils.optimisticMutator(
     deleteRoomMutationArgsSchema,
-    (user) =>
+    (user, _tx, { id }) =>
       enforceRbac(user, mutationRbac.deleteRoom, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "delete room mutator")],
+        args: [{ name: roomsTableName, id }],
       }),
     ({ user }) =>
       async (tx, { id, ...values }) => {
@@ -98,10 +101,10 @@ export namespace Rooms {
           products.map(async (p) => {
             const prev = await tx.get<Product>(`${productsTableName}/${p.id}`);
             if (!prev)
-              throw new ApplicationError.EntityNotFound(
-                productsTableName,
-                p.id,
-              );
+              throw new ApplicationError.EntityNotFound({
+                name: productsTableName,
+                id: p.id,
+              });
 
             const next = {
               ...prev,
@@ -115,7 +118,10 @@ export namespace Rooms {
         if (enforceRbac(user, ["administrator"])) {
           const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
           if (!prev)
-            throw new ApplicationError.EntityNotFound(roomsTableName, id);
+            throw new ApplicationError.EntityNotFound({
+              name: roomsTableName,
+              id,
+            });
 
           const next = {
             ...prev,
@@ -127,21 +133,27 @@ export namespace Rooms {
 
         const success = await tx.del(`${roomsTableName}/${id}`);
         if (!success)
-          throw new ApplicationError.EntityNotFound(roomsTableName, id);
+          throw new ApplicationError.EntityNotFound({
+            name: roomsTableName,
+            id,
+          });
       },
   );
 
   export const restore = Utils.optimisticMutator(
     restoreRoomMutationArgsSchema,
-    (user) =>
+    (user, _tx, { id }) =>
       enforceRbac(user, mutationRbac.restoreRoom, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "restore room mutator")],
+        args: [{ name: roomsTableName, id }],
       }),
     () => async (tx, values) => {
       const prev = await tx.get<Room>(`${roomsTableName}/${values.id}`);
       if (!prev)
-        throw new ApplicationError.EntityNotFound(roomsTableName, values.id);
+        throw new ApplicationError.EntityNotFound({
+          name: roomsTableName,
+          id: values.id,
+        });
 
       const next = {
         ...prev,
@@ -157,7 +169,7 @@ export namespace Rooms {
     (user) =>
       enforceRbac(user, mutationRbac.setWorkflow, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "set workflow mutator")],
+        args: [{ name: workflowStatusesTableName }],
       }),
     () =>
       async (tx, { workflow }) => {
@@ -184,7 +196,7 @@ export namespace Rooms {
     (user) =>
       enforceRbac(user, mutationRbac.setDeliveryOptions, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "set delivery options mutator")],
+        args: [{ name: deliveryOptionsTableName }],
       }),
     () =>
       async (tx, { options }) => {

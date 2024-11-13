@@ -104,7 +104,7 @@ export function enforceRbac<TMaybeError extends AnyError | undefined>(
   const hasAccess = roles.includes(user.profile.role);
 
   if (!hasAccess) {
-    console.log(rbacErrorMessage(user));
+    console.log("Access denied.");
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     if (customError) throw new customError.Error(...customError.args);
@@ -112,12 +112,6 @@ export function enforceRbac<TMaybeError extends AnyError | undefined>(
 
   return hasAccess as EnforceRbacResult<TMaybeError>;
 }
-
-export const rbacErrorMessage = (
-  user: Authenticated["user"],
-  resourceName?: string,
-) =>
-  `User "${user.id}" does not have the required role to access ${resourceName ? `"${resourceName}"` : "this resource"}.`;
 
 export const getBase64UrlEncoded = <TValue extends Record<string, unknown>>(
   input: TValue,

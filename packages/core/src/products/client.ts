@@ -1,7 +1,7 @@
 import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac } from "../utils/shared";
 import {
   createProductMutationArgsSchema,
   deleteProductMutationArgsSchema,
@@ -18,7 +18,7 @@ export namespace Products {
     (user) =>
       enforceRbac(user, mutationRbac.createProduct, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "create product mutator")],
+        args: [{ name: productsTableName }],
       }),
     () => async (tx, values) =>
       tx.set(`${productsTableName}/${values.id}`, values),
@@ -26,16 +26,19 @@ export namespace Products {
 
   export const update = Utils.optimisticMutator(
     updateProductMutationArgsSchema,
-    (user) =>
+    (user, _tx, { id }) =>
       enforceRbac(user, mutationRbac.updateProduct, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "update product mutator")],
+        args: [{ name: productsTableName, id }],
       }),
     () =>
       async (tx, { id, ...values }) => {
         const prev = await tx.get<Product>(`${productsTableName}/${id}`);
         if (!prev)
-          throw new ApplicationError.EntityNotFound(productsTableName, id);
+          throw new ApplicationError.EntityNotFound({
+            name: productsTableName,
+            id,
+          });
 
         const next = {
           ...prev,
@@ -48,10 +51,10 @@ export namespace Products {
 
   export const delete_ = Utils.optimisticMutator(
     deleteProductMutationArgsSchema,
-    (user) =>
+    (user, _tx, { id }) =>
       enforceRbac(user, mutationRbac.deleteProduct, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "delete product mutator")],
+        args: [{ name: productsTableName, id }],
       }),
     ({ user }) =>
       async (tx, values) => {
@@ -60,10 +63,10 @@ export namespace Products {
             `${productsTableName}/${values.id}`,
           );
           if (!prev)
-            throw new ApplicationError.EntityNotFound(
-              productsTableName,
-              values.id,
-            );
+            throw new ApplicationError.EntityNotFound({
+              name: productsTableName,
+              id: values.id,
+            });
 
           const next = {
             ...prev,
@@ -75,10 +78,10 @@ export namespace Products {
 
         const success = await tx.del(`${productsTableName}/${values.id}`);
         if (!success)
-          throw new ApplicationError.EntityNotFound(
-            productsTableName,
-            values.id,
-          );
+          throw new ApplicationError.EntityNotFound({
+            name: productsTableName,
+            id: values.id,
+          });
       },
   );
 }

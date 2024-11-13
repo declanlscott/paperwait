@@ -9,8 +9,8 @@ import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
-import { updateTenantMutationArgsSchema } from "./shared";
+import { enforceRbac, fn } from "../utils/shared";
+import { tenantsTableName, updateTenantMutationArgsSchema } from "./shared";
 import { licensesTable, tenantsTable } from "./sql";
 
 import type { License, Tenant } from "./sql";
@@ -43,7 +43,7 @@ export namespace Tenants {
 
     enforceRbac(user, mutationRbac.updateTenant, {
       Error: ApplicationError.AccessDenied,
-      args: [rbacErrorMessage(user, "update tenant mutator")],
+      args: [{ name: tenantsTableName, id: values.id }],
     });
 
     const usersToLogout: Awaited<ReturnType<typeof Users.fromRoles>> = [];

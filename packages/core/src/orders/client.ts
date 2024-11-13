@@ -2,7 +2,7 @@ import { mutationRbac } from "../replicache/shared";
 import { Users } from "../users/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac } from "../utils/shared";
 import {
   createOrderMutationArgsSchema,
   deleteOrderMutationArgsSchema,
@@ -19,7 +19,7 @@ export namespace Orders {
     (user) =>
       enforceRbac(user, mutationRbac.createOrder, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "create order mutator")],
+        args: [{ name: ordersTableName }],
       }),
     () => async (tx, values) =>
       tx.set(`${ordersTableName}/${values.id}`, values),
@@ -34,7 +34,7 @@ export namespace Orders {
         users.some((u) => u.id === user.id) ||
         enforceRbac(user, mutationRbac.updateOrder, {
           Error: ApplicationError.AccessDenied,
-          args: [rbacErrorMessage(user, "update order mutator")],
+          args: [{ name: ordersTableName, id: values.id }],
         })
       )
         return true;
@@ -44,7 +44,10 @@ export namespace Orders {
     () => async (tx, values) => {
       const prev = await tx.get<Order>(`${ordersTableName}/${values.id}`);
       if (!prev)
-        throw new ApplicationError.EntityNotFound(ordersTableName, values.id);
+        throw new ApplicationError.EntityNotFound({
+          name: ordersTableName,
+          id: values.id,
+        });
 
       const next = {
         ...prev,
@@ -64,7 +67,7 @@ export namespace Orders {
         users.some((u) => u.id === user.id) ||
         enforceRbac(user, mutationRbac.deleteOrder, {
           Error: ApplicationError.AccessDenied,
-          args: [rbacErrorMessage(user, "delete order mutator")],
+          args: [{ name: ordersTableName, id }],
         })
       )
         return true;
@@ -76,7 +79,10 @@ export namespace Orders {
         if (enforceRbac(user, ["administrator"])) {
           const prev = await tx.get<Order>(`${ordersTableName}/${id}`);
           if (!prev)
-            throw new ApplicationError.EntityNotFound(ordersTableName, id);
+            throw new ApplicationError.EntityNotFound({
+              name: ordersTableName,
+              id,
+            });
 
           const next = {
             ...prev,
@@ -88,7 +94,10 @@ export namespace Orders {
 
         const success = await tx.del(`${ordersTableName}/${id}`);
         if (!success)
-          throw new ApplicationError.EntityNotFound(ordersTableName, id);
+          throw new ApplicationError.EntityNotFound({
+            name: ordersTableName,
+            id,
+          });
       },
   );
 }

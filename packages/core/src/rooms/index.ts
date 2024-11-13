@@ -10,15 +10,18 @@ import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
 import { Constants } from "../utils/constants";
 import { ApplicationError, MiscellaneousError } from "../utils/errors";
-import { enforceRbac, fn, rbacErrorMessage } from "../utils/shared";
+import { enforceRbac, fn } from "../utils/shared";
 import {
   createRoomMutationArgsSchema,
   defaultWorkflow,
   deleteRoomMutationArgsSchema,
+  deliveryOptionsTableName,
   restoreRoomMutationArgsSchema,
+  roomsTableName,
   setDeliveryOptionsMutationArgsSchema,
   setWorkflowMutationArgsSchema,
   updateRoomMutationArgsSchema,
+  workflowStatusesTableName,
 } from "./shared";
 import { deliveryOptionsTable, roomsTable, workflowStatusesTable } from "./sql";
 
@@ -30,7 +33,7 @@ export namespace Rooms {
 
     enforceRbac(user, mutationRbac.createRoom, {
       Error: ApplicationError.AccessDenied,
-      args: [rbacErrorMessage(user, "create room mutator")],
+      args: [{ name: roomsTableName }],
     });
 
     return useTransaction(async (tx) => {
@@ -119,7 +122,7 @@ export namespace Rooms {
 
       enforceRbac(user, mutationRbac.updateRoom, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "update room mutator")],
+        args: [{ name: roomsTableName, id }],
       });
 
       return useTransaction(async (tx) => {
@@ -144,7 +147,7 @@ export namespace Rooms {
 
       enforceRbac(user, mutationRbac.deleteRoom, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "delete room mutator")],
+        args: [{ name: roomsTableName, id }],
       });
 
       return useTransaction(async (tx) => {
@@ -179,7 +182,7 @@ export namespace Rooms {
 
     enforceRbac(user, mutationRbac.restoreRoom, {
       Error: ApplicationError.AccessDenied,
-      args: [rbacErrorMessage(user, "restore room mutator")],
+      args: [{ name: roomsTableName, id }],
     });
 
     return useTransaction(async (tx) => {
@@ -231,7 +234,7 @@ export namespace Rooms {
 
     enforceRbac(user, mutationRbac.setWorkflow, {
       Error: ApplicationError.AccessDenied,
-      args: [rbacErrorMessage(user, "set workflow mutator")],
+      args: [{ name: workflowStatusesTableName }],
     });
 
     await useTransaction(async (tx) => {
@@ -321,7 +324,7 @@ export namespace Rooms {
 
       enforceRbac(user, mutationRbac.setDeliveryOptions, {
         Error: ApplicationError.AccessDenied,
-        args: [rbacErrorMessage(user, "set delivery options mutator")],
+        args: [{ name: deliveryOptionsTableName }],
       });
 
       await useTransaction(async (tx) => {

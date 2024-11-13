@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ApplicationError, HttpError } from "@printworks/core/utils/errors";
-import { enforceRbac, rbacErrorMessage } from "@printworks/core/utils/shared";
+import { enforceRbac } from "@printworks/core/utils/shared";
 import { redirect } from "@tanstack/react-router";
 import { createStore } from "zustand";
 
@@ -56,7 +56,7 @@ export function AuthStoreProvider(props: AuthStoreProviderProps) {
         authorizeRoute: (user, roles) =>
           enforceRbac(user, roles, {
             Error: ApplicationError.AccessDenied,
-            args: [rbacErrorMessage(user)],
+            args: [],
           }),
       },
     })),
