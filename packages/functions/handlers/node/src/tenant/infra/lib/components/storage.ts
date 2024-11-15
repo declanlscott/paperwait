@@ -59,7 +59,7 @@ class Bucket extends pulumi.ComponentResource {
     this.#bucket = new aws.s3.BucketV2(
       `${name}Bucket`,
       { forceDestroy: true },
-      { parent: this },
+      { retainOnDelete: AppData.stage === "production", parent: this },
     );
 
     this.#publicAccessBlock = new aws.s3.BucketPublicAccessBlock(
@@ -170,7 +170,11 @@ class Queue extends pulumi.ComponentResource {
     super(`${AppData.name}:tenant:aws:Queue`, name, args, opts);
 
     if (args.withDlq)
-      this.#dlq = new aws.sqs.Queue(`${name}Dlq`, {}, { parent: this });
+      this.#dlq = new aws.sqs.Queue(
+        `${name}Dlq`,
+        {},
+        { retainOnDelete: AppData.stage === "production", parent: this },
+      );
 
     this.#queue = new aws.sqs.Queue(
       `${name}Queue`,
@@ -188,7 +192,7 @@ class Queue extends pulumi.ComponentResource {
               })
             : undefined,
       },
-      { parent: this },
+      { retainOnDelete: AppData.stage === "production", parent: this },
     );
 
     this.registerOutputs({

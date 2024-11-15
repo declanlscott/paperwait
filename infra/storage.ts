@@ -23,18 +23,26 @@ export const codeBucket = new sst.aws.Bucket("CodeBucket", {
 
 export const pulumiBucket = new sst.aws.Bucket("PulumiBucket");
 
-export const infraDeadLetterQueue = new sst.aws.Queue("InfraDeadLetterQueue", {
-  transform: {
-    queue: {
-      messageRetentionSeconds: 1209600, // 14 days
+export const infraDeadLetterQueue = new sst.aws.Queue(
+  "InfraDeadLetterQueue",
+  {
+    transform: {
+      queue: {
+        messageRetentionSeconds: 1209600, // 14 days
+      },
     },
   },
-});
+  { retainOnDelete: $app.stage === "production" },
+);
 
-export const tenantInfraQueue = new sst.aws.Queue("TenantInfraQueue", {
-  dlq: infraDeadLetterQueue.arn,
-  visibilityTimeout: "15 minutes",
-});
+export const tenantInfraQueue = new sst.aws.Queue(
+  "TenantInfraQueue",
+  {
+    dlq: infraDeadLetterQueue.arn,
+    visibilityTimeout: "15 minutes",
+  },
+  { retainOnDelete: $app.stage === "production" },
+);
 
 export const invoicesProcessorDeadLetterQueue = new sst.aws.Queue(
   "InvoicesProcessorDeadLetterQueue",
@@ -45,4 +53,5 @@ export const invoicesProcessorDeadLetterQueue = new sst.aws.Queue(
       },
     },
   },
+  { retainOnDelete: $app.stage === "production" },
 );
