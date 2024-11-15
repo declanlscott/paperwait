@@ -10,10 +10,10 @@
   "dependencies": {
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.35.3",
-    "hono": "^4.6.9",
+    "hono": "^4.6.10",
     "remeda": "^2.17.0",
     "replicache": "^15.0.1",
-    "sst": "^3.3.21",
+    "sst": "^3.3.22",
     "valibot": "beta"
   },
   "devDependencies": {
