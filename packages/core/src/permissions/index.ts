@@ -48,58 +48,44 @@ export namespace Permissions {
   };
 
   const resourceMetadataBaseQueryFactory = {
-    [announcementsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+    [announcementsTable._.name]: (tx) =>
+      tx
         .select({
           id: announcementsTable.id,
           rowVersion: sql<number>`"${announcementsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(announcementsTable)
-        .where(eq(announcementsTable.tenantId, tenant.id))
-        .$dynamic();
-    },
-    [commentsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(announcementsTable.tenantId, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [commentsTable._.name]: (tx) =>
+      tx
         .select({
           id: commentsTable.id,
           rowVersion: sql<number>`"${commentsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}`,
         })
         .from(commentsTable)
-        .where(eq(commentsTable.tenantId, tenant.id))
-        .$dynamic();
-    },
-    [deliveryOptionsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(commentsTable.tenantId, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [deliveryOptionsTable._.name]: (tx) =>
+      tx
         .select({
           id: deliveryOptionsTable.id,
           rowVersion: sql<number>`"${deliveryOptionsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(deliveryOptionsTable)
-        .where(eq(deliveryOptionsTable.tenantId, tenant.id))
-        .$dynamic();
-    },
-    [invoicesTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(deliveryOptionsTable.tenantId, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [invoicesTable._.name]: (tx) =>
+      tx
         .select({
           id: invoicesTable.id,
           rowVersion: sql<number>`"${invoicesTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(invoicesTable)
-        .where(eq(invoicesTable.tenantId, tenant.id))
-        .$dynamic();
-    },
-    [ordersTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(invoicesTable.tenantId, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [ordersTable._.name]: (tx) =>
+      tx
         .select({
           id: ordersTable.id,
           rowVersion: sql<number>`"${ordersTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
@@ -107,92 +93,77 @@ export namespace Permissions {
         .from(ordersTable)
         .where(
           and(
-            eq(ordersTable.tenantId, tenant.id),
+            eq(ordersTable.tenantId, useAuthenticated().tenant.id),
             isNull(ordersTable.deletedAt),
           ),
         )
-        .$dynamic();
-    },
-    [papercutAccountsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .$dynamic(),
+    [papercutAccountsTable._.name]: (tx) =>
+      tx
         .select({
           id: papercutAccountsTable.id,
           rowVersion: sql<number>`"${papercutAccountsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(papercutAccountsTable)
-        .where(eq(papercutAccountsTable.tenantId, tenant.id))
-        .$dynamic();
-    },
-    [papercutAccountCustomerAuthorizationsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(papercutAccountsTable.tenantId, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [papercutAccountCustomerAuthorizationsTable._.name]: (tx) =>
+      tx
         .select({
           id: papercutAccountCustomerAuthorizationsTable.id,
           rowVersion: sql<number>`"${papercutAccountCustomerAuthorizationsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(papercutAccountCustomerAuthorizationsTable)
         .where(
-          eq(papercutAccountCustomerAuthorizationsTable.tenantId, tenant.id),
+          eq(
+            papercutAccountCustomerAuthorizationsTable.tenantId,
+            useAuthenticated().tenant.id,
+          ),
         )
-        .$dynamic();
-    },
-    [papercutAccountManagerAuthorizationsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .$dynamic(),
+    [papercutAccountManagerAuthorizationsTable._.name]: (tx) =>
+      tx
         .select({
           id: papercutAccountManagerAuthorizationsTable.id,
           rowVersion: sql<number>`"${papercutAccountManagerAuthorizationsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(papercutAccountManagerAuthorizationsTable)
         .where(
-          eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id),
+          eq(
+            papercutAccountManagerAuthorizationsTable.tenantId,
+            useAuthenticated().tenant.id,
+          ),
         )
-        .$dynamic();
-    },
-    [productsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .$dynamic(),
+    [productsTable._.name]: (tx) =>
+      tx
         .select({
           id: productsTable.id,
           rowVersion: sql<number>`"${productsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(productsTable)
-        .where(eq(productsTable.tenantId, tenant.id))
-        .$dynamic();
-    },
-    [roomsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(productsTable.tenantId, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [roomsTable._.name]: (tx) =>
+      tx
         .select({
           id: roomsTable.id,
           rowVersion: sql<number>`"${roomsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(roomsTable)
-        .where(eq(roomsTable.tenantId, tenant.id))
-        .$dynamic();
-    },
-    [tenantsTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(roomsTable.tenantId, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [tenantsTable._.name]: (tx) =>
+      tx
         .select({
           id: tenantsTable.id,
           rowVersion: sql<number>`"${tenantsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(tenantsTable)
-        .where(eq(tenantsTable.id, tenant.id))
-        .$dynamic();
-    },
-    [usersTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .where(eq(tenantsTable.id, useAuthenticated().tenant.id))
+        .$dynamic(),
+    [usersTable._.name]: (tx) =>
+      tx
         .select({
           id: usersTable.id,
           rowVersion: sql<number>`"${userProfilesTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
@@ -206,22 +177,23 @@ export namespace Permissions {
           ),
         )
         .where(
-          and(eq(usersTable.tenantId, tenant.id), isNull(usersTable.deletedAt)),
+          and(
+            eq(usersTable.tenantId, useAuthenticated().tenant.id),
+            isNull(usersTable.deletedAt),
+          ),
         )
-        .$dynamic();
-    },
-    [workflowStatusesTable._.name]: (tx) => {
-      const { tenant } = useAuthenticated();
-
-      return tx
+        .$dynamic(),
+    [workflowStatusesTable._.name]: (tx) =>
+      tx
         .select({
           id: workflowStatusesTable.id,
           rowVersion: sql<number>`"${workflowStatusesTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(workflowStatusesTable)
-        .where(and(eq(workflowStatusesTable.tenantId, tenant.id)))
-        .$dynamic();
-    },
+        .where(
+          and(eq(workflowStatusesTable.tenantId, useAuthenticated().tenant.id)),
+        )
+        .$dynamic(),
   } as const satisfies ResourceMetadataBaseQueryFactory;
 
   export type ResourceMetadataFactory = Record<
@@ -415,10 +387,8 @@ export namespace Permissions {
           ),
         ),
       [invoicesTable._.name]: async () =>
-        useTransaction((tx) => {
-          const { user } = useAuthenticated();
-
-          return resourceMetadataBaseQueryFactory[invoicesTable._.name](tx)
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[invoicesTable._.name](tx)
             .innerJoin(
               ordersTable,
               and(
@@ -450,17 +420,15 @@ export namespace Permissions {
               or(
                 isNull(invoicesTable.deletedAt),
                 and(
-                  eq(ordersTable.customerId, user.id),
+                  eq(ordersTable.customerId, useAuthenticated().user.id),
                   isNull(invoicesTable.deletedAt),
                 ),
               ),
-            );
-        }),
+            ),
+        ),
       [ordersTable._.name]: async () =>
-        useTransaction((tx) => {
-          const { user } = useAuthenticated();
-
-          return resourceMetadataBaseQueryFactory[ordersTable._.name](tx)
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[ordersTable._.name](tx)
             .innerJoin(
               papercutAccountsTable,
               and(
@@ -485,12 +453,12 @@ export namespace Permissions {
               or(
                 isNull(ordersTable.deletedAt),
                 and(
-                  eq(ordersTable.customerId, user.id),
+                  eq(ordersTable.customerId, useAuthenticated().user.id),
                   isNull(ordersTable.deletedAt),
                 ),
               ),
-            );
-        }),
+            ),
+        ),
       [papercutAccountsTable._.name]: async () =>
         useTransaction((tx) =>
           resourceMetadataBaseQueryFactory[papercutAccountsTable._.name](
@@ -550,10 +518,8 @@ export namespace Permissions {
           resourceMetadataBaseQueryFactory[announcementsTable._.name],
         ),
       [commentsTable._.name]: async () =>
-        useTransaction((tx) => {
-          const { user } = useAuthenticated();
-
-          return resourceMetadataBaseQueryFactory[commentsTable._.name](tx)
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[commentsTable._.name](tx)
             .innerJoin(
               ordersTable,
               and(
@@ -563,12 +529,12 @@ export namespace Permissions {
             )
             .where(
               and(
-                eq(ordersTable.customerId, user.id),
+                eq(ordersTable.customerId, useAuthenticated().user.id),
                 arrayOverlaps(commentsTable.visibleTo, ["customer"]),
                 isNull(commentsTable.deletedAt),
               ),
-            );
-        }),
+            ),
+        ),
       [deliveryOptionsTable._.name]: async () =>
         useTransaction((tx) =>
           resourceMetadataBaseQueryFactory[deliveryOptionsTable._.name](
@@ -581,10 +547,8 @@ export namespace Permissions {
           ),
         ),
       [invoicesTable._.name]: async () =>
-        useTransaction((tx) => {
-          const { user } = useAuthenticated();
-
-          return resourceMetadataBaseQueryFactory[invoicesTable._.name](tx)
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[invoicesTable._.name](tx)
             .innerJoin(
               ordersTable,
               and(
@@ -594,22 +558,20 @@ export namespace Permissions {
             )
             .where(
               and(
-                eq(ordersTable.customerId, user.id),
+                eq(ordersTable.customerId, useAuthenticated().user.id),
                 isNull(invoicesTable.deletedAt),
               ),
-            );
-        }),
+            ),
+        ),
       [ordersTable._.name]: async () =>
-        useTransaction((tx) => {
-          const { user } = useAuthenticated();
-
-          return resourceMetadataBaseQueryFactory[ordersTable._.name](tx).where(
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[ordersTable._.name](tx).where(
             and(
-              eq(ordersTable.customerId, user.id),
+              eq(ordersTable.customerId, useAuthenticated().user.id),
               isNull(ordersTable.deletedAt),
             ),
-          );
-        }),
+          ),
+        ),
       [papercutAccountsTable._.name]: async () =>
         useTransaction((tx) =>
           resourceMetadataBaseQueryFactory[papercutAccountsTable._.name](
