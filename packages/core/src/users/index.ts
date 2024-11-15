@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import * as R from "remeda";
 
 import { buildConflictUpdateColumns } from "../drizzle/columns";
@@ -14,23 +14,17 @@ import {
   papercutAccountManagerAuthorizationsTable,
   papercutAccountsTable,
 } from "../papercut/sql";
+import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { mutationRbac } from "../replicache/shared";
 import { Sessions } from "../sessions";
 import { useAuthenticated } from "../sessions/context";
-import { Constants } from "../utils/constants";
-import {
-  ApplicationError,
-  HttpError,
-  MiscellaneousError,
-} from "../utils/errors";
-import { enforceRbac, fn } from "../utils/shared";
+import { ApplicationError, HttpError } from "../utils/errors";
+import { fn } from "../utils/shared";
 import {
   deleteUserProfileMutationArgsSchema,
   restoreUserProfileMutationArgsSchema,
   updateUserProfileRoleMutationArgsSchema,
-  usersTableName,
 } from "./shared";
 import { userProfilesTable, usersTable } from "./sql";
 
@@ -101,47 +95,8 @@ export namespace Users {
         .then((rows) => rows.at(0)),
     );
 
-  export async function metadata() {
-    const { user, tenant } = useAuthenticated();
-
-    return useTransaction(async (tx) => {
-      const baseQuery = tx
-        .select({
-          id: usersTable.id,
-          rowVersion: sql<number>`"${userProfilesTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
-        })
-        .from(usersTable)
-        .innerJoin(
-          userProfilesTable,
-          and(
-            eq(usersTable.id, userProfilesTable.userId),
-            eq(usersTable.tenantId, userProfilesTable.tenantId),
-          ),
-        )
-        .where(
-          and(eq(usersTable.tenantId, tenant.id), isNull(usersTable.deletedAt)),
-        )
-        .$dynamic();
-
-      switch (user.profile.role) {
-        case "administrator":
-          return baseQuery;
-        case "operator":
-          return baseQuery.where(isNull(userProfilesTable.deletedAt));
-        case "manager":
-          return baseQuery.where(isNull(userProfilesTable.deletedAt));
-        case "customer":
-          return baseQuery.where(isNull(userProfilesTable.deletedAt));
-        default:
-          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
-      }
-    });
-  }
-
-  export async function fromIds(ids: Array<User["id"]>) {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction((tx) =>
+  export const read = async (ids: Array<User["id"]>) =>
+    useTransaction((tx) =>
       tx
         .select({
           user: usersTable,
@@ -156,13 +111,15 @@ export namespace Users {
           ),
         )
         .where(
-          and(inArray(usersTable.id, ids), eq(usersTable.tenantId, tenant.id)),
+          and(
+            inArray(usersTable.id, ids),
+            eq(usersTable.tenantId, useAuthenticated().tenant.id),
+          ),
         )
         .then((rows) =>
           rows.map(({ user, profile }) => ({ ...user, profile })),
         ),
     );
-  }
 
   export async function fromRoles(
     roles: Array<UserRole> = [
@@ -268,12 +225,10 @@ export namespace Users {
     });
   }
 
-  export async function withManagerAuthorization(
+  export const withManagerAuthorization = async (
     accountId: PapercutAccount["id"],
-  ) {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction(async (tx) =>
+  ) =>
+    useTransaction(async (tx) =>
       tx
         .select({
           managerId: papercutAccountManagerAuthorizationsTable.managerId,
@@ -285,11 +240,13 @@ export namespace Users {
               papercutAccountManagerAuthorizationsTable.papercutAccountId,
               accountId,
             ),
-            eq(papercutAccountManagerAuthorizationsTable.tenantId, tenant.id),
+            eq(
+              papercutAccountManagerAuthorizationsTable.tenantId,
+              useAuthenticated().tenant.id,
+            ),
           ),
         ),
     );
-  }
 
   export async function withCustomerAuthorization(
     accountId: PapercutAccount["id"],
@@ -314,30 +271,34 @@ export namespace Users {
     );
   }
 
-  export async function exists(userId: User["id"]) {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction(async (tx) => {
-      const rows = await tx
+  export const exists = async (userId: User["id"]) =>
+    useTransaction((tx) =>
+      tx
         .select()
         .from(usersTable)
         .where(
-          and(eq(usersTable.id, userId), eq(usersTable.tenantId, tenant.id)),
-        );
-
-      return rows.length > 0;
-    });
-  }
+          and(
+            eq(usersTable.id, userId),
+            eq(usersTable.tenantId, useAuthenticated().tenant.id),
+          ),
+        )
+        .then((rows) => rows.length > 0),
+    );
 
   export const updateProfileRole = fn(
     updateUserProfileRoleMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { user, tenant } = useAuthenticated();
+      const { tenant } = useAuthenticated();
 
-      enforceRbac(user, mutationRbac.updateUserProfileRole, {
-        Error: ApplicationError.AccessDenied,
-        args: [{ name: usersTableName, id }],
-      });
+      const hasAccess = await Permissions.hasAccess(
+        usersTable._.name,
+        "update",
+      );
+      if (!hasAccess)
+        throw new ApplicationError.AccessDenied({
+          name: usersTable._.name,
+          id,
+        });
 
       return useTransaction(async (tx) => {
         await tx
@@ -360,43 +321,51 @@ export namespace Users {
   export const deleteProfile = fn(
     deleteUserProfileMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { user, tenant } = useAuthenticated();
+      const { tenant } = useAuthenticated();
 
-      if (
-        id === user.id ||
-        enforceRbac(user, mutationRbac.deleteUserProfile, {
-          Error: ApplicationError.AccessDenied,
-          args: [{ name: usersTableName, id }],
-        })
-      ) {
-        return useTransaction(async (tx) => {
-          await tx
-            .update(usersTable)
-            .set(values)
-            .where(
-              and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)),
-            );
-
-          await afterTransaction(() =>
-            Promise.all([
-              Sessions.invalidateUser(id),
-              Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
-            ]),
-          );
+      const hasAccess = await Permissions.hasAccess(
+        usersTable._.name,
+        "delete",
+        id,
+      );
+      if (!hasAccess)
+        throw new ApplicationError.AccessDenied({
+          name: usersTable._.name,
+          id,
         });
-      }
+
+      return useTransaction(async (tx) => {
+        await tx
+          .update(usersTable)
+          .set(values)
+          .where(
+            and(eq(usersTable.id, id), eq(usersTable.tenantId, tenant.id)),
+          );
+
+        await afterTransaction(() =>
+          Promise.all([
+            Sessions.invalidateUser(id),
+            Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          ]),
+        );
+      });
     },
   );
 
   export const restoreProfile = fn(
     restoreUserProfileMutationArgsSchema,
     async ({ id }) => {
-      const { user, tenant } = useAuthenticated();
+      const { tenant } = useAuthenticated();
 
-      enforceRbac(user, mutationRbac.restoreUserProfile, {
-        Error: ApplicationError.AccessDenied,
-        args: [{ name: usersTableName, id }],
-      });
+      const hasAccess = await Permissions.hasAccess(
+        usersTable._.name,
+        "update",
+      );
+      if (!hasAccess)
+        throw new ApplicationError.AccessDenied({
+          name: usersTable._.name,
+          id,
+        });
 
       return useTransaction(async (tx) => {
         await tx

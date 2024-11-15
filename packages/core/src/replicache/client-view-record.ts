@@ -1,24 +1,21 @@
 import * as R from "remeda";
 
 import { MiscellaneousError } from "../utils/errors";
-import { syncedTables } from "./data";
+import { syncedTables } from "../utils/tables";
 import { replicacheClientsTable } from "./sql";
 
-import type { Metadata, Table, TableMetadata, TableName } from "./data";
+import type { Table, TableByName, TableName } from "../utils/tables";
+import type { Metadata, TableMetadata } from "./data";
 
 export type ClientViewRecord = {
-  [TName in TableName]: ClientViewRecordEntries<
-    Extract<Table, { _: { name: TName } }>
-  >;
+  [TName in TableName]: ClientViewRecordEntries<TableByName<TName>>;
 };
 export type ClientViewRecordEntries<TTable extends Table> = Record<
   Metadata<TTable>["id"],
   Metadata<TTable>["rowVersion"]
 >;
 export type ClientViewRecordDiff = {
-  [TName in TableName]: ClientViewRecordDiffEntry<
-    Extract<Table, { _: { name: TName } }>
-  >;
+  [TName in TableName]: ClientViewRecordDiffEntry<TableByName<TName>>;
 };
 export type ClientViewRecordDiffEntry<TTable extends Table> = {
   puts: Array<Metadata<TTable>["id"]>;

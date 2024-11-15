@@ -10,8 +10,6 @@ import * as v from "valibot";
 
 import { Constants } from "./constants";
 
-import type { Authenticated } from "../sessions/shared";
-import type { UserRole } from "../users/shared";
 import type { AnyError, CustomError, InferCustomError } from "./types";
 
 export const generateId = customAlphabet(
@@ -90,28 +88,6 @@ export const costSchema = v.pipe(
   v.union([v.number(), v.pipe(v.string(), v.decimal())]),
   v.transform(Number),
 );
-
-type EnforceRbacResult<TMaybeError extends AnyError | undefined> =
-  TMaybeError extends AnyError ? true : boolean;
-
-export function enforceRbac<TMaybeError extends AnyError | undefined>(
-  user: Authenticated["user"],
-  roles: Array<UserRole>,
-  customError?: TMaybeError extends AnyError
-    ? InferCustomError<CustomError<TMaybeError>>
-    : never,
-): EnforceRbacResult<TMaybeError> {
-  const hasAccess = roles.includes(user.profile.role);
-
-  if (!hasAccess) {
-    console.log("Access denied.");
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    if (customError) throw new customError.Error(...customError.args);
-  }
-
-  return hasAccess as EnforceRbacResult<TMaybeError>;
-}
 
 export const getBase64UrlEncoded = <TValue extends Record<string, unknown>>(
   input: TValue,

@@ -1,17 +1,15 @@
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { mutationRbac } from "../replicache/shared";
 import { useAuthenticated } from "../sessions/context";
-import { Constants } from "../utils/constants";
-import { ApplicationError, MiscellaneousError } from "../utils/errors";
-import { enforceRbac, fn } from "../utils/shared";
+import { ApplicationError } from "../utils/errors";
+import { fn } from "../utils/shared";
 import {
   createProductMutationArgsSchema,
   deleteProductMutationArgsSchema,
-  productsTableName,
   updateProductMutationArgsSchema,
 } from "./shared";
 import { productsTable } from "./sql";
@@ -20,85 +18,53 @@ import type { Product } from "./sql";
 
 export namespace Products {
   export const create = fn(createProductMutationArgsSchema, async (values) => {
-    const { user, tenant } = useAuthenticated();
-
-    enforceRbac(user, mutationRbac.createProduct, {
-      Error: ApplicationError.AccessDenied,
-      args: [{ name: productsTableName }],
-    });
+    const hasAccess = await Permissions.hasAccess(
+      productsTable._.name,
+      "create",
+    );
+    if (!hasAccess)
+      throw new ApplicationError.AccessDenied({
+        name: productsTable._.name,
+      });
 
     return useTransaction(async (tx) => {
       await tx.insert(productsTable).values(values);
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+        Replicache.poke([
+          Realtime.formatChannel("tenant", useAuthenticated().tenant.id),
+        ]),
       );
     });
   });
 
-  export async function metadata() {
-    const { user, tenant } = useAuthenticated();
-
-    return useTransaction(async (tx) => {
-      const baseQuery = tx
-        .select({
-          id: productsTable.id,
-          rowVersion: sql<number>`"${productsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
-        })
-        .from(productsTable)
-        .where(eq(productsTable.tenantId, tenant.id))
-        .$dynamic();
-
-      switch (user.profile.role) {
-        case "administrator":
-          return baseQuery;
-        case "operator":
-          return baseQuery.where(isNull(productsTable.deletedAt));
-        case "manager":
-          return baseQuery.where(
-            and(
-              eq(productsTable.status, "published"),
-              isNull(productsTable.deletedAt),
-            ),
-          );
-        case "customer":
-          return baseQuery.where(
-            and(
-              eq(productsTable.status, "published"),
-              isNull(productsTable.deletedAt),
-            ),
-          );
-        default:
-          throw new MiscellaneousError.NonExhaustiveValue(user.profile.role);
-      }
-    });
-  }
-
-  export async function fromIds(ids: Array<Product["id"]>) {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction((tx) =>
+  export const read = async (ids: Array<Product["id"]>) =>
+    useTransaction((tx) =>
       tx
         .select()
         .from(productsTable)
         .where(
           and(
             inArray(productsTable.id, ids),
-            eq(productsTable.tenantId, tenant.id),
+            eq(productsTable.tenantId, useAuthenticated().tenant.id),
           ),
         ),
     );
-  }
 
   export const update = fn(
     updateProductMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { user, tenant } = useAuthenticated();
+      const { tenant } = useAuthenticated();
 
-      enforceRbac(user, mutationRbac.updateProduct, {
-        Error: ApplicationError.AccessDenied,
-        args: [{ name: productsTableName, id }],
-      });
+      const hasAccess = await Permissions.hasAccess(
+        productsTable._.name,
+        "update",
+      );
+      if (!hasAccess)
+        throw new ApplicationError.AccessDenied({
+          name: productsTable._.name,
+          id,
+        });
 
       return useTransaction(async (tx) => {
         await tx
@@ -121,12 +87,17 @@ export namespace Products {
   export const delete_ = fn(
     deleteProductMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { user, tenant } = useAuthenticated();
+      const { tenant } = useAuthenticated();
 
-      enforceRbac(user, mutationRbac.deleteProduct, {
-        Error: ApplicationError.AccessDenied,
-        args: [{ name: productsTableName, id }],
-      });
+      const hasAccess = await Permissions.hasAccess(
+        productsTable._.name,
+        "delete",
+      );
+      if (!hasAccess)
+        throw new ApplicationError.AccessDenied({
+          name: productsTable._.name,
+          id,
+        });
 
       return useTransaction(async (tx) => {
         await tx

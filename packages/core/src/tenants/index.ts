@@ -1,50 +1,40 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { mutationRbac } from "../replicache/shared";
 import { Sessions } from "../sessions";
 import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
-import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac, fn } from "../utils/shared";
-import { tenantsTableName, updateTenantMutationArgsSchema } from "./shared";
+import { fn } from "../utils/shared";
+import { updateTenantMutationArgsSchema } from "./shared";
 import { licensesTable, tenantsTable } from "./sql";
 
 import type { License, Tenant } from "./sql";
 
 export namespace Tenants {
-  export async function metadata() {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction((tx) =>
+  export const read = async () =>
+    useTransaction((tx) =>
       tx
-        .select({
-          id: tenantsTable.id,
-          rowVersion: sql<number>`"${tenantsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
-        })
+        .select()
         .from(tenantsTable)
-        .where(eq(tenantsTable.id, tenant.id)),
+        .where(eq(tenantsTable.id, useAuthenticated().tenant.id)),
     );
-  }
-
-  export async function fromId() {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction((tx) =>
-      tx.select().from(tenantsTable).where(eq(tenantsTable.id, tenant.id)),
-    );
-  }
 
   export const update = fn(updateTenantMutationArgsSchema, async (values) => {
-    const { user, tenant } = useAuthenticated();
+    const { tenant } = useAuthenticated();
 
-    enforceRbac(user, mutationRbac.updateTenant, {
-      Error: ApplicationError.AccessDenied,
-      args: [{ name: tenantsTableName, id: values.id }],
-    });
+    const hasAccess = await Permissions.hasAccess(
+      tenantsTable._.name,
+      "update",
+    );
+    if (!hasAccess)
+      throw new ApplicationError.AccessDenied({
+        name: tenantsTable._.name,
+        id: values.id,
+      });
 
     const usersToLogout: Awaited<ReturnType<typeof Users.fromRoles>> = [];
     if (values.status === "suspended") {

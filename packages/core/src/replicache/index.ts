@@ -4,20 +4,16 @@ import * as R from "remeda";
 import * as v from "valibot";
 
 import { serializable, useTransaction } from "../drizzle/transaction";
+import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { useAuthenticated } from "../sessions/context";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
 import { ReplicacheError } from "../utils/errors";
 import { fn } from "../utils/shared";
+import { syncedTables } from "../utils/tables";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
-import {
-  authoritativeMutatorFactory,
-  dataQueryFactory,
-  metadataQueryFactory,
-  syncedTables,
-  tables,
-} from "./data";
+import { authoritativeMutatorFactory, dataFactory } from "./data";
 import {
   genericMutationSchema,
   mutationNameSchema,
@@ -37,12 +33,14 @@ import type {
   PushResponse,
 } from "replicache";
 import type { OmitTimestamps } from "../drizzle/columns";
+import type { SyncedTable } from "../utils/tables";
 import type {
   ClientViewRecord,
   ClientViewRecordEntries,
 } from "./client-view-record";
 import type {
-  SyncedTable,
+  NonSyncedTableMetadata,
+  SyncedTableMetadata,
   TableData,
   TableMetadata,
   TablePatchData,
@@ -234,20 +232,26 @@ export namespace Replicache {
             `User "${user.id}" does not own client group "${baseClientGroup.id}"`,
           );
 
-        // 6: Read all id/version pairs from the database that should be in the client view
-        // 7: Read all clients in the client group
-        const metadata = await Promise.all(
-          tables.map(async (table) => {
+        const metadata = (await Promise.all([
+          ...syncedTables.map(async (table) => {
             const name = table._.name;
 
+            // 6: Read all id/version pairs from the database that should be in the client view
             const metadata = R.uniqueBy(
-              await metadataQueryFactory[name](baseClientGroup.id),
+              await Permissions.resourceMetadataFactory[user.profile.role][
+                name
+              ](),
               R.prop("id"),
             );
 
-            return [name, metadata] satisfies TableMetadata;
+            return [name, metadata] satisfies SyncedTableMetadata;
           }),
-        );
+          [
+            replicacheClientsTable._.name,
+            // 7: Read all clients in the client group
+            await clientMetadataFromGroupId(baseClientGroup.id),
+          ] satisfies NonSyncedTableMetadata,
+        ])) satisfies Array<TableMetadata>;
 
         // 8: Build next client view record
         const nextCvr = buildCvr({ variant: "next", metadata });
@@ -274,7 +278,7 @@ export namespace Replicache {
               diff[name].puts,
               Constants.REPLICACHE_PULL_CHUNK_SIZE,
             )) {
-              const data = await dataQueryFactory[name](ids);
+              const data = await dataFactory[name](ids);
 
               puts.push(...data);
             }

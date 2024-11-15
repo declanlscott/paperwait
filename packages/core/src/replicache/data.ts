@@ -1,136 +1,82 @@
-import { Replicache } from ".";
 import { Announcements } from "../announcements";
-import { announcementsTable } from "../announcements/sql";
+import { announcementsTableName } from "../announcements/shared";
 import { Comments } from "../comments";
-import { commentsTable } from "../comments/sql";
+import { commentsTableName } from "../comments/shared";
 import { Invoices } from "../invoices";
-import { invoicesTable } from "../invoices/sql";
+import { invoicesTableName } from "../invoices/shared";
 import { Orders } from "../orders";
-import { ordersTable } from "../orders/sql";
+import { ordersTableName } from "../orders/shared";
 import { Papercut } from "../papercut";
 import {
-  papercutAccountCustomerAuthorizationsTable,
-  papercutAccountManagerAuthorizationsTable,
-  papercutAccountsTable,
-} from "../papercut/sql";
+  papercutAccountCustomerAuthorizationsTableName,
+  papercutAccountManagerAuthorizationsTableName,
+  papercutAccountsTableName,
+} from "../papercut/shared";
 import { Products } from "../products";
-import { productsTable } from "../products/sql";
+import { productsTableName } from "../products/shared";
 import { Rooms } from "../rooms";
 import {
-  deliveryOptionsTable,
-  roomsTable,
-  workflowStatusesTable,
-} from "../rooms/sql";
+  deliveryOptionsTableName,
+  roomsTableName,
+  workflowStatusesTableName,
+} from "../rooms/shared";
 import { Tenants } from "../tenants";
-import { tenantsTable } from "../tenants/sql";
+import { tenantsTableName } from "../tenants/shared";
 import { Users } from "../users";
-import { usersTable } from "../users/sql";
-import { replicacheClientsTable } from "./sql";
+import { usersTableName } from "../users/shared";
 
 import type * as v from "valibot";
+import type {
+  NonSyncedTableName,
+  SyncedTable,
+  SyncedTableName,
+  Table,
+  TableByName,
+  TableName,
+} from "../utils/tables";
 import type { MutationName } from "./shared";
 
-export const syncedTables = [
-  announcementsTable,
-  commentsTable,
-  deliveryOptionsTable,
-  invoicesTable,
-  ordersTable,
-  papercutAccountsTable,
-  papercutAccountCustomerAuthorizationsTable,
-  papercutAccountManagerAuthorizationsTable,
-  productsTable,
-  roomsTable,
-  tenantsTable,
-  usersTable,
-  workflowStatusesTable,
-];
-export const nonSyncedTables = [replicacheClientsTable];
-export const tables = [...syncedTables, ...nonSyncedTables];
-
-export type SyncedTable = (typeof syncedTables)[number];
-export type NonSyncedTable = (typeof nonSyncedTables)[number];
-export type Table = SyncedTable | NonSyncedTable;
-
-export type SyncedTableName = SyncedTable["_"]["name"];
-export type NonSyncedTableName = NonSyncedTable["_"]["name"];
-export type TableName = Table["_"]["name"];
-
-export type Metadata<
-  TTable extends Table = Extract<Table, { _: { name: TableName } }>,
-> = {
+export type Metadata<TTable extends Table = TableByName<TableName>> = {
   id: TTable["$inferSelect"]["id"];
   rowVersion: number;
 };
 
 export type SyncedTableMetadata = [
   SyncedTableName,
-  Array<Metadata<Extract<SyncedTable, { _: { name: SyncedTableName } }>>>,
+  Array<Metadata<TableByName<SyncedTableName>>>,
 ];
 export type NonSyncedTableMetadata = [
   NonSyncedTableName,
-  Array<Metadata<Extract<NonSyncedTable, { _: { name: NonSyncedTableName } }>>>,
+  Array<Metadata<TableByName<NonSyncedTableName>>>,
 ];
 export type TableMetadata = [
   TableName,
-  Array<Metadata<Extract<Table, { _: { name: TableName } }>>>,
+  Array<Metadata<TableByName<TableName>>>,
 ];
 
-export type MetadataQueryFactory = {
-  [TName in TableName]: (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...args: Array<any>
-  ) => Promise<Array<Metadata<Extract<Table, { _: { name: TName } }>>>>;
-};
-
-export const metadataQueryFactory = {
-  announcements: Announcements.metadata,
-  comments: Comments.metadata,
-  delivery_options: Rooms.deliveryOptionsMetadata,
-  invoices: Invoices.metadata,
-  orders: Orders.metadata,
-  papercut_accounts: Papercut.accountsMetadata,
-  papercut_account_customer_authorizations:
-    Papercut.accountCustomerAuthorizationsMetadata,
-  papercut_account_manager_authorizations:
-    Papercut.accountManagerAuthorizationsMetadata,
-  products: Products.metadata,
-  replicache_clients: Replicache.clientMetadataFromGroupId,
-  rooms: Rooms.metadata,
-  tenants: Tenants.metadata,
-  users: Users.metadata,
-  workflow_statuses: Rooms.workflowStatusesMetadata,
-} satisfies MetadataQueryFactory;
-
-export type DataQueryFactory = {
+export type DataFactory = {
   [TName in SyncedTableName]: (
-    ids: Array<
-      Extract<SyncedTable, { _: { name: TName } }>["$inferSelect"]["id"]
-    >,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...args: Array<any>
-  ) => Promise<
-    Array<Extract<SyncedTable, { _: { name: TName } }>["$inferSelect"]>
-  >;
+    ids: Array<TableByName<TName>["$inferSelect"]["id"]>,
+  ) => Promise<Array<TableByName<TName>["$inferSelect"]>>;
 };
 
-export const dataQueryFactory = {
-  announcements: Announcements.fromIds,
-  comments: Comments.fromIds,
-  delivery_options: Rooms.deliveryOptionsFromIds,
-  invoices: Invoices.fromIds,
-  orders: Orders.fromIds,
-  papercut_accounts: Papercut.accountsFromIds,
-  papercut_account_customer_authorizations:
-    Papercut.accountCustomerAuthorizationsFromIds,
-  papercut_account_manager_authorizations:
-    Papercut.accountManagerAuthorizationsFromIds,
-  products: Products.fromIds,
-  rooms: Rooms.fromIds,
-  tenants: Tenants.fromId,
-  users: Users.fromIds,
-  workflow_statuses: Rooms.workflowStatusesFromIds,
-} satisfies DataQueryFactory;
+export const dataFactory = {
+  [announcementsTableName]: Announcements.read,
+  [commentsTableName]: Comments.read,
+  [deliveryOptionsTableName]: Rooms.readDeliveryOptions,
+  [invoicesTableName]: Invoices.read,
+  [ordersTableName]: Orders.read,
+  [papercutAccountsTableName]: Papercut.readAccounts,
+  [papercutAccountCustomerAuthorizationsTableName]:
+    Papercut.readAccountCustomerAuthorizations,
+  [papercutAccountManagerAuthorizationsTableName]:
+    Papercut.readAccountManagerAuthorizations,
+  [productsTableName]: Products.read,
+  [roomsTableName]: Rooms.read,
+  [tenantsTableName]: Tenants.read,
+  [usersTableName]: Users.read,
+  [workflowStatusesTableName]: Rooms.readWorkflow,
+} satisfies DataFactory;
 
 export type TablePatchData<TTable extends SyncedTable> = {
   puts: Array<TTable["$inferSelect"]>;
@@ -139,7 +85,7 @@ export type TablePatchData<TTable extends SyncedTable> = {
 
 export type TableData = [
   SyncedTableName,
-  TablePatchData<Extract<SyncedTable, { _: { name: SyncedTableName } }>>,
+  TablePatchData<TableByName<SyncedTableName>>,
 ];
 
 export type AuthoritativeMutator = <TSchema extends v.GenericSchema>(

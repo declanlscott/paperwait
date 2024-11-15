@@ -59,5 +59,5 @@ export namespace Constants {
   export const TAILSCALE_API_BASE_URL = "https://api.tailscale.com/api/v2";
   export const TAILSCALE_TAG_NAME = "printworks-papercut-secure-bridge";
 
-  export const WORKFLOW_PENDING_APPROVAL = "Pending Approval";
+  export const WORKFLOW_REVIEW_STATUS = "Review";
 }

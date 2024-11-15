@@ -73,8 +73,9 @@ export type RestoreRoomMutationArgs = v.InferOutput<
 export const workflowStatusesTableName = "workflow_statuses";
 
 export const workflowStatusTypes = [
-  "Pending",
+  "Review",
   "New",
+  "Pending",
   "InProgress",
   "Completed",
 ] as const;
@@ -127,7 +128,15 @@ export const workflowMutationNames = ["setWorkflow"] as const;
 
 export const setWorkflowMutationArgsSchema = v.object({
   workflow: v.pipe(
-    v.array(v.omit(workflowStatusSchema, ["index", "roomId", "tenantId"])),
+    v.array(
+      v.object({
+        ...v.omit(workflowStatusSchema, ["index", "roomId", "tenantId", "type"])
+          .entries,
+        type: v.picklist(
+          workflowStatusTypes.filter((type) => type !== "Review"),
+        ),
+      }),
+    ),
     v.check(
       (input) => isUniqueByKey("id", input),
       "Workflow status names must be unique",

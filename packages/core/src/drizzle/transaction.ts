@@ -13,7 +13,7 @@ export type Transaction = PgTransaction<
   ExtractTablesWithRelations<Record<string, never>>
 >;
 
-type TxOrDb = Transaction | typeof db;
+export type TxOrDb = Transaction | typeof db;
 
 type TransactionContext<
   TEffect extends () => ReturnType<TEffect> = () => unknown,
