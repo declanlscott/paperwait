@@ -1,7 +1,6 @@
-import { mutationRbac } from "../replicache/shared";
+import { AccessControl } from "../access-control/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import {
   announcementsTableName,
   createAnnouncementMutationArgsSchema,
@@ -15,8 +14,8 @@ import type { Announcement } from "./sql";
 export namespace Announcements {
   export const create = Utils.optimisticMutator(
     createAnnouncementMutationArgsSchema,
-    (user) =>
-      enforceRbac(user, mutationRbac.createAnnouncement, {
+    async (tx, user) =>
+      AccessControl.enforce([tx, user, announcementsTableName, "create"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: announcementsTableName }],
       }),
@@ -26,8 +25,8 @@ export namespace Announcements {
 
   export const update = Utils.optimisticMutator(
     updateAnnouncementMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.updateAnnouncement, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, announcementsTableName, "update"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: announcementsTableName, id }],
       }),
@@ -52,14 +51,14 @@ export namespace Announcements {
 
   export const delete_ = Utils.optimisticMutator(
     deleteAnnouncementMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.deleteAnnouncement, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, announcementsTableName, "delete"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: announcementsTableName, id }],
       }),
     ({ user }) =>
       async (tx, values) => {
-        if (enforceRbac(user, ["administrator"])) {
+        if (user.profile.role === "administrator") {
           const prev = await tx.get<Announcement>(
             `${announcementsTableName}/${values.id}`,
           );

@@ -1,6 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import * as R from "remeda";
 
+import { AccessControl } from "../access-control";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import {
   afterTransaction,
@@ -14,7 +15,6 @@ import {
   papercutAccountManagerAuthorizationsTable,
   papercutAccountsTable,
 } from "../papercut/sql";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { Sessions } from "../sessions";
@@ -290,15 +290,10 @@ export namespace Users {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        usersTable._.name,
-        "update",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: usersTable._.name,
-          id,
-        });
+      await AccessControl.enforce([usersTable._.name, "update"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: usersTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx
@@ -323,16 +318,10 @@ export namespace Users {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        usersTable._.name,
-        "delete",
-        id,
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: usersTable._.name,
-          id,
-        });
+      await AccessControl.enforce([usersTable._.name, "delete", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: usersTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx
@@ -357,15 +346,10 @@ export namespace Users {
     async ({ id }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        usersTable._.name,
-        "update",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: usersTable._.name,
-          id,
-        });
+      await AccessControl.enforce([usersTable._.name, "update"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: usersTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx

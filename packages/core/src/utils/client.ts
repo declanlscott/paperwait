@@ -22,8 +22,8 @@ export namespace Utils {
     <
       TSchema extends v.GenericSchema,
       TAuthorizer extends (
-        user: Authenticated["user"],
         tx: WriteTransaction,
+        user: Authenticated["user"],
         args: v.InferOutput<TSchema>,
       ) => ReturnType<TAuthorizer>,
       TMutator extends Replicache.OptimisticMutator<TSchema>,
@@ -39,7 +39,7 @@ export namespace Utils {
     async (tx: WriteTransaction, args: v.InferInput<TSchema>) => {
       const values = v.parse(schema, args);
 
-      const authorized = await Promise.resolve(authorizer(user, tx, values));
+      const authorized = await Promise.resolve(authorizer(tx, user, values));
 
       const mutator = getMutator({ user, authorized });
 

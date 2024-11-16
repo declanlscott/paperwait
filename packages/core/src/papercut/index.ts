@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 
+import { AccessControl } from "../access-control";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { useAuthenticated } from "../sessions/context";
@@ -30,14 +30,13 @@ export namespace Papercut {
   export const createAccountManagerAuthorization = fn(
     createPapercutAccountManagerAuthorizationMutationArgsSchema,
     async (values) => {
-      const hasAccess = await Permissions.hasAccess(
-        papercutAccountManagerAuthorizationsTable._.name,
-        "create",
+      await AccessControl.enforce(
+        [papercutAccountManagerAuthorizationsTable._.name, "create"],
+        {
+          Error: ApplicationError.AccessDenied,
+          args: [{ name: papercutAccountManagerAuthorizationsTable._.name }],
+        },
       );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: papercutAccountManagerAuthorizationsTable._.name,
-        });
 
       return useTransaction(async (tx) => {
         await tx
@@ -106,16 +105,13 @@ export namespace Papercut {
   export const updateAccountApprovalThreshold = fn(
     updatePapercutAccountApprovalThresholdMutationArgsSchema,
     async ({ id, ...values }) => {
-      const hasAccess = await Permissions.hasAccess(
-        papercutAccountsTable._.name,
-        "update",
-        id,
+      await AccessControl.enforce(
+        [papercutAccountsTable._.name, "update", id],
+        {
+          Error: ApplicationError.AccessDenied,
+          args: [{ name: papercutAccountsTable._.name, id }],
+        },
       );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: papercutAccountsTable._.name,
-          id,
-        });
 
       return useTransaction(async (tx) => {
         await tx
@@ -154,15 +150,10 @@ export namespace Papercut {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        papercutAccountsTable._.name,
-        "delete",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: papercutAccountsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([papercutAccountsTable._.name, "delete"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: papercutAccountsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         const [adminsOps, managers, customers] = await Promise.all([
@@ -232,15 +223,15 @@ export namespace Papercut {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        papercutAccountManagerAuthorizationsTable._.name,
-        "delete",
+      await AccessControl.enforce(
+        [papercutAccountManagerAuthorizationsTable._.name, "delete"],
+        {
+          Error: ApplicationError.AccessDenied,
+          args: [
+            { name: papercutAccountManagerAuthorizationsTable._.name, id },
+          ],
+        },
       );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: papercutAccountManagerAuthorizationsTable._.name,
-          id,
-        });
 
       return useTransaction(async (tx) => {
         await tx

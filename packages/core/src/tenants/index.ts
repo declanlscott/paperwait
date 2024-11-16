@@ -1,7 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 
+import { AccessControl } from "../access-control";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { Sessions } from "../sessions";
@@ -26,15 +26,10 @@ export namespace Tenants {
   export const update = fn(updateTenantMutationArgsSchema, async (values) => {
     const { tenant } = useAuthenticated();
 
-    const hasAccess = await Permissions.hasAccess(
-      tenantsTable._.name,
-      "update",
-    );
-    if (!hasAccess)
-      throw new ApplicationError.AccessDenied({
-        name: tenantsTable._.name,
-        id: values.id,
-      });
+    await AccessControl.enforce([tenantsTable._.name, "update"], {
+      Error: ApplicationError.AccessDenied,
+      args: [{ name: tenantsTable._.name, id: values.id }],
+    });
 
     const usersToLogout: Awaited<ReturnType<typeof Users.fromRoles>> = [];
     if (values.status === "suspended") {

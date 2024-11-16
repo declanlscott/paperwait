@@ -3,8 +3,8 @@ import { and, eq, lt, sql } from "drizzle-orm";
 import * as R from "remeda";
 import * as v from "valibot";
 
+import { AccessControl } from "../access-control";
 import { serializable, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { useAuthenticated } from "../sessions/context";
 import { Utils } from "../utils";
@@ -238,7 +238,7 @@ export namespace Replicache {
 
             // 6: Read all id/version pairs from the database that should be in the client view
             const metadata = R.uniqueBy(
-              await Permissions.resourceMetadataFactory[user.profile.role][
+              await AccessControl.resourceMetadataFactory[user.profile.role][
                 name
               ](),
               R.prop("id"),

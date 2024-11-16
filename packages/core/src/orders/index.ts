@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 
+import { AccessControl } from "../access-control";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { useAuthenticated } from "../sessions/context";
@@ -19,13 +19,13 @@ import type { Order } from "./sql";
 
 export namespace Orders {
   export const create = fn(createOrderMutationArgsSchema, async (values) => {
-    const hasAccess = await Permissions.hasAccess(
-      ordersTable._.name,
-      "create",
-      values.papercutAccountId,
+    await AccessControl.enforce(
+      [ordersTable._.name, "create", values.papercutAccountId],
+      {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: ordersTable._.name }],
+      },
     );
-    if (!hasAccess)
-      throw new ApplicationError.AccessDenied({ name: ordersTable._.name });
 
     return useTransaction(async (tx) => {
       const order = await tx
@@ -59,16 +59,10 @@ export namespace Orders {
   export const update = fn(
     updateOrderMutationArgsSchema,
     async ({ id, ...values }) => {
-      const hasAccess = await Permissions.hasAccess(
-        ordersTable._.name,
-        "update",
-        id,
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: ordersTable._.name,
-          id,
-        });
+      await AccessControl.enforce([ordersTable._.name, "update", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: ordersTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         const [users] = await Promise.all([
@@ -96,16 +90,10 @@ export namespace Orders {
   export const delete_ = fn(
     deleteOrderMutationArgsSchema,
     async ({ id, ...values }) => {
-      const hasAccess = await Permissions.hasAccess(
-        ordersTable._.name,
-        "delete",
-        id,
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: ordersTable._.name,
-          id,
-        });
+      await AccessControl.enforce([ordersTable._.name, "delete", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: ordersTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         const [users] = await Promise.all([

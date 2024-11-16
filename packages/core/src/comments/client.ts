@@ -1,9 +1,6 @@
-import { ordersTableName } from "../orders/shared";
-import { mutationRbac } from "../replicache/shared";
-import { Users } from "../users/client";
+import { AccessControl } from "../access-control/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import {
   commentsTableName,
   createCommentMutationArgsSchema,
@@ -17,46 +14,22 @@ import type { Comment } from "./sql";
 export namespace Comments {
   export const create = Utils.optimisticMutator(
     createCommentMutationArgsSchema,
-    async (user, tx, values) => {
-      const users = await Users.withOrderAccess(tx, values.orderId);
-
-      if (
-        users.some((u) => u.id === user.id) ||
-        enforceRbac(user, mutationRbac.createComment, {
-          Error: ApplicationError.AccessDenied,
-          args: [{ name: commentsTableName }],
-        })
-      )
-        return true;
-
-      throw new ApplicationError.AccessDenied({
-        name: ordersTableName,
-        id: values.orderId,
-      });
-    },
+    async (tx, user, { orderId }) =>
+      AccessControl.enforce([tx, user, commentsTableName, "create", orderId], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: commentsTableName }],
+      }),
     () => async (tx, values) =>
       tx.set(`${commentsTableName}/${values.id}`, values),
   );
 
   export const update = Utils.optimisticMutator(
     updateCommentMutationArgsSchema,
-    async (user, tx, values) => {
-      const users = await Users.withOrderAccess(tx, values.orderId);
-
-      if (
-        users.some((u) => u.id === user.id) ||
-        enforceRbac(user, mutationRbac.updateComment, {
-          Error: ApplicationError.AccessDenied,
-          args: [{ name: commentsTableName, id: values.id }],
-        })
-      )
-        return true;
-
-      throw new ApplicationError.AccessDenied({
-        name: ordersTableName,
-        id: values.orderId,
-      });
-    },
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, commentsTableName, "update", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: commentsTableName, id }],
+      }),
     () => async (tx, values) => {
       const prev = await tx.get<Comment>(`${commentsTableName}/${values.id}`);
       if (!prev)
@@ -76,26 +49,14 @@ export namespace Comments {
 
   export const delete_ = Utils.optimisticMutator(
     deleteCommentMutationArgsSchema,
-    async (user, tx, values) => {
-      const users = await Users.withOrderAccess(tx, values.orderId);
-
-      if (
-        users.some((u) => u.id === user.id) ||
-        enforceRbac(user, mutationRbac.deleteComment, {
-          Error: ApplicationError.AccessDenied,
-          args: [{ name: commentsTableName, id: values.id }],
-        })
-      )
-        return true;
-
-      throw new ApplicationError.AccessDenied({
-        name: ordersTableName,
-        id: values.orderId,
-      });
-    },
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, commentsTableName, "delete", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: commentsTableName, id }],
+      }),
     ({ user }) =>
       async (tx, values) => {
-        if (enforceRbac(user, ["administrator"])) {
+        if (user.profile.role === "administrator") {
           const prev = await tx.get<Comment>(
             `${commentsTableName}/${values.id}`,
           );

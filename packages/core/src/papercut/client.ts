@@ -1,8 +1,6 @@
-import { mutationRbac } from "../replicache/shared";
-import { Users } from "../users/client";
+import { AccessControl } from "../access-control/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
   deletePapercutAccountManagerAuthorizationMutationArgsSchema,
@@ -21,10 +19,9 @@ import type {
 export namespace Papercut {
   export const createAccountManagerAuthorization = Utils.optimisticMutator(
     createPapercutAccountManagerAuthorizationMutationArgsSchema,
-    (user) =>
-      enforceRbac(
-        user,
-        mutationRbac.createPapercutAccountManagerAuthorization,
+    async (tx, user) =>
+      AccessControl.enforce(
+        [tx, user, papercutAccountManagerAuthorizationsTableName, "create"],
         {
           Error: ApplicationError.AccessDenied,
           args: [{ name: papercutAccountManagerAuthorizationsTableName }],
@@ -39,20 +36,14 @@ export namespace Papercut {
 
   export const updateAccountApprovalThreshold = Utils.optimisticMutator(
     updatePapercutAccountApprovalThresholdMutationArgsSchema,
-    async (user, tx, { id }) => {
-      const managers = await Users.withManagerAuthorization(tx, id);
-
-      if (
-        managers.some((u) => u.id === user.id) ||
-        enforceRbac(user, mutationRbac.updatePapercutAccountApprovalThreshold, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce(
+        [tx, user, papercutAccountsTableName, "update", id],
+        {
           Error: ApplicationError.AccessDenied,
-          args: [{ name: papercutAccountManagerAuthorizationsTableName, id }],
-        })
-      )
-        return true;
-
-      throw new ApplicationError.AccessDenied();
-    },
+          args: [{ name: papercutAccountsTableName, id }],
+        },
+      ),
     () =>
       async (tx, { id, ...values }) => {
         const prev = await tx.get<PapercutAccount>(
@@ -75,14 +66,14 @@ export namespace Papercut {
 
   export const deleteAccount = Utils.optimisticMutator(
     deletePapercutAccountMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.deletePapercutAccount, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, papercutAccountsTableName, "delete"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: papercutAccountsTableName, id }],
       }),
     ({ user }) =>
       async (tx, { id, ...values }) => {
-        if (enforceRbac(user, ["administrator"])) {
+        if (user.profile.role === "administrator") {
           const prev = await tx.get<PapercutAccount>(
             `${papercutAccountsTableName}/${id}`,
           );
@@ -111,10 +102,9 @@ export namespace Papercut {
 
   export const deleteAccountManagerAuthorization = Utils.optimisticMutator(
     deletePapercutAccountManagerAuthorizationMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(
-        user,
-        mutationRbac.deletePapercutAccountManagerAuthorization,
+    async (tx, user, { id }) =>
+      AccessControl.enforce(
+        [tx, user, papercutAccountManagerAuthorizationsTableName, "delete"],
         {
           Error: ApplicationError.AccessDenied,
           args: [{ name: papercutAccountManagerAuthorizationsTableName, id }],
@@ -122,7 +112,7 @@ export namespace Papercut {
       ),
     ({ user }) =>
       async (tx, { id, ...values }) => {
-        if (enforceRbac(user, ["administrator"])) {
+        if (user.profile.role === "administrator") {
           const prev = await tx.get<PapercutAccountManagerAuthorization>(
             `${papercutAccountManagerAuthorizationsTableName}/${id}`,
           );

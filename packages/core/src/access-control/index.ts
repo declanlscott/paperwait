@@ -32,8 +32,9 @@ import type { Metadata } from "../replicache/data";
 import type { UserRole } from "../users/shared";
 import type { User } from "../users/sql";
 import type { SyncedTableName, TableByName } from "../utils/tables";
+import type { AnyError, CustomError, InferCustomError } from "../utils/types";
 
-export namespace Permissions {
+export namespace AccessControl {
   type ResourceMetadataBaseQueryFactory = {
     [TName in SyncedTableName]: (tx: TxOrDb) => PgSelectBase<
       TName,
@@ -627,7 +628,7 @@ export namespace Permissions {
     },
   } as const satisfies ResourceMetadataFactory;
 
-  type Factory = Record<
+  type PermissionsFactory = Record<
     UserRole,
     Record<
       SyncedTableName,
@@ -639,7 +640,7 @@ export namespace Permissions {
     >
   >;
 
-  const factory = {
+  const permissionsFactory = {
     administrator: {
       [announcementsTable._.name]: {
         create: true,
@@ -1098,7 +1099,7 @@ export namespace Permissions {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: (userId: User["id"]) => userId !== useAuthenticated().user.id,
+        delete: (userId: User["id"]) => userId === useAuthenticated().user.id,
       },
       [workflowStatusesTable._.name]: {
         create: false,
@@ -1279,7 +1280,7 @@ export namespace Permissions {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: false,
+        delete: (userId: User["id"]) => userId === useAuthenticated().user.id,
       },
       [workflowStatusesTable._.name]: {
         create: false,
@@ -1287,12 +1288,13 @@ export namespace Permissions {
         delete: false,
       },
     },
-  } as const satisfies Factory;
+  } as const satisfies PermissionsFactory;
 
-  export async function hasAccess<
+  export async function check<
     TResource extends SyncedTableName,
     TAction extends "create" | "update" | "delete",
-    TPermission extends (typeof factory)[UserRole][TResource][TAction],
+    TPermission extends
+      (typeof permissionsFactory)[UserRole][TResource][TAction],
   >(
     resource: TResource,
     action: TAction,
@@ -1300,7 +1302,7 @@ export namespace Permissions {
       ? TInput
       : Array<never>
   ) {
-    const permission = (factory as Factory)[
+    const permission = (permissionsFactory as PermissionsFactory)[
       useAuthenticated().user.profile.role
     ][resource][action];
 
@@ -1309,5 +1311,31 @@ export namespace Permissions {
 
       return resolve(permission(...input));
     });
+  }
+
+  export async function enforce<
+    TResource extends SyncedTableName,
+    TAction extends "create" | "update" | "delete",
+    TPermission extends
+      (typeof permissionsFactory)[UserRole][TResource][TAction],
+    TMaybeError extends AnyError | undefined,
+  >(
+    args: Parameters<typeof check<TResource, TAction, TPermission>>,
+    customError?: TMaybeError extends AnyError
+      ? InferCustomError<CustomError<TMaybeError>>
+      : never,
+  ) {
+    const access = await check(...args);
+
+    if (!access) {
+      const message = `Access denied for action "${args[1]}" on resource "${args[0]} with input "${args[2]}".`;
+
+      console.log(message);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      if (customError) throw new customError.Error(...customError.args);
+
+      throw new Error(message);
+    }
   }
 }

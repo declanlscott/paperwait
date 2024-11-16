@@ -1,9 +1,9 @@
 import { and, eq, gte, inArray, notInArray } from "drizzle-orm";
 import * as R from "remeda";
 
+import { AccessControl } from "../access-control";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { productsTable } from "../products/sql";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
@@ -26,9 +26,10 @@ import type { DeliveryOption, Room, WorkflowStatus } from "./sql";
 
 export namespace Rooms {
   export const create = fn(createRoomMutationArgsSchema, async (values) => {
-    const hasAccess = await Permissions.hasAccess(roomsTable._.name, "create");
-    if (!hasAccess)
-      throw new ApplicationError.AccessDenied({ name: roomsTable._.name });
+    await AccessControl.enforce([roomsTable._.name, "create"], {
+      Error: ApplicationError.AccessDenied,
+      args: [{ name: roomsTable._.name }],
+    });
 
     return useTransaction(async (tx) => {
       await Promise.all([
@@ -76,15 +77,10 @@ export namespace Rooms {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        roomsTable._.name,
-        "update",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: roomsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([roomsTable._.name, "update"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: roomsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx
@@ -106,15 +102,10 @@ export namespace Rooms {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        roomsTable._.name,
-        "delete",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: roomsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([roomsTable._.name, "delete"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: roomsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await Promise.all([
@@ -146,12 +137,10 @@ export namespace Rooms {
   export const restore = fn(restoreRoomMutationArgsSchema, async ({ id }) => {
     const { tenant } = useAuthenticated();
 
-    const hasAccess = await Permissions.hasAccess(roomsTable._.name, "update");
-    if (!hasAccess)
-      throw new ApplicationError.AccessDenied({
-        name: roomsTable._.name,
-        id,
-      });
+    await AccessControl.enforce([roomsTable._.name, "update"], {
+      Error: ApplicationError.AccessDenied,
+      args: [{ name: roomsTable._.name, id }],
+    });
 
     return useTransaction(async (tx) => {
       await tx
@@ -181,11 +170,12 @@ export namespace Rooms {
   export const setWorkflow = fn(setWorkflowMutationArgsSchema, async (args) => {
     const { tenant } = useAuthenticated();
 
-    const hasAccess = await Permissions.hasAccess(roomsTable._.name, "create");
-    if (!hasAccess)
-      throw new ApplicationError.AccessDenied({ name: roomsTable._.name });
+    await AccessControl.enforce([workflowStatusesTable._.name, "create"], {
+      Error: ApplicationError.AccessDenied,
+      args: [{ name: workflowStatusesTable._.name }],
+    });
 
-    await useTransaction(async (tx) => {
+    return useTransaction(async (tx) => {
       const workflow = await tx
         .insert(workflowStatusesTable)
         .values(
@@ -253,16 +243,12 @@ export namespace Rooms {
     async (args) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        deliveryOptionsTable._.name,
-        "create",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: deliveryOptionsTable._.name,
-        });
+      await AccessControl.enforce([deliveryOptionsTable._.name, "create"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: deliveryOptionsTable._.name }],
+      });
 
-      await useTransaction(async (tx) => {
+      return useTransaction(async (tx) => {
         const deliveryOptions = await tx
           .insert(deliveryOptionsTable)
           .values(

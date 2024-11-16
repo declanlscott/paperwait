@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 
+import { AccessControl } from "../access-control";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { useAuthenticated } from "../sessions/context";
@@ -18,14 +18,10 @@ import type { Product } from "./sql";
 
 export namespace Products {
   export const create = fn(createProductMutationArgsSchema, async (values) => {
-    const hasAccess = await Permissions.hasAccess(
-      productsTable._.name,
-      "create",
-    );
-    if (!hasAccess)
-      throw new ApplicationError.AccessDenied({
-        name: productsTable._.name,
-      });
+    await AccessControl.enforce([productsTable._.name, "create"], {
+      Error: ApplicationError.AccessDenied,
+      args: [{ name: productsTable._.name }],
+    });
 
     return useTransaction(async (tx) => {
       await tx.insert(productsTable).values(values);
@@ -56,15 +52,10 @@ export namespace Products {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        productsTable._.name,
-        "update",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: productsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([productsTable._.name, "update"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: productsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx
@@ -89,15 +80,10 @@ export namespace Products {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        productsTable._.name,
-        "delete",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: productsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([productsTable._.name, "delete"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: productsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx

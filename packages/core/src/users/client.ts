@@ -1,11 +1,10 @@
 import * as R from "remeda";
 
+import { AccessControl } from "../access-control/client";
 import { ordersTableName } from "../orders/shared";
 import { papercutAccountManagerAuthorizationsTableName } from "../papercut/shared";
-import { mutationRbac } from "../replicache/shared";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import {
   deleteUserProfileMutationArgsSchema,
   restoreUserProfileMutationArgsSchema,
@@ -103,8 +102,8 @@ export namespace Users {
 
   export const updateProfileRole = Utils.optimisticMutator(
     updateUserProfileRoleMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.updateUserProfileRole, {
+    (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, usersTableName, "update"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: usersTableName, id }],
       }),
@@ -131,16 +130,15 @@ export namespace Users {
 
   export const deleteProfile = Utils.optimisticMutator(
     deleteUserProfileMutationArgsSchema,
-    (user, _tx, { id }) =>
-      id === user.id ||
-      enforceRbac(user, mutationRbac.deleteUserProfile, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, usersTableName, "delete"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: usersTableName, id }],
       }),
     ({ user }) =>
       async (tx, { id, ...values }) => {
         // Soft delete for administrators
-        if (enforceRbac(user, ["administrator"])) {
+        if (user.profile.role === "administrator") {
           const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
           if (!prev)
             throw new ApplicationError.EntityNotFound({
@@ -170,8 +168,8 @@ export namespace Users {
 
   export const restoreProfile = Utils.optimisticMutator(
     restoreUserProfileMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.restoreUserProfile, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, usersTableName, "update"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: usersTableName, id }],
       }),

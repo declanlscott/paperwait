@@ -1,14 +1,13 @@
-import { mutationRbac } from "../replicache/shared";
+import { AccessControl } from "../access-control/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import { createInvoiceMutationArgsSchema, invoicesTableName } from "./shared";
 
 export namespace Invoices {
   export const create = Utils.optimisticMutator(
     createInvoiceMutationArgsSchema,
-    async (user) =>
-      enforceRbac(user, mutationRbac.createInvoice, {
+    async (tx, user) =>
+      AccessControl.enforce([tx, user, invoicesTableName, "create"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: invoicesTableName }],
       }),

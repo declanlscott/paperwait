@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 
+import { AccessControl } from "../access-control";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { useAuthenticated } from "../sessions/context";
@@ -19,13 +19,13 @@ import type { Comment } from "./sql";
 
 export namespace Comments {
   export const create = fn(createCommentMutationArgsSchema, async (values) => {
-    const hasAccess = await Permissions.hasAccess(
-      commentsTable._.name,
-      "create",
-      values.orderId,
+    await AccessControl.enforce(
+      [commentsTable._.name, "create", values.orderId],
+      {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: commentsTable._.name }],
+      },
     );
-    if (!hasAccess)
-      throw new ApplicationError.AccessDenied({ name: commentsTable._.name });
 
     return useTransaction(async (tx) => {
       const [users] = await Promise.all([
@@ -55,16 +55,10 @@ export namespace Comments {
   export const update = fn(
     updateCommentMutationArgsSchema,
     async ({ id, ...values }) => {
-      const hasAccess = await Permissions.hasAccess(
-        commentsTable._.name,
-        "update",
-        id,
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: commentsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([commentsTable._.name, "update", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: commentsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         const [users] = await Promise.all([
@@ -92,16 +86,10 @@ export namespace Comments {
   export const delete_ = fn(
     deleteCommentMutationArgsSchema,
     async ({ id, ...values }) => {
-      const hasAccess = await Permissions.hasAccess(
-        commentsTable._.name,
-        "delete",
-        id,
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: commentsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([commentsTable._.name, "delete", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: commentsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         const [users] = await Promise.all([

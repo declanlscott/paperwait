@@ -1,7 +1,6 @@
-import { mutationRbac } from "../replicache/shared";
+import { AccessControl } from "../access-control/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import {
   createProductMutationArgsSchema,
   deleteProductMutationArgsSchema,
@@ -15,8 +14,8 @@ import type { Product } from "./sql";
 export namespace Products {
   export const create = Utils.optimisticMutator(
     createProductMutationArgsSchema,
-    (user) =>
-      enforceRbac(user, mutationRbac.createProduct, {
+    async (tx, user) =>
+      AccessControl.enforce([tx, user, productsTableName, "create"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: productsTableName }],
       }),
@@ -26,8 +25,8 @@ export namespace Products {
 
   export const update = Utils.optimisticMutator(
     updateProductMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.updateProduct, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, productsTableName, "update"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: productsTableName, id }],
       }),
@@ -51,14 +50,14 @@ export namespace Products {
 
   export const delete_ = Utils.optimisticMutator(
     deleteProductMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.deleteProduct, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, productsTableName, "delete"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: productsTableName, id }],
       }),
     ({ user }) =>
       async (tx, values) => {
-        if (enforceRbac(user, ["administrator"])) {
+        if (user.profile.role === "administrator") {
           const prev = await tx.get<Product>(
             `${productsTableName}/${values.id}`,
           );

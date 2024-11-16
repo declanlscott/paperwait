@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 
+import { AccessControl } from "../access-control";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Permissions } from "../permissions";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { useAuthenticated } from "../sessions/context";
@@ -20,14 +20,10 @@ export namespace Announcements {
   export const create = fn(
     createAnnouncementMutationArgsSchema,
     async (values) => {
-      const hasAccess = await Permissions.hasAccess(
-        announcementsTable._.name,
-        "create",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: announcementsTable._.name,
-        });
+      await AccessControl.enforce([announcementsTable._.name, "create"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: announcementsTable._.name }],
+      });
 
       return useTransaction(async (tx) => {
         await tx.insert(announcementsTable).values(values);
@@ -59,15 +55,10 @@ export namespace Announcements {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        announcementsTable._.name,
-        "update",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: announcementsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([announcementsTable._.name, "update"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: announcementsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx
@@ -92,15 +83,10 @@ export namespace Announcements {
     async ({ id, ...values }) => {
       const { tenant } = useAuthenticated();
 
-      const hasAccess = await Permissions.hasAccess(
-        announcementsTable._.name,
-        "delete",
-      );
-      if (!hasAccess)
-        throw new ApplicationError.AccessDenied({
-          name: announcementsTable._.name,
-          id,
-        });
+      await AccessControl.enforce([announcementsTable._.name, "delete"], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: announcementsTable._.name, id }],
+      });
 
       return useTransaction(async (tx) => {
         await tx

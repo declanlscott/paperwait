@@ -1,7 +1,6 @@
-import { mutationRbac } from "../replicache/shared";
+import { AccessControl } from "../access-control/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import { tenantsTableName, updateTenantMutationArgsSchema } from "./shared";
 
 import type { DeepReadonlyObject } from "replicache";
@@ -10,8 +9,8 @@ import type { Tenant } from "./sql";
 export namespace Tenants {
   export const update = Utils.optimisticMutator(
     updateTenantMutationArgsSchema,
-    (user, _tx, { id }) =>
-      enforceRbac(user, mutationRbac.updateTenant, {
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, tenantsTableName, "update"], {
         Error: ApplicationError.AccessDenied,
         args: [{ name: tenantsTableName, id }],
       }),

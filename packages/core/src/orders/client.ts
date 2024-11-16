@@ -1,8 +1,6 @@
-import { mutationRbac } from "../replicache/shared";
-import { Users } from "../users/client";
+import { AccessControl } from "../access-control/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
-import { enforceRbac } from "../utils/shared";
 import {
   createOrderMutationArgsSchema,
   deleteOrderMutationArgsSchema,
@@ -16,31 +14,25 @@ import type { Order } from "./sql";
 export namespace Orders {
   export const create = Utils.optimisticMutator(
     createOrderMutationArgsSchema,
-    (user) =>
-      enforceRbac(user, mutationRbac.createOrder, {
-        Error: ApplicationError.AccessDenied,
-        args: [{ name: ordersTableName }],
-      }),
+    (tx, user, { papercutAccountId }) =>
+      AccessControl.enforce(
+        [tx, user, ordersTableName, "create", papercutAccountId],
+        {
+          Error: ApplicationError.AccessDenied,
+          args: [{ name: ordersTableName }],
+        },
+      ),
     () => async (tx, values) =>
       tx.set(`${ordersTableName}/${values.id}`, values),
   );
 
   export const update = Utils.optimisticMutator(
     updateOrderMutationArgsSchema,
-    async (user, tx, values) => {
-      const users = await Users.withOrderAccess(tx, values.id);
-
-      if (
-        users.some((u) => u.id === user.id) ||
-        enforceRbac(user, mutationRbac.updateOrder, {
-          Error: ApplicationError.AccessDenied,
-          args: [{ name: ordersTableName, id: values.id }],
-        })
-      )
-        return true;
-
-      throw new ApplicationError.AccessDenied();
-    },
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, ordersTableName, "update", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: ordersTableName, id }],
+      }),
     () => async (tx, values) => {
       const prev = await tx.get<Order>(`${ordersTableName}/${values.id}`);
       if (!prev)
@@ -60,23 +52,14 @@ export namespace Orders {
 
   export const delete_ = Utils.optimisticMutator(
     deleteOrderMutationArgsSchema,
-    async (user, tx, { id }) => {
-      const users = await Users.withOrderAccess(tx, id);
-
-      if (
-        users.some((u) => u.id === user.id) ||
-        enforceRbac(user, mutationRbac.deleteOrder, {
-          Error: ApplicationError.AccessDenied,
-          args: [{ name: ordersTableName, id }],
-        })
-      )
-        return true;
-
-      throw new ApplicationError.AccessDenied();
-    },
+    async (tx, user, { id }) =>
+      AccessControl.enforce([tx, user, ordersTableName, "delete", id], {
+        Error: ApplicationError.AccessDenied,
+        args: [{ name: ordersTableName, id }],
+      }),
     ({ user }) =>
       async (tx, { id, ...values }) => {
-        if (enforceRbac(user, ["administrator"])) {
+        if (user.profile.role === "administrator") {
           const prev = await tx.get<Order>(`${ordersTableName}/${id}`);
           if (!prev)
             throw new ApplicationError.EntityNotFound({

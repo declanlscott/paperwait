@@ -25,10 +25,10 @@ importers:
         version: 15.0.1
       sst:
         specifier: ^3.3.22
-        version: 3.3.22(hono@4.6.10)(valibot@1.0.0-beta.5(typescript@5.6.3))
+        version: 3.3.22(hono@4.6.10)(valibot@1.0.0-beta.6(typescript@5.6.3))
       valibot:
         specifier: beta
-        version: 1.0.0-beta.5(typescript@5.6.3)
+        version: 1.0.0-beta.6(typescript@5.6.3)
     devDependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.4.0
@@ -197,7 +197,7 @@ importers:
         version: 5.1.2(astro@4.16.12(@types/node@22.9.0)(rollup@4.26.0)(typescript@5.6.3))(tailwindcss@3.4.15)
       '@hono/valibot-validator':
         specifier: ^0.4.1
-        version: 0.4.1(hono@4.6.10)(valibot@1.0.0-beta.5(typescript@5.6.3))
+        version: 0.4.1(hono@4.6.10)(valibot@1.0.0-beta.6(typescript@5.6.3))
       '@iconify-json/lucide':
         specifier: ^1.2.14
         version: 1.2.14
@@ -239,7 +239,7 @@ importers:
         version: 1.81.9(vite@5.4.11(@types/node@22.9.0))
       '@tanstack/valibot-form-adapter':
         specifier: ^0.34.4
-        version: 0.34.4(valibot@1.0.0-beta.5(typescript@5.6.3))
+        version: 0.34.4(valibot@1.0.0-beta.6(typescript@5.6.3))
       astro:
         specifier: ^4.16.12
         version: 4.16.12(@types/node@22.9.0)(rollup@4.26.0)(typescript@5.6.3)
@@ -6805,8 +6805,8 @@ packages:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
-  valibot@1.0.0-beta.5:
-    resolution: {integrity: sha512-YrU03cSLH8+UIMMAOnYCpD9+c6k/VDlxu13aVDokt/YwtROICC6kkbQeRbamcEuh/+CbFa4pbqOptiNNbHFSog==}
+  valibot@1.0.0-beta.6:
+    resolution: {integrity: sha512-x9ObzhqDCWFaWOa6Zri1mbFcc8OIIKP7cQtD9JauKt5pJFhpJkvAXT+49bFKjoVikiKVk7m33mXgUJb/Wfknmw==}
     peerDependencies:
       typescript: '>=5'
     peerDependenciesMeta:
@@ -8824,10 +8824,10 @@ snapshots:
       protobufjs: 7.4.0
       yargs: 17.7.2
 
-  '@hono/valibot-validator@0.4.1(hono@4.6.10)(valibot@1.0.0-beta.5(typescript@5.6.3))':
+  '@hono/valibot-validator@0.4.1(hono@4.6.10)(valibot@1.0.0-beta.6(typescript@5.6.3))':
     dependencies:
       hono: 4.6.10
-      valibot: 1.0.0-beta.5(typescript@5.6.3)
+      valibot: 1.0.0-beta.6(typescript@5.6.3)
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
@@ -11188,10 +11188,10 @@ snapshots:
 
   '@tanstack/table-core@8.20.5': {}
 
-  '@tanstack/valibot-form-adapter@0.34.4(valibot@1.0.0-beta.5(typescript@5.6.3))':
+  '@tanstack/valibot-form-adapter@0.34.4(valibot@1.0.0-beta.6(typescript@5.6.3))':
     dependencies:
       '@tanstack/form-core': 0.34.4
-      valibot: 1.0.0-beta.5(typescript@5.6.3)
+      valibot: 1.0.0-beta.6(typescript@5.6.3)
 
   '@tanstack/virtual-file-routes@1.81.9': {}
 
@@ -15038,7 +15038,7 @@ snapshots:
   sst-linux-x86@3.3.22:
     optional: true
 
-  sst@3.3.22(hono@4.6.10)(valibot@1.0.0-beta.5(typescript@5.6.3)):
+  sst@3.3.22(hono@4.6.10)(valibot@1.0.0-beta.6(typescript@5.6.3)):
     dependencies:
       aws4fetch: 1.0.20
       jose: 5.2.3
@@ -15050,7 +15050,7 @@ snapshots:
       sst-linux-arm64: 3.3.22
       sst-linux-x64: 3.3.22
       sst-linux-x86: 3.3.22
-      valibot: 1.0.0-beta.5(typescript@5.6.3)
+      valibot: 1.0.0-beta.6(typescript@5.6.3)
 
   stacktracey@2.1.8:
     dependencies:
@@ -15406,7 +15406,7 @@ snapshots:
 
   uuid@9.0.1: {}
 
-  valibot@1.0.0-beta.5(typescript@5.6.3):
+  valibot@1.0.0-beta.6(typescript@5.6.3):
     optionalDependencies:
       typescript: 5.6.3
 
