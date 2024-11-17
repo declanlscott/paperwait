@@ -7,7 +7,7 @@ import { link, useResource } from "../resource";
 export class Functions extends pulumi.ComponentResource {
   static #instance: Functions;
 
-  #papercutSecureBridge: PapercutSecureBridge;
+  #papercutSecureReverseProxy: PapercutSecureReverseProxy;
   #tailscaleAuthKeyRotation: TailscaleAuthKeyRotation;
 
   static getInstance(opts: pulumi.ComponentResourceOptions) {
@@ -21,7 +21,7 @@ export class Functions extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Functions`, "Functions", {}, opts);
 
-    this.#papercutSecureBridge = PapercutSecureBridge.getInstance({
+    this.#papercutSecureReverseProxy = PapercutSecureReverseProxy.getInstance({
       parent: this,
     });
 
@@ -30,8 +30,8 @@ export class Functions extends pulumi.ComponentResource {
     });
   }
 
-  get papercutSecureBridge() {
-    return this.#papercutSecureBridge;
+  get papercutSecureReverseProxy() {
+    return this.#papercutSecureReverseProxy;
   }
 
   get tailscaleAuthKeyRotation() {
@@ -39,27 +39,26 @@ export class Functions extends pulumi.ComponentResource {
   }
 }
 
-class PapercutSecureBridge extends pulumi.ComponentResource {
-  static #instance: PapercutSecureBridge;
+class PapercutSecureReverseProxy extends pulumi.ComponentResource {
+  static #instance: PapercutSecureReverseProxy;
 
   #role: FunctionRole;
-  #tailscaleLayer: aws.lambda.LayerVersion;
   #function: aws.lambda.Function;
 
   static getInstance(opts: pulumi.ComponentResourceOptions) {
-    if (!this.#instance) this.#instance = new PapercutSecureBridge(opts);
+    if (!this.#instance) this.#instance = new PapercutSecureReverseProxy(opts);
 
     return this.#instance;
   }
 
   private constructor(
-    ...[opts]: Parameters<typeof PapercutSecureBridge.getInstance>
+    ...[opts]: Parameters<typeof PapercutSecureReverseProxy.getInstance>
   ) {
     const { AppData, Code } = useResource();
 
     super(
-      `${AppData.name}:tenant:aws:PapercutSecureBridge`,
-      "PapercutSecureBridge",
+      `${AppData.name}:tenant:aws:PapercutSecureReverseProxy`,
+      "PapercutSecureReverseProxy",
       {},
       opts,
     );
@@ -70,7 +69,9 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
       { parent: this },
     ).accountId;
 
-    this.#role = new FunctionRole("PapercutSecureBridge", { parent: this });
+    this.#role = new FunctionRole("PapercutSecureReverseProxy", {
+      parent: this,
+    });
     new aws.iam.RolePolicy(
       "InlinePolicy",
       {
@@ -101,37 +102,22 @@ class PapercutSecureBridge extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#tailscaleLayer = new aws.lambda.LayerVersion(
-      "TailscaleLayer",
-      {
-        s3Bucket: Code.bucket.name,
-        s3Key: Code.bucket.object.tailscaleLayer.key,
-        s3ObjectVersion: Code.bucket.object.tailscaleLayer.versionId,
-        layerName: "tailscale",
-        compatibleRuntimes: [aws.lambda.Runtime.CustomAL2023],
-        compatibleArchitectures: ["arm64"],
-      },
-      { parent: this },
-    );
-
     this.#function = new aws.lambda.Function(
       "Function",
       {
         s3Bucket: Code.bucket.name,
-        s3Key: Code.bucket.object.papercutSecureBridgeHandler.key,
+        s3Key: Code.bucket.object.papercutSecureReverseProxy.key,
         s3ObjectVersion:
-          Code.bucket.object.papercutSecureBridgeHandler.versionId,
+          Code.bucket.object.papercutSecureReverseProxy.versionId,
         runtime: aws.lambda.Runtime.CustomAL2023,
         architectures: ["arm64"],
-        layers: [this.#tailscaleLayer.arn],
+        timeout: 15,
         role: this.#role.arn,
-        ...link({ AppData }),
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      tailscaleLayer: this.#tailscaleLayer.id,
       function: this.#function.id,
     });
   }

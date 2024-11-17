@@ -89,8 +89,8 @@ export const getProgram = (input: ProgramInput) => async () =>
         domainName: ssl.domainName,
         certificateArn: ssl.certificateArn,
         cloudfrontKeyPairId: cloudfrontPublicKey.id,
-        papercutSecureBridgeFunction: {
-          invokeArn: functions.papercutSecureBridge.invokeArn,
+        papercutSecureReverseProxyFunction: {
+          invokeArn: functions.papercutSecureReverseProxy.invokeArn,
         },
         invoicesProcessorQueue: {
           arn: storage.queues.invoicesProcessor.arn,

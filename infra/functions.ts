@@ -32,7 +32,7 @@ sst.Linkable.wrap(sst.aws.Function, (fn) => ({
 }));
 
 export const usersSync = new sst.aws.Function("UsersSync", {
-  handler: "packages/functions/handlers/node/src/users-sync.handler",
+  handler: "packages/functions/node/src/users-sync.handler",
   timeout: "20 seconds",
   link: [appData, cloudfrontPrivateKey, db],
 });
@@ -50,7 +50,7 @@ new aws.lambda.Permission("UsersSyncRulePermission", {
 });
 
 export const invoicesProcessor = new sst.aws.Function("InvoicesProcessor", {
-  handler: "packages/functions/handlers/node/src/invoices-processor.handler",
+  handler: "packages/functions/node/src/invoices-processor.handler",
   timeout: "20 seconds",
   link: [appData, cloudfrontPrivateKey, db, invoicesProcessorDeadLetterQueue],
 });
@@ -63,74 +63,41 @@ new aws.lambda.Permission("InvoicesProcessorRulePermission", {
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
   job: {
-    handler:
-      "packages/functions/handlers/node/src/db-garbage-collection.handler",
+    handler: "packages/functions/node/src/db-garbage-collection.handler",
     timeout: "10 seconds",
     link: [db],
   },
   schedule: "rate(1 day)",
 });
 
-const tailscaleLayerSrcPath = normalizePath(
-  "packages/functions/layers/tailscale/src",
+const papercutSecureReverseProxySrcPath = normalizePath(
+  "packages/functions/go/papercut-secure-reverse-proxy",
 );
-const tailscaleLayerSrc = await command.local.run({
-  dir: tailscaleLayerSrcPath,
-  command: 'echo "Archiving tailscale layer source code..."',
-  archivePaths: ["**", "!dist/**"],
-});
-const tailscaleLayerBuilderAssetPath = "dist/package.zip";
-const tailscaleLayerBuilder = new command.local.Command(
-  "TailscaleLayerBuilder",
-  {
-    dir: tailscaleLayerSrcPath,
-    create: "./build-with-docker.sh",
-    assetPaths: [tailscaleLayerBuilderAssetPath],
-    triggers: [tailscaleLayerSrc.archive],
-  },
-);
-export const tailscaleLayerObject = new aws.s3.BucketObjectv2(
-  "TailscaleLayerObject",
-  {
-    bucket: codeBucket.name,
-    key: "functions/layers/tailscale/package.zip",
-    source: tailscaleLayerBuilder.assets.apply((assets) => {
-      const asset = assets?.[tailscaleLayerBuilderAssetPath];
-      if (!asset) throw new Error("Missing tailscale layer build asset");
-
-      return asset;
-    }),
-  },
-);
-
-const papercutSecureBridgeHandlerSrcPath = normalizePath(
-  "packages/functions/handlers/go/papercut-secure-bridge",
-);
-const papercutSecureBridgeHandlerSrc = await command.local.run({
-  dir: papercutSecureBridgeHandlerSrcPath,
-  command: 'echo "Archiving papercut secure bridge handler source code..."',
+const papercutSecureReverseProxySrc = await command.local.run({
+  dir: papercutSecureReverseProxySrcPath,
+  command: 'echo "Archiving papercut secure reverse proxy source code..."',
   archivePaths: ["**", "!bin/**"],
 });
-const papercutSecureBridgeHandlerBuilderAssetPath = "bin/package.zip";
-const papercutSecureBridgeHandlerBuilder = new command.local.Command(
-  "PapercutSecureBridgeHandlerBuilder",
+const papercutSecureReverseProxyBuilderAssetPath = "bin/package.zip";
+const papercutSecureReverseProxyBuilder = new command.local.Command(
+  "PapercutSecureReverseProxyBuilder",
   {
-    dir: papercutSecureBridgeHandlerSrcPath,
+    dir: papercutSecureReverseProxySrcPath,
     create:
       "GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o bin/bootstrap cmd/function/main.go && zip -j bin/package.zip bin/bootstrap",
-    assetPaths: [papercutSecureBridgeHandlerBuilderAssetPath],
-    triggers: [papercutSecureBridgeHandlerSrc.archive],
+    assetPaths: [papercutSecureReverseProxyBuilderAssetPath],
+    triggers: [papercutSecureReverseProxySrc.archive],
   },
 );
-export const papercutSecureBridgeHandlerObject = new aws.s3.BucketObjectv2(
-  "PapercutSecureBridgeHandlerObject",
+export const papercutSecureReverseProxyObject = new aws.s3.BucketObjectv2(
+  "PapercutSecureReverseProxyObject",
   {
     bucket: codeBucket.name,
-    key: "functions/handlers/papercut-secure-bridge/package.zip",
-    source: papercutSecureBridgeHandlerBuilder.assets.apply((assets) => {
-      const asset = assets?.[papercutSecureBridgeHandlerBuilderAssetPath];
+    key: "functions/papercut-secure-reverse-proxy/package.zip",
+    source: papercutSecureReverseProxyBuilder.assets.apply((assets) => {
+      const asset = assets?.[papercutSecureReverseProxyBuilderAssetPath];
       if (!asset)
-        throw new Error("Missing papercut secure bridge handler build asset");
+        throw new Error("Missing papercut secure reverse proxy build asset");
 
       return asset;
     }),
@@ -142,37 +109,29 @@ export const code = new sst.Linkable("Code", {
     bucket: {
       name: codeBucket.name,
       object: {
-        tailscaleLayer: {
-          key: tailscaleLayerObject.key,
-          versionId: tailscaleLayerObject.versionId,
-        },
-        papercutSecureBridgeHandler: {
-          key: papercutSecureBridgeHandlerObject.key,
-          versionId: papercutSecureBridgeHandlerObject.versionId,
+        papercutSecureReverseProxy: {
+          key: papercutSecureReverseProxyObject.key,
+          versionId: papercutSecureReverseProxyObject.versionId,
         },
       },
     },
   },
 });
 
-const nodeHandlersPath = normalizePath("packages/functions/handlers/node");
-const tenantInfraHandlerSrc = await command.local.run({
-  dir: nodeHandlersPath,
-  command: 'echo "Archiving tenant infra handler source code..."',
+const tenantInfraSrc = await command.local.run({
+  dir: normalizePath("packages/functions/node"),
+  command: 'echo "Archiving tenant infra source code..."',
   archivePaths: [
     "src/tenant/infra/**",
     "!src/tenant/infra/dist/**",
     "package.json",
   ],
 });
-const tenantInfraHandlerBuilder = new command.local.Command(
-  "TenantInfraHandlerBuilder",
-  {
-    dir: nodeHandlersPath,
-    create: "pnpm run infra:build",
-    triggers: [tenantInfraHandlerSrc.archive],
-  },
-);
+const tenantInfraBuilder = new command.local.Command("TenantInfraBuilder", {
+  dir: normalizePath("packages/functions/node"),
+  create: "pnpm run infra:build",
+  triggers: [tenantInfraSrc.archive],
+});
 
 export const repository = new awsx.ecr.Repository("Repository", {
   forceDelete: true,
@@ -182,9 +141,9 @@ export const tenantInfraFunctionImage = new awsx.ecr.Image(
   "TenantInfraFunctionImage",
   {
     repositoryUrl: repository.url,
-    context: normalizePath("packages/functions/handlers/node/src/tenant/infra"),
+    context: normalizePath("packages/functions/node/src/tenant/infra"),
   },
-  { dependsOn: [tenantInfraHandlerBuilder] },
+  { dependsOn: [tenantInfraBuilder] },
 );
 
 export const tenantInfraFunctionRole = new aws.iam.Role(

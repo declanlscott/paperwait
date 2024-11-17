@@ -12,6 +12,8 @@ import {
 
 import type { Tenant } from "../tenants/sql";
 
+// TODO: Reimplement for secure reverse proxy
+
 export namespace SecureBridge {
   export async function getTaskStatus(tenantId: Tenant["id"]) {
     const tenantFqdn = `${tenantId}.${Resource.AppData.domainName.fullyQualified}`;

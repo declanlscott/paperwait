@@ -143,11 +143,11 @@ importers:
         specifier: ^0.4.14
         version: 0.4.14(eslint@8.57.1)
 
-  packages/functions/handlers/node:
+  packages/functions/node:
     dependencies:
       '@printworks/core':
         specifier: workspace:*
-        version: link:../../../core
+        version: link:../../core
       '@pulumi/aws':
         specifier: ^6.59.1
         version: 6.59.1(typescript@5.6.3)
@@ -156,14 +156,14 @@ importers:
         version: 5.43.0(typescript@5.6.3)
       '@pulumi/pulumi':
         specifier: ^3.138.0
-        version: 3.138.0(typescript@5.6.3)
+        version: 3.139.0(typescript@5.6.3)
       openapi-fetch:
         specifier: ^0.13.0
         version: 0.13.0
     devDependencies:
       '@printworks/eslint-config':
         specifier: workspace:*
-        version: link:../../../eslint-config
+        version: link:../../eslint-config
       '@types/aws-lambda':
         specifier: ^8.10.145
         version: 8.10.145
@@ -2181,8 +2181,8 @@ packages:
   '@pulumi/cloudflare@5.43.0':
     resolution: {integrity: sha512-PSiPqcMwePm6vRnAj5EMRyf3C5v+2SR5Ew+lH4P2HXZkZMi6D21EG4+hqNm5eXXaBR94jDssi7FN0QldZYDqXg==}
 
-  '@pulumi/pulumi@3.138.0':
-    resolution: {integrity: sha512-LcQTYwVecIpoA9Dnbq31+3IuOT4QYsGmCbXO0+wJLFlXBxBEoeq4Rft16shxM01n3EXJnTo4w5/pLetoAz0pYg==}
+  '@pulumi/pulumi@3.139.0':
+    resolution: {integrity: sha512-0LJnkxoObZuMyu1zi5RJYwYoeYTHhH8aCl+vlhr3rAnGVAI3PqdwvwFpnycGFw2YSS2I1lOPiQIT5yGZD3RVZQ==}
     engines: {node: '>=18'}
     peerDependencies:
       ts-node: '>= 7.0.1 < 12'
@@ -9355,7 +9355,7 @@ snapshots:
 
   '@pulumi/aws@6.59.1(typescript@5.6.3)':
     dependencies:
-      '@pulumi/pulumi': 3.138.0(typescript@5.6.3)
+      '@pulumi/pulumi': 3.139.0(typescript@5.6.3)
       builtin-modules: 3.0.0
       mime: 2.6.0
       resolve: 1.22.8
@@ -9367,14 +9367,14 @@ snapshots:
 
   '@pulumi/cloudflare@5.43.0(typescript@5.6.3)':
     dependencies:
-      '@pulumi/pulumi': 3.138.0(typescript@5.6.3)
+      '@pulumi/pulumi': 3.139.0(typescript@5.6.3)
     transitivePeerDependencies:
       - bluebird
       - supports-color
       - ts-node
       - typescript
 
-  '@pulumi/pulumi@3.138.0(typescript@5.6.3)':
+  '@pulumi/pulumi@3.139.0(typescript@5.6.3)':
     dependencies:
       '@grpc/grpc-js': 1.12.2
       '@logdna/tail-file': 2.2.0

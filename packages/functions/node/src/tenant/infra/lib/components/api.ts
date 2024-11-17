@@ -10,7 +10,7 @@ export interface ApiArgs {
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
   cloudfrontKeyPairId: pulumi.Input<string>;
-  papercutSecureBridgeFunction: {
+  papercutSecureReverseProxyFunction: {
     invokeArn: aws.lambda.Function["invokeArn"];
   };
   invoicesProcessorQueue: {
@@ -43,8 +43,9 @@ export class Api extends pulumi.ComponentResource {
   #usersSyncRoute: EventRoute;
 
   #papercutResource: aws.apigateway.Resource;
-  #secureBridgeResource: aws.apigateway.Resource;
-  #papercutSecureBridgeRoutes: Array<PapercutSecureBridgeRoute> = [];
+  #papercutSecureReverseProxyResource: aws.apigateway.Resource;
+  #papercutSecureReverseProxyMethod: aws.apigateway.Method;
+  #papercutSecureReverseProxyIntegration: aws.apigateway.Integration;
 
   #invoicesResource: aws.apigateway.Resource;
   #enqueueInvoiceRequestValidator: aws.apigateway.RequestValidator;
@@ -332,173 +333,42 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#secureBridgeResource = new aws.apigateway.Resource(
-      "SecureBridgeResource",
+    this.#papercutSecureReverseProxyResource = new aws.apigateway.Resource(
+      "PapercutSecureReverseProxyResource",
       {
         restApi: args.gateway.id,
         parentId: this.#papercutResource.id,
-        pathPart: "secure-bridge",
+        pathPart: "{proxy+}",
       },
       { parent: this },
     );
 
-    this.#papercutSecureBridgeRoutes.push(
-      new PapercutSecureBridgeRoute(
-        "AdjustSharedAccountAccountBalanceRoute",
-        {
-          restApiId: args.gateway.id,
-          parentId: this.#secureBridgeResource.id,
-          pathPart: "adjustSharedAccountAccountBalance",
-          requestSchemaProperties: {
-            sharedAccountName: {
-              type: "string",
-            },
-            adjustment: {
-              type: "number",
-            },
-            comment: {
-              type: "string",
-            },
-          },
-          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
-          executionRoleArn: this.#role.arn,
-        },
-        { parent: this },
-      ),
+    this.#papercutSecureReverseProxyMethod = new aws.apigateway.Method(
+      "PapercutSecureReverseProxyMethod",
+      {
+        restApi: args.gateway.id,
+        resourceId: this.#papercutSecureReverseProxyResource.id,
+        httpMethod: "ANY",
+        authorization: "AWS_IAM",
+      },
+      { parent: this },
     );
 
-    this.#papercutSecureBridgeRoutes.push(
-      new PapercutSecureBridgeRoute(
-        "GetSharedAccountPropertiesRoute",
+    this.#papercutSecureReverseProxyIntegration =
+      new aws.apigateway.Integration(
+        "PapercutSecureReverseProxyIntegration",
         {
-          restApiId: args.gateway.id,
-          parentId: this.#secureBridgeResource.id,
-          pathPart: "getSharedAccountProperties",
-          requestSchemaProperties: {
-            sharedAccountName: {
-              type: "string",
-            },
-            properties: {
-              type: "array",
-              items: {
-                type: "string",
-              },
-            },
-          },
-          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
-          executionRoleArn: this.#role.arn,
+          restApi: args.gateway.id,
+          resourceId: this.#papercutSecureReverseProxyResource.id,
+          httpMethod: this.#papercutSecureReverseProxyMethod.httpMethod,
+          type: "AWS_PROXY",
+          integrationHttpMethod: "POST",
+          passthroughBehavior: "WHEN_NO_TEMPLATES",
+          uri: args.papercutSecureReverseProxyFunction.invokeArn,
+          credentials: this.#role.arn,
         },
         { parent: this },
-      ),
-    );
-
-    this.#papercutSecureBridgeRoutes.push(
-      new PapercutSecureBridgeRoute(
-        "GetTaskStatusRoute",
-        {
-          restApiId: args.gateway.id,
-          parentId: this.#secureBridgeResource.id,
-          pathPart: "getTaskStatus",
-          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
-          executionRoleArn: this.#role.arn,
-        },
-        { parent: this },
-      ),
-    );
-
-    this.#papercutSecureBridgeRoutes.push(
-      new PapercutSecureBridgeRoute(
-        "IsUserExistsRoute",
-        {
-          restApiId: args.gateway.id,
-          parentId: this.#secureBridgeResource.id,
-          pathPart: "isUserExists",
-          requestSchemaProperties: {
-            username: {
-              type: "string",
-            },
-          },
-          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
-          executionRoleArn: this.#role.arn,
-        },
-        { parent: this },
-      ),
-    );
-
-    this.#papercutSecureBridgeRoutes.push(
-      new PapercutSecureBridgeRoute(
-        "ListSharedAccountsRoute",
-        {
-          restApiId: args.gateway.id,
-          parentId: this.#secureBridgeResource.id,
-          pathPart: "listSharedAccounts",
-          requestSchemaProperties: {
-            offset: {
-              type: "integer",
-            },
-            limit: {
-              type: "integer",
-            },
-          },
-          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
-          executionRoleArn: this.#role.arn,
-        },
-        { parent: this },
-      ),
-    );
-
-    this.#papercutSecureBridgeRoutes.push(
-      new PapercutSecureBridgeRoute(
-        "ListUserAccounts",
-        {
-          restApiId: args.gateway.id,
-          parentId: this.#secureBridgeResource.id,
-          pathPart: "listUserAccounts",
-          requestSchemaProperties: {
-            username: {
-              type: "string",
-            },
-            offset: {
-              type: "integer",
-            },
-            limit: {
-              type: "integer",
-            },
-          },
-          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
-          executionRoleArn: this.#role.arn,
-        },
-        { parent: this },
-      ),
-    );
-
-    this.#papercutSecureBridgeRoutes.push(
-      new PapercutSecureBridgeRoute(
-        "ListUserSharedAccountsRoute",
-        {
-          restApiId: args.gateway.id,
-          parentId: this.#secureBridgeResource.id,
-          pathPart: "listUserSharedAccounts",
-          requestSchemaProperties: {
-            username: {
-              type: "string",
-            },
-            offset: {
-              type: "integer",
-            },
-            limit: {
-              type: "integer",
-            },
-            ignoreUserAccountSelectionConfig: {
-              type: "boolean",
-            },
-          },
-          invokeArn: args.papercutSecureBridgeFunction.invokeArn,
-          executionRoleArn: this.#role.arn,
-        },
-        { parent: this },
-      ),
-    );
+      );
 
     this.#invoicesResource = new aws.apigateway.Resource(
       "InvoicesResource",
@@ -756,7 +626,12 @@ export class Api extends pulumi.ComponentResource {
       appSpecificResource: this.#appSpecificResource.id,
 
       papercutResource: this.#papercutResource.id,
-      secureBridgeResource: this.#secureBridgeResource.id,
+      papercutSecureReverseProxyResource:
+        this.#papercutSecureReverseProxyResource.id,
+      papercutSecureReverseProxyMethod:
+        this.#papercutSecureReverseProxyMethod.id,
+      papercutSecureReverseProxyIntegration:
+        this.#papercutSecureReverseProxyIntegration.id,
 
       invoicesResource: this.#invoicesResource.id,
       enqueueInvoiceMethod: this.#enqueueInvoiceMethod.id,
@@ -937,123 +812,6 @@ class EventRoute extends pulumi.ComponentResource {
 
     this.registerOutputs({
       resource: this.#resource.id,
-      method: this.#method.id,
-      integration: this.#integration.id,
-    });
-  }
-}
-
-interface PapercutSecureBridgeRouteArgs {
-  restApiId: aws.apigateway.RestApi["id"];
-  parentId: aws.apigateway.Resource["id"];
-  pathPart: pulumi.Input<string>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  requestSchemaProperties?: pulumi.Input<Record<string, any>>;
-  executionRoleArn: aws.iam.Role["arn"];
-  invokeArn: aws.lambda.Function["invokeArn"];
-}
-
-class PapercutSecureBridgeRoute extends pulumi.ComponentResource {
-  #resource: aws.apigateway.Resource;
-  #requestValidator?: aws.apigateway.RequestValidator;
-  #requestModel?: aws.apigateway.Model;
-  #method: aws.apigateway.Method;
-  #integration: aws.apigateway.Integration;
-
-  constructor(
-    name: string,
-    args: PapercutSecureBridgeRouteArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ) {
-    const { AppData } = useResource();
-
-    super(
-      `${AppData.name}:tenant:aws:PapercutSecureBridgeRoute`,
-      name,
-      args,
-      opts,
-    );
-
-    this.#resource = new aws.apigateway.Resource(
-      `${name}Resource`,
-      {
-        restApi: args.restApiId,
-        parentId: args.parentId,
-        pathPart: args.pathPart,
-      },
-      { parent: this },
-    );
-
-    if (args.requestSchemaProperties) {
-      this.#requestValidator = new aws.apigateway.RequestValidator(
-        `${name}RequestValidator`,
-        {
-          restApi: args.restApiId,
-          validateRequestBody: true,
-          validateRequestParameters: false,
-        },
-        { parent: this },
-      );
-
-      this.#requestModel = new aws.apigateway.Model(
-        `${name}RequestModel`,
-        {
-          restApi: args.restApiId,
-          contentType: "application/json",
-          schema: pulumi
-            .output(args.requestSchemaProperties)
-            .apply((properties) =>
-              JSON.stringify({
-                $schema: "http://json-schema.org/draft-04/schema#",
-                title: `${name}RequestModel`,
-                type: "object",
-                properties,
-                required: Object.keys(properties),
-                additionalProperties: false,
-              }),
-            ),
-        },
-        { parent: this },
-      );
-    }
-
-    this.#method = new aws.apigateway.Method(
-      `${name}Method`,
-      {
-        restApi: args.restApiId,
-        resourceId: this.#resource.id,
-        httpMethod: "POST",
-        authorization: "AWS_IAM",
-        requestValidatorId:
-          args.requestSchemaProperties && this.#requestValidator
-            ? this.#requestValidator.id
-            : undefined,
-        requestModels:
-          args.requestSchemaProperties && this.#requestModel
-            ? { "application/json": this.#requestModel.name }
-            : undefined,
-      },
-      { parent: this },
-    );
-
-    this.#integration = new aws.apigateway.Integration(
-      `${name}Integration`,
-      {
-        restApi: args.restApiId,
-        resourceId: this.#resource.id,
-        httpMethod: this.#method.httpMethod,
-        integrationHttpMethod: "POST",
-        type: "AWS_PROXY",
-        uri: args.invokeArn,
-        credentials: args.executionRoleArn,
-      },
-      { parent: this },
-    );
-
-    this.registerOutputs({
-      resource: this.#resource.id,
-      requestValidator: this.#requestValidator?.id,
-      requestModel: this.#requestModel?.id,
       method: this.#method.id,
       integration: this.#integration.id,
     });

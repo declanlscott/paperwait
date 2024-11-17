@@ -66,11 +66,7 @@ declare module "sst" {
       "bucket": {
         "name": string
         "object": {
-          "papercutSecureBridgeHandler": {
-            "key": string
-            "versionId": string
-          }
-          "tailscaleLayer": {
+          "papercutSecureReverseProxy": {
             "key": string
             "versionId": string
           }
