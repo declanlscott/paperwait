@@ -9,7 +9,7 @@
     "@printworks/core": "workspace:*",
     "@pulumi/aws": "^6.59.1",
     "@pulumi/cloudflare": "^5.43.0",
-    "@pulumi/pulumi": "^3.138.0",
+    "@pulumi/pulumi": "^3.139.0",
     "openapi-fetch": "^0.13.0"
   },
   "devDependencies": {
