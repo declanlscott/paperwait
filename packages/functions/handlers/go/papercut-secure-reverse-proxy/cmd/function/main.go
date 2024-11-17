@@ -1,4 +1,4 @@
-package function
+package main
 
 import (
 	"papercut-secure-reverse-proxy/internal/handler"

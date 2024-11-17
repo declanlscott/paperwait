@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -21,15 +22,15 @@ import (
 )
 
 const (
-	hostname          = "printworks"
-	endpointParamName = "/papercut/web-services/endpoint"
-	authKeyParamName  = "/tailscale/auth-key"
-	tailscaleDir      = "/tmp/tailscale"
-	cleanupTimeout    = 1800 * time.Millisecond // Lambda shutdown phase is capped at 2 seconds
+	hostname         = "printworks"
+	targetParamName  = "/papercut/server/url"
+	authKeyParamName = "/tailscale/auth-key"
+	tailscaleDir     = "/tmp/tailscale"
+	cleanupTimeout   = 1800 * time.Millisecond // Lambda shutdown phase is capped at 2 seconds
 )
 
 var (
-	tailscale    *tsnet.Server
+	server       *tsnet.Server
 	proxyAdapter *httpadapter.HandlerAdapter
 	cleanupOnce  sync.Once
 )
@@ -58,15 +59,15 @@ func init() {
 	ssmClient := ssm.NewFromConfig(cfg)
 
 	output, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-		Name: aws.String(endpointParamName),
+		Name: aws.String(targetParamName),
 	})
 	if err != nil {
-		log.Fatalf("Failed to get endpoint parameter: %v", err)
+		log.Fatalf("Failed to get target parameter: %v", err)
 	}
 
 	target, err := url.Parse(*output.Parameter.Value)
 	if err != nil {
-		log.Fatalf("Failed to parse endpoint URL: %v", err)
+		log.Fatalf("Failed to parse target URL: %v", err)
 	}
 
 	output, err = ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
@@ -77,15 +78,20 @@ func init() {
 		log.Fatalf("Failed to get auth key parameter: %v", err)
 	}
 
-	tailscale = &tsnet.Server{
+	_ = os.Setenv("TSNET_FORCE_LOGIN", "1")
+
+	server = &tsnet.Server{
 		Dir:       tailscaleDir,
 		Hostname:  hostname,
 		AuthKey:   *output.Parameter.Value,
 		Ephemeral: true,
 	}
+	if _, err := server.Up(ctx); err != nil {
+		log.Fatalf("Failed to start Tailscale server: %v", err)
+	}
 
 	proxy := httputil.NewSingleHostReverseProxy(target)
-	proxy.Transport = tailscale.HTTPClient().Transport
+	proxy.Transport = server.HTTPClient().Transport
 
 	proxyAdapter = httpadapter.New(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -97,12 +103,14 @@ func Handler(
 	ctx context.Context,
 	req events.APIGatewayProxyRequest,
 ) (events.APIGatewayProxyResponse, error) {
+	req.Path = strings.TrimPrefix(req.Path, "/papercut")
+
 	return proxyAdapter.ProxyWithContext(ctx, req)
 }
 
 func cleanup() {
 	cleanupOnce.Do(func() {
-		if tailscale == nil {
+		if server == nil {
 			return
 		}
 
@@ -113,7 +121,7 @@ func cleanup() {
 		go func() {
 			log.Println("Shutting down Tailscale server...")
 
-			if err := tailscale.Close(); err != nil {
+			if err := server.Close(); err != nil {
 				log.Printf("Failed to shut down Tailscale server: %v", err)
 			}
 
