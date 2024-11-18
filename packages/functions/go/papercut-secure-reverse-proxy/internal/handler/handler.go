@@ -2,12 +2,14 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/signal"
+	"papercut-secure-reverse-proxy/internal/utils"
 	"strings"
 	"sync"
 	"syscall"
@@ -18,11 +20,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
+	"tailscale.com/client/tailscale"
 	"tailscale.com/tsnet"
 )
 
 const (
-	hostname         = "printworks"
+	hostnamePrefix   = "printworks-"
 	targetParamName  = "/papercut/server/url"
 	authKeyParamName = "/tailscale/auth-key"
 	tailscaleDir     = "/tmp/tailscale"
@@ -82,7 +85,7 @@ func init() {
 
 	server = &tsnet.Server{
 		Dir:       tailscaleDir,
-		Hostname:  hostname,
+		Hostname:  hostnamePrefix + utils.RandomString(8),
 		AuthKey:   *output.Parameter.Value,
 		Ephemeral: true,
 	}
@@ -119,8 +122,36 @@ func cleanup() {
 
 		done := make(chan struct{})
 		go func() {
-			log.Println("Shutting down Tailscale server...")
+			if err := func() error {
+				tailscale.I_Acknowledge_This_API_Is_Unstable = true
 
+				client, err := server.APIClient()
+				if err != nil {
+					return err
+				}
+
+				devices, err := client.Devices(ctx, tailscale.DeviceAllFields)
+				if err != nil {
+					return err
+				}
+
+				for _, device := range devices {
+					if device.Hostname == server.Hostname {
+						log.Printf("Deleting Tailscale device %q...", device.DeviceID)
+						if err := client.DeleteDevice(ctx, device.DeviceID); err != nil {
+							return err
+						}
+
+						return nil
+					}
+				}
+
+				return errors.New("tailscale device not found")
+			}(); err != nil {
+				log.Printf("Failed to delete Tailscale device: %v", err)
+			}
+
+			log.Println("Shutting down Tailscale server...")
 			if err := server.Close(); err != nil {
 				log.Printf("Failed to shut down Tailscale server: %v", err)
 			}
