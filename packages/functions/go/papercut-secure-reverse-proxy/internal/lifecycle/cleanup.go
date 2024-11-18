@@ -4,41 +4,50 @@ import (
 	"context"
 	"errors"
 	"log"
+	"os"
 
 	"tailscale.com/client/tailscale"
 )
 
-func cleanup(ctx context.Context) {
-	cleanupOnce.Do(func() {
-		if server == nil {
-			return
-		}
+func cleanup(c <-chan os.Signal) {
+	for sig := range c {
+		log.Printf("%v signal received\n", sig)
 
-		ctx, cancel := context.WithTimeout(ctx, cleanupTimeout)
-		defer cancel()
+		cleanupOnce.Do(func() {
+			log.Println("Cleaning up ...")
 
-		done := make(chan struct{})
-		go func() {
-			log.Println("Deleting Tailscale device...")
-			if err := deleteDevice(ctx); err != nil {
-				log.Printf("Failed to delete Tailscale device: %v\n", err)
+			if server == nil {
+				return
 			}
 
-			log.Println("Shutting down Tailscale server...")
-			if err := server.Close(); err != nil {
-				log.Printf("Failed to shut down Tailscale server: %v\n", err)
+			ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
+			defer cancel()
+
+			done := make(chan struct{})
+			go func() {
+				defer close(done)
+
+				log.Println("Deleting Tailscale device ...")
+				if err := deleteDevice(ctx); err != nil {
+					log.Printf("Failed to delete Tailscale device: %v\n", err)
+				}
+
+				log.Println("Shutting down Tailscale server ...")
+				if err := server.Close(); err != nil {
+					log.Printf("Failed to shut down Tailscale server: %v\n", err)
+				}
+			}()
+
+			select {
+			case <-ctx.Done():
+				log.Println("Cleanup timed out")
+			case <-done:
+				log.Println("Cleanup completed successfully")
 			}
+		})
 
-			close(done)
-		}()
-
-		select {
-		case <-ctx.Done():
-			log.Println("Cleanup timed out")
-		case <-done:
-			log.Println("Cleanup completed successfully")
-		}
-	})
+		return
+	}
 }
 
 func deleteDevice(ctx context.Context) error {

@@ -18,20 +18,12 @@ import (
 )
 
 func Startup() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
+
+	go cleanup(c)
+
 	ctx := context.Background()
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan,
-		syscall.SIGTERM, // Lambda shutdown signal
-		syscall.SIGINT,  // Terminal Ctrl+C interrupt
-		syscall.SIGHUP,  // Terminal disconnect
-	)
-
-	go func() {
-		sig := <-sigChan
-		log.Printf("Received signal %v, cleaning up\n", sig)
-		cleanup(ctx)
-	}()
 
 	params, err := getParams(ctx)
 	if err != nil {
@@ -46,6 +38,8 @@ func Startup() {
 		AuthKey:   params.authKey,
 		Ephemeral: true,
 	}
+
+	log.Println("Starting Tailscale server ...")
 	if _, err := server.Up(ctx); err != nil {
 		log.Fatalf("Failed to start Tailscale server: %v", err)
 	}
