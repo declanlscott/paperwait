@@ -2,84 +2,66 @@ package lifecycle
 
 import (
 	"context"
-	"errors"
 	"log"
 	"os"
-
-	"tailscale.com/client/tailscale"
 )
 
 func cleanup(c <-chan os.Signal) {
-	for sig := range c {
-		log.Printf("%v signal received\n", sig)
+	sig := <-c
+	log.Printf("%v signal received\n", sig)
 
-		cleanupOnce.Do(func() {
-			log.Println("Cleaning up ...")
+	cleanupSync.once.Do(func() {
+		log.Println("Cleaning up ...")
 
-			if server == nil {
-				return
-			}
+		ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
+		defer cancel()
 
-			ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
-			defer cancel()
+		cleanupSync.wg.Add(2)
+		go deleteDevice(ctx)
+		go shutdownServer()
 
-			done := make(chan struct{})
-			go func() {
-				defer close(done)
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			cleanupSync.wg.Wait()
+		}()
 
-				log.Println("Deleting Tailscale device ...")
-				if err := deleteDevice(ctx); err != nil {
-					log.Printf("Failed to delete Tailscale device: %v\n", err)
-				}
+		select {
+		case <-ctx.Done():
+			log.Println("Cleanup timed out")
+		case <-done:
+			log.Println("Cleanup completed successfully")
+		}
 
-				log.Println("Shutting down Tailscale server ...")
-				if err := server.Close(); err != nil {
-					log.Printf("Failed to shut down Tailscale server: %v\n", err)
-				}
-			}()
+		log.Println("Exiting ...")
+		os.Exit(0)
+	})
+}
 
-			select {
-			case <-ctx.Done():
-				log.Println("Cleanup timed out")
-			case <-done:
-				log.Println("Cleanup completed successfully")
-			}
-		})
+func deleteDevice(ctx context.Context) {
+	defer cleanupSync.wg.Done()
+	log.Println("Deleting Tailscale device ...")
 
+	if ts.nodeId == nil {
+		log.Println("No Tailscale device to delete")
 		return
+	}
+
+	if err := ts.client.DeleteDevice(ctx, string(*ts.nodeId)); err != nil {
+		log.Printf("Failed to delete Tailscale device: %v\n", err)
 	}
 }
 
-func deleteDevice(ctx context.Context) error {
-	tailscale.I_Acknowledge_This_API_Is_Unstable = true
+func shutdownServer() {
+	defer cleanupSync.wg.Done()
+	log.Println("Shutting down Tailscale server ...")
 
-	client, err := server.APIClient()
-	if err != nil {
-		return err
+	if ts.server == nil {
+		log.Println("No Tailscale server to shut down")
+		return
 	}
 
-	devices, err := client.Devices(ctx, tailscale.DeviceAllFields)
-	if err != nil {
-		return err
+	if err := ts.server.Close(); err != nil {
+		log.Printf("Failed to shut down Tailscale server: %v\n", err)
 	}
-
-	for _, device := range devices {
-		addrMap := make(map[string]bool)
-
-		ipv4, ipv6 := server.TailscaleIPs()
-		addrMap[ipv4.String()] = true
-		addrMap[ipv6.String()] = true
-
-		for _, addr := range device.Addresses {
-			if addrMap[addr] {
-				if err := client.DeleteDevice(ctx, device.DeviceID); err != nil {
-					return err
-				}
-
-				return nil
-			}
-		}
-	}
-
-	return errors.New("tailscale device not found")
 }

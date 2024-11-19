@@ -14,51 +14,59 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
+	"tailscale.com/client/tailscale"
 	"tailscale.com/tsnet"
 )
 
 func Startup() {
+	log.Printf("Starting up ...")
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
-
 	go cleanup(c)
 
 	ctx := context.Background()
+	tailscale.I_Acknowledge_This_API_Is_Unstable = true
 
+	log.Println("Getting startup parameters ...")
 	params, err := getParams(ctx)
 	if err != nil {
-		log.Fatalf("Failed to get parameters: %v", err)
+		log.Fatalf("Failed to get startup parameters: %v", err)
 	}
 
 	_ = os.Setenv("TSNET_FORCE_LOGIN", "1")
-
-	server = &tsnet.Server{
+	ts.server = &tsnet.Server{
 		Dir:       tailscaleDir,
 		Hostname:  hostname,
-		AuthKey:   params.authKey,
+		AuthKey:   *params.authKey,
 		Ephemeral: true,
 	}
 
 	log.Println("Starting Tailscale server ...")
-	if _, err := server.Up(ctx); err != nil {
+	status, err := ts.server.Up(ctx)
+	if err != nil {
 		log.Fatalf("Failed to start Tailscale server: %v", err)
 	}
+	ts.nodeId = &status.Self.ID
+	ts.client = tailscale.NewClient(status.CurrentTailnet.Name, nil)
 
 	proxy := httputil.NewSingleHostReverseProxy(params.target)
-	proxy.Transport = server.HTTPClient().Transport
+	proxy.Transport = ts.server.HTTPClient().Transport
 
 	HandlerAdapter = httpadapter.New(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			proxy.ServeHTTP(w, r)
 		}))
+
+	log.Println("Startup completed")
 }
 
-type params struct {
+type Params struct {
 	target  *url.URL
-	authKey string
+	authKey *string
 }
 
-func getParams(ctx context.Context) (*params, error) {
+func getParams(ctx context.Context) (*Params, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		log.Fatalf("Failed to load AWS SDK configuration: %v", err)
@@ -89,8 +97,8 @@ func getParams(ctx context.Context) (*params, error) {
 		return nil, err
 	}
 
-	return &params{
+	return &Params{
 		target:  target,
-		authKey: *output.Parameter.Value,
+		authKey: output.Parameter.Value,
 	}, nil
 }

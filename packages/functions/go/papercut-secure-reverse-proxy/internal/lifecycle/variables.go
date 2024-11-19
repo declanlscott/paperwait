@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
+	"tailscale.com/client/tailscale"
+	"tailscale.com/tailcfg"
 	"tailscale.com/tsnet"
 )
 
@@ -17,7 +19,14 @@ const (
 )
 
 var (
-	server         *tsnet.Server
+	ts struct {
+		server *tsnet.Server
+		nodeId *tailcfg.StableNodeID
+		client *tailscale.Client
+	}
 	HandlerAdapter *httpadapter.HandlerAdapter
-	cleanupOnce    sync.Once
+	cleanupSync    struct {
+		once *sync.Once
+		wg   *sync.WaitGroup
+	}
 )
