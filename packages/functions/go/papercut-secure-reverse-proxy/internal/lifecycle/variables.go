@@ -11,22 +11,24 @@ import (
 )
 
 const (
-	hostname         = "printworks"
-	targetParamName  = "/papercut/server/url"
-	authKeyParamName = "/tailscale/auth-key"
-	tailscaleDir     = "/tmp/tailscale"
-	cleanupTimeout   = 1800 * time.Millisecond // Lambda shutdown phase is capped at 2 seconds
+	hostname               = "printworks"
+	targetParamName        = "/papercut/server/url"
+	tsOAuthClientParamName = "/tailscale/oauth-client"
+	tsDir                  = "/tmp/tailscale"
+	tsBaseURL              = "https://api.tailscale.com"
+	cleanupTimeout         = 1800 * time.Millisecond // Lambda shutdown phase is capped at 2 seconds
 )
 
 var (
 	ts struct {
-		server *tsnet.Server
-		nodeId *tailcfg.StableNodeID
-		client *tailscale.Client
+		client    *tailscale.Client
+		authKeyID *string
+		server    *tsnet.Server
+		nodeID    *tailcfg.StableNodeID
 	}
 	HandlerAdapter *httpadapter.HandlerAdapter
 	cleanupSync    struct {
-		once *sync.Once
-		wg   *sync.WaitGroup
+		once sync.Once
+		wg   sync.WaitGroup
 	}
 )

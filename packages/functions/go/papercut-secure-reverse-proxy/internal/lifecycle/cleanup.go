@@ -16,8 +16,9 @@ func cleanup(c <-chan os.Signal) {
 		ctx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 		defer cancel()
 
-		cleanupSync.wg.Add(2)
+		cleanupSync.wg.Add(3)
 		go deleteDevice(ctx)
+		go deleteAuthKey(ctx)
 		go shutdownServer()
 
 		done := make(chan struct{})
@@ -42,13 +43,27 @@ func deleteDevice(ctx context.Context) {
 	defer cleanupSync.wg.Done()
 	log.Println("Deleting Tailscale device ...")
 
-	if ts.nodeId == nil {
+	if ts.nodeID == nil {
 		log.Println("No Tailscale device to delete")
 		return
 	}
 
-	if err := ts.client.DeleteDevice(ctx, string(*ts.nodeId)); err != nil {
+	if err := ts.client.DeleteDevice(ctx, string(*ts.nodeID)); err != nil {
 		log.Printf("Failed to delete Tailscale device: %v\n", err)
+	}
+}
+
+func deleteAuthKey(ctx context.Context) {
+	defer cleanupSync.wg.Done()
+	log.Println("Deleting Tailscale auth key ...")
+
+	if ts.authKeyID == nil {
+		log.Println("No Tailscale auth key to delete")
+		return
+	}
+
+	if err := ts.client.DeleteKey(ctx, *ts.authKeyID); err != nil {
+		log.Printf("Failed to delete Tailscale auth key: %v\n", err)
 	}
 }
 
