@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -14,13 +13,12 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
-	"tailscale.com/client/tailscale"
+	tsclient "github.com/tailscale/tailscale-client-go/v2"
 	"tailscale.com/tsnet"
 )
 
@@ -32,7 +30,6 @@ func Startup() {
 	go cleanup(c)
 
 	ctx := context.Background()
-	tailscale.I_Acknowledge_This_API_Is_Unstable = true
 
 	log.Println("Getting startup parameters ...")
 	params, err := getStartupParams(ctx)
@@ -124,58 +121,33 @@ func getStartupParams(ctx context.Context) (*StartupParams, error) {
 			return
 		}
 
-		req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/v2/oauth/token", tsBaseURL), nil)
-		if err != nil {
-			errs <- fmt.Errorf("failed to create access token request: %w", err)
-			return
-		}
-		req.SetBasicAuth(oAuthClient.Id, oAuthClient.Key)
-
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			errs <- fmt.Errorf("failed to make access token request: %w", err)
-			return
-		}
-		defer func(Body io.ReadCloser) {
-			if err := Body.Close(); err != nil {
-				errs <- fmt.Errorf("failed to close access token response body: %w", err)
-			}
-		}(res.Body)
-
-		if res.StatusCode != http.StatusOK {
-			errs <- fmt.Errorf("failed to get access token response returning ok status, received: %d", res.StatusCode)
-			return
+		ts.client = &tsclient.Client{
+			Tailnet: "-",
+			HTTP: tsclient.OAuthConfig{
+				ClientID:     oAuthClient.Id,
+				ClientSecret: oAuthClient.Key,
+				Scopes:       []string{"auth_keys", "devices:core"},
+			}.HTTPClient(),
 		}
 
-		var decoded struct {
-			AccessToken string `json:"access_token"`
-		}
-		if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
-			errs <- fmt.Errorf("failed to decode access token response: %w", err)
-			return
-		}
+		capabilities := tsclient.KeyCapabilities{}
+		capabilities.Devices.Create.Reusable = false
+		capabilities.Devices.Create.Ephemeral = true
+		capabilities.Devices.Create.Preauthorized = true
+		capabilities.Devices.Create.Tags = []string{fmt.Sprintf("tag:%s", hostname)}
 
-		ts.client = tailscale.NewClient("-", tailscale.APIKey(decoded.AccessToken))
-		ts.client.BaseURL = tsBaseURL
-
-		capabilities := tailscale.KeyCapabilities{
-			Devices: tailscale.KeyDeviceCapabilities{
-				Create: tailscale.KeyDeviceCreateCapabilities{
-					Reusable:      false,
-					Ephemeral:     true,
-					Preauthorized: false,
-					Tags:          []string{"tag:printworks"},
-				},
-			},
-		}
-
-		secret, meta, err := ts.client.CreateKeyWithExpiry(ctx, capabilities, 15*time.Minute)
+		key, err := ts.client.Keys().Create(ctx, tsclient.CreateKeyRequest{
+			Capabilities:  capabilities,
+			ExpirySeconds: 30 * 60, // 30 minutes
+			Description:   "papercut secure reverse proxy",
+		})
 		if err != nil {
 			errs <- fmt.Errorf("failed to create auth key: %w", err)
+			return
 		}
 
-		authKey = &secret
-		ts.authKeyID = &meta.ID
+		authKey = &key.Key
+		ts.authKeyID = &key.ID
 	}()
 
 	wg.Wait()

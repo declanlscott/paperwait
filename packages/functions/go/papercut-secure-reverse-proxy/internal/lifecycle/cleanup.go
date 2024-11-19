@@ -48,7 +48,7 @@ func deleteDevice(ctx context.Context) {
 		return
 	}
 
-	if err := ts.client.DeleteDevice(ctx, string(*ts.nodeID)); err != nil {
+	if err := ts.client.Devices().Delete(ctx, string(*ts.nodeID)); err != nil {
 		log.Printf("Failed to delete Tailscale device: %v\n", err)
 	}
 }
@@ -62,7 +62,7 @@ func deleteAuthKey(ctx context.Context) {
 		return
 	}
 
-	if err := ts.client.DeleteKey(ctx, *ts.authKeyID); err != nil {
+	if err := ts.client.Keys().Delete(ctx, *ts.authKeyID); err != nil {
 		log.Printf("Failed to delete Tailscale auth key: %v\n", err)
 	}
 }

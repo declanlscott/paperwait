@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.7
 	github.com/awslabs/aws-lambda-go-api-proxy v0.16.2
+	github.com/tailscale/tailscale-client-go/v2 v2.0.0-20241028210109-bd4d815eb293
 	tailscale.com v1.76.6
 )
 
@@ -79,6 +80,7 @@ require (
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/term v0.22.0 // indirect
