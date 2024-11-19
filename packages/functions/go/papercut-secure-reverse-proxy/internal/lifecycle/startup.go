@@ -2,13 +2,19 @@ package lifecycle
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -29,14 +35,14 @@ func Startup() {
 	tailscale.I_Acknowledge_This_API_Is_Unstable = true
 
 	log.Println("Getting startup parameters ...")
-	params, err := getParams(ctx)
+	params, err := getStartupParams(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get startup parameters: %v", err)
 	}
 
 	_ = os.Setenv("TSNET_FORCE_LOGIN", "1")
 	ts.server = &tsnet.Server{
-		Dir:       tailscaleDir,
+		Dir:       tsDir,
 		Hostname:  hostname,
 		AuthKey:   *params.authKey,
 		Ephemeral: true,
@@ -47,8 +53,7 @@ func Startup() {
 	if err != nil {
 		log.Fatalf("Failed to start Tailscale server: %v", err)
 	}
-	ts.nodeId = &status.Self.ID
-	ts.client = tailscale.NewClient(status.CurrentTailnet.Name, nil)
+	ts.nodeID = &status.Self.ID
 
 	proxy := httputil.NewSingleHostReverseProxy(params.target)
 	proxy.Transport = ts.server.HTTPClient().Transport
@@ -61,12 +66,12 @@ func Startup() {
 	log.Println("Startup completed")
 }
 
-type Params struct {
+type StartupParams struct {
 	target  *url.URL
 	authKey *string
 }
 
-func getParams(ctx context.Context) (*Params, error) {
+func getStartupParams(ctx context.Context) (*StartupParams, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		log.Fatalf("Failed to load AWS SDK configuration: %v", err)
@@ -74,31 +79,120 @@ func getParams(ctx context.Context) (*Params, error) {
 
 	client := ssm.NewFromConfig(cfg)
 
-	output, err := client.GetParameter(ctx, &ssm.GetParameterInput{
-		Name: aws.String(targetParamName),
-	})
-	if err != nil {
-		log.Printf("Failed to get target parameter: %v\n", err)
-		return nil, err
+	const initialWgSize = 2
+	var (
+		target  *url.URL
+		authKey *string
+
+		wg   sync.WaitGroup
+		errs = make(chan error, initialWgSize)
+	)
+	wg.Add(initialWgSize)
+
+	go func() {
+		defer wg.Done()
+
+		output, err := client.GetParameter(ctx, &ssm.GetParameterInput{
+			Name: aws.String(targetParamName),
+		})
+		if err != nil {
+			errs <- fmt.Errorf("failed to get target parameter: %w", err)
+			return
+		}
+
+		target, err = url.Parse(*output.Parameter.Value)
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		output, err := client.GetParameter(ctx, &ssm.GetParameterInput{
+			Name:           aws.String(tsOAuthClientParamName),
+			WithDecryption: aws.Bool(true),
+		})
+		if err != nil {
+			errs <- fmt.Errorf("failed to get oauth client parameter: %w", err)
+			return
+		}
+
+		var oAuthClient struct {
+			Id  string `json:"id"`
+			Key string `json:"key"`
+		}
+		if err := json.Unmarshal([]byte(*output.Parameter.Value), &oAuthClient); err != nil {
+			errs <- fmt.Errorf("failed to unmarshal oauth client parameter: %w", err)
+			return
+		}
+
+		req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/v2/oauth/token", tsBaseURL), nil)
+		if err != nil {
+			errs <- fmt.Errorf("failed to create access token request: %w", err)
+			return
+		}
+		req.SetBasicAuth(oAuthClient.Id, oAuthClient.Key)
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			errs <- fmt.Errorf("failed to make access token request: %w", err)
+			return
+		}
+		defer func(Body io.ReadCloser) {
+			if err := Body.Close(); err != nil {
+				errs <- fmt.Errorf("failed to close access token response body: %w", err)
+			}
+		}(res.Body)
+
+		if res.StatusCode != http.StatusOK {
+			errs <- fmt.Errorf("failed to get access token response returning ok status, received: %d", res.StatusCode)
+			return
+		}
+
+		var decoded struct {
+			AccessToken string `json:"access_token"`
+		}
+		if err := json.NewDecoder(res.Body).Decode(&decoded); err != nil {
+			errs <- fmt.Errorf("failed to decode access token response: %w", err)
+			return
+		}
+
+		ts.client = tailscale.NewClient("-", tailscale.APIKey(decoded.AccessToken))
+		ts.client.BaseURL = tsBaseURL
+
+		capabilities := tailscale.KeyCapabilities{
+			Devices: tailscale.KeyDeviceCapabilities{
+				Create: tailscale.KeyDeviceCreateCapabilities{
+					Reusable:      false,
+					Ephemeral:     true,
+					Preauthorized: false,
+					Tags:          []string{"tag:printworks"},
+				},
+			},
+		}
+
+		secret, meta, err := ts.client.CreateKeyWithExpiry(ctx, capabilities, 15*time.Minute)
+		if err != nil {
+			errs <- fmt.Errorf("failed to create auth key: %w", err)
+		}
+
+		authKey = &secret
+		ts.authKeyID = &meta.ID
+	}()
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	target, err := url.Parse(*output.Parameter.Value)
-	if err != nil {
-		log.Printf("Failed to parse target URL: %v\n", err)
-		return nil, err
+	if target == nil || &authKey == nil {
+		return nil, errors.New("missing startup parameter(s)")
 	}
 
-	output, err = client.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           aws.String(authKeyParamName),
-		WithDecryption: aws.Bool(true),
-	})
-	if err != nil {
-		log.Printf("Failed to get auth key parameter: %v\n", err)
-		return nil, err
-	}
-
-	return &Params{
+	return &StartupParams{
 		target:  target,
-		authKey: output.Parameter.Value,
+		authKey: authKey,
 	}, nil
 }
