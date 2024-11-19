@@ -113,8 +113,8 @@ func getStartupParams(ctx context.Context) (*StartupParams, error) {
 		}
 
 		var oAuthClient struct {
-			ID  string `json:"id"`
-			Key string `json:"key"`
+			ID     string `json:"id"`
+			Secret string `json:"secret"`
 		}
 		if err := json.Unmarshal([]byte(*output.Parameter.Value), &oAuthClient); err != nil {
 			errs <- fmt.Errorf("failed to unmarshal oauth client parameter: %w", err)
@@ -125,7 +125,7 @@ func getStartupParams(ctx context.Context) (*StartupParams, error) {
 			Tailnet: "-",
 			HTTP: tsclient.OAuthConfig{
 				ClientID:     oAuthClient.ID,
-				ClientSecret: oAuthClient.Key,
+				ClientSecret: oAuthClient.Secret,
 				Scopes:       []string{"auth_keys", "devices:core"},
 			}.HTTPClient(),
 		}
