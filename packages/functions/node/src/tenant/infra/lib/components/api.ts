@@ -1,4 +1,5 @@
 import { Utils } from "@printworks/core/utils";
+import { Constants } from "@printworks/core/utils/constants";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -35,13 +36,18 @@ export class Api extends pulumi.ComponentResource {
   #appSpecificResource: aws.apigateway.Resource;
   #wellKnownAppSpecificRoutes: Array<WellKnownAppSpecificRoute> = [];
 
+  #parametersResource: aws.apigateway.Resource;
+  #parametersProxyResource: aws.apigateway.Resource;
+  #parametersProxyMethod: aws.apigateway.Method;
+  #parametersProxyIntegration: aws.apigateway.Integration;
+
   #usersResource: aws.apigateway.Resource;
   #usersSyncRoute: EventRoute;
 
   #papercutResource: aws.apigateway.Resource;
-  #papercutSecureReverseProxyResource: aws.apigateway.Resource;
-  #papercutSecureReverseProxyMethod: aws.apigateway.Method;
-  #papercutSecureReverseProxyIntegration: aws.apigateway.Integration;
+  #papercutProxyResource: aws.apigateway.Resource;
+  #papercutProxyMethod: aws.apigateway.Method;
+  #papercutProxyIntegration: aws.apigateway.Integration;
 
   #invoicesResource: aws.apigateway.Resource;
   #enqueueInvoiceRequestValidator: aws.apigateway.RequestValidator;
@@ -108,6 +114,17 @@ export class Api extends pulumi.ComponentResource {
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
+              {
+                actions: ["ssm:GetParameter", "kms:Decrypt"],
+                resources: [
+                  Constants.MAX_FILE_SIZES_PARAMETER_NAME,
+                  Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+                  Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME,
+                ].map(
+                  (name) =>
+                    pulumi.interpolate`arn:aws:ssm::${aws.getCallerIdentityOutput({}, { parent: this }).accountId}:parameter${name}`,
+                ),
+              },
               {
                 actions: ["events:PutEvents"],
                 resources: [
@@ -241,6 +258,64 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
+    this.#parametersResource = new aws.apigateway.Resource(
+      "ParametersResource",
+      {
+        restApi: args.gateway.id,
+        parentId: args.gateway.rootResourceId,
+        pathPart: "parameters",
+      },
+      { parent: this },
+    );
+
+    this.#parametersProxyResource = new aws.apigateway.Resource(
+      "ParametersProxyResource",
+      {
+        restApi: args.gateway.id,
+        parentId: this.#parametersResource.id,
+        pathPart: "{proxy+}",
+      },
+      { parent: this },
+    );
+
+    this.#parametersProxyMethod = new aws.apigateway.Method(
+      "ParametersProxyMethod",
+      {
+        restApi: args.gateway.id,
+        resourceId: this.#parametersProxyResource.id,
+        httpMethod: "GET",
+        authorization: "AWS_IAM",
+      },
+      { parent: this },
+    );
+
+    this.#parametersProxyIntegration = new aws.apigateway.Integration(
+      "ParametersProxyIntegration",
+      {
+        restApi: args.gateway.id,
+        resourceId: this.#parametersProxyResource.id,
+        httpMethod: this.#parametersProxyMethod.httpMethod,
+        type: "AWS",
+        integrationHttpMethod: "POST",
+        requestTemplates: {
+          "application/json": `
+{
+  "Name": "$util.escapeJavaScript($input.params().path.get('proxy'))",
+  #if($input.params().header.get('X-With-Decryption') == 'true')
+  ,"WithDecryption": true,
+  #end
+  #if($input.params().header.get('X-Overwrite') == 'true')
+  ,"Overwrite": true
+  #end
+}`,
+        },
+        passthroughBehavior: "NEVER",
+        uri: pulumi.interpolate`arn:aws:apigateway:${region}:ssm:action/GetParameter`,
+        credentials: this.#role.arn,
+      },
+      { parent: this },
+    );
+
     this.#usersResource = new aws.apigateway.Resource(
       "UsersResource",
       {
@@ -285,8 +360,8 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#papercutSecureReverseProxyResource = new aws.apigateway.Resource(
-      "PapercutSecureReverseProxyResource",
+    this.#papercutProxyResource = new aws.apigateway.Resource(
+      "PapercutProxyResource",
       {
         restApi: args.gateway.id,
         parentId: this.#papercutResource.id,
@@ -295,32 +370,31 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#papercutSecureReverseProxyMethod = new aws.apigateway.Method(
-      "PapercutSecureReverseProxyMethod",
+    this.#papercutProxyMethod = new aws.apigateway.Method(
+      "PapercutProxyMethod",
       {
         restApi: args.gateway.id,
-        resourceId: this.#papercutSecureReverseProxyResource.id,
+        resourceId: this.#papercutProxyResource.id,
         httpMethod: "ANY",
         authorization: "AWS_IAM",
       },
       { parent: this },
     );
 
-    this.#papercutSecureReverseProxyIntegration =
-      new aws.apigateway.Integration(
-        "PapercutSecureReverseProxyIntegration",
-        {
-          restApi: args.gateway.id,
-          resourceId: this.#papercutSecureReverseProxyResource.id,
-          httpMethod: this.#papercutSecureReverseProxyMethod.httpMethod,
-          type: "AWS_PROXY",
-          integrationHttpMethod: "POST",
-          passthroughBehavior: "WHEN_NO_TEMPLATES",
-          uri: args.papercutSecureReverseProxyFunction.invokeArn,
-          credentials: this.#role.arn,
-        },
-        { parent: this },
-      );
+    this.#papercutProxyIntegration = new aws.apigateway.Integration(
+      "PapercutProxyIntegration",
+      {
+        restApi: args.gateway.id,
+        resourceId: this.#papercutProxyResource.id,
+        httpMethod: this.#papercutProxyMethod.httpMethod,
+        type: "AWS_PROXY",
+        integrationHttpMethod: "POST",
+        passthroughBehavior: "WHEN_NO_TEMPLATES",
+        uri: args.papercutSecureReverseProxyFunction.invokeArn,
+        credentials: this.#role.arn,
+      },
+      { parent: this },
+    );
 
     this.#invoicesResource = new aws.apigateway.Resource(
       "InvoicesResource",
@@ -505,8 +579,7 @@ export class Api extends pulumi.ComponentResource {
       #end
     </Items>
   </Paths>
-</InvalidationBatch>
-`,
+</InvalidationBatch>`,
         },
         passthroughBehavior: "NEVER",
         uri: pulumi.interpolate`arn:aws:apigateway:${region}:cloudfront:path/${args.distributionId}/invalidation`,
@@ -577,13 +650,15 @@ export class Api extends pulumi.ComponentResource {
       wellKnownResource: this.#wellKnownResource.id,
       appSpecificResource: this.#appSpecificResource.id,
 
+      parametersResource: this.#parametersResource.id,
+      parametersProxyResource: this.#parametersProxyResource.id,
+      parametersProxyMethod: this.#parametersProxyMethod.id,
+      parametersProxyIntegration: this.#parametersProxyIntegration.id,
+
       papercutResource: this.#papercutResource.id,
-      papercutSecureReverseProxyResource:
-        this.#papercutSecureReverseProxyResource.id,
-      papercutSecureReverseProxyMethod:
-        this.#papercutSecureReverseProxyMethod.id,
-      papercutSecureReverseProxyIntegration:
-        this.#papercutSecureReverseProxyIntegration.id,
+      papercutSecureReverseProxyResource: this.#papercutProxyResource.id,
+      papercutSecureReverseProxyMethod: this.#papercutProxyMethod.id,
+      papercutSecureReverseProxyIntegration: this.#papercutProxyIntegration.id,
 
       invoicesResource: this.#invoicesResource.id,
       enqueueInvoiceMethod: this.#enqueueInvoiceMethod.id,

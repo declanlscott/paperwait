@@ -235,6 +235,13 @@ export class Router extends pulumi.ComponentResource {
           },
           {
             targetOriginId: "/api/*",
+            pathPattern: "/api/parameters/*",
+            ...urlCacheBehaviorConfig,
+            allowedMethods: ["GET", "HEAD", "OPTIONS"],
+            defaultTtl: 31536000, // 1 year
+          },
+          {
+            targetOriginId: "/api/*",
             pathPattern: "/api/*",
             ...urlCacheBehaviorConfig,
           },
