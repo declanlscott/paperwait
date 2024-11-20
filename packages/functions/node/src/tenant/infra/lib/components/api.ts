@@ -300,9 +300,9 @@ export class Api extends pulumi.ComponentResource {
         requestTemplates: {
           "application/json": `
 {
-  "Name": "$util.escapeJavaScript($input.params().path.get('proxy'))",
+  "Name": "$util.escapeJavaScript($input.params().path.get('proxy'))"
   #if($input.params().header.get('X-With-Decryption') == 'true')
-  ,"WithDecryption": true,
+  ,"WithDecryption": true
   #end
   #if($input.params().header.get('X-Overwrite') == 'true')
   ,"Overwrite": true
