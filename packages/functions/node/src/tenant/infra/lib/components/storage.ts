@@ -12,7 +12,7 @@ export class Storage extends pulumi.ComponentResource {
 
   #buckets: Buckets = {} as Buckets;
   #queues: Queues = {} as Queues;
-  #parametersRole: aws.iam.Role;
+  #putParametersRole: aws.iam.Role;
 
   static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
     if (!this.#instance) this.#instance = new Storage(opts);
@@ -38,10 +38,10 @@ export class Storage extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#parametersRole = new aws.iam.Role(
-      "ParametersRole",
+    this.#putParametersRole = new aws.iam.Role(
+      "PutParametersRole",
       {
-        name: Aws.tenant.parametersRole.name,
+        name: Aws.tenant.putParametersRole.name,
         assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
@@ -74,21 +74,23 @@ export class Storage extends pulumi.ComponentResource {
       { parent: this },
     );
     new aws.iam.RolePolicy(
-      "ParametersRolePolicy",
+      "PutParametersRolePolicy",
       {
-        role: this.#parametersRole.name,
+        role: this.#putParametersRole.name,
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
               {
-                actions: ["ssm:PutParameter", "ssm:GetParameter"],
+                actions: ["ssm:PutParameter"],
                 resources: [
+                  Constants.MAX_FILE_SIZES_PARAMETER_NAME,
+                  Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
                   Constants.PAPERCUT_SERVER_URL_PARAMETER_NAME,
                   Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME,
                   Constants.TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME,
                 ].map(
                   (name) =>
-                    pulumi.interpolate`arn:aws:ssm::${aws.getCallerIdentityOutput({}, { parent: this })}:parameter/${name}`,
+                    pulumi.interpolate`arn:aws:ssm::${aws.getCallerIdentityOutput({}, { parent: this })}:parameter${name}`,
                 ),
               },
             ],
@@ -100,7 +102,7 @@ export class Storage extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      parametersRole: this.#parametersRole.id,
+      putParametersRole: this.#putParametersRole.id,
     });
   }
 

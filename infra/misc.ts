@@ -55,8 +55,8 @@ export const aws_ = new sst.Linkable("Aws", {
       realtimePublisherRole: {
         name: "TenantRealtimePublisherRole",
       },
-      parametersRole: {
-        name: "TenantParametersRole",
+      putParametersRole: {
+        name: "TenantPutParametersRole",
       },
     },
   },
