@@ -8,6 +8,8 @@ import { tenantInfraQueue } from "./storage";
 export const reverseProxy = new sst.cloudflare.Worker("ReverseProxy", {
   handler: "packages/workers/src/reverse-proxy.ts",
   domain: appFqdn,
+  // NOTE: In the future when cloudflare terraform provider v5 is released and pulumi/sst supports it,
+  // we can remove this and declare the rate limiter workers with their bindings and link them here.
   transform: {
     worker: {
       serviceBindings: [

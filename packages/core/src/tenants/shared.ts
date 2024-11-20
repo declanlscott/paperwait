@@ -15,6 +15,16 @@ export const licenseSchema = v.object({
   status: v.picklist(licenseStatuses),
 });
 
+export const tenantMetadataTableName = "tenant_metadata";
+
+export const tenantInfraProgramInputSchema = v.object({
+  usersSyncSchedule: v.pipe(v.optional(v.string(), "55 1 * * ? *"), v.trim()),
+  timezone: v.picklist(Intl.supportedValuesOf("timeZone")),
+});
+export type TenantInfraProgramInput = v.InferOutput<
+  typeof tenantInfraProgramInputSchema
+>;
+
 export const tenantsTableName = "tenants";
 
 export const tenantStatuses = ["initializing", "active", "suspended"] as const;

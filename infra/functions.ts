@@ -6,7 +6,6 @@ import {
   cloudfrontPrivateKey,
   cloudfrontPublicKey,
 } from "./misc";
-import { organization } from "./organization";
 import {
   codeBucket,
   invoicesProcessorDeadLetterQueue,
@@ -40,13 +39,13 @@ new aws.lambda.Permission("UsersSyncSchedulePermission", {
   function: usersSync.name,
   action: "lambda:InvokeFunction",
   principal: "scheduler.amazonaws.com",
-  principalOrgId: organization.id,
+  principalOrgId: aws_.properties.organization.id,
 });
 new aws.lambda.Permission("UsersSyncRulePermission", {
   function: usersSync.name,
   action: "lambda:InvokeFunction",
   principal: "events.amazonaws.com",
-  principalOrgId: organization.id,
+  principalOrgId: aws_.properties.organization.id,
 });
 
 export const invoicesProcessor = new sst.aws.Function("InvoicesProcessor", {
@@ -58,7 +57,7 @@ new aws.lambda.Permission("InvoicesProcessorRulePermission", {
   function: invoicesProcessor.name,
   action: "lambda:InvokeFunction",
   principal: "events.amazonaws.com",
-  principalOrgId: organization.id,
+  principalOrgId: aws_.properties.organization.id,
 });
 
 export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
@@ -177,6 +176,10 @@ new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
       {
         actions: ["ssm:GetParameter"],
         resources: [cloudflareApiTokenParameter.arn],
+      },
+      {
+        actions: ["sts:AssumeRole"],
+        resources: [aws_.properties.organization.managementRole.arn],
       },
     ],
   }).json,

@@ -24,6 +24,11 @@ export namespace Constants {
 
   export const MAX_FILE_SIZES_PARAMETER_NAME = "max-file-sizes";
   export const DOCUMENTS_MIME_TYPES_PARAMETER_NAME = "documents-mime-types";
+  export const PAPERCUT_SERVER_URL_PARAMETER_NAME = "/papercut/server/url";
+  export const PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME =
+    "/papercut/server/auth-token";
+  export const TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME =
+    "/tailscale/oauth-client";
 
   export const ASSETS_MIME_TYPES = [
     "image/jpeg",

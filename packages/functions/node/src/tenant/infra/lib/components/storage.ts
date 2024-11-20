@@ -1,3 +1,4 @@
+import { Constants } from "@printworks/core/utils/constants";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -5,42 +6,24 @@ import { useResource } from "../resource";
 
 type Buckets = Record<"assets" | "documents", Bucket>;
 type Queues = Record<"invoicesProcessor", Queue>;
-type SystemParameters = Record<
-  "papercutServerUrl" | "papercutServerAuthToken" | "tailscaleOauthClient",
-  Parameter
->;
-
-export interface StorageArgs {
-  papercutServer: pulumi.Input<{
-    url: pulumi.Input<string>;
-    authToken: pulumi.Input<string>;
-  }>;
-  tailscaleOauthClient: pulumi.Input<{
-    id: pulumi.Input<string>;
-    secret: pulumi.Input<string>;
-  }>;
-}
 
 export class Storage extends pulumi.ComponentResource {
   static #instance: Storage;
 
   #buckets: Buckets = {} as Buckets;
   #queues: Queues = {} as Queues;
-  #systemParameters: SystemParameters = {} as SystemParameters;
+  #parametersRole: aws.iam.Role;
 
-  static getInstance(
-    args: StorageArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ): Storage {
-    if (!this.#instance) this.#instance = new Storage(args, opts);
+  static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
+    if (!this.#instance) this.#instance = new Storage(opts);
 
     return this.#instance;
   }
 
-  private constructor(...[args, opts]: Parameters<typeof Storage.getInstance>) {
-    const { AppData } = useResource();
+  private constructor(...[opts]: Parameters<typeof Storage.getInstance>) {
+    const { AppData, Aws, Web } = useResource();
 
-    super(`${AppData.name}:tenant:aws:Storage`, "Storage", args, opts);
+    super(`${AppData.name}:tenant:aws:Storage`, "Storage", {}, opts);
 
     this.#buckets.assets = new Bucket("Assets", { parent: this });
 
@@ -55,39 +38,70 @@ export class Storage extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#systemParameters.papercutServerUrl = new Parameter(
-      "PapercutServerUrl",
+    this.#parametersRole = new aws.iam.Role(
+      "ParametersRole",
       {
-        name: "/papercut/server/url",
-        type: "String",
-        value: pulumi.output(args.papercutServer).apply(({ url }) => url),
+        name: Aws.tenant.parametersRole.name,
+        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                principals: [
+                  {
+                    type: "AWS",
+                    identifiers: [Web.server.role.principal],
+                  },
+                ],
+                actions: ["sts:AssumeRole"],
+                conditions:
+                  Web.server.role.principal === "*"
+                    ? [
+                        {
+                          test: "StringLike",
+                          variable: "aws:PrincipalArn",
+                          values: [
+                            pulumi.interpolate`arn:aws:iam::${Aws.account.id}:role/*`,
+                          ],
+                        },
+                      ]
+                    : undefined,
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
+      },
+      { parent: this },
+    );
+    new aws.iam.RolePolicy(
+      "ParametersRolePolicy",
+      {
+        role: this.#parametersRole.name,
+        policy: aws.iam.getPolicyDocumentOutput(
+          {
+            statements: [
+              {
+                actions: ["ssm:PutParameter", "ssm:GetParameter"],
+                resources: [
+                  Constants.PAPERCUT_SERVER_URL_PARAMETER_NAME,
+                  Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME,
+                  Constants.TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME,
+                ].map(
+                  (name) =>
+                    pulumi.interpolate`arn:aws:ssm::${aws.getCallerIdentityOutput({}, { parent: this })}:parameter/${name}`,
+                ),
+              },
+            ],
+          },
+          { parent: this },
+        ).json,
       },
       { parent: this },
     );
 
-    this.#systemParameters.papercutServerAuthToken = new Parameter(
-      "PapercutServerAuthToken",
-      {
-        name: "/papercut/server/auth-token",
-        type: "SecureString",
-        value: pulumi
-          .output(args.papercutServer)
-          .apply(({ authToken }) => authToken),
-      },
-      { parent: this },
-    );
-
-    this.#systemParameters.tailscaleOauthClient = new Parameter(
-      "TailscaleOauthClient",
-      {
-        name: "/tailscale/oauth-client",
-        type: "SecureString",
-        value: pulumi
-          .output(args.tailscaleOauthClient)
-          .apply((value) => JSON.stringify(value)),
-      },
-      { parent: this },
-    );
+    this.registerOutputs({
+      parametersRole: this.#parametersRole.id,
+    });
   }
 
   get buckets() {
@@ -96,10 +110,6 @@ export class Storage extends pulumi.ComponentResource {
 
   get queues() {
     return this.#queues;
-  }
-
-  get systemParameters() {
-    return this.#systemParameters;
   }
 }
 
@@ -268,51 +278,5 @@ class Queue extends pulumi.ComponentResource {
 
   get url() {
     return this.#queue.url;
-  }
-}
-
-interface ParameterArgs {
-  name: pulumi.Input<string>;
-  type: pulumi.Input<aws.ssm.ParameterType>;
-  value: pulumi.Input<string>;
-}
-
-class Parameter extends pulumi.ComponentResource {
-  #parameter: aws.ssm.Parameter;
-
-  constructor(
-    name: string,
-    args: ParameterArgs,
-    opts: pulumi.ComponentResourceOptions,
-  ) {
-    const { AppData } = useResource();
-
-    super(`${AppData.name}:tenant:aws:Parameter`, name, {}, opts);
-
-    this.#parameter = new aws.ssm.Parameter(
-      `${name}Parameter`,
-      {
-        name: args.name,
-        type: args.type,
-        value: args.value,
-      },
-      { retainOnDelete: AppData.stage === "production", parent: this },
-    );
-
-    this.registerOutputs({
-      parameter: this.#parameter.id,
-    });
-  }
-
-  get arn() {
-    return this.#parameter.arn;
-  }
-
-  get name() {
-    return this.#parameter.name;
-  }
-
-  get value() {
-    return this.#parameter.value;
   }
 }

@@ -1,10 +1,12 @@
+import { tenantInfraProgramInputSchema } from "@printworks/core/tenants/shared";
 import { Ssm } from "@printworks/core/utils/aws";
+import { nanoIdSchema } from "@printworks/core/utils/shared";
 import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
 import * as pulumi from "@pulumi/pulumi";
 import * as v from "valibot";
 
-import { getProgram, programInputSchema } from "./lib/program";
+import { getProgram } from "./lib/program";
 import { useResource, withResource } from "./lib/resource";
 
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
@@ -29,17 +31,23 @@ export const handler: SQSHandler = async (event) =>
 async function processRecord(record: SQSRecord) {
   const { AppData, Aws, PulumiBucket } = useResource();
 
-  console.log("Parsing program input...");
-  const programInput = v.parse(programInputSchema, record.body);
-  console.log("Successfully parsed program input");
+  console.log("Parsing record body ...");
+  const { tenantId, ...programInput } = v.parse(
+    v.object({
+      tenantId: nanoIdSchema,
+      ...tenantInfraProgramInputSchema.entries,
+    }),
+    record.body,
+  );
+  console.log("Successfully parsed record body");
 
-  console.log("Initializing stack...");
+  console.log("Initializing stack ...");
   const projectName = `${AppData.name}-${AppData.stage}-tenants`;
   const stack = await pulumi.automation.LocalWorkspace.createOrSelectStack(
     {
       projectName,
-      stackName: `tenant-${programInput.tenantId}`,
-      program: getProgram(programInput),
+      stackName: `tenant-${tenantId}`,
+      program: getProgram(tenantId, programInput),
     },
     {
       projectSettings: {
@@ -54,21 +62,21 @@ async function processRecord(record: SQSRecord) {
   );
   console.log("Successfully initialized stack");
 
-  console.log("Installing plugins...");
+  console.log("Installing plugins ...");
   await Promise.all([
     stack.workspace.installPlugin("aws", `v${awsPluginVersion}`),
     stack.workspace.installPlugin("cloudflare", `v${cloudflarePluginVersion}`),
   ]);
   console.log("Successfully installed plugins");
 
-  console.log("Retrieving Cloudflare API token...");
+  console.log("Retrieving Cloudflare API token ...");
   const cloudflareApiToken = await Ssm.getParameter(new Ssm.Client(), {
     Name: `/${AppData.name}/${AppData.stage}/cloudflare/api-token`,
     WithDecryption: true,
   });
   console.log("Successfully retrieved Cloudflare API token");
 
-  console.log("Setting stack configuration...");
+  console.log("Setting stack configuration ...");
   await stack.setAllConfig({
     "aws:region": { value: Aws.region },
     "aws:assumeRole": { value: Aws.organization.managementRole.arn },
@@ -79,7 +87,7 @@ async function processRecord(record: SQSRecord) {
   });
   console.log("Successfully set stack configuration");
 
-  console.log("Updating stack...");
+  console.log("Updating stack ...");
   const result = await stack.up({
     onEvent: console.log,
     onOutput: console.log,

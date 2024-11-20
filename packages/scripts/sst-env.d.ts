@@ -35,6 +35,9 @@ declare module "sst" {
         "accountAccessRole": {
           "name": string
         }
+        "parametersRole": {
+          "name": string
+        }
         "realtimePublisherRole": {
           "name": string
         }

@@ -136,6 +136,8 @@ export class Realtime extends pulumi.ComponentResource {
     this.registerOutputs({
       api: this.#api.id,
       channelNamespace: this.#channelNamespace.id,
+      subscriberRole: this.#subscriberRole.id,
+      publisherRole: this.#publisherRole.id,
     });
   }
 
