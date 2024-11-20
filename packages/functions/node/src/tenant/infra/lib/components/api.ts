@@ -336,14 +336,14 @@ export class Api extends pulumi.ComponentResource {
         requestTemplate: pulumi.all([args.tenantId, args.domainName]).apply(
           ([tenantId, domainName]) => `
 {
-"Entries": [
-  {
-    "Detail": "{\\"tenantId\\":\\"${tenantId}\\"}",
-    "DetailType": "UsersSync",
-    "EventBusName": "default",
-    "Source":"${Utils.reverseDns(domainName)}"
-  }
-]
+  "Entries": [
+    {
+      "Detail": "{\\"tenantId\\":\\"${tenantId}\\"}",
+      "DetailType": "UsersSync",
+      "EventBusName": "default",
+      "Source":"${Utils.reverseDns(domainName)}"
+    }
+  ]
 }`,
         ),
       },
