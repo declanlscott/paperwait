@@ -35,10 +35,6 @@ export class Api extends pulumi.ComponentResource {
   #appSpecificResource: aws.apigateway.Resource;
   #wellKnownAppSpecificRoutes: Array<WellKnownAppSpecificRoute> = [];
 
-  #tailscaleResource: aws.apigateway.Resource;
-  #tailscaleAuthKeyResource: aws.apigateway.Resource;
-  #tailscaleAuthKeyRotationRoute: EventRoute;
-
   #usersResource: aws.apigateway.Resource;
   #usersSyncRoute: EventRoute;
 
@@ -243,50 +239,6 @@ export class Api extends pulumi.ComponentResource {
         },
         { parent: this },
       ),
-    );
-
-    this.#tailscaleResource = new aws.apigateway.Resource(
-      "TailscaleResource",
-      {
-        restApi: args.gateway.id,
-        parentId: args.gateway.rootResourceId,
-        pathPart: "tailscale",
-      },
-      { parent: this },
-    );
-
-    this.#tailscaleAuthKeyResource = new aws.apigateway.Resource(
-      "TailscaleAuthKeyResource",
-      {
-        restApi: args.gateway.id,
-        parentId: this.#tailscaleResource.id,
-        pathPart: "auth-key",
-      },
-      { parent: this },
-    );
-
-    this.#tailscaleAuthKeyRotationRoute = new EventRoute(
-      "TailscaleAuthKeyRotationRoute",
-      {
-        restApiId: args.gateway.id,
-        parentId: this.#tailscaleAuthKeyResource.id,
-        pathPart: "rotation",
-        executionRoleArn: this.#role.arn,
-        requestTemplate: args.domainName.apply(
-          (domainName) => `
-{
-"Entries": [
-  {
-    "Detail": "{}",
-    "DetailType": "TailscaleAuthKeyRotation",
-    "EventBusName": "default",
-    "Source":"${Utils.reverseDns(domainName)}"
-  }
-]
-}`,
-        ),
-      },
-      { parent: this },
     );
 
     this.#usersResource = new aws.apigateway.Resource(

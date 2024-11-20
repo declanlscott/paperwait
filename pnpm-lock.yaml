@@ -157,9 +157,6 @@ importers:
       '@pulumi/pulumi':
         specifier: ^3.139.0
         version: 3.139.0(typescript@5.6.3)
-      openapi-fetch:
-        specifier: ^0.13.0
-        version: 0.13.0
     devDependencies:
       '@printworks/eslint-config':
         specifier: workspace:*
@@ -5676,12 +5673,6 @@ packages:
 
   oniguruma-to-es@0.1.2:
     resolution: {integrity: sha512-sBYKVJlIMB0WPO+tSu/NNB1ytSFeHyyJZ3Ayxfx3f/QUuXu0lvZk0VB4K7npmdlHSC0ldqanzh/sUSlAbgCTfw==}
-
-  openapi-fetch@0.13.0:
-    resolution: {integrity: sha512-6Nlf/BDbtyHwHdNrLPUiyt4CZMzL3ZyAt55yWH8W7+Z+8aYWnvca4uZHQHXViy8KcnCMqAhLM/bifh2Yjjkf6w==}
-
-  openapi-typescript-helpers@0.0.15:
-    resolution: {integrity: sha512-opyTPaunsklCBpTK8JGef6mfPhLSnyy5a0IN9vKtx3+4aExf+KxEqYwIy3hqkedXIB97u357uLMJsOnm3GVjsw==}
 
   openid-client@5.6.4:
     resolution: {integrity: sha512-T1h3B10BRPKfcObdBklX639tVz+xh34O7GjofqrqiAQdm7eHsQ00ih18x6wuJ/E6FxdtS2u3FmUGPDeEcMwzNA==}
@@ -14081,12 +14072,6 @@ snapshots:
       emoji-regex-xs: 1.0.0
       regex: 4.4.0
       regex-recursion: 4.2.1
-
-  openapi-fetch@0.13.0:
-    dependencies:
-      openapi-typescript-helpers: 0.0.15
-
-  openapi-typescript-helpers@0.0.15: {}
 
   openid-client@5.6.4:
     dependencies:

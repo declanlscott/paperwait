@@ -2,15 +2,13 @@
   "name": "@printworks/functions",
   "scripts": {
     "infra:build": "esbuild ./src/infra/index.ts --platform=node --target=es2020 --format=esm --bundle --outfile=./src/infra/dist/index.js",
-    "tailscale:typegen": "pnpm dlx openapi-typescript https://api.tailscale.com/api/v2?outputOpenapiSchema=true -o ./src/tenant/tailscale-auth-key-rotation/lib/tailscale/schema.d.ts",
     "lint": "eslint ./src/ --ext ts --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@printworks/core": "workspace:*",
     "@pulumi/aws": "^6.59.1",
     "@pulumi/cloudflare": "^5.43.0",
-    "@pulumi/pulumi": "^3.139.0",
-    "openapi-fetch": "^0.13.0"
+    "@pulumi/pulumi": "^3.139.0"
   },
   "devDependencies": {
     "@printworks/eslint-config": "workspace:*",

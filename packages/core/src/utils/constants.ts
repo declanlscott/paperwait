@@ -52,12 +52,6 @@ export namespace Constants {
   export const REPLICACHE_LIFETIME = {
     weeks: 2,
   } as const satisfies Duration;
-  export const TAILSCALE_AUTH_KEY_LIFETIME = {
-    days: 90,
-  } as const satisfies Duration;
-
-  export const TAILSCALE_API_BASE_URL = "https://api.tailscale.com/api/v2";
-  export const TAILSCALE_TAG_NAME = "printworks-papercut-secure-bridge";
 
   export const WORKFLOW_REVIEW_STATUS = "Review";
 }

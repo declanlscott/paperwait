@@ -15,15 +15,28 @@ import { useResource, withResource } from "./resource";
 
 export const programInputSchema = v.object({
   tenantId: nanoIdSchema,
-  usersSyncSchedule: v.optional(v.string(), "55 1 * * ? *"),
+  usersSyncSchedule: v.pipe(v.optional(v.string(), "55 1 * * ? *"), v.trim()),
   timezone: v.picklist(Intl.supportedValuesOf("timeZone")),
+  papercutServerUrl: v.pipe(v.string(), v.url(), v.trim()),
+  papercutServerAuthToken: v.pipe(v.string(), v.trim()),
+  tailscaleOauthClient: v.object({
+    id: v.pipe(v.string(), v.trim()),
+    secret: v.pipe(v.string(), v.trim()),
+  }),
 });
 
 export type ProgramInput = v.InferOutput<typeof programInputSchema>;
 
 export const getProgram = (input: ProgramInput) => async () =>
   withResource(() => {
-    const { tenantId, usersSyncSchedule, timezone } = input;
+    const {
+      tenantId,
+      usersSyncSchedule,
+      timezone,
+      papercutServerUrl,
+      papercutServerAuthToken,
+      tailscaleOauthClient,
+    } = input;
 
     const { AppData, CloudfrontPublicKey, InvoicesProcessor, UsersSync } =
       useResource();
@@ -47,7 +60,16 @@ export const getProgram = (input: ProgramInput) => async () =>
       { provider: account.provider },
     );
 
-    const storage = Storage.getInstance({ providers: [account.provider] });
+    const storage = Storage.getInstance(
+      {
+        papercutServer: {
+          url: papercutServerUrl,
+          authToken: papercutServerAuthToken,
+        },
+        tailscaleOauthClient,
+      },
+      { providers: [account.provider] },
+    );
 
     const realtime = Realtime.getInstance({
       assumeRoleArn: account.assumeRoleArn,
@@ -107,9 +129,6 @@ export const getProgram = (input: ProgramInput) => async () =>
         tenantId,
         domainName: ssl.domainName,
         events: {
-          tailscaleAuthKeyRotation: {
-            functionArn: functions.tailscaleAuthKeyRotation.functionArn,
-          },
           usersSync: {
             functionArn: pulumi.output(UsersSync.arn),
             scheduleExpression: `cron(${usersSyncSchedule})`,

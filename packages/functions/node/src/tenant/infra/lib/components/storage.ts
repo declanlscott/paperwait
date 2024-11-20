@@ -5,23 +5,42 @@ import { useResource } from "../resource";
 
 type Buckets = Record<"assets" | "documents", Bucket>;
 type Queues = Record<"invoicesProcessor", Queue>;
+type SystemParameters = Record<
+  "papercutServerUrl" | "papercutServerAuthToken" | "tailscaleOauthClient",
+  Parameter
+>;
+
+export interface StorageArgs {
+  papercutServer: pulumi.Input<{
+    url: pulumi.Input<string>;
+    authToken: pulumi.Input<string>;
+  }>;
+  tailscaleOauthClient: pulumi.Input<{
+    id: pulumi.Input<string>;
+    secret: pulumi.Input<string>;
+  }>;
+}
 
 export class Storage extends pulumi.ComponentResource {
   static #instance: Storage;
 
   #buckets: Buckets = {} as Buckets;
   #queues: Queues = {} as Queues;
+  #systemParameters: SystemParameters = {} as SystemParameters;
 
-  static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
-    if (!this.#instance) this.#instance = new Storage(opts);
+  static getInstance(
+    args: StorageArgs,
+    opts: pulumi.ComponentResourceOptions,
+  ): Storage {
+    if (!this.#instance) this.#instance = new Storage(args, opts);
 
     return this.#instance;
   }
 
-  private constructor(...[opts]: Parameters<typeof Storage.getInstance>) {
+  private constructor(...[args, opts]: Parameters<typeof Storage.getInstance>) {
     const { AppData } = useResource();
 
-    super(`${AppData.name}:tenant:aws:Storage`, "Storage", {}, opts);
+    super(`${AppData.name}:tenant:aws:Storage`, "Storage", args, opts);
 
     this.#buckets.assets = new Bucket("Assets", { parent: this });
 
@@ -35,6 +54,40 @@ export class Storage extends pulumi.ComponentResource {
       },
       { parent: this },
     );
+
+    this.#systemParameters.papercutServerUrl = new Parameter(
+      "PapercutServerUrl",
+      {
+        name: "/papercut/server/url",
+        type: "String",
+        value: pulumi.output(args.papercutServer).apply(({ url }) => url),
+      },
+      { parent: this },
+    );
+
+    this.#systemParameters.papercutServerAuthToken = new Parameter(
+      "PapercutServerAuthToken",
+      {
+        name: "/papercut/server/auth-token",
+        type: "SecureString",
+        value: pulumi
+          .output(args.papercutServer)
+          .apply(({ authToken }) => authToken),
+      },
+      { parent: this },
+    );
+
+    this.#systemParameters.tailscaleOauthClient = new Parameter(
+      "TailscaleOauthClient",
+      {
+        name: "/tailscale/oauth-client",
+        type: "SecureString",
+        value: pulumi
+          .output(args.tailscaleOauthClient)
+          .apply((value) => JSON.stringify(value)),
+      },
+      { parent: this },
+    );
   }
 
   get buckets() {
@@ -43,6 +96,10 @@ export class Storage extends pulumi.ComponentResource {
 
   get queues() {
     return this.#queues;
+  }
+
+  get systemParameters() {
+    return this.#systemParameters;
   }
 }
 
@@ -211,5 +268,51 @@ class Queue extends pulumi.ComponentResource {
 
   get url() {
     return this.#queue.url;
+  }
+}
+
+interface ParameterArgs {
+  name: pulumi.Input<string>;
+  type: pulumi.Input<aws.ssm.ParameterType>;
+  value: pulumi.Input<string>;
+}
+
+class Parameter extends pulumi.ComponentResource {
+  #parameter: aws.ssm.Parameter;
+
+  constructor(
+    name: string,
+    args: ParameterArgs,
+    opts: pulumi.ComponentResourceOptions,
+  ) {
+    const { AppData } = useResource();
+
+    super(`${AppData.name}:tenant:aws:Parameter`, name, {}, opts);
+
+    this.#parameter = new aws.ssm.Parameter(
+      `${name}Parameter`,
+      {
+        name: args.name,
+        type: args.type,
+        value: args.value,
+      },
+      { retainOnDelete: AppData.stage === "production", parent: this },
+    );
+
+    this.registerOutputs({
+      parameter: this.#parameter.id,
+    });
+  }
+
+  get arn() {
+    return this.#parameter.arn;
+  }
+
+  get name() {
+    return this.#parameter.name;
+  }
+
+  get value() {
+    return this.#parameter.value;
   }
 }

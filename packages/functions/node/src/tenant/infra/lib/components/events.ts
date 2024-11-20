@@ -8,9 +8,6 @@ export interface EventsArgs {
   tenantId: pulumi.Input<string>;
   domainName: aws.acm.Certificate["domainName"];
   events: {
-    tailscaleAuthKeyRotation: {
-      functionArn: aws.lambda.Function["arn"];
-    };
     usersSync: {
       functionArn: aws.lambda.Function["arn"];
       scheduleExpression: pulumi.Input<string>;
@@ -40,41 +37,6 @@ export class Events extends pulumi.ComponentResource {
     const { AppData } = useResource();
 
     super(`${AppData.name}:tenant:aws:Events`, "Events", args, opts);
-
-    this.#events.push(
-      new ScheduledEvent(
-        "ScheduledTailscaleAuthKeyRotation",
-        {
-          scheduleExpression: "rate(60 days)",
-          flexibleTimeWindow: {
-            mode: "OFF",
-          },
-          functionTarget: {
-            arn: args.events.tailscaleAuthKeyRotation.functionArn,
-          },
-        },
-        { parent: this },
-      ),
-    );
-
-    this.#events.push(
-      new PatternedEvent(
-        "PatternedTailscaleAuthKeyRotation",
-        {
-          pattern: pulumi.jsonStringify({
-            "detail-type": ["TailscaleAuthKeyRotation"],
-            source: args.domainName.apply((domainName) =>
-              Utils.reverseDns(domainName),
-            ),
-          }),
-          functionTarget: {
-            arn: args.events.tailscaleAuthKeyRotation.functionArn,
-            createPermission: true,
-          },
-        },
-        { parent: this },
-      ),
-    );
 
     this.#events.push(
       new ScheduledEvent(
