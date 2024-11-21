@@ -101,7 +101,7 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
           Code.bucket.object.papercutSecureReverseProxy.versionId,
         runtime: aws.lambda.Runtime.CustomAL2023,
         architectures: ["arm64"],
-        timeout: 15,
+        timeout: 20,
         role: this.#role.arn,
       },
       { parent: this },
