@@ -13,6 +13,7 @@ export class Account extends pulumi.ComponentResource {
   #account: aws.organizations.Account;
   #assumeRoleArn: pulumi.Output<string>;
   #provider: aws.Provider;
+  #budget: aws.budgets.Budget;
 
   static getInstance(
     args: AccountArgs,
@@ -28,15 +29,16 @@ export class Account extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Account`, "Account", args, opts);
 
-    const accountName = pulumi.interpolate`${AppData.name}-${AppData.stage}-tenant-${args.tenantId}`;
+    const name = pulumi.interpolate`${AppData.name}-${AppData.stage}-tenant-${args.tenantId}`;
 
     const emailSegments = Aws.organization.email.split("@");
+    const email = pulumi.interpolate`${emailSegments[0]}+${name}@${emailSegments[1]}`;
 
     this.#account = new aws.organizations.Account(
       "Account",
       {
-        name: accountName,
-        email: pulumi.interpolate`${emailSegments[0]}+${accountName}@${emailSegments[1]}`,
+        name,
+        email,
         parentId: Aws.organization.tenantsOrganizationalUnit.id,
         roleName: Aws.tenant.accountAccessRole.name,
         iamUserAccessToBilling: "ALLOW",
@@ -55,9 +57,30 @@ export class Account extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    this.#budget = new aws.budgets.Budget(
+      "Budget",
+      {
+        budgetType: "COST",
+        limitAmount: "1",
+        limitUnit: "USD",
+        timeUnit: "MONTHLY",
+        notifications: [
+          {
+            comparisonOperator: "GREATER_THAN",
+            threshold: 100,
+            thresholdType: "PERCENTAGE",
+            notificationType: "FORECASTED",
+            subscriberEmailAddresses: [email],
+          },
+        ],
+      },
+      { parent: this },
+    );
+
     this.registerOutputs({
       account: this.#account.id,
       provider: this.#provider.id,
+      budget: this.#budget.id,
     });
   }
 

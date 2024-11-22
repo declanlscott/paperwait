@@ -87,3 +87,19 @@ export const cloudflareApiTokenParameter = new aws.ssm.Parameter(
     value: process.env.CLOUDFLARE_API_TOKEN!,
   },
 );
+
+export const budget = new aws.budgets.Budget("Budget", {
+  budgetType: "COST",
+  limitAmount: "1",
+  limitUnit: "USD",
+  timeUnit: "MONTHLY",
+  notifications: [
+    {
+      comparisonOperator: "GREATER_THAN",
+      threshold: 100,
+      thresholdType: "PERCENTAGE",
+      notificationType: "FORECASTED",
+      subscriberEmailAddresses: [organization.masterAccountEmail],
+    },
+  ],
+});
