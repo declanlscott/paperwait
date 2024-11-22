@@ -9,21 +9,9 @@ export const bootstrapProvider = new aws.Provider("BootstrapProvider", {
 export const organizationManagementRole = new aws.iam.Role(
   "OrganizationManagementRole",
   {
-    assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-      statements: [
-        {
-          principals: [
-            {
-              type: "AWS",
-              identifiers: [
-                $interpolate`arn:aws:iam::${aws.getCallerIdentityOutput().accountId}:root`,
-              ],
-            },
-          ],
-          actions: ["sts:AssumeRole"],
-        },
-      ],
-    }).json,
+    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+      AWS: $interpolate`arn:aws:iam::${aws.getCallerIdentityOutput().accountId}:root`,
+    }),
     tags: {
       app: $app.name,
       stage: $app.stage,

@@ -32,7 +32,7 @@ export class Functions extends pulumi.ComponentResource {
 class PapercutSecureReverseProxy extends pulumi.ComponentResource {
   static #instance: PapercutSecureReverseProxy;
 
-  #role: FunctionRole;
+  #role: aws.iam.Role;
   #function: aws.lambda.Function;
 
   static getInstance(opts: pulumi.ComponentResourceOptions) {
@@ -59,9 +59,16 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
       { parent: this },
     ).accountId;
 
-    this.#role = new FunctionRole("PapercutSecureReverseProxy", {
-      parent: this,
-    });
+    this.#role = new aws.iam.Role(
+      "Role",
+      {
+        assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+          Service: "lambda.amazonaws.com",
+        }),
+        managedPolicyArns: [aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole],
+      },
+      { parent: this },
+    );
     new aws.iam.RolePolicy(
       "InlinePolicy",
       {
@@ -108,6 +115,7 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
+      role: this.#role.id,
       function: this.#function.id,
     });
   }
@@ -118,51 +126,5 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
 
   get invokeArn() {
     return this.#function.invokeArn;
-  }
-}
-
-class FunctionRole extends pulumi.ComponentResource {
-  #role: aws.iam.Role;
-
-  constructor(name: string, opts: pulumi.ComponentResourceOptions) {
-    const { AppData } = useResource();
-
-    super(`${AppData.name}:tenant:aws:FunctionRole`, name, {}, opts);
-
-    this.#role = new aws.iam.Role(
-      `${name}Role`,
-      {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
-          {
-            statements: [
-              {
-                principals: [
-                  {
-                    type: "Service",
-                    identifiers: ["lambda.amazonaws.com"],
-                  },
-                ],
-                actions: ["sts:AssumeRole"],
-              },
-            ],
-          },
-          { parent: this },
-        ).json,
-        managedPolicyArns: [aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole],
-      },
-      { parent: this },
-    );
-
-    this.registerOutputs({
-      role: this.#role.id,
-    });
-  }
-
-  get name() {
-    return this.#role.name;
-  }
-
-  get arn() {
-    return this.#role.arn;
   }
 }

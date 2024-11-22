@@ -85,22 +85,9 @@ export class Api extends pulumi.ComponentResource {
     this.#role = new aws.iam.Role(
       "Role",
       {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
-          {
-            statements: [
-              {
-                principals: [
-                  {
-                    type: "Service",
-                    identifiers: ["apigateway.amazonaws.com"],
-                  },
-                ],
-                actions: ["sts:AssumeRole"],
-              },
-            ],
-          },
-          { parent: this },
-        ).json,
+        assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+          Service: "apigateway.amazonaws.com",
+        }),
         managedPolicyArns: [
           aws.iam.ManagedPolicy.AmazonAPIGatewayPushToCloudWatchLogs,
         ],

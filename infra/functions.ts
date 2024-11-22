@@ -146,23 +146,12 @@ export const tenantInfraFunctionImage = new awsx.ecr.Image(
 export const tenantInfraFunctionRole = new aws.iam.Role(
   "TenantInfraFunctionRole",
   {
-    assumeRolePolicy: aws.iam.getPolicyDocumentOutput({
-      statements: [
-        {
-          principals: [
-            {
-              type: "Service",
-              identifiers: ["lambda.amazonaws.com"],
-            },
-          ],
-          actions: ["sts:AssumeRole"],
-        },
-      ],
-    }).json,
+    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+      Service: "lambda.amazonaws.com",
+    }),
     managedPolicyArns: [aws.iam.ManagedPolicy.AWSLambdaBasicExecutionRole],
   },
 );
-
 new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
   role: tenantInfraFunctionRole.name,
   policy: aws.iam.getPolicyDocumentOutput({

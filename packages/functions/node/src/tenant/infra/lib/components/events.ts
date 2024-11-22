@@ -79,22 +79,9 @@ export class Events extends pulumi.ComponentResource {
     this.#invoicesProcessorPipeRole = new aws.iam.Role(
       "InvoicesProcessorPipeRole",
       {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
-          {
-            statements: [
-              {
-                actions: ["sts:AssumeRole"],
-                principals: [
-                  {
-                    type: "Service",
-                    identifiers: ["pipes.amazonaws.com"],
-                  },
-                ],
-              },
-            ],
-          },
-          { parent: this },
-        ).json,
+        assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+          Service: "pipes.amazonaws.com",
+        }),
       },
       { parent: this },
     );
@@ -203,22 +190,9 @@ class ScheduledEvent extends pulumi.ComponentResource {
     this.#role = new aws.iam.Role(
       `${name}Role`,
       {
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
-          {
-            statements: [
-              {
-                actions: ["sts:AssumeRole"],
-                principals: [
-                  {
-                    type: "Service",
-                    identifiers: ["scheduler.amazonaws.com"],
-                  },
-                ],
-              },
-            ],
-          },
-          { parent: this },
-        ).json,
+        assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+          Service: "scheduler.amazonaws.com",
+        }),
       },
       { parent: this },
     );
