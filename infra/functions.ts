@@ -139,6 +139,7 @@ export const tenantInfraFunctionImage = new awsx.ecr.Image(
     repositoryUrl: repository.url,
     context: normalizePath("packages/functions/node/src/tenant/infra"),
     platform: "linux/arm64",
+    imageTag: "latest",
   },
   { dependsOn: [tenantInfraBuilder] },
 );
