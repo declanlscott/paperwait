@@ -65,7 +65,7 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
       { parent: this },
     );
     new aws.iam.RolePolicy(
-      "InlinePolicy",
+      "RoleInlinePolicy",
       {
         role: this.#role.name,
         policy: aws.iam.getPolicyDocumentOutput(

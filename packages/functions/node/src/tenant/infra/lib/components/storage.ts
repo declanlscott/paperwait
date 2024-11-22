@@ -74,7 +74,7 @@ export class Storage extends pulumi.ComponentResource {
       { parent: this },
     );
     new aws.iam.RolePolicy(
-      "PutParametersRolePolicy",
+      "PutParametersRoleInlinePolicy",
       {
         role: this.#putParametersRole.name,
         policy: aws.iam.getPolicyDocumentOutput(

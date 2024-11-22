@@ -86,7 +86,7 @@ export class Events extends pulumi.ComponentResource {
       { parent: this },
     );
     new aws.iam.RolePolicy(
-      "InvoicesProcessorPipeInlinePolicy",
+      "InvoicesProcessorPipeRoleInlinePolicy",
       {
         role: this.#invoicesProcessorPipeRole.name,
         policy: aws.iam.getPolicyDocumentOutput(
@@ -198,7 +198,7 @@ class ScheduledEvent extends pulumi.ComponentResource {
     );
 
     new aws.iam.RolePolicy(
-      `${name}InlinePolicy`,
+      `${name}RoleInlinePolicy`,
       {
         role: this.#role.name,
         policy: aws.iam.getPolicyDocumentOutput(

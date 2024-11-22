@@ -20,8 +20,8 @@ export const organizationManagementRole = new aws.iam.Role(
   { provider: bootstrapProvider },
 );
 
-export const organizationManagementInlinePolicy = new aws.iam.RolePolicy(
-  "OrganizationManagementInlinePolicy",
+export const organizationManagementRoleInlinePolicy = new aws.iam.RolePolicy(
+  "OrganizationManagementRoleInlinePolicy",
   {
     role: organizationManagementRole.name,
     policy: aws.iam.getPolicyDocumentOutput({
@@ -42,7 +42,7 @@ const organizationManagementPermissionPropagation = new time.Sleep(
     createDuration: "5s",
     triggers: {
       assumeRolePolicy: organizationManagementRole.assumeRolePolicy,
-      inlinePolicy: organizationManagementInlinePolicy.policy,
+      inlinePolicy: organizationManagementRoleInlinePolicy.policy,
     },
   },
 );
