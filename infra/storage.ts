@@ -56,6 +56,8 @@ export const invoicesProcessorDeadLetterQueue = new sst.aws.Queue(
   { retainOnDelete: $app.stage === "production" },
 );
 
-export const repository = new awsx.ecr.Repository("Repository", {
-  forceDelete: true,
-});
+export const repository = new awsx.ecr.Repository(
+  "Repository",
+  { forceDelete: true },
+  { retainOnDelete: $app.stage === "production" },
+);
