@@ -99,10 +99,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "InfraDeadLetterQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
     "InvoicesProcessor": {
       "arn": string
       "invokeArn": string
@@ -135,6 +131,10 @@ declare module "sst" {
     }
     "ReverseProxy": {
       "type": "sst.cloudflare.Worker"
+      "url": string
+    }
+    "TenantInfraDeadLetterQueue": {
+      "type": "sst.aws.Queue"
       "url": string
     }
     "TenantInfraQueue": {

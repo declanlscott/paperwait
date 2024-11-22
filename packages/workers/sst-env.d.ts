@@ -100,10 +100,6 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "InfraDeadLetterQueue": {
-      "type": "sst.aws.Queue"
-      "url": string
-    }
     "InvoicesProcessor": {
       "arn": string
       "invokeArn": string
@@ -133,6 +129,10 @@ declare module "sst" {
     "ReplicacheLicenseKey": {
       "type": "sst.sst.Secret"
       "value": string
+    }
+    "TenantInfraDeadLetterQueue": {
+      "type": "sst.aws.Queue"
+      "url": string
     }
     "TenantInfraQueue": {
       "type": "sst.aws.Queue"
