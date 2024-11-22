@@ -10,6 +10,7 @@ import {
   codeBucket,
   invoicesProcessorDeadLetterQueue,
   pulumiBucket,
+  repository,
 } from "./storage";
 import { link, normalizePath } from "./utils";
 import { web } from "./web";
@@ -132,15 +133,12 @@ const tenantInfraBuilder = new command.local.Command("TenantInfraBuilder", {
   triggers: [tenantInfraSrc.archive],
 });
 
-export const repository = new awsx.ecr.Repository("Repository", {
-  forceDelete: true,
-});
-
 export const tenantInfraFunctionImage = new awsx.ecr.Image(
   "TenantInfraFunctionImage",
   {
     repositoryUrl: repository.url,
     context: normalizePath("packages/functions/node/src/tenant/infra"),
+    platform: "linux/arm64",
   },
   { dependsOn: [tenantInfraBuilder] },
 );
@@ -174,7 +172,7 @@ new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
         resources: [pulumiBucket.arn, $interpolate`${pulumiBucket.arn}/*`],
       },
       {
-        actions: ["ssm:GetParameter"],
+        actions: ["ssm:GetParameter", "kms:Decrypt"],
         resources: [cloudflareApiTokenParameter.arn],
       },
       {
@@ -188,8 +186,11 @@ new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
 export const tenantInfraFunction = new aws.lambda.Function(
   "TenantInfraFunction",
   {
+    packageType: "Image",
     imageUri: tenantInfraFunctionImage.imageUri,
     role: tenantInfraFunctionRole.arn,
+    timeout: 900,
+    architectures: ["arm64"],
     ...link({
       AppData: appData.properties,
       Aws: aws_.properties,

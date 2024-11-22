@@ -23,8 +23,8 @@ export const codeBucket = new sst.aws.Bucket("CodeBucket", {
 
 export const pulumiBucket = new sst.aws.Bucket("PulumiBucket");
 
-export const infraDeadLetterQueue = new sst.aws.Queue(
-  "InfraDeadLetterQueue",
+export const tenantInfraDeadLetterQueue = new sst.aws.Queue(
+  "TenantInfraDeadLetterQueue",
   {
     transform: {
       queue: {
@@ -38,7 +38,7 @@ export const infraDeadLetterQueue = new sst.aws.Queue(
 export const tenantInfraQueue = new sst.aws.Queue(
   "TenantInfraQueue",
   {
-    dlq: infraDeadLetterQueue.arn,
+    dlq: tenantInfraDeadLetterQueue.arn,
     visibilityTimeout: "15 minutes",
   },
   { retainOnDelete: $app.stage === "production" },
@@ -55,3 +55,7 @@ export const invoicesProcessorDeadLetterQueue = new sst.aws.Queue(
   },
   { retainOnDelete: $app.stage === "production" },
 );
+
+export const repository = new awsx.ecr.Repository("Repository", {
+  forceDelete: true,
+});
