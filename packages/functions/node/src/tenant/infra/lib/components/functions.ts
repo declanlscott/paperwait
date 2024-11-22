@@ -1,3 +1,4 @@
+import { Constants } from "@printworks/core/utils/constants";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -53,12 +54,6 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
       opts,
     );
 
-    const region = aws.getRegionOutput({}, { parent: this }).name;
-    const accountId = aws.getCallerIdentityOutput(
-      {},
-      { parent: this },
-    ).accountId;
-
     this.#role = new aws.iam.Role(
       "Role",
       {
@@ -77,18 +72,16 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
           {
             statements: [
               {
-                actions: ["ssm:GetParameter"],
+                actions: ["ssm:GetParameter", "kms:Decrypt"],
                 resources: [
-                  [AppData.name, AppData.stage, "tailscale", "auth"].join("/"),
-                  [
-                    AppData.name,
-                    AppData.stage,
-                    "papercut",
-                    "web-services",
-                  ].join("/"),
+                  Constants.PAPERCUT_SERVER_URL_PARAMETER_NAME,
+                  Constants.TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME,
                 ].map(
-                  (parameter) =>
-                    pulumi.interpolate`arn:aws:ssm:${region}:${accountId}:parameter/${parameter}`,
+                  (name) =>
+                    pulumi.interpolate`arn:aws:ssm:${aws.getRegionOutput({}, { parent: this }).name}:${
+                      aws.getCallerIdentityOutput({}, { parent: this })
+                        .accountId
+                    }:parameter${name}`,
                 ),
               },
             ],
