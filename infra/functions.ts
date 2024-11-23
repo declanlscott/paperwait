@@ -1,3 +1,4 @@
+import { physicalName } from "../.sst/platform/src/components/naming";
 import { db } from "./db";
 import {
   appData,
@@ -173,14 +174,29 @@ new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
   }).json,
 });
 
+const functionName = physicalName(64, "TenantInfraFunction");
+
+export const tenantInfraLogGroup = new aws.cloudwatch.LogGroup(
+  "TenantInfraLogGroup",
+  {
+    name: `/aws/lambda/${functionName}`,
+    retentionInDays: 14,
+  },
+);
+
 export const tenantInfraFunction = new aws.lambda.Function(
   "TenantInfraFunction",
   {
+    name: functionName,
     packageType: "Image",
     imageUri: tenantInfraFunctionImage.imageUri,
     role: tenantInfraFunctionRole.arn,
     timeout: 900,
     architectures: ["arm64"],
+    loggingConfig: {
+      logFormat: "Text",
+      logGroup: tenantInfraLogGroup.name,
+    },
     ...link({
       AppData: appData.properties,
       Aws: aws_.properties,
