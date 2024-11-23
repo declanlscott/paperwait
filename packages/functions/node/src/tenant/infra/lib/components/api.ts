@@ -40,6 +40,7 @@ export class Api extends pulumi.ComponentResource {
   #parametersProxyResource: aws.apigateway.Resource;
   #parametersProxyMethod: aws.apigateway.Method;
   #parametersProxyIntegration: aws.apigateway.Integration;
+  #parametersProxyCorsRoute: CorsRoute;
 
   #usersResource: aws.apigateway.Resource;
   #usersSyncRoute: EventRoute;
@@ -48,12 +49,14 @@ export class Api extends pulumi.ComponentResource {
   #papercutProxyResource: aws.apigateway.Resource;
   #papercutProxyMethod: aws.apigateway.Method;
   #papercutProxyIntegration: aws.apigateway.Integration;
+  #papercutProxyCorsRoute: CorsRoute;
 
   #invoicesResource: aws.apigateway.Resource;
   #enqueueInvoiceRequestValidator: aws.apigateway.RequestValidator;
   #enqueueInvoiceRequestModel: aws.apigateway.Model;
   #enqueueInvoiceMethod: aws.apigateway.Method;
   #enqueueInvoiceIntegration: aws.apigateway.Integration;
+  #enqueueInvoiceCorsRoute: CorsRoute;
 
   #cdnResource: aws.apigateway.Resource;
   #invalidationResource: aws.apigateway.Resource;
@@ -61,6 +64,10 @@ export class Api extends pulumi.ComponentResource {
   #invalidationRequestModel: aws.apigateway.Model;
   #invalidationMethod: aws.apigateway.Method;
   #invalidationIntegration: aws.apigateway.Integration;
+  #invalidationCorsRoute: CorsRoute;
+
+  #corsResponse4xx: aws.apigateway.Response;
+  #corsResponse5xx: aws.apigateway.Response;
 
   #logGroup: aws.cloudwatch.LogGroup;
   #deployment: aws.apigateway.Deployment;
@@ -211,7 +218,7 @@ export class Api extends pulumi.ComponentResource {
 
     this.#wellKnownAppSpecificRoutes.push(
       new WellKnownAppSpecificRoute(
-        "AccountIdRoute",
+        "AccountId",
         {
           apiId: args.gateway.id,
           parentId: this.#appSpecificResource.id,
@@ -229,7 +236,7 @@ export class Api extends pulumi.ComponentResource {
 
     this.#wellKnownAppSpecificRoutes.push(
       new WellKnownAppSpecificRoute(
-        "CloudfrontKeyPairIdRoute",
+        "CloudfrontKeyPairId",
         {
           apiId: args.gateway.id,
           parentId: this.#appSpecificResource.id,
@@ -303,6 +310,15 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    this.#parametersProxyCorsRoute = new CorsRoute(
+      "ParametersProxy",
+      {
+        restApiId: args.gateway.id,
+        resourceId: this.#parametersProxyResource.id,
+      },
+      { parent: this },
+    );
+
     this.#usersResource = new aws.apigateway.Resource(
       "UsersResource",
       {
@@ -314,7 +330,7 @@ export class Api extends pulumi.ComponentResource {
     );
 
     this.#usersSyncRoute = new EventRoute(
-      "UsersSyncRoute",
+      "UsersSync",
       {
         restApiId: args.gateway.id,
         parentId: this.#usersResource.id,
@@ -379,6 +395,15 @@ export class Api extends pulumi.ComponentResource {
         passthroughBehavior: "WHEN_NO_TEMPLATES",
         uri: args.papercutSecureReverseProxyFunction.invokeArn,
         credentials: this.#role.arn,
+      },
+      { parent: this },
+    );
+
+    this.#papercutProxyCorsRoute = new CorsRoute(
+      "PapercutProxy",
+      {
+        restApiId: args.gateway.id,
+        resourceId: this.#papercutProxyResource.id,
       },
       { parent: this },
     );
@@ -462,6 +487,15 @@ export class Api extends pulumi.ComponentResource {
         passthroughBehavior: "NEVER",
         uri: pulumi.interpolate`arn:aws:apigateway:${region}:sqs:path/${args.invoicesProcessorQueue.name}`,
         credentials: this.#role.arn,
+      },
+      { parent: this },
+    );
+
+    this.#enqueueInvoiceCorsRoute = new CorsRoute(
+      "EnqueueInvoice",
+      {
+        restApiId: args.gateway.id,
+        resourceId: this.#invoicesResource.id,
       },
       { parent: this },
     );
@@ -575,6 +609,47 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    this.#invalidationCorsRoute = new CorsRoute(
+      "Invalidation",
+      {
+        restApiId: args.gateway.id,
+        resourceId: this.#invalidationResource.id,
+      },
+      { parent: this },
+    );
+
+    this.#corsResponse4xx = new aws.apigateway.Response(
+      "CorsResponse4xx",
+      {
+        restApiId: args.gateway.id,
+        responseType: "DEFAULT_4XX",
+        responseParameters: {
+          "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+          "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+        },
+        responseTemplates: {
+          "application/json": '{"message":$context.error.messageString}',
+        },
+      },
+      { parent: this },
+    );
+
+    this.#corsResponse5xx = new aws.apigateway.Response(
+      "CorsResponse5xx",
+      {
+        restApiId: args.gateway.id,
+        responseType: "DEFAULT_5XX",
+        responseParameters: {
+          "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+          "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+        },
+        responseTemplates: {
+          "application/json": '{"message":$context.error.messageString}',
+        },
+      },
+      { parent: this },
+    );
+
     this.#logGroup = new aws.cloudwatch.LogGroup(
       "LogGroup",
       {
@@ -584,14 +659,86 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    const triggers = pulumi
+      .all([
+        args.gateway,
+        this.#wellKnownResource,
+        this.#appSpecificResource,
+        ...this.#wellKnownAppSpecificRoutes.flatMap((route) => [
+          route.resource,
+          route.method,
+          route.integration,
+          route.corsRoute.method,
+          route.corsRoute.integration,
+          route.corsRoute.integrationResponse,
+          route.corsRoute.methodResponse,
+        ]),
+        this.#parametersResource,
+        this.#parametersProxyResource,
+        this.#parametersProxyMethod,
+        this.#parametersProxyIntegration,
+        this.#parametersProxyCorsRoute.method,
+        this.#parametersProxyCorsRoute.integration,
+        this.#parametersProxyCorsRoute.integrationResponse,
+        this.#parametersProxyCorsRoute.methodResponse,
+        this.#usersResource,
+        this.#usersSyncRoute.method,
+        this.#usersSyncRoute.integration,
+        this.#usersSyncRoute.corsRoute.method,
+        this.#usersSyncRoute.corsRoute.integration,
+        this.#usersSyncRoute.corsRoute.integrationResponse,
+        this.#usersSyncRoute.corsRoute.methodResponse,
+        this.#papercutResource,
+        this.#papercutProxyResource,
+        this.#papercutProxyMethod,
+        this.#papercutProxyIntegration,
+        this.#papercutProxyCorsRoute.method,
+        this.#papercutProxyCorsRoute.integration,
+        this.#papercutProxyCorsRoute.integrationResponse,
+        this.#papercutProxyCorsRoute.methodResponse,
+        this.#invoicesResource,
+        this.#enqueueInvoiceRequestValidator,
+        this.#enqueueInvoiceRequestModel,
+        this.#enqueueInvoiceMethod,
+        this.#enqueueInvoiceIntegration,
+        this.#enqueueInvoiceCorsRoute.method,
+        this.#enqueueInvoiceCorsRoute.integration,
+        this.#enqueueInvoiceCorsRoute.integrationResponse,
+        this.#enqueueInvoiceCorsRoute.methodResponse,
+        this.#cdnResource,
+        this.#invalidationResource,
+        this.#invalidationRequestValidator,
+        this.#invalidationRequestModel,
+        this.#invalidationMethod,
+        this.#invalidationIntegration,
+        this.#invalidationCorsRoute.method,
+        this.#invalidationCorsRoute.integration,
+        this.#corsResponse4xx,
+        this.#corsResponse5xx,
+      ])
+      // filter serializable outputs
+      .apply((resources) =>
+        resources.map((resource) =>
+          Object.fromEntries(
+            Object.entries(resource).filter(
+              ([key, value]) =>
+                !key.startsWith("_") && typeof value !== "function",
+            ),
+          ),
+        ),
+      )
+      .apply((resources) =>
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        Object.fromEntries(
+          resources.map((resource) => [resource.urn, JSON.stringify(resource)]),
+        ),
+      );
+
     this.#deployment = new aws.apigateway.Deployment(
       "Deployment",
       {
         restApi: args.gateway.id,
-        // TODO: Better triggers based on above resources
-        triggers: {
-          deployedAt: new Date().toISOString(),
-        },
+        triggers,
       },
       { parent: this },
     );
@@ -658,6 +805,9 @@ export class Api extends pulumi.ComponentResource {
       invalidationMethod: this.#invalidationMethod.id,
       invalidationIntegration: this.#invalidationIntegration.id,
 
+      corsResponse4xx: this.#corsResponse4xx.id,
+      corsResponse5xx: this.#corsResponse5xx.id,
+
       logGroup: this.#logGroup.id,
       deployment: this.#deployment.id,
       stage: this.#stage.id,
@@ -678,6 +828,7 @@ class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
   #integration: aws.apigateway.Integration;
   #methodResponse: aws.apigateway.MethodResponse;
   #integrationResponse: aws.apigateway.IntegrationResponse;
+  #corsRoute: CorsRoute;
 
   constructor(
     name: string,
@@ -688,7 +839,7 @@ class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
 
     super(
       `${AppData.name}:tenant:aws:WellKnownAppSpecificRoute`,
-      name,
+      `${name}WellKnownAppSpecificRoute`,
       args,
       opts,
     );
@@ -748,6 +899,15 @@ class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    this.#corsRoute = new CorsRoute(
+      `${name}WellKnownAppSpecificRoute`,
+      {
+        restApiId: args.apiId,
+        resourceId: this.#resource.id,
+      },
+      { parent: this },
+    );
+
     this.registerOutputs({
       resource: this.#resource.id,
       method: this.#method.id,
@@ -755,6 +915,22 @@ class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
       methodResponse: this.#methodResponse.id,
       integrationResponse: this.#integrationResponse.id,
     });
+  }
+
+  get resource() {
+    return this.#resource;
+  }
+
+  get method() {
+    return this.#method;
+  }
+
+  get integration() {
+    return this.#integration;
+  }
+
+  get corsRoute() {
+    return this.#corsRoute;
   }
 }
 
@@ -770,6 +946,7 @@ class EventRoute extends pulumi.ComponentResource {
   #resource: aws.apigateway.Resource;
   #method: aws.apigateway.Method;
   #integration: aws.apigateway.Integration;
+  #corsRoute: CorsRoute;
 
   constructor(
     name: string,
@@ -778,7 +955,12 @@ class EventRoute extends pulumi.ComponentResource {
   ) {
     const { AppData } = useResource();
 
-    super(`${AppData.name}:tenant:aws:EventRoute`, name, args, opts);
+    super(
+      `${AppData.name}:tenant:aws:EventRoute`,
+      `${name}EventRoute`,
+      args,
+      opts,
+    );
 
     this.#resource = new aws.apigateway.Resource(
       `${name}Resource`,
@@ -824,10 +1006,143 @@ class EventRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
+    this.#corsRoute = new CorsRoute(
+      `${name}Event`,
+      {
+        restApiId: args.restApiId,
+        resourceId: this.#resource.id,
+      },
+      { parent: this },
+    );
+
     this.registerOutputs({
       resource: this.#resource.id,
       method: this.#method.id,
       integration: this.#integration.id,
     });
+  }
+
+  get resource() {
+    return this.#resource;
+  }
+
+  get method() {
+    return this.#method;
+  }
+
+  get integration() {
+    return this.#integration;
+  }
+
+  get corsRoute() {
+    return this.#corsRoute;
+  }
+}
+
+interface CorsRouteArgs {
+  restApiId: aws.apigateway.RestApi["id"];
+  resourceId: aws.apigateway.Resource["id"];
+}
+
+class CorsRoute extends pulumi.ComponentResource {
+  #method: aws.apigateway.Method;
+  #integration: aws.apigateway.Integration;
+  #integrationResponse: aws.apigateway.IntegrationResponse;
+  #methodResponse: aws.apigateway.MethodResponse;
+
+  constructor(
+    name: string,
+    args: CorsRouteArgs,
+    opts: pulumi.ComponentResourceOptions,
+  ) {
+    const { AppData } = useResource();
+
+    super(
+      `${AppData.name}:tenant:aws:CorsRoute`,
+      `${name}CorsRoute`,
+      args,
+      opts,
+    );
+
+    this.#method = new aws.apigateway.Method(
+      `${name}CorsMethod`,
+      {
+        restApi: args.restApiId,
+        resourceId: args.resourceId,
+        httpMethod: "OPTIONS",
+        authorization: "NONE",
+      },
+      { parent: this },
+    );
+
+    this.#integration = new aws.apigateway.Integration(
+      `${name}CorsIntegration`,
+      {
+        restApi: args.restApiId,
+        resourceId: args.resourceId,
+        httpMethod: this.#method.httpMethod,
+        type: "MOCK",
+        requestTemplates: {
+          "application/json": JSON.stringify({ statusCode: 200 }),
+        },
+      },
+      { parent: this },
+    );
+
+    this.#integrationResponse = new aws.apigateway.IntegrationResponse(
+      `${name}CorsIntegrationResponse`,
+      {
+        restApi: args.restApiId,
+        resourceId: args.resourceId,
+        httpMethod: this.#method.httpMethod,
+        statusCode: "204",
+        responseTemplates: {
+          "method.response.header.Access-Control-Allow-Headers": "'*'",
+          "method.response.header.Access-Control-Allow-Methods":
+            "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+          "method.response.header.Access-Control-Allow-Origin": "'*'",
+        },
+      },
+      { parent: this, dependsOn: [this.#integration] },
+    );
+
+    this.#methodResponse = new aws.apigateway.MethodResponse(
+      `${name}CorsMethodResponse`,
+      {
+        restApi: args.restApiId,
+        resourceId: args.resourceId,
+        httpMethod: this.#method.httpMethod,
+        statusCode: this.#integrationResponse.statusCode,
+        responseParameters: {
+          "method.response.header.Access-Control-Allow-Headers": true,
+          "method.response.header.Access-Control-Allow-Methods": true,
+          "method.response.header.Access-Control-Allow-Origin": true,
+        },
+      },
+      { parent: this },
+    );
+
+    this.registerOutputs({
+      method: this.#method.id,
+      integration: this.#integration.id,
+      integrationResponse: this.#integrationResponse.id,
+      methodResponse: this.#methodResponse.id,
+    });
+  }
+
+  get method() {
+    return this.#method;
+  }
+
+  get integration() {
+    return this.#integration;
+  }
+
+  get integrationResponse() {
+    return this.#integrationResponse;
+  }
+
+  get methodResponse() {
+    return this.#methodResponse;
   }
 }
