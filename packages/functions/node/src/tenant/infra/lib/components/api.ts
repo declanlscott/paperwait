@@ -662,6 +662,7 @@ export class Api extends pulumi.ComponentResource {
     const triggers = pulumi
       .all([
         args.gateway,
+
         this.#wellKnownResource,
         this.#appSpecificResource,
         ...this.#wellKnownAppSpecificRoutes.flatMap((route) => [
@@ -673,6 +674,7 @@ export class Api extends pulumi.ComponentResource {
           route.corsRoute.integrationResponse,
           route.corsRoute.methodResponse,
         ]),
+
         this.#parametersResource,
         this.#parametersProxyResource,
         this.#parametersProxyMethod,
@@ -681,6 +683,7 @@ export class Api extends pulumi.ComponentResource {
         this.#parametersProxyCorsRoute.integration,
         this.#parametersProxyCorsRoute.integrationResponse,
         this.#parametersProxyCorsRoute.methodResponse,
+
         this.#usersResource,
         this.#usersSyncRoute.method,
         this.#usersSyncRoute.integration,
@@ -688,6 +691,7 @@ export class Api extends pulumi.ComponentResource {
         this.#usersSyncRoute.corsRoute.integration,
         this.#usersSyncRoute.corsRoute.integrationResponse,
         this.#usersSyncRoute.corsRoute.methodResponse,
+
         this.#papercutResource,
         this.#papercutProxyResource,
         this.#papercutProxyMethod,
@@ -696,6 +700,7 @@ export class Api extends pulumi.ComponentResource {
         this.#papercutProxyCorsRoute.integration,
         this.#papercutProxyCorsRoute.integrationResponse,
         this.#papercutProxyCorsRoute.methodResponse,
+
         this.#invoicesResource,
         this.#enqueueInvoiceRequestValidator,
         this.#enqueueInvoiceRequestModel,
@@ -705,6 +710,7 @@ export class Api extends pulumi.ComponentResource {
         this.#enqueueInvoiceCorsRoute.integration,
         this.#enqueueInvoiceCorsRoute.integrationResponse,
         this.#enqueueInvoiceCorsRoute.methodResponse,
+
         this.#cdnResource,
         this.#invalidationResource,
         this.#invalidationRequestValidator,
@@ -713,6 +719,7 @@ export class Api extends pulumi.ComponentResource {
         this.#invalidationIntegration,
         this.#invalidationCorsRoute.method,
         this.#invalidationCorsRoute.integration,
+
         this.#corsResponse4xx,
         this.#corsResponse5xx,
       ])
@@ -789,12 +796,16 @@ export class Api extends pulumi.ComponentResource {
       parametersProxyMethod: this.#parametersProxyMethod.id,
       parametersProxyIntegration: this.#parametersProxyIntegration.id,
 
+      usersResource: this.#usersResource.id,
+
       papercutResource: this.#papercutResource.id,
-      papercutSecureReverseProxyResource: this.#papercutProxyResource.id,
-      papercutSecureReverseProxyMethod: this.#papercutProxyMethod.id,
-      papercutSecureReverseProxyIntegration: this.#papercutProxyIntegration.id,
+      papercutProxyResource: this.#papercutProxyResource.id,
+      papercutProxyMethod: this.#papercutProxyMethod.id,
+      papercutProxyIntegration: this.#papercutProxyIntegration.id,
 
       invoicesResource: this.#invoicesResource.id,
+      enqueueInvoiceRequestValidator: this.#enqueueInvoiceRequestValidator.id,
+      enqueueInvoiceRequestModel: this.#enqueueInvoiceRequestModel.id,
       enqueueInvoiceMethod: this.#enqueueInvoiceMethod.id,
       enqueueInvoiceIntegration: this.#enqueueInvoiceIntegration.id,
 
