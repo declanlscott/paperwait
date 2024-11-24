@@ -40,6 +40,8 @@ export class Api extends pulumi.ComponentResource {
   #parametersProxyResource: aws.apigateway.Resource;
   #parametersProxyMethod: aws.apigateway.Method;
   #parametersProxyIntegration: aws.apigateway.Integration;
+  #parametersProxyIntegrationResponse: aws.apigateway.IntegrationResponse;
+  #parametersProxyMethodResponse: aws.apigateway.MethodResponse;
   #parametersProxyCorsRoute: CorsRoute;
 
   #usersResource: aws.apigateway.Resource;
@@ -298,14 +300,37 @@ export class Api extends pulumi.ComponentResource {
   #if($input.params().header.get('X-With-Decryption') == 'true')
   ,"WithDecryption": true
   #end
-  #if($input.params().header.get('X-Overwrite') == 'true')
-  ,"Overwrite": true
-  #end
 }`,
         },
         passthroughBehavior: "NEVER",
         uri: pulumi.interpolate`arn:aws:apigateway:${region}:ssm:action/GetParameter`,
         credentials: this.#role.arn,
+      },
+      { parent: this },
+    );
+
+    this.#parametersProxyIntegrationResponse =
+      new aws.apigateway.IntegrationResponse(
+        "ParametersProxyIntegrationResponse",
+        {
+          restApi: args.gateway.id,
+          resourceId: this.#parametersProxyResource.id,
+          httpMethod: this.#parametersProxyMethod.httpMethod,
+          statusCode: "200",
+          responseTemplates: {
+            "application/json": "$input.path('$').Parameter.Value",
+          },
+        },
+        { parent: this },
+      );
+
+    this.#parametersProxyMethodResponse = new aws.apigateway.MethodResponse(
+      "ParametersProxyMethodResponse",
+      {
+        restApi: args.gateway.id,
+        resourceId: this.#parametersProxyResource.id,
+        httpMethod: this.#parametersProxyMethod.httpMethod,
+        statusCode: this.#parametersProxyIntegrationResponse.statusCode,
       },
       { parent: this },
     );
@@ -679,6 +704,8 @@ export class Api extends pulumi.ComponentResource {
         this.#parametersProxyResource,
         this.#parametersProxyMethod,
         this.#parametersProxyIntegration,
+        this.#parametersProxyIntegrationResponse,
+        this.#parametersProxyMethodResponse,
         this.#parametersProxyCorsRoute.method,
         this.#parametersProxyCorsRoute.integration,
         this.#parametersProxyCorsRoute.integrationResponse,
@@ -795,6 +822,9 @@ export class Api extends pulumi.ComponentResource {
       parametersProxyResource: this.#parametersProxyResource.id,
       parametersProxyMethod: this.#parametersProxyMethod.id,
       parametersProxyIntegration: this.#parametersProxyIntegration.id,
+      parametersProxyIntegrationResponse:
+        this.#parametersProxyIntegrationResponse.id,
+      parametersProxyMethodResponse: this.#parametersProxyMethodResponse.id,
 
       usersResource: this.#usersResource.id,
 
@@ -1107,7 +1137,7 @@ class CorsRoute extends pulumi.ComponentResource {
         resourceId: args.resourceId,
         httpMethod: this.#method.httpMethod,
         statusCode: "204",
-        responseTemplates: {
+        responseParameters: {
           "method.response.header.Access-Control-Allow-Headers": "'*'",
           "method.response.header.Access-Control-Allow-Methods":
             "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
