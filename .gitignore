@@ -29,9 +29,6 @@ pnpm-debug.log*
 # drizzle
 .drizzle
 
-# partykit
-.partykit
-
 # wrangler
 .wrangler
 
