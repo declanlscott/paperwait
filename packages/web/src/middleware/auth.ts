@@ -1,5 +1,5 @@
+import { withActor } from "@printworks/core/actors";
 import { Sessions } from "@printworks/core/sessions";
-import { withAuth } from "@printworks/core/sessions/context";
 import { Constants } from "@printworks/core/utils/constants";
 import { defineMiddleware } from "astro:middleware";
 
@@ -11,8 +11,16 @@ export const auth = defineMiddleware(async (context, next) => {
   const token =
     context.cookies.get(Constants.SESSION_COOKIE_NAME)?.value ?? null;
   if (!token)
-    return withAuth(
-      { isAuthed: false, session: null, user: null, tenant: null },
+    return withActor(
+      {
+        type: "user",
+        properties: {
+          isAuthed: false,
+          session: null,
+          user: null,
+          tenant: null,
+        },
+      },
       next,
     );
 
@@ -24,5 +32,5 @@ export const auth = defineMiddleware(async (context, next) => {
 
   context.cookies.set(cookie.name, cookie.value, cookie.attributes);
 
-  return withAuth(auth, next);
+  return withActor({ type: "user", properties: auth }, next);
 });

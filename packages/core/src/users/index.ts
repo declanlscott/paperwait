@@ -2,6 +2,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import * as R from "remeda";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import {
   afterTransaction,
@@ -9,7 +10,7 @@ import {
   useTransaction,
 } from "../drizzle/transaction";
 import { ordersTable } from "../orders/sql";
-import { SecureBridge } from "../papercut/secure-bridge";
+import { PapercutRpc } from "../papercut/rpc";
 import {
   papercutAccountCustomerAuthorizationsTable,
   papercutAccountManagerAuthorizationsTable,
@@ -18,7 +19,6 @@ import {
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { Sessions } from "../sessions";
-import { useAuthenticated } from "../sessions/context";
 import { ApplicationError, HttpError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import {
@@ -31,18 +31,19 @@ import { userProfilesTable, usersTable } from "./sql";
 import type { InferInsertModel } from "drizzle-orm";
 import type { Order } from "../orders/sql";
 import type { PapercutAccount } from "../papercut/sql";
-import type { Tenant } from "../tenants/sql";
 import type { UserRole } from "./shared";
 import type { User, UserProfilesTable } from "./sql";
 
 export namespace Users {
-  export async function sync(tenantId: Tenant["id"]) {
+  export async function sync() {
+    const tenant = useTenant();
+
     // Avoid syncing with papercut if papercut itself is still syncing
-    const taskStatus = await SecureBridge.getTaskStatus(tenantId);
+    const taskStatus = await PapercutRpc.getTaskStatus();
     if (!taskStatus.completed)
       throw new HttpError.ServiceUnavailable(taskStatus.message);
 
-    const next = new Set(await SecureBridge.listUserAccounts(tenantId));
+    const next = new Set(await PapercutRpc.listUserAccounts());
 
     await serializable(async (tx) => {
       const prev = await tx
@@ -50,7 +51,7 @@ export namespace Users {
           username: usersTable.username,
         })
         .from(usersTable)
-        .where(eq(usersTable.tenantId, tenantId))
+        .where(eq(usersTable.tenantId, tenant.id))
         .then((rows) => new Set(R.map(rows, R.prop("username"))));
 
       const puts: Array<User["username"]> = [];
@@ -64,12 +65,12 @@ export namespace Users {
         .values([
           ...puts.map((username) => ({
             username,
-            tenantId,
+            tenantId: tenant.id,
             deletedAt: null,
           })),
           ...dels.map((username) => ({
             username,
-            tenantId,
+            tenantId: tenant.id,
             deletedAt: sql`now()`,
           })),
         ])
@@ -113,7 +114,7 @@ export namespace Users {
         .where(
           and(
             inArray(usersTable.id, ids),
-            eq(usersTable.tenantId, useAuthenticated().tenant.id),
+            eq(usersTable.tenantId, useTenant().id),
           ),
         )
         .then((rows) =>
@@ -121,17 +122,15 @@ export namespace Users {
         ),
     );
 
-  export async function fromRoles(
+  export const fromRoles = async (
     roles: Array<UserRole> = [
       "administrator",
       "operator",
       "manager",
       "customer",
     ],
-  ) {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction((tx) =>
+  ) =>
+    useTransaction((tx) =>
       tx
         .select({ id: usersTable.id, role: userProfilesTable.role })
         .from(usersTable)
@@ -145,14 +144,13 @@ export namespace Users {
         .where(
           and(
             inArray(userProfilesTable.role, roles),
-            eq(usersTable.tenantId, tenant.id),
+            eq(usersTable.tenantId, useTenant().id),
           ),
         ),
     );
-  }
 
   export async function withOrderAccess(orderId: Order["id"]) {
-    const { tenant } = useAuthenticated();
+    const tenant = useTenant();
 
     return useTransaction(async (tx) => {
       const [adminsOps, managers, [customer]] = await Promise.all([
@@ -242,18 +240,16 @@ export namespace Users {
             ),
             eq(
               papercutAccountManagerAuthorizationsTable.tenantId,
-              useAuthenticated().tenant.id,
+              useTenant().id,
             ),
           ),
         ),
     );
 
-  export async function withCustomerAuthorization(
+  export const withCustomerAuthorization = async (
     accountId: PapercutAccount["id"],
-  ) {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction(async (tx) =>
+  ) =>
+    useTransaction((tx) =>
       tx
         .select({
           customerId: papercutAccountCustomerAuthorizationsTable.customerId,
@@ -265,11 +261,13 @@ export namespace Users {
               papercutAccountCustomerAuthorizationsTable.papercutAccountId,
               accountId,
             ),
-            eq(papercutAccountCustomerAuthorizationsTable.tenantId, tenant.id),
+            eq(
+              papercutAccountCustomerAuthorizationsTable.tenantId,
+              useTenant().id,
+            ),
           ),
         ),
     );
-  }
 
   export const exists = async (userId: User["id"]) =>
     useTransaction((tx) =>
@@ -279,7 +277,7 @@ export namespace Users {
         .where(
           and(
             eq(usersTable.id, userId),
-            eq(usersTable.tenantId, useAuthenticated().tenant.id),
+            eq(usersTable.tenantId, useTenant().id),
           ),
         )
         .then((rows) => rows.length > 0),
@@ -288,7 +286,7 @@ export namespace Users {
   export const updateProfileRole = fn(
     updateUserProfileRoleMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([usersTable._.name, "update"], {
         Error: ApplicationError.AccessDenied,
@@ -316,7 +314,7 @@ export namespace Users {
   export const deleteProfile = fn(
     deleteUserProfileMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([usersTable._.name, "delete", id], {
         Error: ApplicationError.AccessDenied,
@@ -344,7 +342,7 @@ export namespace Users {
   export const restoreProfile = fn(
     restoreUserProfileMutationArgsSchema,
     async ({ id }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([usersTable._.name, "update"], {
         Error: ApplicationError.AccessDenied,

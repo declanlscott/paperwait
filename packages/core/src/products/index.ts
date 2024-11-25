@@ -1,10 +1,10 @@
 import { and, eq, inArray } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { useAuthenticated } from "../sessions/context";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import {
@@ -27,9 +27,7 @@ export namespace Products {
       await tx.insert(productsTable).values(values);
 
       await afterTransaction(() =>
-        Replicache.poke([
-          Realtime.formatChannel("tenant", useAuthenticated().tenant.id),
-        ]),
+        Replicache.poke([Realtime.formatChannel("tenant", useTenant().id)]),
       );
     });
   });
@@ -42,7 +40,7 @@ export namespace Products {
         .where(
           and(
             inArray(productsTable.id, ids),
-            eq(productsTable.tenantId, useAuthenticated().tenant.id),
+            eq(productsTable.tenantId, useTenant().id),
           ),
         ),
     );
@@ -50,7 +48,7 @@ export namespace Products {
   export const update = fn(
     updateProductMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([productsTable._.name, "update"], {
         Error: ApplicationError.AccessDenied,
@@ -78,7 +76,7 @@ export namespace Products {
   export const delete_ = fn(
     deleteProductMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([productsTable._.name, "delete"], {
         Error: ApplicationError.AccessDenied,

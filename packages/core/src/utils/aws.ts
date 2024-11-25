@@ -62,7 +62,7 @@ import type {
 } from "@aws-sdk/client-ssm";
 import type { AssumeRoleCommandInput, Credentials } from "@aws-sdk/client-sts";
 import type { SignatureV4Init } from "@smithy/signature-v4";
-import type { NonNullableProperties } from "./types";
+import type { NonNullableProperties, StartsWith } from "./types";
 
 export namespace Appsync {
   export const Client = AppSyncClient;
@@ -110,16 +110,17 @@ export namespace Appsync {
 }
 
 export namespace Cloudfront {
-  export const buildUrl = (fqdn: string, pathSegments: Array<string>) =>
-    `https://${fqdn}/${pathSegments.join("/")}`;
+  export const buildUrl = <TPath extends string>(
+    fqdn: string,
+    path: StartsWith<"/", TPath>,
+  ) => `https://${fqdn}${path}` as const;
 
   export async function getKeyPairId(tenantFqdn: string) {
     const res = await fetch(
-      buildUrl(tenantFqdn, [
-        ".well-known",
-        "appspecific",
-        `${Utils.reverseDns(tenantFqdn)}.cloudfront-key-pair-id.txt`,
-      ]),
+      buildUrl(
+        tenantFqdn,
+        `/.well-known/appspecific/${Utils.reverseDns(tenantFqdn)}.cloudfront-key-pair-id.txt`,
+      ),
       { method: "GET" },
     );
     if (!res.ok) throw new HttpError.Error(res.statusText, res.status);

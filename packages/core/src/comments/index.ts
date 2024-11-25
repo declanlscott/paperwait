@@ -1,10 +1,10 @@
 import { and, eq, inArray } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
@@ -47,7 +47,7 @@ export namespace Comments {
         .where(
           and(
             inArray(commentsTable.id, ids),
-            eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+            eq(commentsTable.tenantId, useTenant().id),
           ),
         ),
     );
@@ -69,7 +69,7 @@ export namespace Comments {
             .where(
               and(
                 eq(commentsTable.id, id),
-                eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                eq(commentsTable.tenantId, useTenant().id),
               ),
             ),
         ]);
@@ -100,7 +100,7 @@ export namespace Comments {
             .where(
               and(
                 eq(commentsTable.id, id),
-                eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                eq(commentsTable.tenantId, useTenant().id),
               ),
             ),
         ]);

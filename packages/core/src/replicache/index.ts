@@ -4,9 +4,9 @@ import * as R from "remeda";
 import * as v from "valibot";
 
 import { AccessControl } from "../access-control";
+import { useAuthenticated, useTenant } from "../actors";
 import { serializable, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
-import { useAuthenticated } from "../sessions/context";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
 import { ReplicacheError } from "../utils/errors";
@@ -50,7 +50,7 @@ import type { ReplicacheClient, ReplicacheClientGroup } from "./sql";
 export namespace Replicache {
   export const clientGroupFromId = async (id: ClientGroupID) =>
     useTransaction(async (tx) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       return tx
         .select({

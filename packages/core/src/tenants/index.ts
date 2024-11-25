@@ -1,11 +1,11 @@
 import { and, eq, isNull } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { Sessions } from "../sessions";
-import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
@@ -17,14 +17,11 @@ import type { License, Tenant } from "./sql";
 export namespace Tenants {
   export const read = async () =>
     useTransaction((tx) =>
-      tx
-        .select()
-        .from(tenantsTable)
-        .where(eq(tenantsTable.id, useAuthenticated().tenant.id)),
+      tx.select().from(tenantsTable).where(eq(tenantsTable.id, useTenant().id)),
     );
 
   export const update = fn(updateTenantMutationArgsSchema, async (values) => {
-    const { tenant } = useAuthenticated();
+    const tenant = useTenant();
 
     await AccessControl.enforce([tenantsTable._.name, "update"], {
       Error: ApplicationError.AccessDenied,

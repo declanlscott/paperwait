@@ -2,12 +2,12 @@ import { and, eq, gte, inArray, notInArray } from "drizzle-orm";
 import * as R from "remeda";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { productsTable } from "../products/sql";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { useAuthenticated } from "../sessions/context";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
@@ -59,23 +59,23 @@ export namespace Rooms {
     });
   });
 
-  export async function read(ids: Array<Room["id"]>) {
-    const { tenant } = useAuthenticated();
-
-    return useTransaction(async (tx) =>
+  export const read = async (ids: Array<Room["id"]>) =>
+    useTransaction((tx) =>
       tx
         .select()
         .from(roomsTable)
         .where(
-          and(inArray(roomsTable.id, ids), eq(roomsTable.tenantId, tenant.id)),
+          and(
+            inArray(roomsTable.id, ids),
+            eq(roomsTable.tenantId, useTenant().id),
+          ),
         ),
     );
-  }
 
   export const update = fn(
     updateRoomMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([roomsTable._.name, "update"], {
         Error: ApplicationError.AccessDenied,
@@ -100,7 +100,7 @@ export namespace Rooms {
   export const delete_ = fn(
     deleteRoomMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([roomsTable._.name, "delete"], {
         Error: ApplicationError.AccessDenied,
@@ -135,7 +135,7 @@ export namespace Rooms {
   );
 
   export const restore = fn(restoreRoomMutationArgsSchema, async ({ id }) => {
-    const { tenant } = useAuthenticated();
+    const tenant = useTenant();
 
     await AccessControl.enforce([roomsTable._.name, "update"], {
       Error: ApplicationError.AccessDenied,
@@ -162,13 +162,13 @@ export namespace Rooms {
         .where(
           and(
             inArray(workflowStatusesTable.id, ids),
-            eq(workflowStatusesTable.tenantId, useAuthenticated().tenant.id),
+            eq(workflowStatusesTable.tenantId, useTenant().id),
           ),
         ),
     );
 
   export const setWorkflow = fn(setWorkflowMutationArgsSchema, async (args) => {
-    const { tenant } = useAuthenticated();
+    const tenant = useTenant();
 
     await AccessControl.enforce([workflowStatusesTable._.name, "create"], {
       Error: ApplicationError.AccessDenied,
@@ -233,7 +233,7 @@ export namespace Rooms {
         .where(
           and(
             inArray(deliveryOptionsTable.id, ids),
-            eq(deliveryOptionsTable.tenantId, useAuthenticated().tenant.id),
+            eq(deliveryOptionsTable.tenantId, useTenant().id),
           ),
         ),
     );
@@ -241,7 +241,7 @@ export namespace Rooms {
   export const setDeliveryOptions = fn(
     setDeliveryOptionsMutationArgsSchema,
     async (args) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([deliveryOptionsTable._.name, "create"], {
         Error: ApplicationError.AccessDenied,

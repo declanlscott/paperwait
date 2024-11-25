@@ -14,8 +14,12 @@ import {
   JWTClaims,
   parseJWT,
 } from "@oslojs/jwt";
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
 export namespace Utils {
+  export const xmlBuilder = new XMLBuilder();
+  export const xmlParser = new XMLParser();
+
   export function createContext<TContext>(name: string) {
     const storage = new AsyncLocalStorage<TContext>();
 

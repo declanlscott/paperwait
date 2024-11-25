@@ -1,5 +1,6 @@
 import { and, arrayOverlaps, eq, isNull, or, sql } from "drizzle-orm";
 
+import { useAuthenticated, useTenant } from "../actors";
 import { announcementsTable } from "../announcements/sql";
 import { commentsTable } from "../comments/sql";
 import { useTransaction } from "../drizzle/transaction";
@@ -17,7 +18,6 @@ import {
   roomsTable,
   workflowStatusesTable,
 } from "../rooms/sql";
-import { useAuthenticated } from "../sessions/context";
 import { tenantsTable } from "../tenants/sql";
 import { userProfilesTable, usersTable } from "../users/sql";
 import { Constants } from "../utils/constants";
@@ -56,7 +56,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${announcementsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(announcementsTable)
-        .where(eq(announcementsTable.tenantId, useAuthenticated().tenant.id))
+        .where(eq(announcementsTable.tenantId, useTenant().id))
         .$dynamic(),
     [commentsTable._.name]: (tx) =>
       tx
@@ -65,7 +65,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${commentsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}`,
         })
         .from(commentsTable)
-        .where(eq(commentsTable.tenantId, useAuthenticated().tenant.id))
+        .where(eq(commentsTable.tenantId, useTenant().id))
         .$dynamic(),
     [deliveryOptionsTable._.name]: (tx) =>
       tx
@@ -74,7 +74,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${deliveryOptionsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(deliveryOptionsTable)
-        .where(eq(deliveryOptionsTable.tenantId, useAuthenticated().tenant.id))
+        .where(eq(deliveryOptionsTable.tenantId, useTenant().id))
         .$dynamic(),
     [invoicesTable._.name]: (tx) =>
       tx
@@ -83,7 +83,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${invoicesTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(invoicesTable)
-        .where(eq(invoicesTable.tenantId, useAuthenticated().tenant.id))
+        .where(eq(invoicesTable.tenantId, useTenant().id))
         .$dynamic(),
     [ordersTable._.name]: (tx) =>
       tx
@@ -94,7 +94,7 @@ export namespace AccessControl {
         .from(ordersTable)
         .where(
           and(
-            eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+            eq(ordersTable.tenantId, useTenant().id),
             isNull(ordersTable.deletedAt),
           ),
         )
@@ -106,7 +106,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${papercutAccountsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(papercutAccountsTable)
-        .where(eq(papercutAccountsTable.tenantId, useAuthenticated().tenant.id))
+        .where(eq(papercutAccountsTable.tenantId, useTenant().id))
         .$dynamic(),
     [papercutAccountCustomerAuthorizationsTable._.name]: (tx) =>
       tx
@@ -118,7 +118,7 @@ export namespace AccessControl {
         .where(
           eq(
             papercutAccountCustomerAuthorizationsTable.tenantId,
-            useAuthenticated().tenant.id,
+            useTenant().id,
           ),
         )
         .$dynamic(),
@@ -132,7 +132,7 @@ export namespace AccessControl {
         .where(
           eq(
             papercutAccountManagerAuthorizationsTable.tenantId,
-            useAuthenticated().tenant.id,
+            useTenant().id,
           ),
         )
         .$dynamic(),
@@ -143,7 +143,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${productsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(productsTable)
-        .where(eq(productsTable.tenantId, useAuthenticated().tenant.id))
+        .where(eq(productsTable.tenantId, useTenant().id))
         .$dynamic(),
     [roomsTable._.name]: (tx) =>
       tx
@@ -152,7 +152,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${roomsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(roomsTable)
-        .where(eq(roomsTable.tenantId, useAuthenticated().tenant.id))
+        .where(eq(roomsTable.tenantId, useTenant().id))
         .$dynamic(),
     [tenantsTable._.name]: (tx) =>
       tx
@@ -161,7 +161,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${tenantsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(tenantsTable)
-        .where(eq(tenantsTable.id, useAuthenticated().tenant.id))
+        .where(eq(tenantsTable.id, useTenant().id))
         .$dynamic(),
     [usersTable._.name]: (tx) =>
       tx
@@ -179,7 +179,7 @@ export namespace AccessControl {
         )
         .where(
           and(
-            eq(usersTable.tenantId, useAuthenticated().tenant.id),
+            eq(usersTable.tenantId, useTenant().id),
             isNull(usersTable.deletedAt),
           ),
         )
@@ -191,9 +191,7 @@ export namespace AccessControl {
           rowVersion: sql<number>`"${workflowStatusesTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
         })
         .from(workflowStatusesTable)
-        .where(
-          and(eq(workflowStatusesTable.tenantId, useAuthenticated().tenant.id)),
-        )
+        .where(and(eq(workflowStatusesTable.tenantId, useTenant().id)))
         .$dynamic(),
   } as const satisfies ResourceMetadataBaseQueryFactory;
 
@@ -724,7 +722,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(commentsTable.id, commentId),
-                  eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                  eq(commentsTable.tenantId, useTenant().id),
                   eq(commentsTable.authorId, useAuthenticated().user.id),
                 ),
               )
@@ -738,7 +736,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(commentsTable.id, commentId),
-                  eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                  eq(commentsTable.tenantId, useTenant().id),
                   eq(commentsTable.authorId, useAuthenticated().user.id),
                 ),
               )
@@ -836,7 +834,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(ordersTable.id, orderId),
-                  eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                  eq(ordersTable.tenantId, useTenant().id),
                   isNull(ordersTable.deletedAt),
                   or(
                     and(
@@ -862,7 +860,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(commentsTable.id, commentId),
-                  eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                  eq(commentsTable.tenantId, useTenant().id),
                   eq(commentsTable.authorId, useAuthenticated().user.id),
                 ),
               )
@@ -876,7 +874,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(commentsTable.id, commentId),
-                  eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                  eq(commentsTable.tenantId, useTenant().id),
                   eq(commentsTable.authorId, useAuthenticated().user.id),
                 ),
               )
@@ -915,10 +913,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(papercutAccountsTable.id, papercutAccountId),
-                  eq(
-                    papercutAccountsTable.tenantId,
-                    useAuthenticated().tenant.id,
-                  ),
+                  eq(papercutAccountsTable.tenantId, useTenant().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -958,7 +953,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(ordersTable.id, orderId),
-                  eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                  eq(ordersTable.tenantId, useTenant().id),
                   isNull(ordersTable.deletedAt),
                   eq(workflowStatusesTable.type, "Review"),
                   or(
@@ -1012,7 +1007,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(ordersTable.id, orderId),
-                  eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                  eq(ordersTable.tenantId, useTenant().id),
                   isNull(ordersTable.deletedAt),
                   eq(workflowStatusesTable.type, "Review"),
                   or(
@@ -1055,10 +1050,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(papercutAccountsTable.id, papercutAccountId),
-                  eq(
-                    papercutAccountsTable.tenantId,
-                    useAuthenticated().tenant.id,
-                  ),
+                  eq(papercutAccountsTable.tenantId, useTenant().id),
                   eq(
                     papercutAccountManagerAuthorizationsTable.managerId,
                     useAuthenticated().user.id,
@@ -1122,7 +1114,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(ordersTable.id, orderId),
-                  eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                  eq(ordersTable.tenantId, useTenant().id),
                   eq(ordersTable.customerId, useAuthenticated().user.id),
                   isNull(ordersTable.deletedAt),
                 ),
@@ -1137,7 +1129,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(commentsTable.id, commentId),
-                  eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                  eq(commentsTable.tenantId, useTenant().id),
                   eq(commentsTable.authorId, useAuthenticated().user.id),
                   isNull(commentsTable.deletedAt),
                 ),
@@ -1152,7 +1144,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(commentsTable.id, commentId),
-                  eq(commentsTable.tenantId, useAuthenticated().tenant.id),
+                  eq(commentsTable.tenantId, useTenant().id),
                   eq(commentsTable.authorId, useAuthenticated().user.id),
                   isNull(commentsTable.deletedAt),
                 ),
@@ -1192,10 +1184,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(papercutAccountsTable.id, papercutAccountId),
-                  eq(
-                    papercutAccountsTable.tenantId,
-                    useAuthenticated().tenant.id,
-                  ),
+                  eq(papercutAccountsTable.tenantId, useTenant().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -1215,7 +1204,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(ordersTable.id, orderId),
-                  eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                  eq(ordersTable.tenantId, useTenant().id),
                   eq(ordersTable.customerId, useAuthenticated().user.id),
                   eq(workflowStatusesTable.type, "Review"),
                   isNull(ordersTable.deletedAt),
@@ -1238,7 +1227,7 @@ export namespace AccessControl {
               .where(
                 and(
                   eq(ordersTable.id, orderId),
-                  eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                  eq(ordersTable.tenantId, useTenant().id),
                   eq(ordersTable.customerId, useAuthenticated().user.id),
                   eq(workflowStatusesTable.type, "Review"),
                   isNull(ordersTable.deletedAt),

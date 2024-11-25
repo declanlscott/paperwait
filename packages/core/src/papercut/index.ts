@@ -1,12 +1,14 @@
 import { and, eq, inArray } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { useAuthenticated } from "../sessions/context";
+import { TenantApi } from "../tenants/api";
 import { Users } from "../users";
-import { ApplicationError } from "../utils/errors";
+import { Constants } from "../utils/constants";
+import { ApplicationError, HttpError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import {
   createPapercutAccountManagerAuthorizationMutationArgsSchema,
@@ -27,6 +29,16 @@ import type {
 } from "./sql";
 
 export namespace Papercut {
+  export async function getAuthToken() {
+    const res = await TenantApi.send(
+      `/papercut${Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME}`,
+      { method: "GET", headers: { "X-With-Decryption": "true" } },
+    );
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+
+    return res.text();
+  }
+
   export const createAccountManagerAuthorization = fn(
     createPapercutAccountManagerAuthorizationMutationArgsSchema,
     async (values) => {
@@ -45,9 +57,7 @@ export namespace Papercut {
           .onConflictDoNothing();
 
         await afterTransaction(() =>
-          Replicache.poke([
-            Realtime.formatChannel("tenant", useAuthenticated().tenant.id),
-          ]),
+          Replicache.poke([Realtime.formatChannel("tenant", useTenant().id)]),
         );
       });
     },
@@ -61,7 +71,7 @@ export namespace Papercut {
         .where(
           and(
             inArray(papercutAccountsTable.id, ids),
-            eq(papercutAccountsTable.tenantId, useAuthenticated().tenant.id),
+            eq(papercutAccountsTable.tenantId, useTenant().id),
           ),
         ),
     );
@@ -78,7 +88,7 @@ export namespace Papercut {
             inArray(papercutAccountCustomerAuthorizationsTable.id, ids),
             eq(
               papercutAccountCustomerAuthorizationsTable.tenantId,
-              useAuthenticated().tenant.id,
+              useTenant().id,
             ),
           ),
         ),
@@ -96,7 +106,7 @@ export namespace Papercut {
             inArray(papercutAccountManagerAuthorizationsTable.id, ids),
             eq(
               papercutAccountManagerAuthorizationsTable.tenantId,
-              useAuthenticated().tenant.id,
+              useTenant().id,
             ),
           ),
         ),
@@ -120,7 +130,7 @@ export namespace Papercut {
           .where(
             and(
               eq(papercutAccountsTable.id, id),
-              eq(papercutAccountsTable.tenantId, useAuthenticated().tenant.id),
+              eq(papercutAccountsTable.tenantId, useTenant().id),
             ),
           );
 
@@ -148,7 +158,7 @@ export namespace Papercut {
   export const deleteAccount = fn(
     deletePapercutAccountMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([papercutAccountsTable._.name, "delete"], {
         Error: ApplicationError.AccessDenied,
@@ -221,7 +231,7 @@ export namespace Papercut {
   export const deleteAccountManagerAuthorization = fn(
     deletePapercutAccountManagerAuthorizationMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce(
         [papercutAccountManagerAuthorizationsTable._.name, "delete"],

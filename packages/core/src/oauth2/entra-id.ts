@@ -3,8 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { Resource } from "sst";
 import * as v from "valibot";
 
+import { useTenant } from "../actors";
 import { useTransaction } from "../drizzle/transaction";
-import { useAuthenticated } from "../sessions/context";
 import { userProfilesTable, usersTable } from "../users/sql";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
@@ -94,7 +94,7 @@ export namespace EntraId {
   ) => provider.refreshAccessToken(refreshToken);
 
   export async function photo(userId: User["id"]): Promise<Response> {
-    const { tenant } = useAuthenticated();
+    const tenant = useTenant();
     const oauth2 = useOauth2();
 
     const user = await useTransaction((tx) =>

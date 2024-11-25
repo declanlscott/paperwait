@@ -1,4 +1,5 @@
 import { vValidator } from "@hono/valibot-validator";
+import { useAuthenticated } from "@printworks/core/actor";
 import {
   afterTransaction,
   useTransaction,
@@ -16,7 +17,6 @@ import { oauth2ProvidersTable } from "@printworks/core/oauth2/sql";
 import { Realtime } from "@printworks/core/realtime";
 import { Replicache } from "@printworks/core/replicache";
 import { Sessions } from "@printworks/core/sessions";
-import { useAuthenticated } from "@printworks/core/sessions/context";
 import { tenantsTable } from "@printworks/core/tenants/sql";
 import { Users } from "@printworks/core/users";
 import { userProfilesTable, usersTable } from "@printworks/core/users/sql";

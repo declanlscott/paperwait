@@ -1,3 +1,4 @@
+import { withActor } from "@printworks/core/actors";
 import { Realtime } from "@printworks/core/realtime";
 import { Users } from "@printworks/core/users";
 import * as v from "valibot";
@@ -16,7 +17,7 @@ export const handler: EventBridgeHandler<string, unknown, void> = async (
       event.detail,
     );
 
-    await Users.sync(tenantId);
+    await withActor({ type: "system", properties: { tenantId } }, Users.sync);
   } catch (e) {
     console.error(e);
 

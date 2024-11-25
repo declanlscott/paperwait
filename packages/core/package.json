@@ -29,6 +29,7 @@
     "@oslojs/jwt": "^0.2.0",
     "@smithy/signature-v4": "^4.2.3",
     "arctic": "2.1.0",
+    "fast-xml-parser": "^4.5.0",
     "nanoid": "^5.0.8",
     "postgres": "^3.4.5"
   },

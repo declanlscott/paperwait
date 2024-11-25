@@ -1,10 +1,10 @@
 import { and, eq, inArray } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { useAuthenticated } from "../sessions/context";
 import { Users } from "../users";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
@@ -51,7 +51,7 @@ export namespace Orders {
         .where(
           and(
             inArray(ordersTable.id, ids),
-            eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+            eq(ordersTable.tenantId, useTenant().id),
           ),
         ),
     );
@@ -73,7 +73,7 @@ export namespace Orders {
             .where(
               and(
                 eq(ordersTable.id, id),
-                eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                eq(ordersTable.tenantId, useTenant().id),
               ),
             ),
         ]);
@@ -104,7 +104,7 @@ export namespace Orders {
             .where(
               and(
                 eq(ordersTable.id, id),
-                eq(ordersTable.tenantId, useAuthenticated().tenant.id),
+                eq(ordersTable.tenantId, useTenant().id),
               ),
             ),
         ]);

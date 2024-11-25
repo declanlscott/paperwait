@@ -1,10 +1,10 @@
 import { and, eq, inArray } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
+import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
-import { useAuthenticated } from "../sessions/context";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import {
@@ -29,9 +29,7 @@ export namespace Announcements {
         await tx.insert(announcementsTable).values(values);
 
         await afterTransaction(() =>
-          Replicache.poke([
-            Realtime.formatChannel("tenant", useAuthenticated().tenant.id),
-          ]),
+          Replicache.poke([Realtime.formatChannel("tenant", useTenant().id)]),
         );
       });
     },
@@ -45,7 +43,7 @@ export namespace Announcements {
         .where(
           and(
             inArray(announcementsTable.id, ids),
-            eq(announcementsTable.tenantId, useAuthenticated().tenant.id),
+            eq(announcementsTable.tenantId, useTenant().id),
           ),
         ),
     );
@@ -53,7 +51,7 @@ export namespace Announcements {
   export const update = fn(
     updateAnnouncementMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([announcementsTable._.name, "update"], {
         Error: ApplicationError.AccessDenied,
@@ -81,7 +79,7 @@ export namespace Announcements {
   export const delete_ = fn(
     deleteAnnouncementMutationArgsSchema,
     async ({ id, ...values }) => {
-      const { tenant } = useAuthenticated();
+      const tenant = useTenant();
 
       await AccessControl.enforce([announcementsTable._.name, "delete"], {
         Error: ApplicationError.AccessDenied,

@@ -99,6 +99,9 @@ importers:
       arctic:
         specifier: 2.1.0
         version: 2.1.0
+      fast-xml-parser:
+        specifier: ^4.5.0
+        version: 4.5.0
       nanoid:
         specifier: ^5.0.8
         version: 5.0.8
@@ -4541,6 +4544,10 @@ packages:
 
   fast-xml-parser@4.4.1:
     resolution: {integrity: sha512-xkjOecfnKGkSsOwtZ5Pz7Us/T6mrbPQrq0nh+aCO5V9nk5NLWmasAHumTKjiPJPWANe+kAZ84Jc8ooJkzZ88Sw==}
+    hasBin: true
+
+  fast-xml-parser@4.5.0:
+    resolution: {integrity: sha512-/PlTQCI96+fZMAOLMZK4CWG1ItCbfZ/0jx7UIJFChPNrx7tcEgerUgWbeieCM9MfHInUDyK8DWYZ+YrywDJuTg==}
     hasBin: true
 
   fastq@1.17.1:
@@ -12567,6 +12574,10 @@ snapshots:
   fast-uri@3.0.3: {}
 
   fast-xml-parser@4.4.1:
+    dependencies:
+      strnum: 1.0.5
+
+  fast-xml-parser@4.5.0:
     dependencies:
       strnum: 1.0.5
 
