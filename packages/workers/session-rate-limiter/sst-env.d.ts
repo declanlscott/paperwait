@@ -134,6 +134,13 @@ declare module "sst" {
       "type": "sst.aws.Queue"
       "url": string
     }
+    "TenantInfraDispatcher": {
+      "arn": string
+      "invokeArn": string
+      "name": string
+      "roleArn": string
+      "type": "sst.aws.Function"
+    }
     "TenantInfraQueue": {
       "type": "sst.aws.Queue"
       "url": string

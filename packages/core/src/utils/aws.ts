@@ -22,7 +22,11 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
+import {
+  SendMessageBatchCommand,
+  SendMessageCommand,
+  SQSClient,
+} from "@aws-sdk/client-sqs";
 import {
   DeleteParameterCommand,
   GetParameterCommand,
@@ -54,7 +58,10 @@ import type {
   GetObjectCommandInput,
   PutObjectCommandInput,
 } from "@aws-sdk/client-s3";
-import type { SendMessageCommandInput } from "@aws-sdk/client-sqs";
+import type {
+  SendMessageBatchCommandInput,
+  SendMessageCommandInput,
+} from "@aws-sdk/client-sqs";
 import type {
   DeleteParameterCommandInput,
   GetParameterCommandInput,
@@ -179,6 +186,11 @@ export namespace Sqs {
     client: Client,
     input: NonNullableProperties<SendMessageCommandInput>,
   ) => client.send(new SendMessageCommand(input));
+
+  export const sendMessageBatch = async (
+    client: Client,
+    input: NonNullableProperties<SendMessageBatchCommandInput>,
+  ) => client.send(new SendMessageBatchCommand(input));
 }
 
 export namespace Ssm {

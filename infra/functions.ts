@@ -12,6 +12,7 @@ import {
   invoicesProcessorDeadLetterQueue,
   pulumiBucket,
   repository,
+  tenantInfraQueue,
 } from "./storage";
 import { link, normalizePath } from "./utils";
 import { web } from "./web";
@@ -207,5 +208,14 @@ export const tenantInfraFunction = new aws.lambda.Function(
       UsersSync: usersSync.getSSTLink().properties,
       Web: web.getSSTLink().properties,
     }),
+  },
+);
+
+export const tenantInfraDispatcher = new sst.aws.Function(
+  "TenantInfraDispatcher",
+  {
+    handler: "packages/functions/node/src/tenant/infra-dispatcher.handler",
+    url: { authorization: "iam" },
+    link: [db, tenantInfraQueue],
   },
 );
