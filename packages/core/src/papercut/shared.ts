@@ -53,7 +53,7 @@ export const updatePapercutAccountApprovalThresholdMutationArgsSchema = v.pick(
 
 export const deletePapercutAccountMutationArgsSchema = v.object({
   id: papercutAccountIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.date(),
 });
 export type DeletePapercutAccountMutationArgs = v.InferOutput<
   typeof deletePapercutAccountMutationArgsSchema
@@ -72,7 +72,7 @@ export type CreatePapercutAccountManagerAuthorizationMutationArgs =
 export const deletePapercutAccountManagerAuthorizationMutationArgsSchema =
   v.object({
     id: nanoIdSchema,
-    deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+    deletedAt: v.date(),
   });
 export type DeletePapercutAccountManagerAuthorizationMutationArgs =
   v.InferOutput<

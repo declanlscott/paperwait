@@ -37,7 +37,7 @@ export type CreateCommentMutationArgs = v.InferOutput<
 export const updateCommentMutationArgsSchema = v.object({
   id: nanoIdSchema,
   orderId: nanoIdSchema,
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.date(),
   ...v.partial(
     v.omit(commentSchema, [
       "id",
@@ -56,7 +56,7 @@ export type UpdateCommentMutationArgs = v.InferOutput<
 export const deleteCommentMutationArgsSchema = v.object({
   id: nanoIdSchema,
   orderId: nanoIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.date(),
 });
 export type DeleteCommentMutationArgs = v.InferOutput<
   typeof deleteCommentMutationArgsSchema

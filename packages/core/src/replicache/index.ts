@@ -1,6 +1,7 @@
 import { sub } from "date-fns";
 import { and, eq, lt, sql } from "drizzle-orm";
 import * as R from "remeda";
+import { deserialize, serialize } from "superjson";
 import * as v from "valibot";
 
 import { AccessControl } from "../access-control";
@@ -16,6 +17,7 @@ import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
 import { authoritativeMutatorFactory, dataFactory } from "./data";
 import {
   genericMutationSchema,
+  isSerialized,
   mutationNameSchema,
   pullRequestSchema,
   pushRequestSchema,
@@ -45,6 +47,7 @@ import type {
   TableMetadata,
   TablePatchData,
 } from "./data";
+import type { Serialized } from "./shared";
 import type { ReplicacheClient, ReplicacheClientGroup } from "./sql";
 
 export namespace Replicache {
@@ -119,7 +122,7 @@ export namespace Replicache {
         .where(
           lt(
             replicacheClientGroupsTable.updatedAt,
-            sub(new Date(), Constants.REPLICACHE_LIFETIME).toISOString(),
+            sub(new Date(), Constants.REPLICACHE_LIFETIME),
           ),
         ),
     );
@@ -142,7 +145,7 @@ export namespace Replicache {
         .where(
           lt(
             replicacheClientsTable.updatedAt,
-            sub(new Date(), Constants.REPLICACHE_LIFETIME).toISOString(),
+            sub(new Date(), Constants.REPLICACHE_LIFETIME),
           ),
         ),
     );
@@ -332,7 +335,7 @@ export namespace Replicache {
                 eq(replicacheClientViewsTable.tenantId, user.tenantId),
                 lt(
                   replicacheClientViewsTable.updatedAt,
-                  sub(new Date(), Constants.REPLICACHE_LIFETIME).toISOString(),
+                  sub(new Date(), Constants.REPLICACHE_LIFETIME),
                 ),
               ),
             ),
@@ -370,7 +373,7 @@ export namespace Replicache {
           patch.push({
             op: "put",
             key: `${name}/${value.id}`,
-            value,
+            value: serialize(value) as Serialized,
           });
 
         for (const id of dels) patch.push({ op: "del", key: `${name}/${id}` });
@@ -496,9 +499,16 @@ export namespace Replicache {
             // 10. Perform mutation
             if (!context.use().errorMode) {
               try {
+                if (!isSerialized(mutation.args))
+                  throw new ReplicacheError.BadRequest(
+                    "Mutation args not serialized",
+                  );
+
                 // 10(i): Business logic
                 // 10(i)(a): xmin column is automatically updated by Postgres on any affected rows
-                await authoritativeMutatorFactory[mutation.name](mutation.args);
+                await authoritativeMutatorFactory[mutation.name](
+                  deserialize(mutation.args),
+                );
               } catch (e) {
                 // 10(ii)(a-c): Log, abort, and retry
                 console.log(`Error processing mutation "${mutation.id}"`);

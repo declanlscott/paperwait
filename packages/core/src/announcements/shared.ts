@@ -26,7 +26,7 @@ export type CreateAnnouncementMutationArgs = v.InferOutput<
 
 export const updateAnnouncementMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.date(),
   ...v.partial(
     v.omit(announcementSchema, [
       "id",
@@ -43,7 +43,7 @@ export type UpdateAnnouncementMutationArgs = v.InferOutput<
 
 export const deleteAnnouncementMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.date(),
 });
 export type DeleteAnnouncementMutationArgs = v.InferOutput<
   typeof deleteAnnouncementMutationArgsSchema

@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@printworks/core/sessions/context";
 import { Replicache } from "replicache";
+import { serialize } from "superjson";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
+import { useApi } from "~/app/lib/hooks/api";
 import { useAuthActions } from "~/app/lib/hooks/auth";
 import { useResource } from "~/app/lib/hooks/resource";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
+import type { PusherResult, PushResponse } from "replicache";
 import type { AppRouter } from "~/app/types";
 
 interface ReplicacheProviderProps extends PropsWithChildren {
@@ -16,6 +19,8 @@ interface ReplicacheProviderProps extends PropsWithChildren {
 }
 
 export function ReplicacheProvider(props: ReplicacheProviderProps) {
+  const api = useApi();
+
   const { invalidate, navigate } = props.router;
 
   const { user } = useAuth();
@@ -52,6 +57,35 @@ export function ReplicacheProvider(props: ReplicacheProviderProps) {
       pushURL: "/api/replicache/push",
       pullURL: "/api/replicache/pull",
       logLevel: isDev ? "info" : "error",
+      pusher: async (req) => {
+        const res = await api.replicache.push.$post({
+          json: {
+            ...req,
+            mutations: req.mutations.map((mutation) => ({
+              ...mutation,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+              args: serialize(mutation.args),
+            })),
+          },
+        });
+        if (!res.ok)
+          return {
+            httpRequestInfo: {
+              httpStatusCode: res.status,
+              errorMessage: await res.text(),
+            },
+          };
+
+        const json = await res.json();
+
+        return {
+          response: json ?? undefined,
+          httpRequestInfo: {
+            httpStatusCode: res.status,
+            errorMessage: json?.error ?? "",
+          },
+        };
+      },
     });
 
     client.getAuth = () => getAuth(client);
@@ -62,7 +96,7 @@ export function ReplicacheProvider(props: ReplicacheProviderProps) {
       setReplicache(() => (user ? { status: "initializing" } : null));
       void client.close();
     };
-  }, [user, replicacheLicenseKey, isDev, getAuth]);
+  }, [user, replicacheLicenseKey, isDev, api, getAuth]);
 
   const { loadingIndicator } = useSlot();
 

@@ -1,4 +1,5 @@
 import { AccessControl } from "../access-control/client";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
@@ -8,7 +9,6 @@ import {
   updateOrderMutationArgsSchema,
 } from "./shared";
 
-import type { DeepReadonlyObject } from "replicache";
 import type { Order } from "./sql";
 
 export namespace Orders {
@@ -23,7 +23,7 @@ export namespace Orders {
         },
       ),
     () => async (tx, values) =>
-      tx.set(`${ordersTableName}/${values.id}`, values),
+      Replicache.set(tx, ordersTableName, values.id, values),
   );
 
   export const update = Utils.optimisticMutator(
@@ -34,19 +34,12 @@ export namespace Orders {
         args: [{ name: ordersTableName, id }],
       }),
     () => async (tx, values) => {
-      const prev = await tx.get<Order>(`${ordersTableName}/${values.id}`);
-      if (!prev)
-        throw new ApplicationError.EntityNotFound({
-          name: ordersTableName,
-          id: values.id,
-        });
+      const prev = await Replicache.get<Order>(tx, ordersTableName, values.id);
 
-      const next = {
+      return Replicache.set(tx, ordersTableName, values.id, {
         ...prev,
         ...values,
-      } satisfies DeepReadonlyObject<Order>;
-
-      return tx.set(`${ordersTableName}/${values.id}`, next);
+      });
     },
   );
 
@@ -60,27 +53,15 @@ export namespace Orders {
     ({ user }) =>
       async (tx, { id, ...values }) => {
         if (user.profile.role === "administrator") {
-          const prev = await tx.get<Order>(`${ordersTableName}/${id}`);
-          if (!prev)
-            throw new ApplicationError.EntityNotFound({
-              name: ordersTableName,
-              id,
-            });
+          const prev = await Replicache.get<Order>(tx, ordersTableName, id);
 
-          const next = {
+          return Replicache.set(tx, ordersTableName, id, {
             ...prev,
             ...values,
-          } satisfies DeepReadonlyObject<Order>;
-
-          return tx.set(`${ordersTableName}/${id}`, next);
+          });
         }
 
-        const success = await tx.del(`${ordersTableName}/${id}`);
-        if (!success)
-          throw new ApplicationError.EntityNotFound({
-            name: ordersTableName,
-            id,
-          });
+        await Replicache.del(tx, ordersTableName, id);
       },
   );
 }

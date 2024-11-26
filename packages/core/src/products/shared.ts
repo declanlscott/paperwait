@@ -278,7 +278,7 @@ export type CreateProductMutationArgs = v.InferOutput<
 
 export const updateProductMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.date(),
   ...v.partial(
     v.omit(productSchema, [
       "id",
@@ -295,7 +295,7 @@ export type UpdateProductMutationArgs = v.InferOutput<
 
 export const deleteProductMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.date(),
 });
 export type DeleteProductMutationArgs = v.InferOutput<
   typeof deleteProductMutationArgsSchema

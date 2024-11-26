@@ -1,4 +1,5 @@
 import { AccessControl } from "../access-control/client";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import { createInvoiceMutationArgsSchema, invoicesTableName } from "./shared";
@@ -12,6 +13,6 @@ export namespace Invoices {
         args: [{ name: invoicesTableName }],
       }),
     () => async (tx, values) =>
-      tx.set(`${invoicesTableName}/${values.id}`, values),
+      Replicache.set(tx, invoicesTableName, values.id, values),
   );
 }

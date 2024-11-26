@@ -1,9 +1,9 @@
 import { AccessControl } from "../access-control/client";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import { tenantsTableName, updateTenantMutationArgsSchema } from "./shared";
 
-import type { DeepReadonlyObject } from "replicache";
 import type { Tenant } from "./sql";
 
 export namespace Tenants {
@@ -16,19 +16,12 @@ export namespace Tenants {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await tx.get<Tenant>(`${tenantsTableName}/${id}`);
-        if (!prev)
-          throw new ApplicationError.EntityNotFound({
-            name: tenantsTableName,
-            id,
-          });
+        const prev = await Replicache.get<Tenant>(tx, tenantsTableName, id);
 
-        const next = {
+        return Replicache.set(tx, tenantsTableName, id, {
           ...prev,
           ...values,
-        } satisfies DeepReadonlyObject<Tenant>;
-
-        return tx.set(`${tenantsTableName}/${id}`, next);
+        });
       },
   );
 }

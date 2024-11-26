@@ -216,7 +216,7 @@ export const orderSchema = v.object({
     v.trim(),
     v.maxLength(Constants.VARCHAR_LENGTH),
   ),
-  approvedAt: v.nullable(v.pipe(v.string(), v.isoTimestamp())),
+  approvedAt: v.nullable(v.date()),
 });
 
 export const orderMutationNames = [
@@ -235,7 +235,7 @@ export type CreateOrderMutationArgs = v.InferOutput<
 
 export const updateOrderMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.date(),
   ...v.partial(
     v.omit(orderSchema, [
       "id",
@@ -252,7 +252,7 @@ export type UpdateOrderMutationArgs = v.InferOutput<
 
 export const deleteOrderMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.date(),
 });
 export type DeleteOrderMutationArgs = v.InferOutput<
   typeof deleteOrderMutationArgsSchema

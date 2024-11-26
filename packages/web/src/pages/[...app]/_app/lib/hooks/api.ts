@@ -13,5 +13,5 @@ export function useApi() {
     [isDev, appFqdn],
   );
 
-  return { client };
+  return client.api;
 }

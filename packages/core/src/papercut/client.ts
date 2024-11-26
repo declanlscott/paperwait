@@ -1,4 +1,5 @@
 import { AccessControl } from "../access-control/client";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
@@ -10,7 +11,6 @@ import {
   updatePapercutAccountApprovalThresholdMutationArgsSchema,
 } from "./shared";
 
-import type { DeepReadonlyObject } from "replicache";
 import type {
   PapercutAccount,
   PapercutAccountManagerAuthorization,
@@ -28,8 +28,10 @@ export namespace Papercut {
         },
       ),
     () => async (tx, values) =>
-      tx.set(
-        `${papercutAccountManagerAuthorizationsTableName}/${values.id}`,
+      Replicache.set(
+        tx,
+        papercutAccountManagerAuthorizationsTableName,
+        values.id,
         values,
       ),
   );
@@ -46,21 +48,16 @@ export namespace Papercut {
       ),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await tx.get<PapercutAccount>(
-          `${papercutAccountsTableName}/${id}`,
+        const prev = await Replicache.get<PapercutAccount>(
+          tx,
+          papercutAccountsTableName,
+          id,
         );
-        if (!prev)
-          throw new ApplicationError.EntityNotFound({
-            name: papercutAccountsTableName,
-            id,
-          });
 
-        const next = {
+        return Replicache.set(tx, papercutAccountsTableName, id, {
           ...prev,
           ...values,
-        } satisfies DeepReadonlyObject<PapercutAccount>;
-
-        return tx.set(`${papercutAccountsTableName}/${id}`, next);
+        });
       },
   );
 
@@ -74,29 +71,19 @@ export namespace Papercut {
     ({ user }) =>
       async (tx, { id, ...values }) => {
         if (user.profile.role === "administrator") {
-          const prev = await tx.get<PapercutAccount>(
-            `${papercutAccountsTableName}/${id}`,
+          const prev = await Replicache.get<PapercutAccount>(
+            tx,
+            papercutAccountsTableName,
+            id,
           );
-          if (!prev)
-            throw new ApplicationError.EntityNotFound({
-              name: papercutAccountsTableName,
-              id,
-            });
 
-          const next = {
+          return Replicache.set(tx, papercutAccountsTableName, id, {
             ...prev,
             ...values,
-          } satisfies DeepReadonlyObject<PapercutAccount>;
-
-          return tx.set(`${papercutAccountsTableName}/${id}`, next);
+          });
         }
 
-        const success = await tx.del(`${papercutAccountsTableName}/${id}`);
-        if (!success)
-          throw new ApplicationError.EntityNotFound({
-            name: papercutAccountsTableName,
-            id,
-          });
+        await Replicache.del(tx, papercutAccountsTableName, id);
       },
   );
 
@@ -113,34 +100,29 @@ export namespace Papercut {
     ({ user }) =>
       async (tx, { id, ...values }) => {
         if (user.profile.role === "administrator") {
-          const prev = await tx.get<PapercutAccountManagerAuthorization>(
-            `${papercutAccountManagerAuthorizationsTableName}/${id}`,
-          );
-          if (!prev)
-            throw new ApplicationError.EntityNotFound({
-              name: papercutAccountManagerAuthorizationsTableName,
+          const prev =
+            await Replicache.get<PapercutAccountManagerAuthorization>(
+              tx,
+              papercutAccountManagerAuthorizationsTableName,
               id,
-            });
+            );
 
-          const next = {
-            ...prev,
-            ...values,
-          } satisfies DeepReadonlyObject<PapercutAccountManagerAuthorization>;
-
-          return tx.set(
-            `${papercutAccountManagerAuthorizationsTableName}/${id}`,
-            next,
+          return Replicache.set(
+            tx,
+            papercutAccountManagerAuthorizationsTableName,
+            id,
+            {
+              ...prev,
+              ...values,
+            },
           );
         }
 
-        const success = await tx.del(
-          `${papercutAccountManagerAuthorizationsTableName}/${id}`,
+        await Replicache.del(
+          tx,
+          papercutAccountManagerAuthorizationsTableName,
+          id,
         );
-        if (!success)
-          throw new ApplicationError.EntityNotFound({
-            name: papercutAccountManagerAuthorizationsTableName,
-            id,
-          });
       },
   );
 }

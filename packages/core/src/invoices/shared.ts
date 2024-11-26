@@ -23,7 +23,7 @@ export const invoiceSchema = v.object({
   ...tenantTableSchema.entries,
   lineItems: v.array(lineItemSchema),
   status: v.picklist(invoiceStatuses),
-  chargedAt: v.optional(v.pipe(v.string(), v.isoTimestamp())),
+  chargedAt: v.optional(v.date()),
   orderId: nanoIdSchema,
 });
 

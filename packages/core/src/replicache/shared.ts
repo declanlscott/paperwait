@@ -14,6 +14,9 @@ import {
 import { tenantMutationNames } from "../tenants/shared";
 import { userProfileMutationNames } from "../users/shared";
 
+import type { ReadonlyJSONObject } from "replicache";
+import type { SuperJSONResult } from "superjson";
+
 export const replicacheMetaTableName = "replicache_meta";
 export const replicacheClientGroupsTableName = "replicache_client_groups";
 export const replicacheClientsTableName = "replicache_clients";
@@ -21,7 +24,7 @@ export const replicacheClientViewsTableName = "replicache_client_views";
 
 export const genericMutationSchema = v.object({
   name: v.string(),
-  args: v.unknown(),
+  args: v.any(),
   id: v.number(),
   timestamp: v.number(),
   clientID: v.pipe(v.string(), v.uuid()),
@@ -70,3 +73,10 @@ export const pullRequestSchema = v.variant("pullVersion", [
   }),
 ]);
 export type PullRequest = v.InferOutput<typeof pullRequestSchema>;
+
+export type Serialized = ReadonlyJSONObject & SuperJSONResult;
+
+export const isSerialized = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any,
+): value is SuperJSONResult => typeof value === "object" && "json" in value;

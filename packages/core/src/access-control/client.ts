@@ -15,6 +15,7 @@ import {
   type PapercutAccountManagerAuthorization,
 } from "../papercut/sql";
 import { productsTableName } from "../products/shared";
+import { Replicache } from "../replicache/client";
 import {
   deliveryOptionsTableName,
   roomsTableName,
@@ -127,20 +128,30 @@ export namespace AccessControl {
       [commentsTableName]: {
         create: true,
         update: async (tx, user, commentId: Comment["id"]) => {
-          const comment = await tx.get<Comment>(
-            [commentsTableName, commentId].join("/"),
-          );
-          if (!comment) return false;
+          try {
+            const comment = await Replicache.get<Comment>(
+              tx,
+              commentsTableName,
+              commentId,
+            );
 
-          return comment.authorId === user.id;
+            return comment.authorId === user.id;
+          } catch {
+            return false;
+          }
         },
         delete: async (tx, user, commentId: Comment["id"]) => {
-          const comment = await tx.get<Comment>(
-            [commentsTableName, commentId].join("/"),
-          );
-          if (!comment) return false;
+          try {
+            const comment = await Replicache.get<Comment>(
+              tx,
+              commentsTableName,
+              commentId,
+            );
 
-          return comment.authorId === user.id;
+            return comment.authorId === user.id;
+          } catch {
+            return false;
+          }
         },
       },
       [deliveryOptionsTableName]: {
@@ -207,48 +218,63 @@ export namespace AccessControl {
       },
       [commentsTableName]: {
         create: async (tx, user, orderId: Order["id"]) => {
-          const order = await tx.get<Order>(
-            [ordersTableName, orderId].join("/"),
-          );
-          if (!order) return false;
+          try {
+            const order = await Replicache.get<Order>(
+              tx,
+              ordersTableName,
+              orderId,
+            );
 
-          if (order.customerId === user.id) return true;
+            if (order.customerId === user.id) return true;
 
-          const papercutAccount = await tx.get<PapercutAccount>(
-            [papercutAccountsTableName, order.papercutAccountId].join("/"),
-          );
-          if (!papercutAccount) return false;
+            const papercutAccount = await Replicache.get<PapercutAccount>(
+              tx,
+              papercutAccountsTableName,
+              order.papercutAccountId,
+            );
 
-          return R.pipe(
-            await tx
-              .scan<PapercutAccountManagerAuthorization>({
-                prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-              })
-              .toArray(),
-            R.filter(
-              (authorization) =>
-                authorization.papercutAccountId === papercutAccount.id &&
-                authorization.managerId === user.id,
-            ),
-            R.length(),
-            R.isDeepEqual(1),
-          );
+            return R.pipe(
+              await Replicache.scan<PapercutAccountManagerAuthorization>(
+                tx,
+                papercutAccountManagerAuthorizationsTableName,
+              ),
+              R.filter(
+                (authorization) =>
+                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.managerId === user.id,
+              ),
+              R.length(),
+              R.isDeepEqual(1),
+            );
+          } catch {
+            return false;
+          }
         },
         update: async (tx, user, commentId: Comment["id"]) => {
-          const comment = await tx.get<Comment>(
-            [commentsTableName, commentId].join("/"),
-          );
-          if (!comment) return false;
+          try {
+            const comment = await Replicache.get<Comment>(
+              tx,
+              commentsTableName,
+              commentId,
+            );
 
-          return comment.authorId === user.id;
+            return comment.authorId === user.id;
+          } catch {
+            return false;
+          }
         },
         delete: async (tx, user, commentId: Comment["id"]) => {
-          const comment = await tx.get<Comment>(
-            [commentsTableName, commentId].join("/"),
-          );
-          if (!comment) return false;
+          try {
+            const comment = await Replicache.get<Comment>(
+              tx,
+              commentsTableName,
+              commentId,
+            );
 
-          return comment.authorId === user.id;
+            return comment.authorId === user.id;
+          } catch {
+            return false;
+          }
         },
       },
       [deliveryOptionsTableName]: {
@@ -263,115 +289,131 @@ export namespace AccessControl {
       },
       [ordersTableName]: {
         create: async (tx, user, papercutAccountId: PapercutAccount["id"]) => {
-          const papercutAccount = await tx.get<PapercutAccount>(
-            [papercutAccountsTableName, papercutAccountId].join("/"),
-          );
-          if (!papercutAccount) return false;
-
-          return R.pipe(
-            await tx
-              .scan<PapercutAccountCustomerAuthorization>({
-                prefix: `${papercutAccountCustomerAuthorizationsTableName}/`,
-              })
-              .toArray(),
-            R.filter(
-              (authorization) =>
-                authorization.papercutAccountId === papercutAccountId &&
-                authorization.customerId === user.id,
-            ),
-            R.length(),
-            R.isDeepEqual(1),
-          );
+          try {
+            return R.pipe(
+              await Replicache.scan<PapercutAccountCustomerAuthorization>(
+                tx,
+                papercutAccountCustomerAuthorizationsTableName,
+              ),
+              R.filter(
+                (authorization) =>
+                  authorization.papercutAccountId === papercutAccountId &&
+                  authorization.customerId === user.id,
+              ),
+              R.length(),
+              R.isDeepEqual(1),
+            );
+          } catch {
+            return false;
+          }
         },
         update: async (tx, user, orderId: Order["id"]) => {
-          const order = await tx.get<Order>(
-            [ordersTableName, orderId].join("/"),
-          );
-          if (!order) return false;
+          try {
+            const order = await Replicache.get<Order>(
+              tx,
+              ordersTableName,
+              orderId,
+            );
 
-          const workflowStatus = await tx.get<WorkflowStatus>(
-            [workflowStatusesTableName, order.workflowStatus].join("/"),
-          );
-          if (!workflowStatus || workflowStatus.type !== "Review") return false;
+            const workflowStatus = await Replicache.get<WorkflowStatus>(
+              tx,
+              workflowStatusesTableName,
+              order.workflowStatus,
+            );
 
-          if (order.customerId === user.id) return true;
+            if (workflowStatus.type !== "Review") return false;
+            if (order.customerId === user.id) return true;
 
-          const papercutAccount = await tx.get<PapercutAccount>(
-            [papercutAccountsTableName, order.papercutAccountId].join("/"),
-          );
-          if (!papercutAccount) return false;
+            const papercutAccount = await Replicache.get<PapercutAccount>(
+              tx,
+              papercutAccountsTableName,
+              order.papercutAccountId,
+            );
 
-          return R.pipe(
-            await tx
-              .scan<PapercutAccountManagerAuthorization>({
-                prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-              })
-              .toArray(),
-            R.filter(
-              (authorization) =>
-                authorization.papercutAccountId === papercutAccount.id &&
-                authorization.managerId === user.id,
-            ),
-            R.length(),
-            R.isDeepEqual(1),
-          );
+            return R.pipe(
+              await Replicache.scan<PapercutAccountManagerAuthorization>(
+                tx,
+                papercutAccountManagerAuthorizationsTableName,
+              ),
+              R.filter(
+                (authorization) =>
+                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.managerId === user.id,
+              ),
+              R.length(),
+              R.isDeepEqual(1),
+            );
+          } catch {
+            return false;
+          }
         },
         delete: async (tx, user, orderId: Order["id"]) => {
-          const order = await tx.get<Order>(
-            [ordersTableName, orderId].join("/"),
-          );
-          if (!order) return false;
+          try {
+            const order = await Replicache.get<Order>(
+              tx,
+              ordersTableName,
+              orderId,
+            );
 
-          const workflowStatus = await tx.get<WorkflowStatus>(
-            [workflowStatusesTableName, order.workflowStatus].join("/"),
-          );
-          if (!workflowStatus || workflowStatus.type !== "Review") return false;
+            const workflowStatus = await Replicache.get<WorkflowStatus>(
+              tx,
+              workflowStatusesTableName,
+              order.workflowStatus,
+            );
 
-          if (order.customerId === user.id) return true;
+            if (workflowStatus.type !== "Review") return false;
+            if (order.customerId === user.id) return true;
 
-          const papercutAccount = await tx.get<PapercutAccount>(
-            [papercutAccountsTableName, order.papercutAccountId].join("/"),
-          );
-          if (!papercutAccount) return false;
+            const papercutAccount = await Replicache.get<PapercutAccount>(
+              tx,
+              papercutAccountsTableName,
+              order.papercutAccountId,
+            );
 
-          return R.pipe(
-            await tx
-              .scan<PapercutAccountManagerAuthorization>({
-                prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-              })
-              .toArray(),
-            R.filter(
-              (authorization) =>
-                authorization.papercutAccountId === papercutAccount.id &&
-                authorization.managerId === user.id,
-            ),
-            R.length(),
-            R.isDeepEqual(1),
-          );
+            return R.pipe(
+              await Replicache.scan<PapercutAccountManagerAuthorization>(
+                tx,
+                papercutAccountManagerAuthorizationsTableName,
+              ),
+              R.filter(
+                (authorization) =>
+                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.managerId === user.id,
+              ),
+              R.length(),
+              R.isDeepEqual(1),
+            );
+          } catch {
+            return false;
+          }
         },
       },
       [papercutAccountsTableName]: {
         create: false,
         update: async (tx, user, papercutAccountId: PapercutAccount["id"]) => {
-          const papercutAccount = await tx.get<PapercutAccount>(
-            [papercutAccountsTableName, papercutAccountId].join("/"),
-          );
-          if (!papercutAccount) return false;
+          try {
+            const papercutAccount = await Replicache.get<PapercutAccount>(
+              tx,
+              papercutAccountsTableName,
+              papercutAccountId,
+            );
 
-          return R.pipe(
-            await tx
-              .scan<PapercutAccountManagerAuthorization>({
-                prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-              })
-              .toArray(),
-            R.filter(
-              (authorization) =>
-                authorization.papercutAccountId === papercutAccount.id &&
-                authorization.managerId === user.id,
-            ),
-            R.length(),
-            R.isDeepEqual(1),
-          );
+            return R.pipe(
+              await Replicache.scan<PapercutAccountManagerAuthorization>(
+                tx,
+                papercutAccountManagerAuthorizationsTableName,
+              ),
+              R.filter(
+                (authorization) =>
+                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.managerId === user.id,
+              ),
+              R.length(),
+              R.isDeepEqual(1),
+            );
+          } catch {
+            return false;
+          }
         },
         delete: false,
       },
@@ -419,28 +461,43 @@ export namespace AccessControl {
       },
       [commentsTableName]: {
         create: async (tx, user, orderId: Order["id"]) => {
-          const order = await tx.get<Order>(
-            [ordersTableName, orderId].join("/"),
-          );
-          if (!order) return false;
+          try {
+            const order = await Replicache.get<Order>(
+              tx,
+              ordersTableName,
+              orderId,
+            );
 
-          return order.customerId === user.id;
+            return order.customerId === user.id;
+          } catch {
+            return false;
+          }
         },
         update: async (tx, user, commentId: Comment["id"]) => {
-          const comment = await tx.get<Comment>(
-            [commentsTableName, commentId].join("/"),
-          );
-          if (!comment) return false;
+          try {
+            const comment = await Replicache.get<Comment>(
+              tx,
+              commentsTableName,
+              commentId,
+            );
 
-          return comment.authorId === user.id;
+            return comment.authorId === user.id;
+          } catch {
+            return false;
+          }
         },
         delete: async (tx, user, commentId: Comment["id"]) => {
-          const comment = await tx.get<Comment>(
-            [commentsTableName, commentId].join("/"),
-          );
-          if (!comment) return false;
+          try {
+            const comment = await Replicache.get<Comment>(
+              tx,
+              commentsTableName,
+              commentId,
+            );
 
-          return comment.authorId === user.id;
+            return comment.authorId === user.id;
+          } catch {
+            return false;
+          }
         },
       },
       [deliveryOptionsTableName]: {
@@ -455,51 +512,69 @@ export namespace AccessControl {
       },
       [ordersTableName]: {
         create: async (tx, user, papercutAccountId: PapercutAccount["id"]) => {
-          const papercutAccount = await tx.get<PapercutAccount>(
-            [papercutAccountsTableName, papercutAccountId].join("/"),
-          );
-          if (!papercutAccount) return false;
+          try {
+            const papercutAccount = await Replicache.get<PapercutAccount>(
+              tx,
+              papercutAccountsTableName,
+              papercutAccountId,
+            );
 
-          return R.pipe(
-            await tx
-              .scan<PapercutAccountCustomerAuthorization>({
-                prefix: `${papercutAccountCustomerAuthorizationsTableName}/`,
-              })
-              .toArray(),
-            R.filter(
-              (authorization) =>
-                authorization.papercutAccountId === papercutAccountId &&
-                authorization.customerId === user.id,
-            ),
-            R.length(),
-            R.isDeepEqual(1),
-          );
+            return R.pipe(
+              await Replicache.scan<PapercutAccountCustomerAuthorization>(
+                tx,
+                papercutAccountCustomerAuthorizationsTableName,
+              ),
+              R.filter(
+                (authorization) =>
+                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.customerId === user.id,
+              ),
+              R.length(),
+              R.isDeepEqual(1),
+            );
+          } catch {
+            return false;
+          }
         },
         update: async (tx, user, orderId: Order["id"]) => {
-          const order = await tx.get<Order>(
-            [ordersTableName, orderId].join("/"),
-          );
-          if (!order) return false;
+          try {
+            const order = await Replicache.get<Order>(
+              tx,
+              ordersTableName,
+              orderId,
+            );
 
-          const workflowStatus = await tx.get<WorkflowStatus>(
-            [workflowStatusesTableName, order.workflowStatus].join("/"),
-          );
-          if (!workflowStatus || workflowStatus.type !== "Review") return false;
+            const workflowStatus = await Replicache.get<WorkflowStatus>(
+              tx,
+              workflowStatusesTableName,
+              order.workflowStatus,
+            );
+            if (workflowStatus.type !== "Review") return false;
 
-          return order.customerId === user.id;
+            return order.customerId === user.id;
+          } catch {
+            return false;
+          }
         },
         delete: async (tx, user, orderId: Order["id"]) => {
-          const order = await tx.get<Order>(
-            [ordersTableName, orderId].join("/"),
-          );
-          if (!order) return false;
+          try {
+            const order = await Replicache.get<Order>(
+              tx,
+              ordersTableName,
+              orderId,
+            );
 
-          const workflowStatus = await tx.get<WorkflowStatus>(
-            [workflowStatusesTableName, order.workflowStatus].join("/"),
-          );
-          if (!workflowStatus || workflowStatus.type !== "Review") return false;
+            const workflowStatus = await Replicache.get<WorkflowStatus>(
+              tx,
+              workflowStatusesTableName,
+              order.workflowStatus,
+            );
+            if (workflowStatus.type !== "Review") return false;
 
-          return order.customerId === user.id;
+            return order.customerId === user.id;
+          } catch {
+            return false;
+          }
         },
       },
       [papercutAccountsTableName]: {

@@ -3,6 +3,7 @@ import * as R from "remeda";
 import { AccessControl } from "../access-control/client";
 import { ordersTableName } from "../orders/shared";
 import { papercutAccountManagerAuthorizationsTableName } from "../papercut/shared";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
@@ -12,7 +13,7 @@ import {
   usersTableName,
 } from "./shared";
 
-import type { DeepReadonlyObject, WriteTransaction } from "replicache";
+import type { WriteTransaction } from "replicache";
 import type { Order } from "../orders/sql";
 import type {
   PapercutAccount,
@@ -32,28 +33,20 @@ export namespace Users {
       "customer",
     ],
   ) =>
-    tx
-      .scan<UserWithProfile>({ prefix: `${usersTableName}/` })
-      .toArray()
-      .then((users) =>
-        users.filter((user) => roles.includes(user.profile.role)),
-      );
+    Replicache.scan<UserWithProfile>(tx, usersTableName).then(
+      R.filter((user) => roles.includes(user.profile.role)),
+    );
 
   export async function withOrderAccess(
     tx: WriteTransaction,
     orderId: Order["id"],
   ) {
-    const order = await tx.get<Order>(`${ordersTableName}/${orderId}`);
-    if (!order)
-      throw new ApplicationError.EntityNotFound({
-        name: ordersTableName,
-        id: orderId,
-      });
+    const order = await Replicache.get<Order>(tx, ordersTableName, orderId);
 
     const [adminsOps, managers, customer] = await Promise.all([
       fromRoles(tx, ["administrator", "operator"]),
       withManagerAuthorization(tx, order.papercutAccountId),
-      tx.get<UserWithProfile>(`${usersTableName}/${order.customerId}`),
+      Replicache.get<UserWithProfile>(tx, usersTableName, order.customerId),
     ]);
 
     return R.uniqueBy(
@@ -67,16 +60,15 @@ export namespace Users {
     accountId: PapercutAccount["id"],
   ) =>
     R.pipe(
-      await tx
-        .scan<PapercutAccountManagerAuthorization>({
-          prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-        })
-        .toArray(),
+      await Replicache.scan<PapercutAccountManagerAuthorization>(
+        tx,
+        papercutAccountManagerAuthorizationsTableName,
+      ),
       R.filter(({ papercutAccountId }) => papercutAccountId === accountId),
       async (authorizations) =>
         Promise.all(
           authorizations.map(({ managerId }) =>
-            tx.get<UserWithProfile>(`${usersTableName}/${managerId}`),
+            Replicache.get<UserWithProfile>(tx, usersTableName, managerId),
           ),
         ).then((users) => users.filter(Boolean)),
     );
@@ -86,16 +78,15 @@ export namespace Users {
     accountId: PapercutAccount["id"],
   ) =>
     R.pipe(
-      await tx
-        .scan<PapercutAccountCustomerAuthorization>({
-          prefix: `${papercutAccountManagerAuthorizationsTableName}/`,
-        })
-        .toArray(),
+      await Replicache.scan<PapercutAccountCustomerAuthorization>(
+        tx,
+        papercutAccountManagerAuthorizationsTableName,
+      ),
       R.filter(({ papercutAccountId }) => papercutAccountId === accountId),
       async (authorizations) =>
         Promise.all(
           authorizations.map(({ customerId }) =>
-            tx.get<UserWithProfile>(`${usersTableName}/${customerId}`),
+            Replicache.get<UserWithProfile>(tx, usersTableName, customerId),
           ),
         ).then((users) => users.filter(Boolean)),
     );
@@ -109,22 +100,16 @@ export namespace Users {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
-        if (!prev)
-          throw new ApplicationError.EntityNotFound({
-            name: usersTableName,
-            id,
-          });
+        const prev = await Replicache.get<UserWithProfile>(
+          tx,
+          usersTableName,
+          id,
+        );
 
-        const next = {
+        return Replicache.set(tx, usersTableName, id, {
           ...prev,
-          profile: {
-            ...prev.profile,
-            ...values,
-          },
-        } satisfies DeepReadonlyObject<UserWithProfile>;
-
-        return tx.set(`${usersTableName}/${id}`, next);
+          profile: { ...prev.profile, ...values },
+        });
       },
   );
 
@@ -139,30 +124,19 @@ export namespace Users {
       async (tx, { id, ...values }) => {
         // Soft delete for administrators
         if (user.profile.role === "administrator") {
-          const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
-          if (!prev)
-            throw new ApplicationError.EntityNotFound({
-              name: usersTableName,
-              id,
-            });
+          const prev = await Replicache.get<UserWithProfile>(
+            tx,
+            usersTableName,
+            id,
+          );
 
-          const next = {
+          return Replicache.set(tx, usersTableName, id, {
             ...prev,
-            profile: {
-              ...prev.profile,
-              ...values,
-            },
-          } satisfies DeepReadonlyObject<UserWithProfile>;
-
-          return tx.set(`${usersTableName}/${id}`, next);
+            profile: { ...prev.profile, ...values },
+          });
         }
 
-        const success = await tx.del(`${usersTableName}/${id}`);
-        if (!success)
-          throw new ApplicationError.EntityNotFound({
-            name: usersTableName,
-            id,
-          });
+        await Replicache.del(tx, usersTableName, id);
       },
   );
 
@@ -175,22 +149,19 @@ export namespace Users {
       }),
     () =>
       async (tx, { id }) => {
-        const prev = await tx.get<UserWithProfile>(`${usersTableName}/${id}`);
-        if (!prev)
-          throw new ApplicationError.EntityNotFound({
-            name: usersTableName,
-            id,
-          });
+        const prev = await Replicache.get<UserWithProfile>(
+          tx,
+          usersTableName,
+          id,
+        );
 
-        const next = {
+        return Replicache.set(tx, usersTableName, id, {
           ...prev,
           profile: {
             ...prev.profile,
             deletedAt: null,
           },
-        } satisfies DeepReadonlyObject<UserWithProfile>;
-
-        return tx.set(`${usersTableName}/${id}`, next);
+        });
       },
   );
 }

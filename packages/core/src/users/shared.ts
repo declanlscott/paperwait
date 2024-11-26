@@ -30,7 +30,7 @@ export const userProfileMutationNames = [
 export const updateUserProfileRoleMutationArgsSchema = v.object({
   id: nanoIdSchema,
   role: v.picklist(userRoles),
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.date(),
 });
 export type UpdateUserRoleMutationArgs = v.InferOutput<
   typeof updateUserProfileRoleMutationArgsSchema
@@ -38,7 +38,7 @@ export type UpdateUserRoleMutationArgs = v.InferOutput<
 
 export const deleteUserProfileMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.date(),
 });
 export type DeleteUserProfileMutationArgs = v.InferOutput<
   typeof deleteUserProfileMutationArgsSchema

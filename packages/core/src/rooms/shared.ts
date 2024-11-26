@@ -40,7 +40,7 @@ export type CreateRoomMutationArgs = v.InferOutput<
 
 export const updateRoomMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.date(),
   ...v.partial(
     v.omit(roomSchema, [
       "id",
@@ -57,7 +57,7 @@ export type UpdateRoomMutationArgs = v.InferOutput<
 
 export const deleteRoomMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  deletedAt: v.pipe(v.string(), v.isoTimestamp()),
+  deletedAt: v.date(),
 });
 export type DeleteRoomMutationArgs = v.InferOutput<
   typeof deleteRoomMutationArgsSchema

@@ -1,4 +1,5 @@
 import { AccessControl } from "../access-control/client";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
@@ -8,7 +9,6 @@ import {
   updateProductMutationArgsSchema,
 } from "./shared";
 
-import type { DeepReadonlyObject } from "replicache";
 import type { Product } from "./sql";
 
 export namespace Products {
@@ -20,7 +20,7 @@ export namespace Products {
         args: [{ name: productsTableName }],
       }),
     () => async (tx, values) =>
-      tx.set(`${productsTableName}/${values.id}`, values),
+      Replicache.set(tx, productsTableName, values.id, values),
   );
 
   export const update = Utils.optimisticMutator(
@@ -32,19 +32,12 @@ export namespace Products {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await tx.get<Product>(`${productsTableName}/${id}`);
-        if (!prev)
-          throw new ApplicationError.EntityNotFound({
-            name: productsTableName,
-            id,
-          });
+        const prev = await Replicache.get<Product>(tx, productsTableName, id);
 
-        const next = {
+        return Replicache.set(tx, productsTableName, id, {
           ...prev,
           ...values,
-        } satisfies DeepReadonlyObject<Product>;
-
-        return tx.set(`${productsTableName}/${id}`, next);
+        });
       },
   );
 
@@ -58,29 +51,19 @@ export namespace Products {
     ({ user }) =>
       async (tx, values) => {
         if (user.profile.role === "administrator") {
-          const prev = await tx.get<Product>(
-            `${productsTableName}/${values.id}`,
+          const prev = await Replicache.get<Product>(
+            tx,
+            productsTableName,
+            values.id,
           );
-          if (!prev)
-            throw new ApplicationError.EntityNotFound({
-              name: productsTableName,
-              id: values.id,
-            });
 
-          const next = {
+          return Replicache.set(tx, productsTableName, values.id, {
             ...prev,
             ...values,
-          } satisfies DeepReadonlyObject<Product>;
-
-          return tx.set(`${productsTableName}/${values.id}`, next);
+          });
         }
 
-        const success = await tx.del(`${productsTableName}/${values.id}`);
-        if (!success)
-          throw new ApplicationError.EntityNotFound({
-            name: productsTableName,
-            id: values.id,
-          });
+        await Replicache.del(tx, productsTableName, values.id);
       },
   );
 }

@@ -50,7 +50,7 @@ export const tenantMutationNames = ["updateTenant"] as const;
 
 export const updateTenantMutationArgsSchema = v.object({
   id: nanoIdSchema,
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
+  updatedAt: v.date(),
   ...v.partial(
     v.omit(tenantSchema, [
       "id",

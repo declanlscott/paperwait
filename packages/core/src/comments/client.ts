@@ -1,4 +1,5 @@
 import { AccessControl } from "../access-control/client";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
@@ -8,7 +9,6 @@ import {
   updateCommentMutationArgsSchema,
 } from "./shared";
 
-import type { DeepReadonlyObject } from "replicache";
 import type { Comment } from "./sql";
 
 export namespace Comments {
@@ -20,7 +20,7 @@ export namespace Comments {
         args: [{ name: commentsTableName }],
       }),
     () => async (tx, values) =>
-      tx.set(`${commentsTableName}/${values.id}`, values),
+      Replicache.set(tx, commentsTableName, values.id, values),
   );
 
   export const update = Utils.optimisticMutator(
@@ -31,19 +31,16 @@ export namespace Comments {
         args: [{ name: commentsTableName, id }],
       }),
     () => async (tx, values) => {
-      const prev = await tx.get<Comment>(`${commentsTableName}/${values.id}`);
-      if (!prev)
-        throw new ApplicationError.EntityNotFound({
-          name: commentsTableName,
-          id: values.id,
-        });
+      const prev = await Replicache.get<Comment>(
+        tx,
+        commentsTableName,
+        values.id,
+      );
 
-      const next = {
+      return Replicache.set(tx, commentsTableName, values.id, {
         ...prev,
         ...values,
-      } satisfies DeepReadonlyObject<Comment>;
-
-      return tx.set(`${commentsTableName}/${values.id}`, next);
+      });
     },
   );
 
@@ -57,29 +54,19 @@ export namespace Comments {
     ({ user }) =>
       async (tx, values) => {
         if (user.profile.role === "administrator") {
-          const prev = await tx.get<Comment>(
-            `${commentsTableName}/${values.id}`,
+          const prev = await Replicache.get<Comment>(
+            tx,
+            commentsTableName,
+            values.id,
           );
-          if (!prev)
-            throw new ApplicationError.EntityNotFound({
-              name: commentsTableName,
-              id: values.id,
-            });
 
-          const next = {
+          return Replicache.set(tx, commentsTableName, values.id, {
             ...prev,
             ...values,
-          } satisfies DeepReadonlyObject<Comment>;
-
-          return tx.set(`${commentsTableName}/${values.id}`, next);
+          });
         }
 
-        const success = await tx.del(`${commentsTableName}/${values.id}`);
-        if (!success)
-          throw new ApplicationError.EntityNotFound({
-            name: commentsTableName,
-            id: values.id,
-          });
+        await Replicache.del(tx, commentsTableName, values.id);
       },
   );
 }

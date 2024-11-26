@@ -2,6 +2,7 @@ import * as R from "remeda";
 
 import { AccessControl } from "../access-control/client";
 import { productsTableName } from "../products/shared";
+import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
@@ -18,7 +19,6 @@ import {
   workflowStatusesTableName,
 } from "./shared";
 
-import type { DeepReadonlyObject } from "replicache";
 import type { Product } from "../products/sql";
 import type { DeliveryOption, Room, WorkflowStatus } from "./sql";
 
@@ -32,9 +32,11 @@ export namespace Rooms {
       }),
     () => async (tx, values) => {
       await Promise.all([
-        tx.set(`${roomsTableName}/${values.id}`, values),
-        tx.set(
-          `${workflowStatusesTableName}/${Constants.WORKFLOW_REVIEW_STATUS}`,
+        Replicache.set(tx, roomsTableName, values.id, values),
+        Replicache.set(
+          tx,
+          workflowStatusesTableName,
+          Constants.WORKFLOW_REVIEW_STATUS,
           {
             id: Constants.WORKFLOW_REVIEW_STATUS,
             type: "Review",
@@ -46,7 +48,7 @@ export namespace Rooms {
           },
         ),
         ...defaultWorkflow.map(async (status, index) =>
-          tx.set(`${workflowStatusesTableName}/${status.id}`, {
+          Replicache.set(tx, workflowStatusesTableName, status.id, {
             ...status,
             index,
             roomId: values.id,
@@ -66,19 +68,12 @@ export namespace Rooms {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
-        if (!prev)
-          throw new ApplicationError.EntityNotFound({
-            name: roomsTableName,
-            id,
-          });
+        const prev = await Replicache.get<Room>(tx, roomsTableName, id);
 
-        const next = {
+        return Replicache.set(tx, roomsTableName, id, {
           ...prev,
           ...values,
-        } satisfies DeepReadonlyObject<Room>;
-
-        return tx.set(`${roomsTableName}/${id}`, next);
+        });
       },
   );
 
@@ -92,50 +87,35 @@ export namespace Rooms {
     ({ user }) =>
       async (tx, { id, ...values }) => {
         // Set all products in the room to draft
-        const products = await tx
-          .scan<Product>({ prefix: `${productsTableName}/` })
-          .toArray()
-          .then((products) => products.filter((p) => p.roomId === id));
+        const products = await Replicache.scan<Product>(
+          tx,
+          productsTableName,
+        ).then(R.filter((product) => product.roomId === id));
         await Promise.all(
           products.map(async (p) => {
-            const prev = await tx.get<Product>(`${productsTableName}/${p.id}`);
-            if (!prev)
-              throw new ApplicationError.EntityNotFound({
-                name: productsTableName,
-                id: p.id,
-              });
+            const prev = await Replicache.get<Product>(
+              tx,
+              productsTableName,
+              p.id,
+            );
 
-            const next = {
+            return Replicache.set(tx, productsTableName, p.id, {
               ...prev,
               status: "draft",
-            } satisfies DeepReadonlyObject<Product>;
-
-            return tx.set(`${productsTableName}/${p.id}`, next);
+            });
           }),
         );
 
         if (user.profile.role === "administrator") {
-          const prev = await tx.get<Room>(`${roomsTableName}/${id}`);
-          if (!prev)
-            throw new ApplicationError.EntityNotFound({
-              name: roomsTableName,
-              id,
-            });
+          const prev = await Replicache.get<Room>(tx, roomsTableName, id);
 
-          const next = {
+          return Replicache.set(tx, roomsTableName, id, {
             ...prev,
             ...values,
-          } satisfies DeepReadonlyObject<Room>;
-
-          return tx.set(`${roomsTableName}/${id}`, next);
+          });
         }
 
-        const success = await tx.del(`${roomsTableName}/${id}`);
-        if (!success)
-          throw new ApplicationError.EntityNotFound({
-            name: roomsTableName,
-            id,
-          });
+        await Replicache.del(tx, roomsTableName, id);
       },
   );
 
@@ -147,19 +127,12 @@ export namespace Rooms {
         args: [{ name: roomsTableName, id }],
       }),
     () => async (tx, values) => {
-      const prev = await tx.get<Room>(`${roomsTableName}/${values.id}`);
-      if (!prev)
-        throw new ApplicationError.EntityNotFound({
-          name: roomsTableName,
-          id: values.id,
-        });
+      const prev = await Replicache.get<Room>(tx, roomsTableName, values.id);
 
-      const next = {
+      return Replicache.set(tx, roomsTableName, values.id, {
         ...prev,
         deletedAt: null,
-      } satisfies DeepReadonlyObject<Room>;
-
-      return tx.set(`${roomsTableName}/${values.id}`, next);
+      });
     },
   );
 
@@ -173,17 +146,20 @@ export namespace Rooms {
     () =>
       async (tx, { workflow }) => {
         for (const status of workflow)
-          await tx.set(`${workflowStatusesTableName}/${status.id}`, status);
+          await Replicache.set(
+            tx,
+            workflowStatusesTableName,
+            status.id,
+            status,
+          );
 
         await R.pipe(
-          await tx
-            .scan<WorkflowStatus>({ prefix: `${workflowStatusesTableName}/` })
-            .toArray(),
+          await Replicache.scan<WorkflowStatus>(tx, workflowStatusesTableName),
           R.filter((status) => !workflow.some((s) => s.id === status.id)),
           async (dels) =>
             Promise.all(
               dels.map((status) =>
-                tx.del(`${workflowStatusesTableName}/${status.id}`),
+                Replicache.del(tx, workflowStatusesTableName, status.id),
               ),
             ),
         );
@@ -200,17 +176,15 @@ export namespace Rooms {
     () =>
       async (tx, { options }) => {
         for (const option of options)
-          await tx.set(`${deliveryOptionsTableName}/${option.id}`, option);
+          await Replicache.set(tx, deliveryOptionsTableName, option.id, option);
 
         await R.pipe(
-          await tx
-            .scan<DeliveryOption>({ prefix: `${deliveryOptionsTableName}/` })
-            .toArray(),
+          await Replicache.scan<DeliveryOption>(tx, deliveryOptionsTableName),
           R.filter((option) => !options.some((o) => o.id === option.id)),
           async (dels) =>
             Promise.all(
               dels.map((option) =>
-                tx.del(`${deliveryOptionsTableName}/${option.id}`),
+                Replicache.del(tx, deliveryOptionsTableName, option.id),
               ),
             ),
         );

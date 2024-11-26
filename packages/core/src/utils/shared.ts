@@ -68,9 +68,9 @@ export const nanoIdSchema = v.pipe(
 export type NanoId = v.InferOutput<typeof nanoIdSchema>;
 
 export const timestampsSchema = v.object({
-  createdAt: v.pipe(v.string(), v.isoTimestamp()),
-  updatedAt: v.pipe(v.string(), v.isoTimestamp()),
-  deletedAt: v.nullable(v.pipe(v.string(), v.isoTimestamp())),
+  createdAt: v.date(),
+  updatedAt: v.date(),
+  deletedAt: v.nullable(v.date()),
 });
 
 export const tenantTableSchema = v.object({
