@@ -19,9 +19,6 @@ import {
   workflowStatusesTableName,
 } from "./shared";
 
-import type { Product } from "../products/sql";
-import type { DeliveryOption, Room, WorkflowStatus } from "./sql";
-
 export namespace Rooms {
   export const create = Utils.optimisticMutator(
     createRoomMutationArgsSchema,
@@ -68,7 +65,7 @@ export namespace Rooms {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await Replicache.get<Room>(tx, roomsTableName, id);
+        const prev = await Replicache.get(tx, roomsTableName, id);
 
         return Replicache.set(tx, roomsTableName, id, {
           ...prev,
@@ -87,17 +84,12 @@ export namespace Rooms {
     ({ user }) =>
       async (tx, { id, ...values }) => {
         // Set all products in the room to draft
-        const products = await Replicache.scan<Product>(
-          tx,
-          productsTableName,
-        ).then(R.filter((product) => product.roomId === id));
+        const products = await Replicache.scan(tx, productsTableName).then(
+          R.filter((product) => product.roomId === id),
+        );
         await Promise.all(
           products.map(async (p) => {
-            const prev = await Replicache.get<Product>(
-              tx,
-              productsTableName,
-              p.id,
-            );
+            const prev = await Replicache.get(tx, productsTableName, p.id);
 
             return Replicache.set(tx, productsTableName, p.id, {
               ...prev,
@@ -107,7 +99,7 @@ export namespace Rooms {
         );
 
         if (user.profile.role === "administrator") {
-          const prev = await Replicache.get<Room>(tx, roomsTableName, id);
+          const prev = await Replicache.get(tx, roomsTableName, id);
 
           return Replicache.set(tx, roomsTableName, id, {
             ...prev,
@@ -127,7 +119,7 @@ export namespace Rooms {
         args: [{ name: roomsTableName, id }],
       }),
     () => async (tx, values) => {
-      const prev = await Replicache.get<Room>(tx, roomsTableName, values.id);
+      const prev = await Replicache.get(tx, roomsTableName, values.id);
 
       return Replicache.set(tx, roomsTableName, values.id, {
         ...prev,
@@ -154,7 +146,7 @@ export namespace Rooms {
           );
 
         await R.pipe(
-          await Replicache.scan<WorkflowStatus>(tx, workflowStatusesTableName),
+          await Replicache.scan(tx, workflowStatusesTableName),
           R.filter((status) => !workflow.some((s) => s.id === status.id)),
           async (dels) =>
             Promise.all(
@@ -179,7 +171,7 @@ export namespace Rooms {
           await Replicache.set(tx, deliveryOptionsTableName, option.id, option);
 
         await R.pipe(
-          await Replicache.scan<DeliveryOption>(tx, deliveryOptionsTableName),
+          await Replicache.scan(tx, deliveryOptionsTableName),
           R.filter((option) => !options.some((o) => o.id === option.id)),
           async (dels) =>
             Promise.all(

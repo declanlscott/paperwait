@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import {
-  papercutAccountCustomerAuthorizationsTableName,
-  papercutAccountManagerAuthorizationsTableName,
-  papercutAccountsTableName,
-} from "@printworks/core/papercut/shared";
+  billingAccountCustomerAuthorizationsTableName,
+  billingAccountManagerAuthorizationsTableName,
+  billingAccountsTableName,
+} from "@printworks/core/billing-accounts/shared";
 import { productsTableName } from "@printworks/core/products/shared";
 import { Replicache } from "@printworks/core/replicache/client";
 import { roomsTableName } from "@printworks/core/rooms/shared";
@@ -15,15 +15,10 @@ import { useApi } from "~/app/lib/hooks/api";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useSubscribe } from "~/app/lib/hooks/replicache";
 
-import type {
-  PapercutAccount,
-  PapercutAccountCustomerAuthorization,
-  PapercutAccountManagerAuthorization,
-} from "@printworks/core/papercut/sql";
+import type { BillingAccount } from "@printworks/core/billing-accounts/sql";
 import type { Product } from "@printworks/core/products/sql";
 import type { Room } from "@printworks/core/rooms/sql";
-import type { Tenant } from "@printworks/core/tenants/sql";
-import type { User, UserWithProfile } from "@printworks/core/users/sql";
+import type { User } from "@printworks/core/users/sql";
 import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
 
 export const useQuery = <TData, TDefaultData = undefined>(
@@ -32,61 +27,46 @@ export const useQuery = <TData, TDefaultData = undefined>(
 
 export const queryFactory = {
   tenant: () => async (tx) =>
-    Replicache.scan<Tenant>(tx, tenantsTableName).then((tenants) =>
-      tenants.at(0),
-    ),
-  users: () => (tx) => Replicache.scan<UserWithProfile>(tx, usersTableName),
+    Replicache.scan(tx, tenantsTableName).then((tenants) => tenants.at(0)),
+  users: () => (tx) => Replicache.scan(tx, usersTableName),
   user: (userId: User["id"]) => (tx) =>
-    Replicache.get<UserWithProfile>(tx, usersTableName, userId),
-  papercutAccounts: () => (tx) =>
-    Replicache.scan<PapercutAccount>(tx, papercutAccountsTableName),
-  papercutAccount: (accountId: PapercutAccount["id"]) => (tx) =>
-    Replicache.get<PapercutAccount>(tx, papercutAccountsTableName, accountId),
-  managedPapercutAccountIds: (managerId: User["id"]) => async (tx) =>
+    Replicache.get(tx, usersTableName, userId),
+  billingAccounts: () => (tx) => Replicache.scan(tx, billingAccountsTableName),
+  billingAccount: (accountId: BillingAccount["id"]) => (tx) =>
+    Replicache.get(tx, billingAccountsTableName, accountId),
+  managedBillingAccountIds: (managerId: User["id"]) => async (tx) =>
     R.pipe(
-      await Replicache.scan<PapercutAccountManagerAuthorization>(
-        tx,
-        papercutAccountManagerAuthorizationsTableName,
-      ),
+      await Replicache.scan(tx, billingAccountManagerAuthorizationsTableName),
       R.filter((a) => a.managerId === managerId),
-      R.map(R.prop("papercutAccountId")),
+      R.map(R.prop("billingAccountId")),
     ),
-  papercutAccountCustomerAuthorizations: () => (tx) =>
-    Replicache.scan<PapercutAccountCustomerAuthorization>(
-      tx,
-      papercutAccountCustomerAuthorizationsTableName,
-    ),
-  papercutAccountManagerAuthorizations: () => (tx) =>
-    Replicache.scan<PapercutAccountManagerAuthorization>(
-      tx,
-      papercutAccountManagerAuthorizationsTableName,
-    ),
+  billingAccountCustomerAuthorizations: () => (tx) =>
+    Replicache.scan(tx, billingAccountCustomerAuthorizationsTableName),
+  billingAccountManagerAuthorizations: () => (tx) =>
+    Replicache.scan(tx, billingAccountManagerAuthorizationsTableName),
   managedCustomerIds: (managerId: User["id"]) => async (tx) =>
     R.pipe(
-      await Replicache.scan<PapercutAccountManagerAuthorization>(
-        tx,
-        papercutAccountManagerAuthorizationsTableName,
-      ),
+      await Replicache.scan(tx, billingAccountManagerAuthorizationsTableName),
       R.filter((a) => a.managerId === managerId),
-      R.map(R.prop("papercutAccountId")),
-      async (managedPapercutAccountIds) =>
+      R.map(R.prop("billingAccountId")),
+      async (managedBillingAccountIds) =>
         R.pipe(
-          await Replicache.scan<PapercutAccountCustomerAuthorization>(
+          await Replicache.scan(
             tx,
-            papercutAccountCustomerAuthorizationsTableName,
+            billingAccountCustomerAuthorizationsTableName,
           ),
           R.filter((a) =>
-            managedPapercutAccountIds.includes(a.papercutAccountId),
+            managedBillingAccountIds.includes(a.billingAccountId),
           ),
           R.map(R.prop("customerId")),
         ),
     ),
-  rooms: () => (tx) => Replicache.scan<Room>(tx, roomsTableName),
+  rooms: () => (tx) => Replicache.scan(tx, roomsTableName),
   room: (roomId: Room["id"]) => (tx) =>
-    Replicache.get<Room>(tx, roomsTableName, roomId),
-  products: () => (tx) => Replicache.scan<Product>(tx, productsTableName),
+    Replicache.get(tx, roomsTableName, roomId),
+  products: () => (tx) => Replicache.scan(tx, productsTableName),
   product: (productId: Product["id"]) => (tx) =>
-    Replicache.get<Product>(tx, productsTableName, productId),
+    Replicache.get(tx, productsTableName, productId),
 } satisfies QueryFactory;
 
 export function useMutator() {

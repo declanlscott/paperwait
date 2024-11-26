@@ -6,9 +6,9 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { bigintString, id } from "../drizzle/columns";
+import { billingAccountsTable } from "../billing-accounts/sql";
+import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
-import { papercutAccountsTable } from "../papercut/sql";
 import { productsTable } from "../products/sql";
 import { deliveryOptionsTable, workflowStatusesTable } from "../rooms/sql";
 import { usersTable } from "../users/sql";
@@ -25,7 +25,7 @@ export const ordersTable = tenantTable(
     managerId: id("manager_id"),
     operatorId: id("operator_id"),
     productId: id("product_id").notNull(),
-    papercutAccountId: bigintString("papercut_account_id").notNull(),
+    billingAccountId: id("billing_account_id").notNull(),
     attributes: jsonb("attributes").$type<OrderAttributes>().notNull(),
     workflowStatus: varchar("workflow_status", {
       length: Constants.VARCHAR_LENGTH,
@@ -33,7 +33,7 @@ export const ordersTable = tenantTable(
     deliverTo: varchar("deliver_to", {
       length: Constants.VARCHAR_LENGTH,
     }).notNull(),
-    approvedAt: timestamp("approved_at", { mode: "string" }),
+    approvedAt: timestamp("approved_at"),
   },
   (table) => ({
     customerReference: foreignKey({
@@ -56,13 +56,10 @@ export const ordersTable = tenantTable(
       foreignColumns: [productsTable.id, productsTable.tenantId],
       name: "product_fk",
     }),
-    papercutAccountReference: foreignKey({
-      columns: [table.papercutAccountId, table.tenantId],
-      foreignColumns: [
-        papercutAccountsTable.id,
-        papercutAccountsTable.tenantId,
-      ],
-      name: "papercut_account_fk",
+    billingAccountReference: foreignKey({
+      columns: [table.billingAccountId, table.tenantId],
+      foreignColumns: [billingAccountsTable.id, billingAccountsTable.tenantId],
+      name: "billing_account_fk",
     }),
     workflowStatusReference: foreignKey({
       columns: [table.workflowStatus, table.tenantId],
@@ -78,8 +75,8 @@ export const ordersTable = tenantTable(
       name: "deliver_to_fk",
     }),
     customerIdIndex: index("customer_id_idx").on(table.customerId),
-    papercutAccountIdIndex: index("papercut_account_id_idx").on(
-      table.papercutAccountId,
+    billingAccountIdIndex: index("billing_account_id_idx").on(
+      table.billingAccountId,
     ),
   }),
 );

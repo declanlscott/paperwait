@@ -4,8 +4,6 @@ import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import { tenantsTableName, updateTenantMutationArgsSchema } from "./shared";
 
-import type { Tenant } from "./sql";
-
 export namespace Tenants {
   export const update = Utils.optimisticMutator(
     updateTenantMutationArgsSchema,
@@ -16,7 +14,7 @@ export namespace Tenants {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await Replicache.get<Tenant>(tx, tenantsTableName, id);
+        const prev = await Replicache.get(tx, tenantsTableName, id);
 
         return Replicache.set(tx, tenantsTableName, id, {
           ...prev,

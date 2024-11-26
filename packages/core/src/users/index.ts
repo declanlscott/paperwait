@@ -3,6 +3,11 @@ import * as R from "remeda";
 
 import { AccessControl } from "../access-control";
 import { useTenant } from "../actors";
+import {
+  billingAccountCustomerAuthorizationsTable,
+  billingAccountManagerAuthorizationsTable,
+  billingAccountsTable,
+} from "../billing-accounts/sql";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import {
   afterTransaction,
@@ -11,11 +16,6 @@ import {
 } from "../drizzle/transaction";
 import { ordersTable } from "../orders/sql";
 import { PapercutRpc } from "../papercut/rpc";
-import {
-  papercutAccountCustomerAuthorizationsTable,
-  papercutAccountManagerAuthorizationsTable,
-  papercutAccountsTable,
-} from "../papercut/sql";
 import { Realtime } from "../realtime";
 import { Replicache } from "../replicache";
 import { Sessions } from "../sessions";
@@ -29,8 +29,8 @@ import {
 import { userProfilesTable, usersTable } from "./sql";
 
 import type { InferInsertModel } from "drizzle-orm";
+import type { BillingAccount } from "../billing-accounts/sql";
 import type { Order } from "../orders/sql";
-import type { PapercutAccount } from "../papercut/sql";
 import type { UserRole } from "./shared";
 import type { User, UserProfilesTable } from "./sql";
 
@@ -166,15 +166,15 @@ export namespace Users {
             ),
           )
           .innerJoin(
-            papercutAccountManagerAuthorizationsTable,
+            billingAccountManagerAuthorizationsTable,
             and(
               eq(
                 usersTable.id,
-                papercutAccountManagerAuthorizationsTable.managerId,
+                billingAccountManagerAuthorizationsTable.managerId,
               ),
               eq(
                 usersTable.tenantId,
-                papercutAccountManagerAuthorizationsTable.tenantId,
+                billingAccountManagerAuthorizationsTable.tenantId,
               ),
             ),
           )
@@ -182,10 +182,10 @@ export namespace Users {
             ordersTable,
             and(
               eq(
-                papercutAccountManagerAuthorizationsTable.papercutAccountId,
-                ordersTable.papercutAccountId,
+                billingAccountManagerAuthorizationsTable.billingAccountId,
+                ordersTable.billingAccountId,
               ),
-              eq(papercutAccountsTable.tenantId, tenant.id),
+              eq(billingAccountsTable.tenantId, tenant.id),
             ),
           )
           .where(
@@ -224,22 +224,22 @@ export namespace Users {
   }
 
   export const withManagerAuthorization = async (
-    accountId: PapercutAccount["id"],
+    accountId: BillingAccount["id"],
   ) =>
     useTransaction(async (tx) =>
       tx
         .select({
-          managerId: papercutAccountManagerAuthorizationsTable.managerId,
+          managerId: billingAccountManagerAuthorizationsTable.managerId,
         })
-        .from(papercutAccountManagerAuthorizationsTable)
+        .from(billingAccountManagerAuthorizationsTable)
         .where(
           and(
             eq(
-              papercutAccountManagerAuthorizationsTable.papercutAccountId,
+              billingAccountManagerAuthorizationsTable.billingAccountId,
               accountId,
             ),
             eq(
-              papercutAccountManagerAuthorizationsTable.tenantId,
+              billingAccountManagerAuthorizationsTable.tenantId,
               useTenant().id,
             ),
           ),
@@ -247,22 +247,22 @@ export namespace Users {
     );
 
   export const withCustomerAuthorization = async (
-    accountId: PapercutAccount["id"],
+    accountId: BillingAccount["id"],
   ) =>
     useTransaction((tx) =>
       tx
         .select({
-          customerId: papercutAccountCustomerAuthorizationsTable.customerId,
+          customerId: billingAccountCustomerAuthorizationsTable.customerId,
         })
-        .from(papercutAccountCustomerAuthorizationsTable)
+        .from(billingAccountCustomerAuthorizationsTable)
         .where(
           and(
             eq(
-              papercutAccountCustomerAuthorizationsTable.papercutAccountId,
+              billingAccountCustomerAuthorizationsTable.billingAccountId,
               accountId,
             ),
             eq(
-              papercutAccountCustomerAuthorizationsTable.tenantId,
+              billingAccountCustomerAuthorizationsTable.tenantId,
               useTenant().id,
             ),
           ),

@@ -1,10 +1,10 @@
 import * as v from "valibot";
 
 import { announcementMutationNames } from "../announcements/shared";
+import { billingAccountMutationNames } from "../billing-accounts/shared";
 import { commentMutationNames } from "../comments/shared";
 import { invoiceMutationNames } from "../invoices/shared";
 import { orderMutationNames } from "../orders/shared";
-import { papercutMutationNames } from "../papercut/shared";
 import { productMutationNames } from "../products/shared";
 import {
   deliveryOptionsMutationNames,
@@ -33,12 +33,12 @@ export type GenericMutation = v.InferOutput<typeof genericMutationSchema>;
 
 export const mutationNameSchema = v.picklist([
   ...announcementMutationNames,
+  ...billingAccountMutationNames,
   ...commentMutationNames,
   ...deliveryOptionsMutationNames,
   ...invoiceMutationNames,
   ...orderMutationNames,
   ...tenantMutationNames,
-  ...papercutMutationNames,
   ...productMutationNames,
   ...roomMutationNames,
   ...userProfileMutationNames,

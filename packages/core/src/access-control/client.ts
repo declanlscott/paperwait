@@ -1,19 +1,14 @@
 import * as R from "remeda";
 
 import { announcementsTableName } from "../announcements/shared";
+import {
+  billingAccountCustomerAuthorizationsTableName,
+  billingAccountManagerAuthorizationsTableName,
+  billingAccountsTableName,
+} from "../billing-accounts/shared";
 import { commentsTableName } from "../comments/shared";
 import { invoicesTableName } from "../invoices/shared";
 import { ordersTableName } from "../orders/shared";
-import {
-  papercutAccountCustomerAuthorizationsTableName,
-  papercutAccountManagerAuthorizationsTableName,
-  papercutAccountsTableName,
-} from "../papercut/shared";
-import {
-  type PapercutAccount,
-  type PapercutAccountCustomerAuthorization,
-  type PapercutAccountManagerAuthorization,
-} from "../papercut/sql";
 import { productsTableName } from "../products/shared";
 import { Replicache } from "../replicache/client";
 import {
@@ -25,9 +20,9 @@ import { tenantsTableName } from "../tenants/shared";
 import { usersTableName } from "../users/shared";
 
 import type { WriteTransaction } from "replicache";
+import type { BillingAccount } from "../billing-accounts/sql";
 import type { Comment } from "../comments/sql";
 import type { Order } from "../orders/sql";
-import type { WorkflowStatus } from "../rooms/sql";
 import type { UserRole } from "../users/shared";
 import type { User, UserWithProfile } from "../users/sql";
 import type { SyncedTableName } from "../utils/tables";
@@ -58,6 +53,21 @@ export namespace AccessControl {
         update: true,
         delete: true,
       },
+      [billingAccountsTableName]: {
+        create: false,
+        update: true,
+        delete: true,
+      },
+      [billingAccountCustomerAuthorizationsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTableName]: {
+        create: true,
+        update: false,
+        delete: true,
+      },
       [commentsTableName]: {
         create: true,
         update: true,
@@ -76,21 +86,6 @@ export namespace AccessControl {
       [ordersTableName]: {
         create: true,
         update: true,
-        delete: true,
-      },
-      [papercutAccountsTableName]: {
-        create: false,
-        update: true,
-        delete: true,
-      },
-      [papercutAccountCustomerAuthorizationsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTableName]: {
-        create: true,
-        update: false,
         delete: true,
       },
       [productsTableName]: {
@@ -125,11 +120,26 @@ export namespace AccessControl {
         update: true,
         delete: true,
       },
+      [billingAccountsTableName]: {
+        create: false,
+        update: true,
+        delete: false,
+      },
+      [billingAccountCustomerAuthorizationsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
       [commentsTableName]: {
         create: true,
         update: async (tx, user, commentId: Comment["id"]) => {
           try {
-            const comment = await Replicache.get<Comment>(
+            const comment = await Replicache.get(
               tx,
               commentsTableName,
               commentId,
@@ -142,7 +152,7 @@ export namespace AccessControl {
         },
         delete: async (tx, user, commentId: Comment["id"]) => {
           try {
-            const comment = await Replicache.get<Comment>(
+            const comment = await Replicache.get(
               tx,
               commentsTableName,
               commentId,
@@ -168,21 +178,6 @@ export namespace AccessControl {
         create: true,
         update: true,
         delete: true,
-      },
-      [papercutAccountsTableName]: {
-        create: false,
-        update: true,
-        delete: false,
-      },
-      [papercutAccountCustomerAuthorizationsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
       },
       [productsTableName]: {
         create: true,
@@ -216,31 +211,66 @@ export namespace AccessControl {
         update: false,
         delete: false,
       },
-      [commentsTableName]: {
-        create: async (tx, user, orderId: Order["id"]) => {
+      [billingAccountsTableName]: {
+        create: false,
+        update: async (tx, user, billingAccountId: BillingAccount["id"]) => {
           try {
-            const order = await Replicache.get<Order>(
+            const billingAccount = await Replicache.get(
               tx,
-              ordersTableName,
-              orderId,
-            );
-
-            if (order.customerId === user.id) return true;
-
-            const papercutAccount = await Replicache.get<PapercutAccount>(
-              tx,
-              papercutAccountsTableName,
-              order.papercutAccountId,
+              billingAccountsTableName,
+              billingAccountId,
             );
 
             return R.pipe(
-              await Replicache.scan<PapercutAccountManagerAuthorization>(
+              await Replicache.scan(
                 tx,
-                papercutAccountManagerAuthorizationsTableName,
+                billingAccountManagerAuthorizationsTableName,
               ),
               R.filter(
                 (authorization) =>
-                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.billingAccountId === billingAccount.id &&
+                  authorization.managerId === user.id,
+              ),
+              R.length(),
+              R.isDeepEqual(1),
+            );
+          } catch {
+            return false;
+          }
+        },
+        delete: false,
+      },
+      [billingAccountCustomerAuthorizationsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [commentsTableName]: {
+        create: async (tx, user, orderId: Order["id"]) => {
+          try {
+            const order = await Replicache.get(tx, ordersTableName, orderId);
+
+            if (order.customerId === user.id) return true;
+
+            const billingAccount = await Replicache.get(
+              tx,
+              billingAccountsTableName,
+              order.billingAccountId,
+            );
+
+            return R.pipe(
+              await Replicache.scan(
+                tx,
+                billingAccountManagerAuthorizationsTableName,
+              ),
+              R.filter(
+                (authorization) =>
+                  authorization.billingAccountId === billingAccount.id &&
                   authorization.managerId === user.id,
               ),
               R.length(),
@@ -252,7 +282,7 @@ export namespace AccessControl {
         },
         update: async (tx, user, commentId: Comment["id"]) => {
           try {
-            const comment = await Replicache.get<Comment>(
+            const comment = await Replicache.get(
               tx,
               commentsTableName,
               commentId,
@@ -265,7 +295,7 @@ export namespace AccessControl {
         },
         delete: async (tx, user, commentId: Comment["id"]) => {
           try {
-            const comment = await Replicache.get<Comment>(
+            const comment = await Replicache.get(
               tx,
               commentsTableName,
               commentId,
@@ -288,16 +318,16 @@ export namespace AccessControl {
         delete: false,
       },
       [ordersTableName]: {
-        create: async (tx, user, papercutAccountId: PapercutAccount["id"]) => {
+        create: async (tx, user, billingAccountId: BillingAccount["id"]) => {
           try {
             return R.pipe(
-              await Replicache.scan<PapercutAccountCustomerAuthorization>(
+              await Replicache.scan(
                 tx,
-                papercutAccountCustomerAuthorizationsTableName,
+                billingAccountCustomerAuthorizationsTableName,
               ),
               R.filter(
                 (authorization) =>
-                  authorization.papercutAccountId === papercutAccountId &&
+                  authorization.billingAccountId === billingAccountId &&
                   authorization.customerId === user.id,
               ),
               R.length(),
@@ -309,13 +339,9 @@ export namespace AccessControl {
         },
         update: async (tx, user, orderId: Order["id"]) => {
           try {
-            const order = await Replicache.get<Order>(
-              tx,
-              ordersTableName,
-              orderId,
-            );
+            const order = await Replicache.get(tx, ordersTableName, orderId);
 
-            const workflowStatus = await Replicache.get<WorkflowStatus>(
+            const workflowStatus = await Replicache.get(
               tx,
               workflowStatusesTableName,
               order.workflowStatus,
@@ -324,20 +350,20 @@ export namespace AccessControl {
             if (workflowStatus.type !== "Review") return false;
             if (order.customerId === user.id) return true;
 
-            const papercutAccount = await Replicache.get<PapercutAccount>(
+            const billingAccount = await Replicache.get(
               tx,
-              papercutAccountsTableName,
-              order.papercutAccountId,
+              billingAccountsTableName,
+              order.billingAccountId,
             );
 
             return R.pipe(
-              await Replicache.scan<PapercutAccountManagerAuthorization>(
+              await Replicache.scan(
                 tx,
-                papercutAccountManagerAuthorizationsTableName,
+                billingAccountManagerAuthorizationsTableName,
               ),
               R.filter(
                 (authorization) =>
-                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.billingAccountId === billingAccount.id &&
                   authorization.managerId === user.id,
               ),
               R.length(),
@@ -349,13 +375,9 @@ export namespace AccessControl {
         },
         delete: async (tx, user, orderId: Order["id"]) => {
           try {
-            const order = await Replicache.get<Order>(
-              tx,
-              ordersTableName,
-              orderId,
-            );
+            const order = await Replicache.get(tx, ordersTableName, orderId);
 
-            const workflowStatus = await Replicache.get<WorkflowStatus>(
+            const workflowStatus = await Replicache.get(
               tx,
               workflowStatusesTableName,
               order.workflowStatus,
@@ -364,20 +386,20 @@ export namespace AccessControl {
             if (workflowStatus.type !== "Review") return false;
             if (order.customerId === user.id) return true;
 
-            const papercutAccount = await Replicache.get<PapercutAccount>(
+            const billingAccount = await Replicache.get(
               tx,
-              papercutAccountsTableName,
-              order.papercutAccountId,
+              billingAccountsTableName,
+              order.billingAccountId,
             );
 
             return R.pipe(
-              await Replicache.scan<PapercutAccountManagerAuthorization>(
+              await Replicache.scan(
                 tx,
-                papercutAccountManagerAuthorizationsTableName,
+                billingAccountManagerAuthorizationsTableName,
               ),
               R.filter(
                 (authorization) =>
-                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.billingAccountId === billingAccount.id &&
                   authorization.managerId === user.id,
               ),
               R.length(),
@@ -387,45 +409,6 @@ export namespace AccessControl {
             return false;
           }
         },
-      },
-      [papercutAccountsTableName]: {
-        create: false,
-        update: async (tx, user, papercutAccountId: PapercutAccount["id"]) => {
-          try {
-            const papercutAccount = await Replicache.get<PapercutAccount>(
-              tx,
-              papercutAccountsTableName,
-              papercutAccountId,
-            );
-
-            return R.pipe(
-              await Replicache.scan<PapercutAccountManagerAuthorization>(
-                tx,
-                papercutAccountManagerAuthorizationsTableName,
-              ),
-              R.filter(
-                (authorization) =>
-                  authorization.papercutAccountId === papercutAccount.id &&
-                  authorization.managerId === user.id,
-              ),
-              R.length(),
-              R.isDeepEqual(1),
-            );
-          } catch {
-            return false;
-          }
-        },
-        delete: false,
-      },
-      [papercutAccountCustomerAuthorizationsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
       },
       [productsTableName]: {
         create: false,
@@ -459,14 +442,25 @@ export namespace AccessControl {
         update: false,
         delete: false,
       },
+      [billingAccountsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountCustomerAuthorizationsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTableName]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
       [commentsTableName]: {
         create: async (tx, user, orderId: Order["id"]) => {
           try {
-            const order = await Replicache.get<Order>(
-              tx,
-              ordersTableName,
-              orderId,
-            );
+            const order = await Replicache.get(tx, ordersTableName, orderId);
 
             return order.customerId === user.id;
           } catch {
@@ -475,7 +469,7 @@ export namespace AccessControl {
         },
         update: async (tx, user, commentId: Comment["id"]) => {
           try {
-            const comment = await Replicache.get<Comment>(
+            const comment = await Replicache.get(
               tx,
               commentsTableName,
               commentId,
@@ -488,7 +482,7 @@ export namespace AccessControl {
         },
         delete: async (tx, user, commentId: Comment["id"]) => {
           try {
-            const comment = await Replicache.get<Comment>(
+            const comment = await Replicache.get(
               tx,
               commentsTableName,
               commentId,
@@ -511,22 +505,22 @@ export namespace AccessControl {
         delete: false,
       },
       [ordersTableName]: {
-        create: async (tx, user, papercutAccountId: PapercutAccount["id"]) => {
+        create: async (tx, user, billingAccountId: BillingAccount["id"]) => {
           try {
-            const papercutAccount = await Replicache.get<PapercutAccount>(
+            const billingAccount = await Replicache.get(
               tx,
-              papercutAccountsTableName,
-              papercutAccountId,
+              billingAccountsTableName,
+              billingAccountId,
             );
 
             return R.pipe(
-              await Replicache.scan<PapercutAccountCustomerAuthorization>(
+              await Replicache.scan(
                 tx,
-                papercutAccountCustomerAuthorizationsTableName,
+                billingAccountCustomerAuthorizationsTableName,
               ),
               R.filter(
                 (authorization) =>
-                  authorization.papercutAccountId === papercutAccount.id &&
+                  authorization.billingAccountId === billingAccount.id &&
                   authorization.customerId === user.id,
               ),
               R.length(),
@@ -538,13 +532,9 @@ export namespace AccessControl {
         },
         update: async (tx, user, orderId: Order["id"]) => {
           try {
-            const order = await Replicache.get<Order>(
-              tx,
-              ordersTableName,
-              orderId,
-            );
+            const order = await Replicache.get(tx, ordersTableName, orderId);
 
-            const workflowStatus = await Replicache.get<WorkflowStatus>(
+            const workflowStatus = await Replicache.get(
               tx,
               workflowStatusesTableName,
               order.workflowStatus,
@@ -558,13 +548,9 @@ export namespace AccessControl {
         },
         delete: async (tx, user, orderId: Order["id"]) => {
           try {
-            const order = await Replicache.get<Order>(
-              tx,
-              ordersTableName,
-              orderId,
-            );
+            const order = await Replicache.get(tx, ordersTableName, orderId);
 
-            const workflowStatus = await Replicache.get<WorkflowStatus>(
+            const workflowStatus = await Replicache.get(
               tx,
               workflowStatusesTableName,
               order.workflowStatus,
@@ -576,21 +562,6 @@ export namespace AccessControl {
             return false;
           }
         },
-      },
-      [papercutAccountsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountCustomerAuthorizationsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTableName]: {
-        create: false,
-        update: false,
-        delete: false,
       },
       [productsTableName]: {
         create: false,

@@ -2,16 +2,16 @@ import { and, arrayOverlaps, eq, isNull, or, sql } from "drizzle-orm";
 
 import { useAuthenticated, useTenant } from "../actors";
 import { announcementsTable } from "../announcements/sql";
+import {
+  billingAccountCustomerAuthorizationsTable,
+  billingAccountManagerAuthorizationsTable,
+  billingAccountsTable,
+} from "../billing-accounts/sql";
 import { commentsTable } from "../comments/sql";
 import { useTransaction } from "../drizzle/transaction";
 import { invoicesTable } from "../invoices/sql";
 import { ordersTableName } from "../orders/shared";
 import { ordersTable } from "../orders/sql";
-import {
-  papercutAccountCustomerAuthorizationsTable,
-  papercutAccountManagerAuthorizationsTable,
-  papercutAccountsTable,
-} from "../papercut/sql";
 import { productsTable } from "../products/sql";
 import {
   deliveryOptionsTable,
@@ -24,10 +24,10 @@ import { Constants } from "../utils/constants";
 
 import type { SQL } from "drizzle-orm";
 import type { PgSelectBase } from "drizzle-orm/pg-core";
+import type { BillingAccount } from "../billing-accounts/sql";
 import type { Comment } from "../comments/sql";
 import type { TxOrDb } from "../drizzle/transaction";
 import type { Order } from "../orders/sql";
-import type { PapercutAccount } from "../papercut/sql";
 import type { Metadata } from "../replicache/data";
 import type { UserRole } from "../users/shared";
 import type { User } from "../users/sql";
@@ -57,6 +57,40 @@ export namespace AccessControl {
         })
         .from(announcementsTable)
         .where(eq(announcementsTable.tenantId, useTenant().id))
+        .$dynamic(),
+    [billingAccountsTable._.name]: (tx) =>
+      tx
+        .select({
+          id: billingAccountsTable.id,
+          rowVersion: sql<number>`"${billingAccountsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
+        })
+        .from(billingAccountsTable)
+        .where(eq(billingAccountsTable.tenantId, useTenant().id))
+        .$dynamic(),
+    [billingAccountCustomerAuthorizationsTable._.name]: (tx) =>
+      tx
+        .select({
+          id: billingAccountCustomerAuthorizationsTable.id,
+          rowVersion: sql<number>`"${billingAccountCustomerAuthorizationsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
+        })
+        .from(billingAccountCustomerAuthorizationsTable)
+        .where(
+          eq(
+            billingAccountCustomerAuthorizationsTable.tenantId,
+            useTenant().id,
+          ),
+        )
+        .$dynamic(),
+    [billingAccountManagerAuthorizationsTable._.name]: (tx) =>
+      tx
+        .select({
+          id: billingAccountManagerAuthorizationsTable.id,
+          rowVersion: sql<number>`"${billingAccountManagerAuthorizationsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
+        })
+        .from(billingAccountManagerAuthorizationsTable)
+        .where(
+          eq(billingAccountManagerAuthorizationsTable.tenantId, useTenant().id),
+        )
         .$dynamic(),
     [commentsTable._.name]: (tx) =>
       tx
@@ -96,43 +130,6 @@ export namespace AccessControl {
           and(
             eq(ordersTable.tenantId, useTenant().id),
             isNull(ordersTable.deletedAt),
-          ),
-        )
-        .$dynamic(),
-    [papercutAccountsTable._.name]: (tx) =>
-      tx
-        .select({
-          id: papercutAccountsTable.id,
-          rowVersion: sql<number>`"${papercutAccountsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
-        })
-        .from(papercutAccountsTable)
-        .where(eq(papercutAccountsTable.tenantId, useTenant().id))
-        .$dynamic(),
-    [papercutAccountCustomerAuthorizationsTable._.name]: (tx) =>
-      tx
-        .select({
-          id: papercutAccountCustomerAuthorizationsTable.id,
-          rowVersion: sql<number>`"${papercutAccountCustomerAuthorizationsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
-        })
-        .from(papercutAccountCustomerAuthorizationsTable)
-        .where(
-          eq(
-            papercutAccountCustomerAuthorizationsTable.tenantId,
-            useTenant().id,
-          ),
-        )
-        .$dynamic(),
-    [papercutAccountManagerAuthorizationsTable._.name]: (tx) =>
-      tx
-        .select({
-          id: papercutAccountManagerAuthorizationsTable.id,
-          rowVersion: sql<number>`"${papercutAccountManagerAuthorizationsTable._.name}"."${Constants.ROW_VERSION_COLUMN_NAME}"`,
-        })
-        .from(papercutAccountManagerAuthorizationsTable)
-        .where(
-          eq(
-            papercutAccountManagerAuthorizationsTable.tenantId,
-            useTenant().id,
           ),
         )
         .$dynamic(),
@@ -210,6 +207,22 @@ export namespace AccessControl {
         useTransaction(
           resourceMetadataBaseQueryFactory[announcementsTable._.name],
         ),
+      [billingAccountsTable._.name]: async () =>
+        useTransaction(
+          resourceMetadataBaseQueryFactory[billingAccountsTable._.name],
+        ),
+      [billingAccountCustomerAuthorizationsTable._.name]: async () =>
+        useTransaction(
+          resourceMetadataBaseQueryFactory[
+            billingAccountCustomerAuthorizationsTable._.name
+          ],
+        ),
+      [billingAccountManagerAuthorizationsTable._.name]: async () =>
+        useTransaction(
+          resourceMetadataBaseQueryFactory[
+            billingAccountManagerAuthorizationsTable._.name
+          ],
+        ),
       [commentsTable._.name]: async () =>
         useTransaction(resourceMetadataBaseQueryFactory[commentsTable._.name]),
       [deliveryOptionsTable._.name]: async () =>
@@ -220,22 +233,6 @@ export namespace AccessControl {
         useTransaction(resourceMetadataBaseQueryFactory[invoicesTable._.name]),
       [ordersTable._.name]: async () =>
         useTransaction(resourceMetadataBaseQueryFactory[ordersTable._.name]),
-      [papercutAccountsTable._.name]: async () =>
-        useTransaction(
-          resourceMetadataBaseQueryFactory[papercutAccountsTable._.name],
-        ),
-      [papercutAccountCustomerAuthorizationsTable._.name]: async () =>
-        useTransaction(
-          resourceMetadataBaseQueryFactory[
-            papercutAccountCustomerAuthorizationsTable._.name
-          ],
-        ),
-      [papercutAccountManagerAuthorizationsTable._.name]: async () =>
-        useTransaction(
-          resourceMetadataBaseQueryFactory[
-            papercutAccountManagerAuthorizationsTable._.name
-          ],
-        ),
       [productsTable._.name]: async () =>
         useTransaction(resourceMetadataBaseQueryFactory[productsTable._.name]),
       [roomsTable._.name]: async () =>
@@ -253,6 +250,28 @@ export namespace AccessControl {
       [announcementsTable._.name]: async () =>
         useTransaction(
           resourceMetadataBaseQueryFactory[announcementsTable._.name],
+        ),
+      [billingAccountsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[billingAccountsTable._.name](
+            tx,
+          ).where(isNull(billingAccountsTable.deletedAt)),
+        ),
+      [billingAccountCustomerAuthorizationsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[
+            billingAccountCustomerAuthorizationsTable._.name
+          ](tx).where(
+            isNull(billingAccountCustomerAuthorizationsTable.deletedAt),
+          ),
+        ),
+      [billingAccountManagerAuthorizationsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[
+            billingAccountManagerAuthorizationsTable._.name
+          ](tx).where(
+            isNull(billingAccountManagerAuthorizationsTable.deletedAt),
+          ),
         ),
       [commentsTable._.name]: async () =>
         useTransaction((tx) =>
@@ -285,28 +304,6 @@ export namespace AccessControl {
             isNull(ordersTable.deletedAt),
           ),
         ),
-      [papercutAccountsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[papercutAccountsTable._.name](
-            tx,
-          ).where(isNull(papercutAccountsTable.deletedAt)),
-        ),
-      [papercutAccountCustomerAuthorizationsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[
-            papercutAccountCustomerAuthorizationsTable._.name
-          ](tx).where(
-            isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
-          ),
-        ),
-      [papercutAccountManagerAuthorizationsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[
-            papercutAccountManagerAuthorizationsTable._.name
-          ](tx).where(
-            isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
-          ),
-        ),
       [productsTable._.name]: async () =>
         useTransaction((tx) =>
           resourceMetadataBaseQueryFactory[productsTable._.name](tx).where(
@@ -337,6 +334,28 @@ export namespace AccessControl {
         useTransaction(
           resourceMetadataBaseQueryFactory[announcementsTable._.name],
         ),
+      [billingAccountsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[billingAccountsTable._.name](
+            tx,
+          ).where(isNull(billingAccountsTable.deletedAt)),
+        ),
+      [billingAccountCustomerAuthorizationsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[
+            billingAccountCustomerAuthorizationsTable._.name
+          ](tx).where(
+            isNull(billingAccountCustomerAuthorizationsTable.deletedAt),
+          ),
+        ),
+      [billingAccountManagerAuthorizationsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[
+            billingAccountManagerAuthorizationsTable._.name
+          ](tx).where(
+            isNull(billingAccountManagerAuthorizationsTable.deletedAt),
+          ),
+        ),
       [commentsTable._.name]: async () =>
         useTransaction((tx) =>
           resourceMetadataBaseQueryFactory[commentsTable._.name](tx)
@@ -348,22 +367,22 @@ export namespace AccessControl {
               ),
             )
             .innerJoin(
-              papercutAccountsTable,
+              billingAccountsTable,
               and(
-                eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-                eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
+                eq(ordersTable.billingAccountId, billingAccountsTable.id),
+                eq(ordersTable.tenantId, billingAccountsTable.tenantId),
               ),
             )
             .innerJoin(
-              papercutAccountManagerAuthorizationsTable,
+              billingAccountManagerAuthorizationsTable,
               and(
                 eq(
-                  papercutAccountsTable.id,
-                  papercutAccountManagerAuthorizationsTable.papercutAccountId,
+                  billingAccountsTable.id,
+                  billingAccountManagerAuthorizationsTable.billingAccountId,
                 ),
                 eq(
-                  papercutAccountsTable.tenantId,
-                  papercutAccountManagerAuthorizationsTable.tenantId,
+                  billingAccountsTable.tenantId,
+                  billingAccountManagerAuthorizationsTable.tenantId,
                 ),
               ),
             )
@@ -396,22 +415,22 @@ export namespace AccessControl {
               ),
             )
             .innerJoin(
-              papercutAccountsTable,
+              billingAccountsTable,
               and(
-                eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-                eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
+                eq(ordersTable.billingAccountId, billingAccountsTable.id),
+                eq(ordersTable.tenantId, billingAccountsTable.tenantId),
               ),
             )
             .innerJoin(
-              papercutAccountManagerAuthorizationsTable,
+              billingAccountManagerAuthorizationsTable,
               and(
                 eq(
-                  papercutAccountsTable.id,
-                  papercutAccountManagerAuthorizationsTable.papercutAccountId,
+                  billingAccountsTable.id,
+                  billingAccountManagerAuthorizationsTable.billingAccountId,
                 ),
                 eq(
-                  papercutAccountsTable.tenantId,
-                  papercutAccountManagerAuthorizationsTable.tenantId,
+                  billingAccountsTable.tenantId,
+                  billingAccountManagerAuthorizationsTable.tenantId,
                 ),
               ),
             )
@@ -429,22 +448,22 @@ export namespace AccessControl {
         useTransaction((tx) =>
           resourceMetadataBaseQueryFactory[ordersTable._.name](tx)
             .innerJoin(
-              papercutAccountsTable,
+              billingAccountsTable,
               and(
-                eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-                eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
+                eq(ordersTable.billingAccountId, billingAccountsTable.id),
+                eq(ordersTable.tenantId, billingAccountsTable.tenantId),
               ),
             )
             .innerJoin(
-              papercutAccountManagerAuthorizationsTable,
+              billingAccountManagerAuthorizationsTable,
               and(
                 eq(
-                  papercutAccountsTable.id,
-                  papercutAccountManagerAuthorizationsTable.papercutAccountId,
+                  billingAccountsTable.id,
+                  billingAccountManagerAuthorizationsTable.billingAccountId,
                 ),
                 eq(
-                  papercutAccountsTable.tenantId,
-                  papercutAccountManagerAuthorizationsTable.tenantId,
+                  billingAccountsTable.tenantId,
+                  billingAccountManagerAuthorizationsTable.tenantId,
                 ),
               ),
             )
@@ -457,28 +476,6 @@ export namespace AccessControl {
                 ),
               ),
             ),
-        ),
-      [papercutAccountsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[papercutAccountsTable._.name](
-            tx,
-          ).where(isNull(papercutAccountsTable.deletedAt)),
-        ),
-      [papercutAccountCustomerAuthorizationsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[
-            papercutAccountCustomerAuthorizationsTable._.name
-          ](tx).where(
-            isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
-          ),
-        ),
-      [papercutAccountManagerAuthorizationsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[
-            papercutAccountManagerAuthorizationsTable._.name
-          ](tx).where(
-            isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
-          ),
         ),
       [productsTable._.name]: async () =>
         useTransaction((tx) =>
@@ -515,6 +512,28 @@ export namespace AccessControl {
       [announcementsTable._.name]: async () =>
         useTransaction(
           resourceMetadataBaseQueryFactory[announcementsTable._.name],
+        ),
+      [billingAccountsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[billingAccountsTable._.name](
+            tx,
+          ).where(isNull(billingAccountsTable.deletedAt)),
+        ),
+      [billingAccountCustomerAuthorizationsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[
+            billingAccountCustomerAuthorizationsTable._.name
+          ](tx).where(
+            isNull(billingAccountCustomerAuthorizationsTable.deletedAt),
+          ),
+        ),
+      [billingAccountManagerAuthorizationsTable._.name]: async () =>
+        useTransaction((tx) =>
+          resourceMetadataBaseQueryFactory[
+            billingAccountManagerAuthorizationsTable._.name
+          ](tx).where(
+            isNull(billingAccountManagerAuthorizationsTable.deletedAt),
+          ),
         ),
       [commentsTable._.name]: async () =>
         useTransaction((tx) =>
@@ -571,28 +590,6 @@ export namespace AccessControl {
             ),
           ),
         ),
-      [papercutAccountsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[papercutAccountsTable._.name](
-            tx,
-          ).where(isNull(papercutAccountsTable.deletedAt)),
-        ),
-      [papercutAccountCustomerAuthorizationsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[
-            papercutAccountCustomerAuthorizationsTable._.name
-          ](tx).where(
-            isNull(papercutAccountCustomerAuthorizationsTable.deletedAt),
-          ),
-        ),
-      [papercutAccountManagerAuthorizationsTable._.name]: async () =>
-        useTransaction((tx) =>
-          resourceMetadataBaseQueryFactory[
-            papercutAccountManagerAuthorizationsTable._.name
-          ](tx).where(
-            isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
-          ),
-        ),
       [productsTable._.name]: async () =>
         useTransaction((tx) =>
           resourceMetadataBaseQueryFactory[productsTable._.name](tx).where(
@@ -645,6 +642,21 @@ export namespace AccessControl {
         update: true,
         delete: true,
       },
+      [billingAccountsTable._.name]: {
+        create: false,
+        update: true,
+        delete: true,
+      },
+      [billingAccountCustomerAuthorizationsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTable._.name]: {
+        create: true,
+        update: false,
+        delete: true,
+      },
       [commentsTable._.name]: {
         create: true,
         update: true,
@@ -663,21 +675,6 @@ export namespace AccessControl {
       [ordersTable._.name]: {
         create: true,
         update: true,
-        delete: true,
-      },
-      [papercutAccountsTable._.name]: {
-        create: false,
-        update: true,
-        delete: true,
-      },
-      [papercutAccountCustomerAuthorizationsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTable._.name]: {
-        create: true,
-        update: false,
         delete: true,
       },
       [productsTable._.name]: {
@@ -712,6 +709,21 @@ export namespace AccessControl {
         update: true,
         delete: true,
       },
+      [billingAccountsTable._.name]: {
+        create: false,
+        update: true,
+        delete: false,
+      },
+      [billingAccountCustomerAuthorizationsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
       [commentsTable._.name]: {
         create: true,
         update: async (commentId: Comment["id"]) =>
@@ -757,21 +769,6 @@ export namespace AccessControl {
         create: true,
         update: true,
         delete: true,
-      },
-      [papercutAccountsTable._.name]: {
-        create: false,
-        update: true,
-        delete: false,
-      },
-      [papercutAccountCustomerAuthorizationsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
       },
       [productsTable._.name]: {
         create: true,
@@ -805,6 +802,52 @@ export namespace AccessControl {
         update: false,
         delete: false,
       },
+      [billingAccountsTable._.name]: {
+        create: false,
+        update: async (billingAccountId: BillingAccount["id"]) =>
+          useTransaction((tx) =>
+            tx
+              .select({})
+              .from(billingAccountsTable)
+              .innerJoin(
+                billingAccountManagerAuthorizationsTable,
+                and(
+                  eq(
+                    billingAccountsTable.id,
+                    billingAccountManagerAuthorizationsTable.billingAccountId,
+                  ),
+                  eq(
+                    billingAccountsTable.tenantId,
+                    billingAccountManagerAuthorizationsTable.tenantId,
+                  ),
+                ),
+              )
+              .where(
+                and(
+                  eq(billingAccountsTable.id, billingAccountId),
+                  eq(billingAccountsTable.tenantId, useTenant().id),
+                  eq(
+                    billingAccountManagerAuthorizationsTable.managerId,
+                    useAuthenticated().user.id,
+                  ),
+                  isNull(billingAccountsTable.deletedAt),
+                  isNull(billingAccountManagerAuthorizationsTable.deletedAt),
+                ),
+              )
+              .then((rows) => rows.length > 0),
+          ),
+        delete: false,
+      },
+      [billingAccountCustomerAuthorizationsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
       [commentsTable._.name]: {
         create: async (orderId: Order["id"]) =>
           useTransaction((tx) =>
@@ -812,22 +855,22 @@ export namespace AccessControl {
               .select({})
               .from(ordersTable)
               .innerJoin(
-                papercutAccountsTable,
+                billingAccountsTable,
                 and(
-                  eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-                  eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
+                  eq(ordersTable.billingAccountId, billingAccountsTable.id),
+                  eq(ordersTable.tenantId, billingAccountsTable.tenantId),
                 ),
               )
               .leftJoin(
-                papercutAccountManagerAuthorizationsTable,
+                billingAccountManagerAuthorizationsTable,
                 and(
                   eq(
-                    papercutAccountsTable.id,
-                    papercutAccountManagerAuthorizationsTable.papercutAccountId,
+                    billingAccountsTable.id,
+                    billingAccountManagerAuthorizationsTable.billingAccountId,
                   ),
                   eq(
-                    papercutAccountsTable.tenantId,
-                    papercutAccountManagerAuthorizationsTable.tenantId,
+                    billingAccountsTable.tenantId,
+                    billingAccountManagerAuthorizationsTable.tenantId,
                   ),
                 ),
               )
@@ -839,11 +882,11 @@ export namespace AccessControl {
                   or(
                     and(
                       eq(
-                        papercutAccountManagerAuthorizationsTable.managerId,
+                        billingAccountManagerAuthorizationsTable.managerId,
                         useAuthenticated().user.id,
                       ),
                       isNull(
-                        papercutAccountManagerAuthorizationsTable.deletedAt,
+                        billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
                     eq(ordersTable.customerId, useAuthenticated().user.id),
@@ -892,28 +935,28 @@ export namespace AccessControl {
         delete: false,
       },
       [ordersTable._.name]: {
-        create: async (papercutAccountId: PapercutAccount["id"]) =>
+        create: async (billingAccountId: BillingAccount["id"]) =>
           useTransaction((tx) =>
             tx
               .select({})
-              .from(papercutAccountsTable)
+              .from(billingAccountsTable)
               .innerJoin(
-                papercutAccountCustomerAuthorizationsTable,
+                billingAccountCustomerAuthorizationsTable,
                 and(
                   eq(
-                    papercutAccountsTable.id,
-                    papercutAccountCustomerAuthorizationsTable.papercutAccountId,
+                    billingAccountsTable.id,
+                    billingAccountCustomerAuthorizationsTable.billingAccountId,
                   ),
                   eq(
-                    papercutAccountsTable.tenantId,
-                    papercutAccountCustomerAuthorizationsTable.tenantId,
+                    billingAccountsTable.tenantId,
+                    billingAccountCustomerAuthorizationsTable.tenantId,
                   ),
                 ),
               )
               .where(
                 and(
-                  eq(papercutAccountsTable.id, papercutAccountId),
-                  eq(papercutAccountsTable.tenantId, useTenant().id),
+                  eq(billingAccountsTable.id, billingAccountId),
+                  eq(billingAccountsTable.tenantId, useTenant().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -924,22 +967,22 @@ export namespace AccessControl {
               .select({})
               .from(ordersTable)
               .innerJoin(
-                papercutAccountsTable,
+                billingAccountsTable,
                 and(
-                  eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-                  eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
+                  eq(ordersTable.billingAccountId, billingAccountsTable.id),
+                  eq(ordersTable.tenantId, billingAccountsTable.tenantId),
                 ),
               )
               .leftJoin(
-                papercutAccountManagerAuthorizationsTable,
+                billingAccountManagerAuthorizationsTable,
                 and(
                   eq(
-                    papercutAccountsTable.id,
-                    papercutAccountManagerAuthorizationsTable.papercutAccountId,
+                    billingAccountsTable.id,
+                    billingAccountManagerAuthorizationsTable.billingAccountId,
                   ),
                   eq(
-                    papercutAccountsTable.tenantId,
-                    papercutAccountManagerAuthorizationsTable.tenantId,
+                    billingAccountsTable.tenantId,
+                    billingAccountManagerAuthorizationsTable.tenantId,
                   ),
                 ),
               )
@@ -959,11 +1002,11 @@ export namespace AccessControl {
                   or(
                     and(
                       eq(
-                        papercutAccountManagerAuthorizationsTable.managerId,
+                        billingAccountManagerAuthorizationsTable.managerId,
                         useAuthenticated().user.id,
                       ),
                       isNull(
-                        papercutAccountManagerAuthorizationsTable.deletedAt,
+                        billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
                     eq(ordersTable.customerId, useAuthenticated().user.id),
@@ -978,22 +1021,22 @@ export namespace AccessControl {
               .select({})
               .from(ordersTable)
               .innerJoin(
-                papercutAccountsTable,
+                billingAccountsTable,
                 and(
-                  eq(ordersTable.papercutAccountId, papercutAccountsTable.id),
-                  eq(ordersTable.tenantId, papercutAccountsTable.tenantId),
+                  eq(ordersTable.billingAccountId, billingAccountsTable.id),
+                  eq(ordersTable.tenantId, billingAccountsTable.tenantId),
                 ),
               )
               .leftJoin(
-                papercutAccountManagerAuthorizationsTable,
+                billingAccountManagerAuthorizationsTable,
                 and(
                   eq(
-                    papercutAccountsTable.id,
-                    papercutAccountManagerAuthorizationsTable.papercutAccountId,
+                    billingAccountsTable.id,
+                    billingAccountManagerAuthorizationsTable.billingAccountId,
                   ),
                   eq(
-                    papercutAccountsTable.tenantId,
-                    papercutAccountManagerAuthorizationsTable.tenantId,
+                    billingAccountsTable.tenantId,
+                    billingAccountManagerAuthorizationsTable.tenantId,
                   ),
                 ),
               )
@@ -1013,11 +1056,11 @@ export namespace AccessControl {
                   or(
                     and(
                       eq(
-                        papercutAccountManagerAuthorizationsTable.managerId,
+                        billingAccountManagerAuthorizationsTable.managerId,
                         useAuthenticated().user.id,
                       ),
                       isNull(
-                        papercutAccountManagerAuthorizationsTable.deletedAt,
+                        billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
                     eq(ordersTable.customerId, useAuthenticated().user.id),
@@ -1026,52 +1069,6 @@ export namespace AccessControl {
               )
               .then((rows) => rows.length > 0),
           ),
-      },
-      [papercutAccountsTable._.name]: {
-        create: false,
-        update: async (papercutAccountId: PapercutAccount["id"]) =>
-          useTransaction((tx) =>
-            tx
-              .select({})
-              .from(papercutAccountsTable)
-              .innerJoin(
-                papercutAccountManagerAuthorizationsTable,
-                and(
-                  eq(
-                    papercutAccountsTable.id,
-                    papercutAccountManagerAuthorizationsTable.papercutAccountId,
-                  ),
-                  eq(
-                    papercutAccountsTable.tenantId,
-                    papercutAccountManagerAuthorizationsTable.tenantId,
-                  ),
-                ),
-              )
-              .where(
-                and(
-                  eq(papercutAccountsTable.id, papercutAccountId),
-                  eq(papercutAccountsTable.tenantId, useTenant().id),
-                  eq(
-                    papercutAccountManagerAuthorizationsTable.managerId,
-                    useAuthenticated().user.id,
-                  ),
-                  isNull(papercutAccountsTable.deletedAt),
-                  isNull(papercutAccountManagerAuthorizationsTable.deletedAt),
-                ),
-              )
-              .then((rows) => rows.length > 0),
-          ),
-        delete: false,
-      },
-      [papercutAccountCustomerAuthorizationsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
       },
       [productsTable._.name]: {
         create: false,
@@ -1105,6 +1102,21 @@ export namespace AccessControl {
         update: false,
         delete: false,
       },
+      [billingAccountsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountCustomerAuthorizationsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      [billingAccountManagerAuthorizationsTable._.name]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
       [commentsTable._.name]: {
         create: async (orderId: Order["id"]) =>
           useTransaction((tx) =>
@@ -1163,28 +1175,28 @@ export namespace AccessControl {
         delete: false,
       },
       [ordersTable._.name]: {
-        create: async (papercutAccountId: PapercutAccount["id"]) =>
+        create: async (billingAccountId: BillingAccount["id"]) =>
           useTransaction((tx) =>
             tx
               .select({})
-              .from(papercutAccountsTable)
+              .from(billingAccountsTable)
               .innerJoin(
-                papercutAccountCustomerAuthorizationsTable,
+                billingAccountCustomerAuthorizationsTable,
                 and(
                   eq(
-                    papercutAccountsTable.id,
-                    papercutAccountCustomerAuthorizationsTable.papercutAccountId,
+                    billingAccountsTable.id,
+                    billingAccountCustomerAuthorizationsTable.billingAccountId,
                   ),
                   eq(
-                    papercutAccountsTable.tenantId,
-                    papercutAccountCustomerAuthorizationsTable.tenantId,
+                    billingAccountsTable.tenantId,
+                    billingAccountCustomerAuthorizationsTable.tenantId,
                   ),
                 ),
               )
               .where(
                 and(
-                  eq(papercutAccountsTable.id, papercutAccountId),
-                  eq(papercutAccountsTable.tenantId, useTenant().id),
+                  eq(billingAccountsTable.id, billingAccountId),
+                  eq(billingAccountsTable.tenantId, useTenant().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -1235,21 +1247,6 @@ export namespace AccessControl {
               )
               .then((rows) => rows.length > 0),
           ),
-      },
-      [papercutAccountsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountCustomerAuthorizationsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
-      },
-      [papercutAccountManagerAuthorizationsTable._.name]: {
-        create: false,
-        update: false,
-        delete: false,
       },
       [productsTable._.name]: {
         create: false,

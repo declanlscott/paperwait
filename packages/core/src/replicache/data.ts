@@ -1,17 +1,17 @@
 import { Announcements } from "../announcements";
 import { announcementsTableName } from "../announcements/shared";
+import { BillingAccounts } from "../billing-accounts";
+import {
+  billingAccountCustomerAuthorizationsTableName,
+  billingAccountManagerAuthorizationsTableName,
+  billingAccountsTableName,
+} from "../billing-accounts/shared";
 import { Comments } from "../comments";
 import { commentsTableName } from "../comments/shared";
 import { Invoices } from "../invoices";
 import { invoicesTableName } from "../invoices/shared";
 import { Orders } from "../orders";
 import { ordersTableName } from "../orders/shared";
-import { Papercut } from "../papercut";
-import {
-  papercutAccountCustomerAuthorizationsTableName,
-  papercutAccountManagerAuthorizationsTableName,
-  papercutAccountsTableName,
-} from "../papercut/shared";
 import { Products } from "../products";
 import { productsTableName } from "../products/shared";
 import { Rooms } from "../rooms";
@@ -62,15 +62,15 @@ export type DataFactory = {
 
 export const dataFactory = {
   [announcementsTableName]: Announcements.read,
+  [billingAccountsTableName]: BillingAccounts.read,
+  [billingAccountCustomerAuthorizationsTableName]:
+    BillingAccounts.readCustomerAuthorizations,
+  [billingAccountManagerAuthorizationsTableName]:
+    BillingAccounts.readManagerAuthorizations,
   [commentsTableName]: Comments.read,
   [deliveryOptionsTableName]: Rooms.readDeliveryOptions,
   [invoicesTableName]: Invoices.read,
   [ordersTableName]: Orders.read,
-  [papercutAccountsTableName]: Papercut.readAccounts,
-  [papercutAccountCustomerAuthorizationsTableName]:
-    Papercut.readAccountCustomerAuthorizations,
-  [papercutAccountManagerAuthorizationsTableName]:
-    Papercut.readAccountManagerAuthorizations,
   [productsTableName]: Products.read,
   [roomsTableName]: Rooms.read,
   [tenantsTableName]: Tenants.read,
@@ -101,6 +101,12 @@ export const authoritativeMutatorFactory = {
   createAnnouncement: Announcements.create,
   updateAnnouncement: Announcements.update,
   deleteAnnouncement: Announcements.delete_,
+  updateBillingAccountReviewThreshold: BillingAccounts.updateReviewThreshold,
+  deleteBillingAccount: BillingAccounts.delete_,
+  createBillingAccountManagerAuthorization:
+    BillingAccounts.createManagerAuthorization,
+  deleteBillingAccountManagerAuthorization:
+    BillingAccounts.deleteManagerAuthorization,
   createComment: Comments.create,
   updateComment: Comments.update,
   deleteComment: Comments.delete_,
@@ -109,13 +115,6 @@ export const authoritativeMutatorFactory = {
   createOrder: Orders.create,
   updateOrder: Orders.update,
   deleteOrder: Orders.delete_,
-  updatePapercutAccountApprovalThreshold:
-    Papercut.updateAccountApprovalThreshold,
-  deletePapercutAccount: Papercut.deleteAccount,
-  createPapercutAccountManagerAuthorization:
-    Papercut.createAccountManagerAuthorization,
-  deletePapercutAccountManagerAuthorization:
-    Papercut.deleteAccountManagerAuthorization,
   createProduct: Products.create,
   updateProduct: Products.update,
   deleteProduct: Products.delete_,

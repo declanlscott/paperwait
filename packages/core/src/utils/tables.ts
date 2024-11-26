@@ -1,12 +1,12 @@
 import { announcementsTable } from "../announcements/sql";
+import {
+  billingAccountCustomerAuthorizationsTable,
+  billingAccountManagerAuthorizationsTable,
+  billingAccountsTable,
+} from "../billing-accounts/sql";
 import { commentsTable } from "../comments/sql";
 import { invoicesTable } from "../invoices/sql";
 import { ordersTable } from "../orders/sql";
-import {
-  papercutAccountCustomerAuthorizationsTable,
-  papercutAccountManagerAuthorizationsTable,
-  papercutAccountsTable,
-} from "../papercut/sql";
 import { productsTable } from "../products/sql";
 import { replicacheClientsTable } from "../replicache/sql";
 import {
@@ -19,13 +19,13 @@ import { usersTable } from "../users/sql";
 
 export const syncedTables = [
   announcementsTable,
+  billingAccountsTable,
+  billingAccountCustomerAuthorizationsTable,
+  billingAccountManagerAuthorizationsTable,
   commentsTable,
   deliveryOptionsTable,
   invoicesTable,
   ordersTable,
-  papercutAccountsTable,
-  papercutAccountCustomerAuthorizationsTable,
-  papercutAccountManagerAuthorizationsTable,
   productsTable,
   roomsTable,
   tenantsTable,

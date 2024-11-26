@@ -9,8 +9,6 @@ import {
   updateAnnouncementMutationArgsSchema,
 } from "./shared";
 
-import type { Announcement } from "./sql";
-
 export namespace Announcements {
   export const create = Utils.optimisticMutator(
     createAnnouncementMutationArgsSchema,
@@ -31,11 +29,7 @@ export namespace Announcements {
         args: [{ name: announcementsTableName, id }],
       }),
     () => async (tx, values) => {
-      const prev = await Replicache.get<Announcement>(
-        tx,
-        announcementsTableName,
-        values.id,
-      );
+      const prev = await Replicache.get(tx, announcementsTableName, values.id);
 
       return Replicache.set(tx, announcementsTableName, values.id, {
         ...prev,
@@ -54,7 +48,7 @@ export namespace Announcements {
     ({ user }) =>
       async (tx, values) => {
         if (user.profile.role === "administrator") {
-          const prev = await Replicache.get<Announcement>(
+          const prev = await Replicache.get(
             tx,
             announcementsTableName,
             values.id,

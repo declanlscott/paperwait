@@ -1,5 +1,6 @@
 import { pgEnum } from "drizzle-orm/pg-core";
 
+import { billingAccountTypes } from "../billing-accounts/shared";
 import { invoiceStatuses } from "../invoices/shared";
 import { oauth2ProviderVariants } from "../oauth2/shared";
 import { productStatuses } from "../products/shared";
@@ -26,4 +27,8 @@ export const oauth2ProviderVariant = pgEnum(
 
 export const productStatus = pgEnum("product_status", productStatuses);
 
+export const billingAccountType = pgEnum(
+  "billing_account_type",
+  billingAccountTypes,
+);
 export const invoiceStatus = pgEnum("invoice_status", invoiceStatuses);

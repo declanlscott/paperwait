@@ -1,11 +1,7 @@
 import * as v from "valibot";
 
 import { Constants } from "../utils/constants";
-import {
-  nanoIdSchema,
-  papercutAccountIdSchema,
-  tenantTableSchema,
-} from "../utils/shared";
+import { nanoIdSchema, tenantTableSchema } from "../utils/shared";
 
 export const ordersTableName = "orders";
 
@@ -204,7 +200,7 @@ export const orderSchema = v.object({
   managerId: v.nullable(nanoIdSchema),
   operatorId: v.nullable(nanoIdSchema),
   productId: nanoIdSchema,
-  papercutAccountId: papercutAccountIdSchema,
+  billingAccountId: nanoIdSchema,
   attributes: orderAttributesSchema,
   workflowStatus: v.pipe(
     v.string(),

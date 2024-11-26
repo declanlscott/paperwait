@@ -5,13 +5,14 @@ import { ApplicationError } from "../utils/errors";
 
 import type {
   DeepReadonlyObject,
-  ReadonlyJSONObject,
   ReadTransaction,
   WriteTransaction,
 } from "replicache";
 import type * as v from "valibot";
 import type { Authenticated } from "../sessions/shared";
-import type { SyncedTable, SyncedTableName } from "../utils/tables";
+import type { usersTableName } from "../users/shared";
+import type { UserWithProfile } from "../users/sql";
+import type { SyncedTableName, TableByName } from "../utils/tables";
 import type { MutationName, Serialized } from "./shared";
 
 export namespace Replicache {
@@ -30,30 +31,46 @@ export namespace Replicache {
   export type OptimisticMutatorFactory<TSchema extends v.GenericSchema = any> =
     Record<MutationName, OptimisticMutator<TSchema>>;
 
-  export async function get<TDeserialized extends SyncedTable["$inferSelect"]>(
+  export async function get<TTableName extends SyncedTableName>(
     tx: ReadTransaction,
-    name: SyncedTableName,
+    name: TTableName,
     id: string,
   ) {
     const value = (await tx.get(`${name}/${id}`)) as Serialized | undefined;
     if (!value) throw new ApplicationError.EntityNotFound({ name, id });
 
-    return deserialize<DeepReadonlyObject<TDeserialized>>(value);
+    return deserialize<
+      DeepReadonlyObject<
+        TTableName extends typeof usersTableName
+          ? UserWithProfile
+          : TableByName<TTableName>["$inferSelect"]
+      >
+    >(value);
   }
 
-  export const scan = async <TDeserialized extends SyncedTable["$inferSelect"]>(
+  export const scan = async <TTableName extends SyncedTableName>(
     tx: ReadTransaction,
-    name: SyncedTableName,
+    name: TTableName,
   ) =>
     (
       tx.scan({ prefix: `${name}/` }).toArray() as Promise<Array<Serialized>>
-    ).then(R.map(deserialize<DeepReadonlyObject<TDeserialized>>));
+    ).then(
+      R.map(
+        deserialize<
+          DeepReadonlyObject<
+            TTableName extends typeof usersTableName
+              ? UserWithProfile
+              : TableByName<TTableName>["$inferSelect"]
+          >
+        >,
+      ),
+    );
 
   export const set = async (
     tx: WriteTransaction,
     name: SyncedTableName,
     id: string,
-    value: ReadonlyJSONObject,
+    value: unknown,
   ) => tx.set(`${name}/${id}`, serialize(value) as Serialized);
 
   export async function del(

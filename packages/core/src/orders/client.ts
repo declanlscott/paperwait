@@ -9,14 +9,12 @@ import {
   updateOrderMutationArgsSchema,
 } from "./shared";
 
-import type { Order } from "./sql";
-
 export namespace Orders {
   export const create = Utils.optimisticMutator(
     createOrderMutationArgsSchema,
-    (tx, user, { papercutAccountId }) =>
+    (tx, user, { billingAccountId }) =>
       AccessControl.enforce(
-        [tx, user, ordersTableName, "create", papercutAccountId],
+        [tx, user, ordersTableName, "create", billingAccountId],
         {
           Error: ApplicationError.AccessDenied,
           args: [{ name: ordersTableName }],
@@ -34,7 +32,7 @@ export namespace Orders {
         args: [{ name: ordersTableName, id }],
       }),
     () => async (tx, values) => {
-      const prev = await Replicache.get<Order>(tx, ordersTableName, values.id);
+      const prev = await Replicache.get(tx, ordersTableName, values.id);
 
       return Replicache.set(tx, ordersTableName, values.id, {
         ...prev,
@@ -53,7 +51,7 @@ export namespace Orders {
     ({ user }) =>
       async (tx, { id, ...values }) => {
         if (user.profile.role === "administrator") {
-          const prev = await Replicache.get<Order>(tx, ordersTableName, id);
+          const prev = await Replicache.get(tx, ordersTableName, id);
 
           return Replicache.set(tx, ordersTableName, id, {
             ...prev,

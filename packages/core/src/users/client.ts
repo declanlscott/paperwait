@@ -1,8 +1,11 @@
 import * as R from "remeda";
 
 import { AccessControl } from "../access-control/client";
+import {
+  billingAccountCustomerAuthorizationsTableName,
+  billingAccountManagerAuthorizationsTableName,
+} from "../billing-accounts/shared";
 import { ordersTableName } from "../orders/shared";
-import { papercutAccountManagerAuthorizationsTableName } from "../papercut/shared";
 import { Replicache } from "../replicache/client";
 import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
@@ -14,14 +17,9 @@ import {
 } from "./shared";
 
 import type { WriteTransaction } from "replicache";
+import type { BillingAccount } from "../billing-accounts/sql";
 import type { Order } from "../orders/sql";
-import type {
-  PapercutAccount,
-  PapercutAccountCustomerAuthorization,
-  PapercutAccountManagerAuthorization,
-} from "../papercut/sql";
 import type { UserRole } from "./shared";
-import type { UserWithProfile } from "./sql";
 
 export namespace Users {
   export const fromRoles = async (
@@ -33,7 +31,7 @@ export namespace Users {
       "customer",
     ],
   ) =>
-    Replicache.scan<UserWithProfile>(tx, usersTableName).then(
+    Replicache.scan(tx, usersTableName).then(
       R.filter((user) => roles.includes(user.profile.role)),
     );
 
@@ -41,12 +39,12 @@ export namespace Users {
     tx: WriteTransaction,
     orderId: Order["id"],
   ) {
-    const order = await Replicache.get<Order>(tx, ordersTableName, orderId);
+    const order = await Replicache.get(tx, ordersTableName, orderId);
 
     const [adminsOps, managers, customer] = await Promise.all([
       fromRoles(tx, ["administrator", "operator"]),
-      withManagerAuthorization(tx, order.papercutAccountId),
-      Replicache.get<UserWithProfile>(tx, usersTableName, order.customerId),
+      withManagerAuthorization(tx, order.billingAccountId),
+      Replicache.get(tx, usersTableName, order.customerId),
     ]);
 
     return R.uniqueBy(
@@ -57,36 +55,30 @@ export namespace Users {
 
   export const withManagerAuthorization = async (
     tx: WriteTransaction,
-    accountId: PapercutAccount["id"],
+    accountId: BillingAccount["id"],
   ) =>
     R.pipe(
-      await Replicache.scan<PapercutAccountManagerAuthorization>(
-        tx,
-        papercutAccountManagerAuthorizationsTableName,
-      ),
-      R.filter(({ papercutAccountId }) => papercutAccountId === accountId),
+      await Replicache.scan(tx, billingAccountManagerAuthorizationsTableName),
+      R.filter(({ billingAccountId }) => billingAccountId === accountId),
       async (authorizations) =>
         Promise.all(
           authorizations.map(({ managerId }) =>
-            Replicache.get<UserWithProfile>(tx, usersTableName, managerId),
+            Replicache.get(tx, usersTableName, managerId),
           ),
         ).then((users) => users.filter(Boolean)),
     );
 
   export const withCustomerAuthorization = async (
     tx: WriteTransaction,
-    accountId: PapercutAccount["id"],
+    accountId: BillingAccount["id"],
   ) =>
     R.pipe(
-      await Replicache.scan<PapercutAccountCustomerAuthorization>(
-        tx,
-        papercutAccountManagerAuthorizationsTableName,
-      ),
-      R.filter(({ papercutAccountId }) => papercutAccountId === accountId),
+      await Replicache.scan(tx, billingAccountCustomerAuthorizationsTableName),
+      R.filter(({ billingAccountId }) => billingAccountId === accountId),
       async (authorizations) =>
         Promise.all(
           authorizations.map(({ customerId }) =>
-            Replicache.get<UserWithProfile>(tx, usersTableName, customerId),
+            Replicache.get(tx, usersTableName, customerId),
           ),
         ).then((users) => users.filter(Boolean)),
     );
@@ -100,11 +92,7 @@ export namespace Users {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await Replicache.get<UserWithProfile>(
-          tx,
-          usersTableName,
-          id,
-        );
+        const prev = await Replicache.get(tx, usersTableName, id);
 
         return Replicache.set(tx, usersTableName, id, {
           ...prev,
@@ -124,11 +112,7 @@ export namespace Users {
       async (tx, { id, ...values }) => {
         // Soft delete for administrators
         if (user.profile.role === "administrator") {
-          const prev = await Replicache.get<UserWithProfile>(
-            tx,
-            usersTableName,
-            id,
-          );
+          const prev = await Replicache.get(tx, usersTableName, id);
 
           return Replicache.set(tx, usersTableName, id, {
             ...prev,
@@ -149,11 +133,7 @@ export namespace Users {
       }),
     () =>
       async (tx, { id }) => {
-        const prev = await Replicache.get<UserWithProfile>(
-          tx,
-          usersTableName,
-          id,
-        );
+        const prev = await Replicache.get(tx, usersTableName, id);
 
         return Replicache.set(tx, usersTableName, id, {
           ...prev,

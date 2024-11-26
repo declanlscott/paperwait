@@ -20,7 +20,7 @@ import type { Order } from "./sql";
 export namespace Orders {
   export const create = fn(createOrderMutationArgsSchema, async (values) => {
     await AccessControl.enforce(
-      [ordersTable._.name, "create", values.papercutAccountId],
+      [ordersTable._.name, "create", values.billingAccountId],
       {
         Error: ApplicationError.AccessDenied,
         args: [{ name: ordersTable._.name }],

@@ -9,8 +9,6 @@ import {
   updateProductMutationArgsSchema,
 } from "./shared";
 
-import type { Product } from "./sql";
-
 export namespace Products {
   export const create = Utils.optimisticMutator(
     createProductMutationArgsSchema,
@@ -32,7 +30,7 @@ export namespace Products {
       }),
     () =>
       async (tx, { id, ...values }) => {
-        const prev = await Replicache.get<Product>(tx, productsTableName, id);
+        const prev = await Replicache.get(tx, productsTableName, id);
 
         return Replicache.set(tx, productsTableName, id, {
           ...prev,
@@ -51,11 +49,7 @@ export namespace Products {
     ({ user }) =>
       async (tx, values) => {
         if (user.profile.role === "administrator") {
-          const prev = await Replicache.get<Product>(
-            tx,
-            productsTableName,
-            values.id,
-          );
+          const prev = await Replicache.get(tx, productsTableName, values.id);
 
           return Replicache.set(tx, productsTableName, values.id, {
             ...prev,

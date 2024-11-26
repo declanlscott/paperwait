@@ -9,8 +9,6 @@ import {
   updateCommentMutationArgsSchema,
 } from "./shared";
 
-import type { Comment } from "./sql";
-
 export namespace Comments {
   export const create = Utils.optimisticMutator(
     createCommentMutationArgsSchema,
@@ -31,11 +29,7 @@ export namespace Comments {
         args: [{ name: commentsTableName, id }],
       }),
     () => async (tx, values) => {
-      const prev = await Replicache.get<Comment>(
-        tx,
-        commentsTableName,
-        values.id,
-      );
+      const prev = await Replicache.get(tx, commentsTableName, values.id);
 
       return Replicache.set(tx, commentsTableName, values.id, {
         ...prev,
@@ -54,11 +48,7 @@ export namespace Comments {
     ({ user }) =>
       async (tx, values) => {
         if (user.profile.role === "administrator") {
-          const prev = await Replicache.get<Comment>(
-            tx,
-            commentsTableName,
-            values.id,
-          );
+          const prev = await Replicache.get(tx, commentsTableName, values.id);
 
           return Replicache.set(tx, commentsTableName, values.id, {
             ...prev,
