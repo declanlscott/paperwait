@@ -10,10 +10,10 @@
   "dependencies": {
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.35.3",
-    "hono": "^4.6.11",
-    "remeda": "^2.17.3",
+    "hono": "^4.6.12",
+    "remeda": "^2.17.4",
     "replicache": "^15.0.1",
-    "sst": "^3.3.28",
+    "sst": "^3.3.33",
     "superjson": "^2.2.1",
     "valibot": "beta"
   },
@@ -22,7 +22,7 @@
     "@total-typescript/ts-reset": "^0.6.1",
     "@tsconfig/node20": "^20.1.4",
     "@types/aws-lambda": "8.10.141",
-    "prettier": "^3.3.3",
+    "prettier": "^3.4.1",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "typescript": "^5.7.2"

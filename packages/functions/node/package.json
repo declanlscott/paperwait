@@ -6,13 +6,13 @@
   },
   "dependencies": {
     "@printworks/core": "workspace:*",
-    "@pulumi/aws": "^6.60.0",
+    "@pulumi/aws": "^6.61.0",
     "@pulumi/cloudflare": "^5.43.1",
-    "@pulumi/pulumi": "^3.141.0"
+    "@pulumi/pulumi": "^3.142.0"
   },
   "devDependencies": {
     "@printworks/eslint-config": "workspace:*",
-    "@types/aws-lambda": "^8.10.145",
+    "@types/aws-lambda": "^8.10.146",
     "esbuild": "^0.24.0"
   }
 }
