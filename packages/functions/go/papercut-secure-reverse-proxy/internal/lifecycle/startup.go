@@ -159,7 +159,7 @@ func getStartupParams(ctx context.Context) (*StartupParams, error) {
 		}
 	}
 
-	if target == nil || &authKey == nil {
+	if target == nil || authKey == nil {
 		return nil, errors.New("missing startup parameter(s)")
 	}
 
