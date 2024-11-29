@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import { Papercut } from ".";
-import { TenantApi } from "../tenants/api";
+import { Api } from "../api";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
 import { HttpError } from "../utils/errors";
@@ -55,7 +55,7 @@ export namespace PapercutRpc {
   ) {
     const authToken = await Papercut.getAuthToken();
 
-    const res = await TenantApi.send(path, {
+    const res = await Api.send(path, {
       method: "POST",
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       body: Utils.xmlBuilder.build({
@@ -110,7 +110,7 @@ export namespace PapercutRpc {
   ) {
     const authToken = await Papercut.getAuthToken();
 
-    const res = await TenantApi.send(path, {
+    const res = await Api.send(path, {
       method: "POST",
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       body: Utils.xmlBuilder.build({
@@ -175,7 +175,7 @@ export namespace PapercutRpc {
   }
 
   export async function getTaskStatus() {
-    const res = await TenantApi.send(path, {
+    const res = await Api.send(path, {
       method: "POST",
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       body: Utils.xmlBuilder.build({
@@ -240,7 +240,7 @@ export namespace PapercutRpc {
     let offset = 0;
     let hasMore: boolean;
     do {
-      const res = await TenantApi.send(path, {
+      const res = await Api.send(path, {
         method: "POST",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         body: Utils.xmlBuilder.build({
@@ -290,7 +290,7 @@ export namespace PapercutRpc {
     let offset = 0;
     let hasMore: boolean;
     do {
-      const res = await TenantApi.send(path, {
+      const res = await Api.send(path, {
         method: "POST",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         body: Utils.xmlBuilder.build({
@@ -342,7 +342,7 @@ export namespace PapercutRpc {
     let offset = 0;
     let hasMore: boolean;
     do {
-      const res = await TenantApi.send(path, {
+      const res = await Api.send(path, {
         method: "POST",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         body: Utils.xmlBuilder.build({

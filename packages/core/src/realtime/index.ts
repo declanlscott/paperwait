@@ -1,25 +1,52 @@
+import { addMinutes } from "date-fns";
+import * as R from "remeda";
 import { Resource } from "sst";
 
-import { HttpError } from "../utils/errors";
+import { useTenant } from "../actors";
+import { Cloudfront, SignatureV4 } from "../utils/aws";
 
 export namespace Realtime {
-  export function formatChannel(prefix: string, id: string) {
-    return `${prefix}_${id}`;
-  }
+  export async function publish(channel: string, events: Array<string>) {
+    const fqdn = `${useTenant().id}.${Resource.AppData.domainName.fullyQualified}`;
 
-  export type Channel = ReturnType<typeof formatChannel>;
+    const url = Cloudfront.buildUrl({ fqdn, path: "/event" });
 
-  export async function send(channel: Channel, message: string) {
-    const res = await fetch(`${Resource.Realtime.url}/party/${channel}`, {
-      method: "POST",
-      headers: { "x-api-key": Resource.Realtime.apiKey },
-      body: message,
+    const signer = SignatureV4.buildSigner({
+      region: Resource.Aws.region,
+      service: "appsync",
     });
 
-    if (!res.ok)
-      throw new HttpError.Error(
-        `Failed to send message to channel ${channel}`,
-        res.status,
+    const keyPairId = await Cloudfront.getKeyPairId(fqdn);
+
+    for (const batch of R.chunk(events, 5)) {
+      const req = await signer.sign({
+        hostname: url.hostname,
+        protocol: url.protocol,
+        method: "POST",
+        path: url.pathname,
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          channel,
+          events: batch,
+        }),
+      });
+
+      await fetch(
+        Cloudfront.getSignedUrl({
+          keyPairId,
+          privateKey: Resource.CloudfrontPrivateKey.pem,
+          url: url.toString(),
+          dateLessThan: addMinutes(Date.now(), 1).toISOString(),
+        }),
+        {
+          method: req.method,
+          headers: req.headers,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          body: req.body,
+        },
       );
+    }
   }
 }

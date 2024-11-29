@@ -117,17 +117,22 @@ export namespace Appsync {
 }
 
 export namespace Cloudfront {
-  export const buildUrl = <TPath extends string>(
-    fqdn: string,
-    path: StartsWith<"/", TPath>,
-  ) => `https://${fqdn}${path}` as const;
+  export const buildUrl = <TPath extends string>({
+    protocol = "https",
+    fqdn,
+    path,
+  }: {
+    protocol?: string;
+    fqdn: string;
+    path: StartsWith<"/", TPath>;
+  }) => new URL(`${protocol}://${fqdn}${path}`);
 
   export async function getKeyPairId(tenantFqdn: string) {
     const res = await fetch(
-      buildUrl(
-        tenantFqdn,
-        `/.well-known/appspecific/${Utils.reverseDns(tenantFqdn)}.cloudfront-key-pair-id.txt`,
-      ),
+      buildUrl({
+        fqdn: tenantFqdn,
+        path: `/.well-known/appspecific/${Utils.reverseDns(tenantFqdn)}.cloudfront-key-pair-id.txt`,
+      }),
       { method: "GET" },
     );
     if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
