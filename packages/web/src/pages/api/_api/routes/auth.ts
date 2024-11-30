@@ -1,5 +1,5 @@
 import { vValidator } from "@hono/valibot-validator";
-import { useAuthenticated } from "@printworks/core/actor";
+import { useAuthenticated } from "@printworks/core/actors";
 import {
   afterTransaction,
   useTransaction,
@@ -14,7 +14,7 @@ import {
   oauth2ProviderVariants,
 } from "@printworks/core/oauth2/shared";
 import { oauth2ProvidersTable } from "@printworks/core/oauth2/sql";
-import { Realtime } from "@printworks/core/realtime";
+import { formatChannel } from "@printworks/core/realtime/shared";
 import { Replicache } from "@printworks/core/replicache";
 import { Sessions } from "@printworks/core/sessions";
 import { tenantsTable } from "@printworks/core/tenants/sql";
@@ -236,7 +236,7 @@ export default new Hono()
           if (!newUserProfile) throw new Error("Failed to create user profile");
 
           await afterTransaction(() =>
-            Replicache.poke([Realtime.formatChannel("tenant", tenantId)]),
+            Replicache.poke([formatChannel("tenant", tenantId)]),
           );
 
           return Sessions.create({ userId: user.id, tenantId }, tokens);
@@ -282,7 +282,7 @@ export default new Hono()
           }
 
           await afterTransaction(() =>
-            Replicache.poke([Realtime.formatChannel("tenant", tenantId)]),
+            Replicache.poke([formatChannel("tenant", tenantId)]),
           );
         }
 

@@ -113,8 +113,8 @@ export class Api extends pulumi.ComponentResource {
               {
                 actions: ["ssm:GetParameter", "kms:Decrypt"],
                 resources: [
-                  Constants.MAX_FILE_SIZES_PARAMETER_NAME,
                   Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+                  Constants.DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME,
                   Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME,
                 ].map(
                   (name) =>
@@ -297,7 +297,7 @@ export class Api extends pulumi.ComponentResource {
           "application/json": `
 {
   "Name": "$util.escapeJavaScript($input.params().path.get('proxy'))"
-  #if($input.params().header.get('X-With-Decryption') == 'true')
+  #if($util.escapeJavaScript($input.params().query.get('withDecryption')) == 'true')
   ,"WithDecryption": true
   #end
 }`,

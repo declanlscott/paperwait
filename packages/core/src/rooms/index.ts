@@ -6,7 +6,7 @@ import { useTenant } from "../actors";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { productsTable } from "../products/sql";
-import { Realtime } from "../realtime";
+import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
@@ -54,7 +54,7 @@ export namespace Rooms {
       ]);
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("tenant", values.tenantId)]),
+        Replicache.poke([formatChannel("tenant", values.tenantId)]),
       );
     });
   });
@@ -91,7 +91,7 @@ export namespace Rooms {
           );
 
         await afterTransaction(() =>
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },
@@ -128,7 +128,7 @@ export namespace Rooms {
         ]);
 
         await afterTransaction(() =>
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },
@@ -149,7 +149,7 @@ export namespace Rooms {
         .where(and(eq(roomsTable.id, id), eq(roomsTable.tenantId, tenant.id)));
 
       await afterTransaction(() =>
-        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+        Replicache.poke([formatChannel("tenant", tenant.id)]),
       );
     });
   });
@@ -220,7 +220,7 @@ export namespace Rooms {
         );
 
       await afterTransaction(async () =>
-        Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+        Replicache.poke([formatChannel("tenant", tenant.id)]),
       );
     });
   });
@@ -295,7 +295,7 @@ export namespace Rooms {
           );
 
         await afterTransaction(async () =>
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },

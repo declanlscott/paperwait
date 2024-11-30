@@ -40,9 +40,6 @@ import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { SignatureV4 as _SignatureV4 } from "@smithy/signature-v4";
 
-import { Utils } from ".";
-import { HttpError } from "./errors";
-
 import type {
   CreateApiCommandInput,
   CreateChannelNamespaceCommandInput,
@@ -127,20 +124,8 @@ export namespace Cloudfront {
     path: StartsWith<"/", TPath>;
   }) => new URL(`${protocol}://${fqdn}${path}`);
 
-  export async function getKeyPairId(tenantFqdn: string) {
-    const res = await fetch(
-      buildUrl({
-        fqdn: tenantFqdn,
-        path: `/.well-known/appspecific/${Utils.reverseDns(tenantFqdn)}.cloudfront-key-pair-id.txt`,
-      }),
-      { method: "GET" },
-    );
-    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
-
-    return res.text();
-  }
-
-  export const getSignedUrl = _getSignedUrl;
+  export const getSignedUrl = (...args: Parameters<typeof _getSignedUrl>) =>
+    new URL(_getSignedUrl(...args));
 }
 
 export namespace S3 {

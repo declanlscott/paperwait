@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { AccessControl } from "../access-control";
 import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Realtime } from "../realtime";
+import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
@@ -29,7 +29,7 @@ export namespace Announcements {
         await tx.insert(announcementsTable).values(values);
 
         await afterTransaction(() =>
-          Replicache.poke([Realtime.formatChannel("tenant", useTenant().id)]),
+          Replicache.poke([formatChannel("tenant", useTenant().id)]),
         );
       });
     },
@@ -70,7 +70,7 @@ export namespace Announcements {
           );
 
         await afterTransaction(() =>
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },
@@ -98,7 +98,7 @@ export namespace Announcements {
           );
 
         await afterTransaction(() =>
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },
