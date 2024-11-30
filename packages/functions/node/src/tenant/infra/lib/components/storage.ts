@@ -83,8 +83,8 @@ export class Storage extends pulumi.ComponentResource {
               {
                 actions: ["ssm:PutParameter"],
                 resources: [
-                  Constants.MAX_FILE_SIZES_PARAMETER_NAME,
                   Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+                  Constants.DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME,
                   Constants.PAPERCUT_SERVER_URL_PARAMETER_NAME,
                   Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME,
                   Constants.TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME,

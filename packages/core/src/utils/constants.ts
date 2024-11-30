@@ -22,9 +22,10 @@ export namespace Constants {
 
   export const POKE = "poke";
 
-  export const MAX_FILE_SIZES_PARAMETER_NAME = "/app/settings/max-file-sizes";
   export const DOCUMENTS_MIME_TYPES_PARAMETER_NAME =
-    "/app/settings/documents-mime-types";
+    "/app/settings/documents/mime-types";
+  export const DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME =
+    "/app/settings/documents/size-limit";
   export const PAPERCUT_SERVER_URL_PARAMETER_NAME = "/papercut/server/url";
   export const PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME =
     "/papercut/server/auth-token";

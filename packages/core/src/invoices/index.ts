@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { AccessControl } from "../access-control";
 import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Realtime } from "../realtime";
+import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
 import { Users } from "../users";
 import { ApplicationError } from "../utils/errors";
@@ -30,7 +30,7 @@ export namespace Invoices {
       ]);
 
       await afterTransaction(() =>
-        Replicache.poke(users.map((u) => Realtime.formatChannel("user", u.id))),
+        Replicache.poke(users.map((u) => formatChannel("user", u.id))),
       );
     });
   });

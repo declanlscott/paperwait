@@ -2,21 +2,23 @@ import { addMinutes } from "date-fns";
 import * as R from "remeda";
 import { Resource } from "sst";
 
-import { useTenant } from "../actors";
+import { Api } from "../api";
+import { Tenants } from "../tenants";
 import { Cloudfront, SignatureV4 } from "../utils/aws";
 
 export namespace Realtime {
   export async function publish(channel: string, events: Array<string>) {
-    const fqdn = `${useTenant().id}.${Resource.AppData.domainName.fullyQualified}`;
-
-    const url = Cloudfront.buildUrl({ fqdn, path: "/event" });
+    const url = Cloudfront.buildUrl({
+      fqdn: Tenants.getFqdn(),
+      path: "/event",
+    });
 
     const signer = SignatureV4.buildSigner({
       region: Resource.Aws.region,
       service: "appsync",
     });
 
-    const keyPairId = await Cloudfront.getKeyPairId(fqdn);
+    const keyPairId = await Api.getCloudfrontKeyPairId();
 
     for (const batch of R.chunk(events, 5)) {
       const req = await signer.sign({

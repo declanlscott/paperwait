@@ -17,8 +17,8 @@ import {
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
 export namespace Utils {
-  export const xmlBuilder = new XMLBuilder();
-  export const xmlParser = new XMLParser();
+  export const xmlBuilder = new XMLBuilder({ preserveOrder: true });
+  export const xmlParser = new XMLParser({ preserveOrder: true });
 
   export function createContext<TContext>(name: string) {
     const storage = new AsyncLocalStorage<TContext>();
@@ -79,7 +79,6 @@ export namespace Utils {
     }) as TResource;
   }
 
-  export function reverseDns(domainName: string) {
-    return domainName.split(".").reverse().join(".");
-  }
+  export const reverseDns = (domainName: string) =>
+    domainName.split(".").reverse().join(".");
 }

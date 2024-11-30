@@ -1,4 +1,4 @@
-import { Realtime } from "@printworks/core/realtime";
+import { formatChannel } from "@printworks/core/realtime/shared";
 import { Outlet } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -31,8 +31,8 @@ export function AuthenticatedLayout() {
 function RealtimeWrapper(props: PropsWithChildren) {
   const { user } = useAuthenticated();
 
-  useRealtime({ channel: Realtime.formatChannel("tenant", user.tenantId) });
-  useRealtime({ channel: Realtime.formatChannel("user", user.id) });
+  useRealtime({ channel: formatChannel("tenant", user.tenantId) });
+  useRealtime({ channel: formatChannel("user", user.id) });
 
   useQuery(queryFactory.user(user.id), {
     onData: (u) => {

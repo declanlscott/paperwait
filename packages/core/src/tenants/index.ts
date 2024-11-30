@@ -1,9 +1,10 @@
 import { and, eq, isNull } from "drizzle-orm";
+import { Resource } from "sst";
 
 import { AccessControl } from "../access-control";
 import { useTenant } from "../actors";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
-import { Realtime } from "../realtime";
+import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
 import { Sessions } from "../sessions";
 import { Users } from "../users";
@@ -44,7 +45,7 @@ export namespace Tenants {
       await afterTransaction(() =>
         Promise.all([
           ...usersToLogout.map((user) => Sessions.invalidateUser(user.id)),
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         ]),
       );
     });
@@ -73,4 +74,7 @@ export namespace Tenants {
         )
         .then((rows) => rows.length === 1),
     );
+
+  export const getFqdn = () =>
+    `${useTenant().id}.${Resource.AppData.domainName.fullyQualified}`;
 }

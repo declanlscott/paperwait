@@ -16,7 +16,7 @@ import {
 } from "../drizzle/transaction";
 import { ordersTable } from "../orders/sql";
 import { PapercutRpc } from "../papercut/rpc";
-import { Realtime } from "../realtime";
+import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
 import { Sessions } from "../sessions";
 import { ApplicationError, HttpError } from "../utils/errors";
@@ -305,7 +305,7 @@ export namespace Users {
           );
 
         await afterTransaction(() =>
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },
@@ -332,7 +332,7 @@ export namespace Users {
         await afterTransaction(() =>
           Promise.all([
             Sessions.invalidateUser(id),
-            Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+            Replicache.poke([formatChannel("tenant", tenant.id)]),
           ]),
         );
       });
@@ -358,7 +358,7 @@ export namespace Users {
           );
 
         await afterTransaction(() =>
-          Replicache.poke([Realtime.formatChannel("tenant", tenant.id)]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },
