@@ -1,6 +1,5 @@
 import { AccessControl } from "../access-control/client";
 import { Replicache } from "../replicache/client";
-import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
   createOrderMutationArgsSchema,
@@ -10,7 +9,7 @@ import {
 } from "./shared";
 
 export namespace Orders {
-  export const create = Utils.optimisticMutator(
+  export const create = Replicache.optimisticMutator(
     createOrderMutationArgsSchema,
     (tx, user, { billingAccountId }) =>
       AccessControl.enforce(
@@ -24,7 +23,7 @@ export namespace Orders {
       Replicache.set(tx, ordersTableName, values.id, values),
   );
 
-  export const update = Utils.optimisticMutator(
+  export const update = Replicache.optimisticMutator(
     updateOrderMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, ordersTableName, "update", id], {
@@ -41,7 +40,7 @@ export namespace Orders {
     },
   );
 
-  export const delete_ = Utils.optimisticMutator(
+  export const delete_ = Replicache.optimisticMutator(
     deleteOrderMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, ordersTableName, "delete", id], {

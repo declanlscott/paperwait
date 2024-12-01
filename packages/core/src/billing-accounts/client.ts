@@ -1,6 +1,5 @@
 import { AccessControl } from "../access-control/client";
 import { Replicache } from "../replicache/client";
-import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
   billingAccountManagerAuthorizationsTableName,
@@ -12,7 +11,7 @@ import {
 } from "./shared";
 
 export namespace BillingAccounts {
-  export const createManagerAuthorization = Utils.optimisticMutator(
+  export const createManagerAuthorization = Replicache.optimisticMutator(
     createBillingAccountManagerAuthorizationMutationArgsSchema,
     async (tx, user) =>
       AccessControl.enforce(
@@ -31,7 +30,7 @@ export namespace BillingAccounts {
       ),
   );
 
-  export const updateReviewThreshold = Utils.optimisticMutator(
+  export const updateReviewThreshold = Replicache.optimisticMutator(
     updateBillingAccountReviewThresholdMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce(
@@ -52,7 +51,7 @@ export namespace BillingAccounts {
       },
   );
 
-  export const delete_ = Utils.optimisticMutator(
+  export const delete_ = Replicache.optimisticMutator(
     deleteBillingAccountMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, billingAccountsTableName, "delete"], {
@@ -74,7 +73,7 @@ export namespace BillingAccounts {
       },
   );
 
-  export const deleteManagerAuthorization = Utils.optimisticMutator(
+  export const deleteManagerAuthorization = Replicache.optimisticMutator(
     deleteBillingAccountManagerAuthorizationMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce(

@@ -1,6 +1,5 @@
 import { AccessControl } from "../access-control/client";
 import { Replicache } from "../replicache/client";
-import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
   commentsTableName,
@@ -10,7 +9,7 @@ import {
 } from "./shared";
 
 export namespace Comments {
-  export const create = Utils.optimisticMutator(
+  export const create = Replicache.optimisticMutator(
     createCommentMutationArgsSchema,
     async (tx, user, { orderId }) =>
       AccessControl.enforce([tx, user, commentsTableName, "create", orderId], {
@@ -21,7 +20,7 @@ export namespace Comments {
       Replicache.set(tx, commentsTableName, values.id, values),
   );
 
-  export const update = Utils.optimisticMutator(
+  export const update = Replicache.optimisticMutator(
     updateCommentMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, commentsTableName, "update", id], {
@@ -38,7 +37,7 @@ export namespace Comments {
     },
   );
 
-  export const delete_ = Utils.optimisticMutator(
+  export const delete_ = Replicache.optimisticMutator(
     deleteCommentMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, commentsTableName, "delete", id], {

@@ -1,6 +1,5 @@
 import { AccessControl } from "../access-control/client";
 import { Replicache } from "../replicache/client";
-import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
   announcementsTableName,
@@ -10,7 +9,7 @@ import {
 } from "./shared";
 
 export namespace Announcements {
-  export const create = Utils.optimisticMutator(
+  export const create = Replicache.optimisticMutator(
     createAnnouncementMutationArgsSchema,
     async (tx, user) =>
       AccessControl.enforce([tx, user, announcementsTableName, "create"], {
@@ -21,7 +20,7 @@ export namespace Announcements {
       Replicache.set(tx, announcementsTableName, values.id, values),
   );
 
-  export const update = Utils.optimisticMutator(
+  export const update = Replicache.optimisticMutator(
     updateAnnouncementMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, announcementsTableName, "update"], {
@@ -38,7 +37,7 @@ export namespace Announcements {
     },
   );
 
-  export const delete_ = Utils.optimisticMutator(
+  export const delete_ = Replicache.optimisticMutator(
     deleteAnnouncementMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, announcementsTableName, "delete"], {

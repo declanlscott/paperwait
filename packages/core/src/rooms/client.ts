@@ -3,7 +3,6 @@ import * as R from "remeda";
 import { AccessControl } from "../access-control/client";
 import { productsTableName } from "../products/shared";
 import { Replicache } from "../replicache/client";
-import { Utils } from "../utils/client";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
 import {
@@ -20,7 +19,7 @@ import {
 } from "./shared";
 
 export namespace Rooms {
-  export const create = Utils.optimisticMutator(
+  export const create = Replicache.optimisticMutator(
     createRoomMutationArgsSchema,
     async (tx, user) =>
       AccessControl.enforce([tx, user, roomsTableName, "create"], {
@@ -56,7 +55,7 @@ export namespace Rooms {
     },
   );
 
-  export const update = Utils.optimisticMutator(
+  export const update = Replicache.optimisticMutator(
     updateRoomMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, roomsTableName, "update"], {
@@ -74,7 +73,7 @@ export namespace Rooms {
       },
   );
 
-  export const delete_ = Utils.optimisticMutator(
+  export const delete_ = Replicache.optimisticMutator(
     deleteRoomMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, roomsTableName, "delete"], {
@@ -111,7 +110,7 @@ export namespace Rooms {
       },
   );
 
-  export const restore = Utils.optimisticMutator(
+  export const restore = Replicache.optimisticMutator(
     restoreRoomMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, roomsTableName, "update"], {
@@ -128,7 +127,7 @@ export namespace Rooms {
     },
   );
 
-  export const setWorkflow = Utils.optimisticMutator(
+  export const setWorkflow = Replicache.optimisticMutator(
     setWorkflowMutationArgsSchema,
     async (tx, user) =>
       AccessControl.enforce([tx, user, roomsTableName, "create"], {
@@ -158,7 +157,7 @@ export namespace Rooms {
       },
   );
 
-  export const setDeliveryOptions = Utils.optimisticMutator(
+  export const setDeliveryOptions = Replicache.optimisticMutator(
     setDeliveryOptionsMutationArgsSchema,
     async (tx, user) =>
       AccessControl.enforce([tx, user, deliveryOptionsTableName, "create"], {

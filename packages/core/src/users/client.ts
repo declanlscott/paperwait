@@ -7,7 +7,6 @@ import {
 } from "../billing-accounts/shared";
 import { ordersTableName } from "../orders/shared";
 import { Replicache } from "../replicache/client";
-import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import {
   deleteUserProfileMutationArgsSchema,
@@ -83,7 +82,7 @@ export namespace Users {
         ).then((users) => users.filter(Boolean)),
     );
 
-  export const updateProfileRole = Utils.optimisticMutator(
+  export const updateProfileRole = Replicache.optimisticMutator(
     updateUserProfileRoleMutationArgsSchema,
     (tx, user, { id }) =>
       AccessControl.enforce([tx, user, usersTableName, "update"], {
@@ -101,7 +100,7 @@ export namespace Users {
       },
   );
 
-  export const deleteProfile = Utils.optimisticMutator(
+  export const deleteProfile = Replicache.optimisticMutator(
     deleteUserProfileMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, usersTableName, "delete"], {
@@ -124,7 +123,7 @@ export namespace Users {
       },
   );
 
-  export const restoreProfile = Utils.optimisticMutator(
+  export const restoreProfile = Replicache.optimisticMutator(
     restoreUserProfileMutationArgsSchema,
     async (tx, user, { id }) =>
       AccessControl.enforce([tx, user, usersTableName, "update"], {

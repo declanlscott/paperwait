@@ -1,11 +1,10 @@
 import { AccessControl } from "../access-control/client";
 import { Replicache } from "../replicache/client";
-import { Utils } from "../utils/client";
 import { ApplicationError } from "../utils/errors";
 import { createInvoiceMutationArgsSchema, invoicesTableName } from "./shared";
 
 export namespace Invoices {
-  export const create = Utils.optimisticMutator(
+  export const create = Replicache.optimisticMutator(
     createInvoiceMutationArgsSchema,
     async (tx, user) =>
       AccessControl.enforce([tx, user, invoicesTableName, "create"], {
