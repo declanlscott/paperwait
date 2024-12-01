@@ -35,6 +35,7 @@ import type {
   PushResponse,
 } from "replicache";
 import type { OmitTimestamps } from "../drizzle/columns";
+import type { Channel } from "../realtime/shared";
 import type { SyncedTable } from "../utils/tables";
 import type {
   ClientViewRecord,
@@ -150,12 +151,14 @@ export namespace Replicache {
         ),
     );
 
-  export async function poke(channels: Array<Realtime.Channel>) {
+  export async function poke(channels: Array<Channel>) {
     const uniqueChannels = R.unique(channels);
     if (uniqueChannels.length === 0) return;
 
     const results = await Promise.allSettled(
-      uniqueChannels.map((channel) => Realtime.send(channel, Constants.POKE)),
+      uniqueChannels.map((channel) =>
+        Realtime.publish(channel, [Constants.POKE]),
+      ),
     );
 
     results
