@@ -1,5 +1,6 @@
 import { addMinutes } from "date-fns";
 import { Resource } from "sst";
+import * as v from "valibot";
 
 import { Tenants } from "../tenants";
 import { Utils } from "../utils";
@@ -25,6 +26,44 @@ export namespace Api {
     if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
 
     return res.text();
+  }
+
+  export async function syncUsers() {
+    const res = await send("/users/sync", { method: "POST" });
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+
+    const result = v.safeParse(
+      v.object({
+        Entries: v.array(
+          v.object({
+            ErrorCode: v.optional(v.string()),
+            ErrorMessage: v.optional(v.string()),
+            EventId: v.optional(v.string()),
+          }),
+        ),
+        FailedEntryCount: v.number(),
+      }),
+      await res.json(),
+    );
+    if (!result.success)
+      throw new HttpError.InternalServerError("Invalid sync users response");
+
+    if (result.output.FailedEntryCount > 0)
+      throw new HttpError.InternalServerError("Sync users event failure");
+
+    const eventId = result.output.Entries.at(0)?.EventId;
+    if (!eventId)
+      throw new HttpError.InternalServerError("Missing sync users event id");
+
+    return { eventId };
+  }
+
+  export async function invalidateCache(paths: Array<string>) {
+    const res = await send("/cdn/invalidation", {
+      method: "POST",
+      body: JSON.stringify({ paths }),
+    });
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
   }
 
   export async function send<TPath extends string>(

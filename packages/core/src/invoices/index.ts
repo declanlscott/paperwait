@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
 import { useTenant } from "../actors";
+import { Api } from "../api";
 import { afterTransaction, useTransaction } from "../drizzle/transaction";
 import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
@@ -23,11 +24,22 @@ export namespace Invoices {
     return useTransaction(async (tx) => {
       const [users] = await Promise.all([
         Users.withOrderAccess(values.orderId),
-        tx
-          .insert(invoicesTable)
-          .values(values)
-          .returning({ id: invoicesTable.id }),
+        tx.insert(invoicesTable).values(values),
       ]);
+
+      const res = await Api.send("/invoices", {
+        method: "POST",
+        body: JSON.stringify({ invoiceId: values.id }),
+      });
+      if (!res.ok)
+        tx.update(invoicesTable)
+          .set({ status: "error" })
+          .where(
+            and(
+              eq(invoicesTable.id, values.id),
+              eq(invoicesTable.tenantId, useTenant().id),
+            ),
+          );
 
       await afterTransaction(() =>
         Replicache.poke(users.map((u) => formatChannel("user", u.id))),

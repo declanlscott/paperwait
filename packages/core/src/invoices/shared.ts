@@ -5,7 +5,7 @@ import { nanoIdSchema, tenantTableSchema } from "../utils/shared";
 
 export const invoicesTableName = "invoices";
 
-export const invoiceStatuses = ["processing", "charged"] as const;
+export const invoiceStatuses = ["error", "processing", "charged"] as const;
 
 export const lineItemV1Schema = v.object({
   version: v.fallback(v.literal(1), 1),
