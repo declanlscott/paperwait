@@ -99,7 +99,7 @@ export class Realtime extends pulumi.ComponentResource {
             statements: [
               {
                 actions: ["appsync:EventConnect", "appsync:EventSubscribe"],
-                resources: [this.#api.apiArn],
+                resources: [pulumi.interpolate`${this.#api.apiArn}/*`],
               },
             ],
           },
@@ -123,7 +123,7 @@ export class Realtime extends pulumi.ComponentResource {
             statements: [
               {
                 actions: ["appsync:EventPublish"],
-                resources: [this.#api.apiArn],
+                resources: [pulumi.interpolate`${this.#api.apiArn}/*`],
               },
             ],
           },
