@@ -8,29 +8,13 @@ import { HttpError } from "../utils/errors";
 
 export namespace Documents {
   export async function setMimeTypes(mimeTypes: Array<string>) {
-    const accountId = await Api.getAccountId();
-
-    const sts = new Sts.Client();
-
-    const { Credentials } = await Sts.assumeRole(sts, {
-      RoleArn: `arn:aws:iam::${accountId}:role/${Resource.Aws.tenant.putParametersRole.name}`,
-      RoleSessionName: "SetDocumentsMimeTypes",
-      DurationSeconds: 60,
-    });
-
-    if (
-      !Credentials?.AccessKeyId ||
-      !Credentials.SecretAccessKey ||
-      !Credentials.SessionToken
-    )
-      throw new Error("Missing ssm credentials");
-
     const ssm = new Ssm.Client({
-      credentials: {
-        accessKeyId: Credentials.AccessKeyId,
-        secretAccessKey: Credentials.SecretAccessKey,
-        sessionToken: Credentials.SessionToken,
-      },
+      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
+        type: "name",
+        accountId: await Api.getAccountId(),
+        roleName: Resource.Aws.tenant.putParametersRole.name,
+        roleSessionName: "SetDocumentsMimeTypes",
+      }),
     });
 
     await Ssm.putParameter(ssm, {
@@ -51,29 +35,13 @@ export namespace Documents {
   }
 
   export async function setSizeLimit(byteSize: number) {
-    const accountId = await Api.getAccountId();
-
-    const sts = new Sts.Client();
-
-    const { Credentials } = await Sts.assumeRole(sts, {
-      RoleArn: `arn:aws:iam::${accountId}:role/${Resource.Aws.tenant.putParametersRole.name}`,
-      RoleSessionName: "SetDocumentsSizeLimit",
-      DurationSeconds: 60,
-    });
-
-    if (
-      !Credentials?.AccessKeyId ||
-      !Credentials.SecretAccessKey ||
-      !Credentials.SessionToken
-    )
-      throw new Error("Missing ssm credentials");
-
     const ssm = new Ssm.Client({
-      credentials: {
-        accessKeyId: Credentials.AccessKeyId,
-        secretAccessKey: Credentials.SecretAccessKey,
-        sessionToken: Credentials.SessionToken,
-      },
+      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
+        type: "name",
+        accountId: await Api.getAccountId(),
+        roleName: Resource.Aws.tenant.putParametersRole.name,
+        roleSessionName: "SetDocumentsSizeLimit",
+      }),
     });
 
     await Ssm.putParameter(ssm, {

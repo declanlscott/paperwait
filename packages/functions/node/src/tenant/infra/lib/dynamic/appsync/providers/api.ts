@@ -26,23 +26,14 @@ export class ApiProvider implements pulumi.dynamic.ResourceProvider {
     this.#logicalName = logicalName(name);
   }
 
-  static async #getClient(roleArn: string) {
-    const { Credentials } = await Sts.assumeRole(ApiProvider.#sts, {
-      RoleArn: roleArn,
-      RoleSessionName: "ApiProvider",
+  static #getClient = async (roleArn: string) =>
+    new Appsync.Client({
+      credentials: await Sts.getAssumeRoleCredentials(ApiProvider.#sts, {
+        type: "arn",
+        roleArn,
+        roleSessionName: "ApiProvider",
+      }),
     });
-    if (!Credentials?.AccessKeyId || !Credentials.SecretAccessKey)
-      throw new Error("Missing credentials");
-
-    return new Appsync.Client({
-      credentials: {
-        accessKeyId: Credentials.AccessKeyId,
-        secretAccessKey: Credentials.SecretAccessKey,
-        sessionToken: Credentials.SessionToken,
-        expiration: Credentials.Expiration,
-      },
-    });
-  }
 
   async create({
     clientRoleArn,

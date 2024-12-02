@@ -26,23 +26,17 @@ export class ChannelNamespaceProvider
 {
   static #sts = new Sts.Client();
 
-  static async #getClient(roleArn: string) {
-    const { Credentials } = await Sts.assumeRole(
-      ChannelNamespaceProvider.#sts,
-      { RoleArn: roleArn, RoleSessionName: "ChannelNamespaceProvider" },
-    );
-    if (!Credentials?.AccessKeyId || !Credentials.SecretAccessKey)
-      throw new Error("Missing credentials");
-
-    return new Appsync.Client({
-      credentials: {
-        accessKeyId: Credentials.AccessKeyId,
-        secretAccessKey: Credentials.SecretAccessKey,
-        sessionToken: Credentials.SessionToken,
-        expiration: Credentials.Expiration,
-      },
+  static #getClient = async (roleArn: string) =>
+    new Appsync.Client({
+      credentials: await Sts.getAssumeRoleCredentials(
+        ChannelNamespaceProvider.#sts,
+        {
+          type: "arn",
+          roleArn,
+          roleSessionName: "ChannelNamespaceProvider",
+        },
+      ),
     });
-  }
 
   async create({
     clientRoleArn,

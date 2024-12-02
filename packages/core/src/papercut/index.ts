@@ -7,28 +7,13 @@ import { HttpError } from "../utils/errors";
 
 export namespace Papercut {
   export async function setTailscaleOauthClient(id: string, secret: string) {
-    const accountId = await Api.getAccountId();
-
-    const sts = new Sts.Client();
-
-    const { Credentials } = await Sts.assumeRole(sts, {
-      RoleArn: `arn:aws:iam::${accountId}:role/${Resource.Aws.tenant.putParametersRole.name}`,
-      RoleSessionName: "SetTailscaleOauthClient",
-      DurationSeconds: 60,
-    });
-    if (
-      !Credentials?.AccessKeyId ||
-      !Credentials.SecretAccessKey ||
-      !Credentials.SessionToken
-    )
-      throw new Error("Missing ssm credentials");
-
     const ssm = new Ssm.Client({
-      credentials: {
-        accessKeyId: Credentials.AccessKeyId,
-        secretAccessKey: Credentials.SecretAccessKey,
-        sessionToken: Credentials.SessionToken,
-      },
+      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
+        type: "name",
+        accountId: await Api.getAccountId(),
+        roleName: Resource.Aws.tenant.putParametersRole.name,
+        roleSessionName: "SetTailscaleOauthClient",
+      }),
     });
 
     await Ssm.putParameter(ssm, {
@@ -39,28 +24,13 @@ export namespace Papercut {
   }
 
   export async function setServerUrl(url: string) {
-    const accountId = await Api.getAccountId();
-
-    const sts = new Sts.Client();
-
-    const { Credentials } = await Sts.assumeRole(sts, {
-      RoleArn: `arn:aws:iam::${accountId}:role/${Resource.Aws.tenant.putParametersRole.name}`,
-      RoleSessionName: "SetPapercutServerUrl",
-      DurationSeconds: 60,
-    });
-    if (
-      !Credentials?.AccessKeyId ||
-      !Credentials.SecretAccessKey ||
-      !Credentials.SessionToken
-    )
-      throw new Error("Missing ssm credentials");
-
     const ssm = new Ssm.Client({
-      credentials: {
-        accessKeyId: Credentials.AccessKeyId,
-        secretAccessKey: Credentials.SecretAccessKey,
-        sessionToken: Credentials.SessionToken,
-      },
+      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
+        type: "name",
+        accountId: await Api.getAccountId(),
+        roleName: Resource.Aws.tenant.putParametersRole.name,
+        roleSessionName: "SetPapercutServerUrl",
+      }),
     });
 
     await Ssm.putParameter(ssm, {
@@ -71,28 +41,13 @@ export namespace Papercut {
   }
 
   export async function setAuthToken(token: string) {
-    const accountId = await Api.getAccountId();
-
-    const sts = new Sts.Client();
-
-    const { Credentials } = await Sts.assumeRole(sts, {
-      RoleArn: `arn:aws:iam::${accountId}:role/${Resource.Aws.tenant.putParametersRole.name}`,
-      RoleSessionName: "SetPapercutAuthToken",
-      DurationSeconds: 60,
-    });
-    if (
-      !Credentials?.AccessKeyId ||
-      !Credentials.SecretAccessKey ||
-      !Credentials.SessionToken
-    )
-      throw new Error("Missing ssm credentials");
-
     const ssm = new Ssm.Client({
-      credentials: {
-        accessKeyId: Credentials.AccessKeyId,
-        secretAccessKey: Credentials.SecretAccessKey,
-        sessionToken: Credentials.SessionToken,
-      },
+      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
+        type: "name",
+        accountId: await Api.getAccountId(),
+        roleName: Resource.Aws.tenant.putParametersRole.name,
+        roleSessionName: "SetPapercutAuthToken",
+      }),
     });
 
     await Ssm.putParameter(ssm, {

@@ -64,7 +64,7 @@ import type {
   GetParameterCommandInput,
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
-import type { AssumeRoleCommandInput, Credentials } from "@aws-sdk/client-sts";
+import type { AssumeRoleCommandInput } from "@aws-sdk/client-sts";
 import type { SignatureV4Init } from "@smithy/signature-v4";
 import type { NonNullableProperties, StartsWith } from "./types";
 
@@ -218,10 +218,36 @@ export namespace Sts {
   export const Client = STSClient;
   export type Client = STSClient;
 
-  export type NonNullableCredentials = NonNullableProperties<Credentials>;
-
   export const assumeRole = async (
     client: Client,
     input: NonNullableProperties<AssumeRoleCommandInput>,
   ) => client.send(new AssumeRoleCommand(input));
+
+  export async function getAssumeRoleCredentials(
+    client: Client,
+    input: (
+      | { type: "arn"; roleArn: string }
+      | { type: "name"; accountId: string; roleName: string }
+    ) & {
+      roleSessionName: string;
+    },
+  ) {
+    const { Credentials } = await assumeRole(client, {
+      RoleArn:
+        input.type === "arn"
+          ? input.roleArn
+          : `arn:aws:iam::${input.accountId}:role/${input.roleName}`,
+      RoleSessionName: input.roleSessionName,
+    });
+
+    if (!Credentials?.AccessKeyId || !Credentials.SecretAccessKey)
+      throw new Error("Missing assume role credentials");
+
+    return {
+      accessKeyId: Credentials.AccessKeyId,
+      secretAccessKey: Credentials.SecretAccessKey,
+      sessionToken: Credentials.SessionToken,
+      expiration: Credentials.Expiration,
+    };
+  }
 }
