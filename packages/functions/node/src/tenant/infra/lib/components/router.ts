@@ -6,14 +6,13 @@ import { useResource } from "../resource";
 
 const allViewerExceptHostHeaderPolicyName = "Managed-AllViewerExceptHostHeader";
 const cachingOptimizedPolicyName = "Managed-CachingOptimized";
-const cachingDisabledPolicyName = "Managed-CachingDisabled";
 
 export interface RouterArgs {
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
   keyPairId: pulumi.Input<string>;
   origins: Record<
-    "api" | "assets" | "documents" | "appsyncHttp" | "appsyncRealtime",
+    "api" | "assets" | "documents",
     {
       domainName: pulumi.Input<string>;
       originPath?: pulumi.Input<string>;
@@ -27,7 +26,6 @@ export class Router extends pulumi.ComponentResource {
   #keyGroup: aws.cloudfront.KeyGroup;
   #apiCachePolicy: aws.cloudfront.CachePolicy;
   #s3AccessControl: aws.cloudfront.OriginAccessControl;
-  #realtimeOriginRequestPolicy: aws.cloudfront.OriginRequestPolicy;
   #distribution: aws.cloudfront.Distribution;
   #cname: cloudflare.Record;
 
@@ -92,25 +90,6 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#realtimeOriginRequestPolicy = new aws.cloudfront.OriginRequestPolicy(
-      "RealtimeOriginRequestPolicy",
-      {
-        cookiesConfig: {
-          cookieBehavior: "none",
-        },
-        headersConfig: {
-          headerBehavior: "whitelist",
-          headers: {
-            items: ["Sec-WebSocket-Key", "Sec-WebSocket-Version"],
-          },
-        },
-        queryStringsConfig: {
-          queryStringBehavior: "none",
-        },
-      },
-      { parent: this },
-    );
-
     const urlCacheBehaviorConfig = {
       viewerProtocolPolicy: "redirect-to-https",
       allowedMethods: [
@@ -163,26 +142,6 @@ export class Router extends pulumi.ComponentResource {
       trustedKeyGroups: [this.#keyGroup.id],
     } satisfies BehaviorConfig;
 
-    const realtimeCacheBehaviorConfig = {
-      viewerProtocolPolicy: "redirect-to-https",
-      allowedMethods: ["GET", "HEAD", "OPTIONS"],
-      cachedMethods: [],
-      compress: false,
-      defaultTtl: 0,
-      cachePolicyId: aws.cloudfront
-        .getCachePolicy({ name: cachingDisabledPolicyName }, { parent: this })
-        .then((policy) => {
-          if (!policy.id)
-            throw new Error(
-              `"${cachingDisabledPolicyName}" cache policy not found`,
-            );
-
-          return policy.id;
-        }),
-      originRequestPolicyId: this.#realtimeOriginRequestPolicy.id,
-      trustedKeyGroups: [this.#keyGroup.id],
-    } satisfies BehaviorConfig;
-
     this.#distribution = new aws.cloudfront.Distribution(
       "Distribution",
       {
@@ -203,16 +162,6 @@ export class Router extends pulumi.ComponentResource {
             originId: "/documents/*",
             originAccessControlId: this.#s3AccessControl.id,
             ...args.origins.documents,
-          },
-          {
-            originId: "/event",
-            customOriginConfig,
-            ...args.origins.appsyncHttp,
-          },
-          {
-            originId: "/event/realtime",
-            customOriginConfig,
-            ...args.origins.appsyncRealtime,
           },
           {
             originId: "/*",
@@ -255,16 +204,6 @@ export class Router extends pulumi.ComponentResource {
             pathPattern: "/documents/*",
             ...bucketCacheBehaviorConfig,
           },
-          {
-            targetOriginId: "/event",
-            pathPattern: "/event",
-            ...urlCacheBehaviorConfig,
-          },
-          {
-            targetOriginId: "/event/realtime",
-            pathPattern: "/event/realtime",
-            ...realtimeCacheBehaviorConfig,
-          },
         ],
         restrictions: {
           geoRestriction: {
@@ -300,7 +239,6 @@ export class Router extends pulumi.ComponentResource {
       keyGroup: this.#keyGroup.id,
       apiCachePolicy: this.#apiCachePolicy.id,
       s3AccessControl: this.#s3AccessControl.id,
-      realtimeOriginRequestPolicy: this.#realtimeOriginRequestPolicy.id,
       distribution: this.#distribution.id,
       cname: this.#cname.id,
     });

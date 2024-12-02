@@ -61,12 +61,6 @@ export const getProgram =
             documents: {
               domainName: storage.buckets.documents.regionalDomainName,
             },
-            appsyncHttp: {
-              domainName: realtime.httpDomainName,
-            },
-            appsyncRealtime: {
-              domainName: realtime.realtimeDomainName,
-            },
           },
         },
         { providers: [account.provider] },
@@ -83,6 +77,7 @@ export const getProgram =
           domainName: ssl.domainName,
           certificateArn: ssl.certificateArn,
           cloudfrontKeyPairId: cloudfrontPublicKey.id,
+          appsyncDns: realtime.dns,
           papercutSecureReverseProxyFunction: {
             invokeArn: functions.papercutSecureReverseProxy.invokeArn,
           },

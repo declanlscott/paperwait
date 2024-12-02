@@ -11,6 +11,10 @@ export interface ApiArgs {
   domainName: aws.acm.Certificate["domainName"];
   certificateArn: aws.acm.Certificate["arn"];
   cloudfrontKeyPairId: pulumi.Input<string>;
+  appsyncDns: {
+    http: pulumi.Input<string>;
+    realtime: pulumi.Input<string>;
+  };
   papercutSecureReverseProxyFunction: {
     invokeArn: aws.lambda.Function["invokeArn"];
   };
@@ -249,6 +253,42 @@ export class Api extends pulumi.ComponentResource {
           ),
           responseTemplates: {
             "text/plain": args.cloudfrontKeyPairId,
+          },
+        },
+        { parent: this },
+      ),
+    );
+
+    this.#wellKnownAppSpecificRoutes.push(
+      new WellKnownAppSpecificRoute(
+        "AppsyncHttpDomainName",
+        {
+          apiId: args.gateway.id,
+          parentId: this.#appSpecificResource.id,
+          pathPart: args.domainName.apply(
+            (domainName) =>
+              `${Utils.reverseDns(domainName)}.appsync-http-domain-name.txt`,
+          ),
+          responseTemplates: {
+            "text/plain": args.appsyncDns.http,
+          },
+        },
+        { parent: this },
+      ),
+    );
+
+    this.#wellKnownAppSpecificRoutes.push(
+      new WellKnownAppSpecificRoute(
+        "AppsyncRealtimeDomainName",
+        {
+          apiId: args.gateway.id,
+          parentId: this.#appSpecificResource.id,
+          pathPart: args.domainName.apply(
+            (domainName) =>
+              `${Utils.reverseDns(domainName)}.appsync-realtime-domain-name.txt`,
+          ),
+          responseTemplates: {
+            "text/plain": args.appsyncDns.realtime,
           },
         },
         { parent: this },

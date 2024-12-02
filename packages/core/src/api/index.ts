@@ -28,6 +28,24 @@ export namespace Api {
     return res.text();
   }
 
+  export async function getAppsyncHttpDomainName() {
+    const res = await send(
+      `/.well-known/appspecific/${Utils.reverseDns(Tenants.getFqdn())}.appsync-http-domain-name.txt`,
+    );
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+
+    return res.text();
+  }
+
+  export async function getAppsyncRealtimeDomainName() {
+    const res = await send(
+      `/.well-known/appspecific/${Utils.reverseDns(Tenants.getFqdn())}.appsync-realtime-domain-name.txt`,
+    );
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+
+    return res.text();
+  }
+
   export async function syncUsers() {
     const res = await send("/users/sync", { method: "POST" });
     if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
@@ -90,6 +108,7 @@ export namespace Api {
       body: init?.body?.toString(),
     });
 
+    // NOTE: Requests to `/.well-known` should not use a signed URL
     if (path.startsWith("/.well-known"))
       return fetch(url, {
         method: "GET",

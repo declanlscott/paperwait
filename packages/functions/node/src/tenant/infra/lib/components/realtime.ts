@@ -141,11 +141,10 @@ export class Realtime extends pulumi.ComponentResource {
     });
   }
 
-  get httpDomainName() {
-    return pulumi.interpolate`${this.#api.apiId}.appsync-api.${aws.getRegionOutput({}, { parent: this }).name}.amazonaws.com`;
-  }
-
-  get realtimeDomainName() {
-    return pulumi.interpolate`${this.#api.apiId}.appsync-realtime-api.${aws.getRegionOutput({}, { parent: this }).name}.amazonaws.com`;
+  get dns() {
+    return {
+      http: this.#api.dns.HTTP,
+      realtime: this.#api.dns.REALTIME,
+    };
   }
 }
