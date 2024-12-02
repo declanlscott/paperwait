@@ -9,6 +9,7 @@ import type {
   createRouter,
   NavigateOptions,
   ToOptions,
+  TrailingSlashOption,
 } from "@tanstack/react-router";
 import type { FilterFn } from "@tanstack/react-table";
 import type { ReadTransaction } from "replicache";
@@ -28,7 +29,6 @@ declare module "react-aria-components" {
 }
 
 declare module "@tanstack/react-table" {
-  // add fuzzy filter to the filterFns
   interface FilterFns {
     fuzzy: FilterFn<unknown>;
   }
@@ -38,7 +38,7 @@ declare module "@tanstack/react-table" {
 }
 
 export type AppRouter = ReturnType<
-  typeof createRouter<typeof routeTree, "always" | "never" | "preserve">
+  typeof createRouter<typeof routeTree, TrailingSlashOption, boolean>
 >;
 
 export type Slot = {

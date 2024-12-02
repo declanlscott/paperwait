@@ -12,7 +12,7 @@ import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
-import type { Auth } from "@printworks/core/sessions/context";
+import type { UserActor } from "@printworks/core/actors/shared";
 import type { Resource } from "sst";
 import type { AppRouter, Slot } from "~/app/types";
 
@@ -20,7 +20,7 @@ const queryClient = new QueryClient();
 
 export interface AppProps extends Partial<Slot> {
   clientResource: Resource["Client"];
-  auth: Auth;
+  auth: UserActor["properties"];
 }
 
 export function App(props: AppProps) {

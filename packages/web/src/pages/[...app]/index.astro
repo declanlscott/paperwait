@@ -1,5 +1,5 @@
 ---
-import { useAuth } from "@printworks/core/sessions/context";
+import { assertActor } from "@printworks/core/actors";
 import { Icon } from "astro-icon/components";
 import { Resource } from "sst";
 
@@ -11,9 +11,7 @@ import type { AppProps } from "~/app/index";
 
 const appProps = {
   clientResource: Resource.Client,
-  // This is NOT a react hook, even though it looks like one.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  auth: useAuth(),
+  auth: assertActor("user").properties,
 } satisfies AppProps;
 ---
 
