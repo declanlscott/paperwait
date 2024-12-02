@@ -7,6 +7,22 @@ import { Tenants } from "../tenants";
 import { Cloudfront, SignatureV4 } from "../utils/aws";
 
 export namespace Realtime {
+  export const getUrl = async () =>
+    Cloudfront.getSignedUrl({
+      keyPairId: await Api.getCloudfrontKeyPairId(),
+      privateKey: Resource.CloudfrontPrivateKey.pem,
+      url: Cloudfront.buildUrl({
+        protocol: "wss",
+        fqdn: Tenants.getFqdn(),
+        path: "/event/realtime",
+      }).toString(),
+      dateLessThan: addMinutes(Date.now(), 15).toISOString(),
+    });
+
+  export async function getAuthProtocol() {
+    // TODO: implement
+  }
+
   export async function publish(channel: string, events: Array<string>) {
     const url = Cloudfront.buildUrl({
       fqdn: Tenants.getFqdn(),
