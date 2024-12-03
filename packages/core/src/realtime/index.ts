@@ -1,29 +1,22 @@
+import { HttpRequest } from "@smithy/protocol-http";
 import * as R from "remeda";
 import { Resource } from "sst";
 
 import { Api } from "../api";
-import { SignatureV4, Sts } from "../utils/aws";
+import { SignatureV4, Sts, Util } from "../utils/aws";
 
 export namespace Realtime {
-  export async function getUrl() {
-    const domainName = await Api.getAppsyncRealtimeDomainName();
-
-    return new URL(`wss://${domainName}/event/realtime`);
-  }
+  export const getUrl = async () =>
+    Util.formatUrl(
+      new HttpRequest({
+        protocol: "wss:",
+        hostname: await Api.getAppsyncRealtimeDomainName(),
+        path: "/event/realtime",
+      }),
+    );
 
   export async function getAuthProtocol() {
-    const signer = SignatureV4.buildSigner({
-      region: Resource.Aws.region,
-      service: "appsync",
-      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
-        type: "name",
-        accountId: await Api.getAccountId(),
-        roleName: Resource.Aws.tenant.realtimePublisherRole.name,
-        roleSessionName: "RealtimePublisher",
-      }),
-    });
-
-    // TODO: Finish implementation
+    // TODO: Implement
   }
 
   export async function publish(channel: string, events: Array<string>) {
@@ -38,25 +31,24 @@ export namespace Realtime {
       }),
     });
 
-    const domainName = await Api.getAppsyncHttpDomainName();
-    const url = new URL(`https://${domainName}/event`);
+    const hostname = await Api.getAppsyncHttpDomainName();
 
     for (const batch of R.chunk(events, 5)) {
-      const req = await signer.sign({
-        hostname: url.hostname,
-        protocol: url.protocol,
-        method: "POST",
-        path: url.pathname,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          channel,
-          events: batch,
+      const req = await signer.sign(
+        new HttpRequest({
+          method: "POST",
+          protocol: "https:",
+          hostname,
+          path: "/event",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            channel,
+            events: batch,
+          }),
         }),
-      });
+      );
 
-      await fetch(url, {
+      await fetch(Util.formatUrl(req), {
         method: req.method,
         headers: req.headers,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

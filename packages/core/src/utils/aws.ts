@@ -38,6 +38,7 @@ import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { getSignedUrl as _getSignedUrl } from "@aws-sdk/cloudfront-signer";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { formatUrl as _formatUrl } from "@aws-sdk/util-format-url";
 import { SignatureV4 as _SignatureV4 } from "@smithy/signature-v4";
 
 import type {
@@ -250,4 +251,8 @@ export namespace Sts {
       expiration: Credentials.Expiration,
     };
   }
+}
+
+export namespace Util {
+  export const formatUrl = _formatUrl;
 }
