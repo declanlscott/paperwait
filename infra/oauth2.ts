@@ -1,7 +1,7 @@
 import { appFqdn } from "./dns";
 import { googleClientId, googleClientSecret } from "./secrets";
 
-const wellKnown = azuread.getApplicationPublishedAppIds({});
+const wellKnown = azuread.getApplicationPublishedAppIds();
 const microsoftGraphAppId = await wellKnown.then(
   ({ result }) => result?.MicrosoftGraph,
 );

@@ -77,14 +77,14 @@ export class ApiProvider implements pulumi.dynamic.ResourceProvider {
   }
 
   async update(
-    apiId: string,
+    id: string,
     olds: ApiProviderOutputs,
     { clientRoleArn, ...input }: ApiProviderInputs,
   ): Promise<pulumi.dynamic.UpdateResult<ApiProviderOutputs>> {
     const client = await ApiProvider.#getClient(clientRoleArn);
 
     const output = await Appsync.updateApi(client, {
-      apiId,
+      apiId: id,
       name: olds.name,
       ...input,
     });

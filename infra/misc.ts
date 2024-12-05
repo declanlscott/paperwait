@@ -44,7 +44,7 @@ export const aws_ = new sst.Linkable("Aws", {
     account: {
       id: aws.getCallerIdentityOutput().accountId,
     },
-    region: aws.getRegionOutput({}).name,
+    region: aws.getRegionOutput().name,
     tenant: {
       accountAccessRole: {
         name: tenantAccountAccessRoleName,
