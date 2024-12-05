@@ -1,8 +1,7 @@
-import { foreignKey, index, text } from "drizzle-orm/pg-core";
+import { index, text } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
-import { ordersTable } from "../orders/sql";
 import { userRole } from "../utils/sql";
 import { commentsTableName } from "./shared";
 
@@ -17,11 +16,6 @@ export const commentsTable = tenantTable(
     visibleTo: userRole("visible_to").array().notNull(),
   },
   (table) => ({
-    orderReference: foreignKey({
-      columns: [table.orderId, table.tenantId],
-      foreignColumns: [ordersTable.id, ordersTable.tenantId],
-      name: "order_fk",
-    }),
     orderIdIndex: index("order_id_idx").on(table.orderId),
     visibleToIndex: index("visible_to_idx").on(table.visibleTo),
   }),

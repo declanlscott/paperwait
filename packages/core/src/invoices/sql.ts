@@ -1,8 +1,7 @@
-import { foreignKey, index, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { index, jsonb, timestamp } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
-import { ordersTable } from "../orders/sql";
 import { invoiceStatus } from "../utils/sql";
 import { invoicesTableName } from "./shared";
 
@@ -18,11 +17,6 @@ export const invoicesTable = tenantTable(
     orderId: id("order_id").notNull(),
   },
   (table) => ({
-    orderReference: foreignKey({
-      columns: [table.orderId, table.tenantId],
-      foreignColumns: [ordersTable.id, ordersTable.tenantId],
-      name: "order_fk",
-    }).onDelete("cascade"),
     orderIdIndex: index("order_id_idx").on(table.orderId),
   }),
 );

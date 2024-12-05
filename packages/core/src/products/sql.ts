@@ -1,8 +1,7 @@
-import { foreignKey, index, jsonb, varchar } from "drizzle-orm/pg-core";
+import { index, jsonb, varchar } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
-import { roomsTable } from "../rooms/sql";
 import { Constants } from "../utils/constants";
 import { productStatus } from "../utils/sql";
 import { productsTableName } from "./shared";
@@ -19,11 +18,6 @@ export const productsTable = tenantTable(
     config: jsonb("config").$type<ProductConfiguration>().notNull(),
   },
   (table) => ({
-    roomReference: foreignKey({
-      columns: [table.roomId, table.tenantId],
-      foreignColumns: [roomsTable.id, roomsTable.tenantId],
-      name: "room_fk",
-    }).onDelete("cascade"),
     statusIndex: index("status_idx").on(table.status),
     roomIdIndex: index("room_id_idx").on(table.roomId),
   }),

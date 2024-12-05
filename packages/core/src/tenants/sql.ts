@@ -1,5 +1,4 @@
 import {
-  foreignKey,
   index,
   jsonb,
   pgTable,
@@ -9,7 +8,6 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { id, idPrimaryKey, timestamps } from "../drizzle/columns";
-import { oauth2ProvidersTable } from "../oauth2/sql";
 import { Constants } from "../utils/constants";
 import { licenseStatus, tenantStatus } from "../utils/sql";
 import {
@@ -23,9 +21,7 @@ import type { TenantInfraProgramInput } from "./shared";
 
 export const licensesTable = pgTable(licensesTableName, {
   key: uuid("key").defaultRandom().primaryKey(),
-  tenantId: id("tenant_id")
-    .unique()
-    .references(() => tenantsTable.id),
+  tenantId: id("tenant_id").unique(),
   status: licenseStatus("status").notNull().default("active"),
 });
 export type LicensesTable = typeof licensesTable;
@@ -46,11 +42,6 @@ export const tenantsTable = pgTable(
   (table) => ({
     slugIndex: index("slug_idx").on(table.slug),
     nameIndex: index("name_idx").on(table.name),
-    oauth2ProviderReference: foreignKey({
-      columns: [table.oauth2ProviderId, table.id],
-      foreignColumns: [oauth2ProvidersTable.id, oauth2ProvidersTable.tenantId],
-      name: "oauth2_provider_fk",
-    }),
   }),
 );
 export type TenantsTable = typeof tenantsTable;
@@ -61,10 +52,7 @@ export const tenantMetadataTable = pgTable(tenantMetadataTableName, {
   infraProgramInput: jsonb("infra_program_input")
     .$type<TenantInfraProgramInput>()
     .notNull(),
-  tenantId: id("tenant_id")
-    .unique()
-    .notNull()
-    .references(() => tenantsTable.id),
+  tenantId: id("tenant_id").unique().notNull(),
   ...timestamps,
 });
 export type TenantMetadataTable = typeof tenantMetadataTable;

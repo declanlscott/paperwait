@@ -1,6 +1,5 @@
 import {
   boolean,
-  foreignKey,
   index,
   numeric,
   pgTable,
@@ -53,11 +52,6 @@ export const workflowStatusesTable = pgTable(
     primary: primaryKey({
       columns: [table.id, table.roomId, table.tenantId],
     }),
-    roomReference: foreignKey({
-      columns: [table.roomId, table.tenantId],
-      foreignColumns: [roomsTable.id, roomsTable.tenantId],
-      name: "room_fk",
-    }),
     uniqueIndex: unique("unique_index").on(table.index, table.roomId),
   }),
 );
@@ -82,11 +76,6 @@ export const deliveryOptionsTable = pgTable(
   (table) => ({
     primary: primaryKey({
       columns: [table.id, table.roomId, table.tenantId],
-    }),
-    roomReference: foreignKey({
-      columns: [table.roomId, table.tenantId],
-      foreignColumns: [roomsTable.id, roomsTable.tenantId],
-      name: "room_fk",
     }),
   }),
 );

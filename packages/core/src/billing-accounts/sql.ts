@@ -1,16 +1,8 @@
 import { sql } from "drizzle-orm";
-import {
-  bigint,
-  foreignKey,
-  index,
-  numeric,
-  text,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { bigint, index, numeric, text, uniqueIndex } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
-import { usersTable } from "../users/sql";
 import { billingAccountType } from "../utils/sql";
 import {
   billingAccountCustomerAuthorizationsTableName,
@@ -44,16 +36,6 @@ export const billingAccountCustomerAuthorizationsTable = tenantTable(
     billingAccountId: id("billing_account_id").notNull(),
   },
   (table) => ({
-    customerReference: foreignKey({
-      columns: [table.customerId, table.tenantId],
-      foreignColumns: [usersTable.id, usersTable.tenantId],
-      name: "user_fk",
-    }).onDelete("cascade"),
-    billingAccountReference: foreignKey({
-      columns: [table.billingAccountId, table.tenantId],
-      foreignColumns: [billingAccountsTable.id, billingAccountsTable.tenantId],
-      name: "billing_account_fk",
-    }).onDelete("cascade"),
     uniqueBillingAccountCustomerIndex: uniqueIndex(
       "unique_billing_account_customer_idx",
     ).on(table.billingAccountId, table.customerId),
@@ -72,16 +54,6 @@ export const billingAccountManagerAuthorizationsTable = tenantTable(
     billingAccountId: id("billing_account_id").notNull(),
   },
   (table) => ({
-    managerReference: foreignKey({
-      columns: [table.managerId, table.tenantId],
-      foreignColumns: [usersTable.id, usersTable.tenantId],
-      name: "manager_fk",
-    }).onDelete("cascade"),
-    billingAccountReference: foreignKey({
-      columns: [table.billingAccountId, table.tenantId],
-      foreignColumns: [billingAccountsTable.id, billingAccountsTable.tenantId],
-      name: "billing_account_fk",
-    }).onDelete("cascade"),
     uniqueBillingAccountManagerIndex: uniqueIndex(
       "unique_billing_account_manager_idx",
     ).on(table.billingAccountId, table.managerId),

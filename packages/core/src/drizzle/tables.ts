@@ -1,6 +1,5 @@
 import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 
-import { tenantsTable } from "../tenants/sql";
 import { generateId } from "../utils/shared";
 import { id, timestamps } from "./columns";
 
@@ -18,9 +17,7 @@ export const tenantIdColumns = {
     return id("id").$defaultFn(generateId).notNull();
   },
   get tenantId() {
-    return id("tenant_id")
-      .notNull()
-      .references(() => tenantsTable.id);
+    return id("tenant_id").notNull();
   },
 };
 

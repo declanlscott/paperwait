@@ -1,6 +1,5 @@
 import {
   bigint,
-  foreignKey,
   index,
   integer,
   jsonb,
@@ -12,7 +11,6 @@ import {
 
 import { id, timestamps } from "../drizzle/columns";
 import { tenantIdColumns } from "../drizzle/tables";
-import { usersTable } from "../users/sql";
 import {
   replicacheClientGroupsTableName,
   replicacheClientsTableName,
@@ -41,11 +39,6 @@ export const replicacheClientGroupsTable = pgTable(
   },
   (table) => ({
     primary: primaryKey({ columns: [table.id, table.tenantId] }),
-    userReference: foreignKey({
-      columns: [table.userId, table.tenantId],
-      foreignColumns: [usersTable.id, usersTable.tenantId],
-      name: "user_fk",
-    }).onDelete("cascade"),
     updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
 );
@@ -66,14 +59,6 @@ export const replicacheClientsTable = pgTable(
   },
   (table) => ({
     primary: primaryKey({ columns: [table.id, table.tenantId] }),
-    clientGroupReference: foreignKey({
-      columns: [table.clientGroupId, table.tenantId],
-      foreignColumns: [
-        replicacheClientGroupsTable.id,
-        replicacheClientGroupsTable.tenantId,
-      ],
-      name: "client_group_fk",
-    }).onDelete("cascade"),
     clientGroupIdIndex: index("client_group_id_idx").on(table.clientGroupId),
     updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
@@ -94,14 +79,6 @@ export const replicacheClientViewsTable = pgTable(
     primary: primaryKey({
       columns: [table.clientGroupId, table.version, table.tenantId],
     }),
-    clientGroupReference: foreignKey({
-      columns: [table.clientGroupId, table.tenantId],
-      foreignColumns: [
-        replicacheClientGroupsTable.id,
-        replicacheClientGroupsTable.tenantId,
-      ],
-      name: "client_group_fk",
-    }).onDelete("cascade"),
     updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
   }),
 );

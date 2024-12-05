@@ -1,34 +1,21 @@
-import { foreignKey, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { tenantIdColumns } from "../drizzle/tables";
-import { usersTable } from "../users/sql";
 
 import type { InferSelectModel } from "drizzle-orm";
 
-export const sessionsTable = pgTable(
-  "sessions",
-  {
-    id: text("id").primaryKey(),
-    tenantId: tenantIdColumns.tenantId,
-    userId: id("user_id").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-  },
-  (table) => ({
-    userReference: foreignKey({
-      columns: [table.userId, table.tenantId],
-      foreignColumns: [usersTable.id, usersTable.tenantId],
-      name: "user_fk",
-    }).onDelete("cascade"),
-  }),
-);
+export const sessionsTable = pgTable("sessions", {
+  id: text("id").primaryKey(),
+  tenantId: tenantIdColumns.tenantId,
+  userId: id("user_id").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
 export type SessionsTable = typeof sessionsTable;
 export type Session = InferSelectModel<SessionsTable>;
 
 export const sessionTokensTable = pgTable("session_tokens", {
-  sessionId: text("session_id")
-    .primaryKey()
-    .references(() => sessionsTable.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").primaryKey(),
   userId: id("user_id").notNull(),
   tenantId: tenantIdColumns.tenantId,
   idToken: text("id_token").notNull(),

@@ -1,4 +1,4 @@
-import { foreignKey, index, text, unique } from "drizzle-orm/pg-core";
+import { index, text, unique } from "drizzle-orm/pg-core";
 
 import { id } from "../drizzle/columns";
 import { tenantTable } from "../drizzle/tables";
@@ -33,11 +33,6 @@ export const userProfilesTable = tenantTable(
     email: text("email").notNull(),
   },
   (table) => ({
-    userReference: foreignKey({
-      columns: [table.userId, table.tenantId],
-      foreignColumns: [usersTable.id, usersTable.tenantId],
-      name: "user_fk",
-    }).onDelete("cascade"),
     uniqueUserId: unique("unique_user_id").on(table.userId, table.tenantId),
     uniqueOauth2UserId: unique("unique_oauth2_user_id").on(
       table.oauth2UserId,
