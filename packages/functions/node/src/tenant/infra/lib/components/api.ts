@@ -27,66 +27,66 @@ export interface ApiArgs {
 }
 
 export class Api extends pulumi.ComponentResource {
-  static #instance: Api;
+  private static _instance: Api;
 
-  #role: aws.iam.Role;
-  #apiPolicy: aws.apigateway.RestApiPolicy;
-  #domainName: aws.apigateway.DomainName;
+  private _role: aws.iam.Role;
+  private _apiPolicy: aws.apigateway.RestApiPolicy;
+  private _domainName: aws.apigateway.DomainName;
 
   // NOTE: The well-known app-specific resources are following the registered IANA specification:
   // https://www.github.com/Vroo/well-known-uri-appspecific/blob/main/well-known-uri-for-application-specific-purposes.txt
   // https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml
-  #wellKnownResource: aws.apigateway.Resource;
-  #appSpecificResource: aws.apigateway.Resource;
-  #wellKnownAppSpecificRoutes: Array<WellKnownAppSpecificRoute> = [];
+  private _wellKnownResource: aws.apigateway.Resource;
+  private _appSpecificResource: aws.apigateway.Resource;
+  private _wellKnownAppSpecificRoutes: Array<WellKnownAppSpecificRoute> = [];
 
-  #parametersResource: aws.apigateway.Resource;
-  #parametersProxyResource: aws.apigateway.Resource;
-  #parametersProxyMethod: aws.apigateway.Method;
-  #parametersProxyIntegration: aws.apigateway.Integration;
-  #parametersProxyResponses: Responses;
-  #parametersProxyCorsRoute: CorsRoute;
+  private _parametersResource: aws.apigateway.Resource;
+  private _parametersProxyResource: aws.apigateway.Resource;
+  private _parametersProxyMethod: aws.apigateway.Method;
+  private _parametersProxyIntegration: aws.apigateway.Integration;
+  private _parametersProxyResponses: Responses;
+  private _parametersProxyCorsRoute: CorsRoute;
 
-  #usersResource: aws.apigateway.Resource;
-  #usersSyncRoute: EventRoute;
+  private _usersResource: aws.apigateway.Resource;
+  private _usersSyncRoute: EventRoute;
 
-  #papercutResource: aws.apigateway.Resource;
-  #papercutProxyResource: aws.apigateway.Resource;
-  #papercutProxyMethod: aws.apigateway.Method;
-  #papercutProxyIntegration: aws.apigateway.Integration;
-  #papercutProxyCorsRoute: CorsRoute;
+  private _papercutResource: aws.apigateway.Resource;
+  private _papercutProxyResource: aws.apigateway.Resource;
+  private _papercutProxyMethod: aws.apigateway.Method;
+  private _papercutProxyIntegration: aws.apigateway.Integration;
+  private _papercutProxyCorsRoute: CorsRoute;
 
-  #invoicesResource: aws.apigateway.Resource;
-  #enqueueInvoiceRequestValidator: aws.apigateway.RequestValidator;
-  #enqueueInvoiceRequestModel: aws.apigateway.Model;
-  #enqueueInvoiceMethod: aws.apigateway.Method;
-  #enqueueInvoiceIntegration: aws.apigateway.Integration;
-  #enqueueInvoiceResponses: Responses;
-  #enqueueInvoiceCorsRoute: CorsRoute;
+  private _invoicesResource: aws.apigateway.Resource;
+  private _enqueueInvoiceRequestValidator: aws.apigateway.RequestValidator;
+  private _enqueueInvoiceRequestModel: aws.apigateway.Model;
+  private _enqueueInvoiceMethod: aws.apigateway.Method;
+  private _enqueueInvoiceIntegration: aws.apigateway.Integration;
+  private _enqueueInvoiceResponses: Responses;
+  private _enqueueInvoiceCorsRoute: CorsRoute;
 
-  #cdnResource: aws.apigateway.Resource;
-  #invalidationResource: aws.apigateway.Resource;
-  #invalidationRequestValidator: aws.apigateway.RequestValidator;
-  #invalidationRequestModel: aws.apigateway.Model;
-  #invalidationMethod: aws.apigateway.Method;
-  #invalidationIntegration: aws.apigateway.Integration;
-  #invalidationResponses: Responses;
-  #invalidationCorsRoute: CorsRoute;
+  private _cdnResource: aws.apigateway.Resource;
+  private _invalidationResource: aws.apigateway.Resource;
+  private _invalidationRequestValidator: aws.apigateway.RequestValidator;
+  private _invalidationRequestModel: aws.apigateway.Model;
+  private _invalidationMethod: aws.apigateway.Method;
+  private _invalidationIntegration: aws.apigateway.Integration;
+  private _invalidationResponses: Responses;
+  private _invalidationCorsRoute: CorsRoute;
 
-  #corsResponse4xx: aws.apigateway.Response;
-  #corsResponse5xx: aws.apigateway.Response;
+  private _corsResponse4xx: aws.apigateway.Response;
+  private _corsResponse5xx: aws.apigateway.Response;
 
-  #logGroup: aws.cloudwatch.LogGroup;
-  #deployment: aws.apigateway.Deployment;
-  #stage: aws.apigateway.Stage;
+  private _logGroup: aws.cloudwatch.LogGroup;
+  private _deployment: aws.apigateway.Deployment;
+  private _stage: aws.apigateway.Stage;
 
   static getInstance(
     args: ApiArgs,
     opts: pulumi.ComponentResourceOptions,
   ): Api {
-    if (!this.#instance) this.#instance = new Api(args, opts);
+    if (!this._instance) this._instance = new Api(args, opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Api.getInstance>) {
@@ -96,7 +96,7 @@ export class Api extends pulumi.ComponentResource {
 
     const region = aws.getRegionOutput({}, { parent: this });
 
-    this.#role = new aws.iam.Role(
+    this._role = new aws.iam.Role(
       "Role",
       {
         assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
@@ -111,7 +111,7 @@ export class Api extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       "RoleInlinePolicy",
       {
-        role: this.#role,
+        role: this._role,
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
@@ -156,7 +156,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#apiPolicy = new aws.apigateway.RestApiPolicy(
+    this._apiPolicy = new aws.apigateway.RestApiPolicy(
       "ApiPolicy",
       {
         restApiId: args.gateway.id,
@@ -193,7 +193,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#domainName = new aws.apigateway.DomainName(
+    this._domainName = new aws.apigateway.DomainName(
       "DomainName",
       {
         domainName: args.domainName,
@@ -203,7 +203,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#wellKnownResource = new aws.apigateway.Resource(
+    this._wellKnownResource = new aws.apigateway.Resource(
       "WellKnownResource",
       {
         restApi: args.gateway.id,
@@ -213,22 +213,22 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#appSpecificResource = new aws.apigateway.Resource(
+    this._appSpecificResource = new aws.apigateway.Resource(
       "AppSpecificResource",
       {
         restApi: args.gateway.id,
-        parentId: this.#wellKnownResource.id,
+        parentId: this._wellKnownResource.id,
         pathPart: "appspecific",
       },
       { parent: this },
     );
 
-    this.#wellKnownAppSpecificRoutes.push(
+    this._wellKnownAppSpecificRoutes.push(
       new WellKnownAppSpecificRoute(
         "AccountId",
         {
           apiId: args.gateway.id,
-          parentId: this.#appSpecificResource.id,
+          parentId: this._appSpecificResource.id,
           pathPart: args.domainName.apply(
             (domainName) => `${Utils.reverseDns(domainName)}.account-id.txt`,
           ),
@@ -241,12 +241,12 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
-    this.#wellKnownAppSpecificRoutes.push(
+    this._wellKnownAppSpecificRoutes.push(
       new WellKnownAppSpecificRoute(
         "CloudfrontKeyPairId",
         {
           apiId: args.gateway.id,
-          parentId: this.#appSpecificResource.id,
+          parentId: this._appSpecificResource.id,
           pathPart: args.domainName.apply(
             (domainName) =>
               `${Utils.reverseDns(domainName)}.cloudfront-key-pair-id.txt`,
@@ -259,12 +259,12 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
-    this.#wellKnownAppSpecificRoutes.push(
+    this._wellKnownAppSpecificRoutes.push(
       new WellKnownAppSpecificRoute(
         "AppsyncHttpDomainName",
         {
           apiId: args.gateway.id,
-          parentId: this.#appSpecificResource.id,
+          parentId: this._appSpecificResource.id,
           pathPart: args.domainName.apply(
             (domainName) =>
               `${Utils.reverseDns(domainName)}.appsync-http-domain-name.txt`,
@@ -277,12 +277,12 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
-    this.#wellKnownAppSpecificRoutes.push(
+    this._wellKnownAppSpecificRoutes.push(
       new WellKnownAppSpecificRoute(
         "AppsyncRealtimeDomainName",
         {
           apiId: args.gateway.id,
-          parentId: this.#appSpecificResource.id,
+          parentId: this._appSpecificResource.id,
           pathPart: args.domainName.apply(
             (domainName) =>
               `${Utils.reverseDns(domainName)}.appsync-realtime-domain-name.txt`,
@@ -295,7 +295,7 @@ export class Api extends pulumi.ComponentResource {
       ),
     );
 
-    this.#parametersResource = new aws.apigateway.Resource(
+    this._parametersResource = new aws.apigateway.Resource(
       "ParametersResource",
       {
         restApi: args.gateway.id,
@@ -305,33 +305,33 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#parametersProxyResource = new aws.apigateway.Resource(
+    this._parametersProxyResource = new aws.apigateway.Resource(
       "ParametersProxyResource",
       {
         restApi: args.gateway.id,
-        parentId: this.#parametersResource.id,
+        parentId: this._parametersResource.id,
         pathPart: "{proxy+}",
       },
       { parent: this },
     );
 
-    this.#parametersProxyMethod = new aws.apigateway.Method(
+    this._parametersProxyMethod = new aws.apigateway.Method(
       "ParametersProxyMethod",
       {
         restApi: args.gateway.id,
-        resourceId: this.#parametersProxyResource.id,
+        resourceId: this._parametersProxyResource.id,
         httpMethod: "GET",
         authorization: "AWS_IAM",
       },
       { parent: this },
     );
 
-    this.#parametersProxyIntegration = new aws.apigateway.Integration(
+    this._parametersProxyIntegration = new aws.apigateway.Integration(
       "ParametersProxyIntegration",
       {
         restApi: args.gateway.id,
-        resourceId: this.#parametersProxyResource.id,
-        httpMethod: this.#parametersProxyMethod.httpMethod,
+        resourceId: this._parametersProxyResource.id,
+        httpMethod: this._parametersProxyMethod.httpMethod,
         type: "AWS",
         integrationHttpMethod: "POST",
         requestParameters: {
@@ -350,32 +350,32 @@ export class Api extends pulumi.ComponentResource {
         },
         passthroughBehavior: "NEVER",
         uri: pulumi.interpolate`arn:aws:apigateway:${region}:ssm:path//`,
-        credentials: this.#role.arn,
+        credentials: this._role.arn,
       },
       { parent: this },
     );
 
-    this.#parametersProxyResponses = new Responses(
+    this._parametersProxyResponses = new Responses(
       "ParametersProxy",
       {
         statusCodes: ["200", "400", "403", "500", "503"],
         restApi: args.gateway.id,
-        resourceId: this.#parametersProxyResource.id,
-        httpMethod: this.#parametersProxyMethod.httpMethod,
+        resourceId: this._parametersProxyResource.id,
+        httpMethod: this._parametersProxyMethod.httpMethod,
       },
       { parent: this },
     );
 
-    this.#parametersProxyCorsRoute = new CorsRoute(
+    this._parametersProxyCorsRoute = new CorsRoute(
       "ParametersProxy",
       {
         restApiId: args.gateway.id,
-        resourceId: this.#parametersProxyResource.id,
+        resourceId: this._parametersProxyResource.id,
       },
       { parent: this },
     );
 
-    this.#usersResource = new aws.apigateway.Resource(
+    this._usersResource = new aws.apigateway.Resource(
       "UsersResource",
       {
         restApi: args.gateway.id,
@@ -385,13 +385,13 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#usersSyncRoute = new EventRoute(
+    this._usersSyncRoute = new EventRoute(
       "UsersSync",
       {
         restApiId: args.gateway.id,
-        parentId: this.#usersResource.id,
+        parentId: this._usersResource.id,
         pathPart: "sync",
-        executionRoleArn: this.#role.arn,
+        executionRoleArn: this._role.arn,
         requestTemplate: pulumi.all([args.tenantId, args.domainName]).apply(
           ([tenantId, domainName]) => `
 {
@@ -409,7 +409,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#papercutResource = new aws.apigateway.Resource(
+    this._papercutResource = new aws.apigateway.Resource(
       "PapercutResource",
       {
         restApi: args.gateway.id,
@@ -419,52 +419,52 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#papercutProxyResource = new aws.apigateway.Resource(
+    this._papercutProxyResource = new aws.apigateway.Resource(
       "PapercutProxyResource",
       {
         restApi: args.gateway.id,
-        parentId: this.#papercutResource.id,
+        parentId: this._papercutResource.id,
         pathPart: "{proxy+}",
       },
       { parent: this },
     );
 
-    this.#papercutProxyMethod = new aws.apigateway.Method(
+    this._papercutProxyMethod = new aws.apigateway.Method(
       "PapercutProxyMethod",
       {
         restApi: args.gateway.id,
-        resourceId: this.#papercutProxyResource.id,
+        resourceId: this._papercutProxyResource.id,
         httpMethod: "ANY",
         authorization: "AWS_IAM",
       },
       { parent: this },
     );
 
-    this.#papercutProxyIntegration = new aws.apigateway.Integration(
+    this._papercutProxyIntegration = new aws.apigateway.Integration(
       "PapercutProxyIntegration",
       {
         restApi: args.gateway.id,
-        resourceId: this.#papercutProxyResource.id,
-        httpMethod: this.#papercutProxyMethod.httpMethod,
+        resourceId: this._papercutProxyResource.id,
+        httpMethod: this._papercutProxyMethod.httpMethod,
         type: "AWS_PROXY",
         integrationHttpMethod: "POST",
         passthroughBehavior: "WHEN_NO_TEMPLATES",
         uri: args.papercutSecureReverseProxyFunction.invokeArn,
-        credentials: this.#role.arn,
+        credentials: this._role.arn,
       },
       { parent: this },
     );
 
-    this.#papercutProxyCorsRoute = new CorsRoute(
+    this._papercutProxyCorsRoute = new CorsRoute(
       "PapercutProxy",
       {
         restApiId: args.gateway.id,
-        resourceId: this.#papercutProxyResource.id,
+        resourceId: this._papercutProxyResource.id,
       },
       { parent: this },
     );
 
-    this.#invoicesResource = new aws.apigateway.Resource(
+    this._invoicesResource = new aws.apigateway.Resource(
       "InvoicesResource",
       {
         restApi: args.gateway.id,
@@ -474,7 +474,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#enqueueInvoiceRequestValidator = new aws.apigateway.RequestValidator(
+    this._enqueueInvoiceRequestValidator = new aws.apigateway.RequestValidator(
       "EnqueueInvoiceRequestValidator",
       {
         restApi: args.gateway.id,
@@ -484,7 +484,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#enqueueInvoiceRequestModel = new aws.apigateway.Model(
+    this._enqueueInvoiceRequestModel = new aws.apigateway.Model(
       "EnqueueInvoiceRequestModel",
       {
         restApi: args.gateway.id,
@@ -505,27 +505,27 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#enqueueInvoiceMethod = new aws.apigateway.Method(
+    this._enqueueInvoiceMethod = new aws.apigateway.Method(
       "EnqueueInvoiceMethod",
       {
         restApi: args.gateway.id,
-        resourceId: this.#invoicesResource.id,
+        resourceId: this._invoicesResource.id,
         httpMethod: "POST",
         authorization: "AWS_IAM",
-        requestValidatorId: this.#enqueueInvoiceRequestValidator.id,
+        requestValidatorId: this._enqueueInvoiceRequestValidator.id,
         requestModels: {
-          "application/json": this.#enqueueInvoiceRequestModel.id,
+          "application/json": this._enqueueInvoiceRequestModel.id,
         },
       },
       { parent: this },
     );
 
-    this.#enqueueInvoiceIntegration = new aws.apigateway.Integration(
+    this._enqueueInvoiceIntegration = new aws.apigateway.Integration(
       "EnqueueInvoiceIntegration",
       {
         restApi: args.gateway.id,
-        resourceId: this.#invoicesResource.id,
-        httpMethod: this.#enqueueInvoiceMethod.httpMethod,
+        resourceId: this._invoicesResource.id,
+        httpMethod: this._enqueueInvoiceMethod.httpMethod,
         type: "AWS",
         integrationHttpMethod: "POST",
         requestParameters: {
@@ -542,32 +542,32 @@ export class Api extends pulumi.ComponentResource {
         },
         passthroughBehavior: "NEVER",
         uri: pulumi.interpolate`arn:aws:apigateway:${region}:sqs:path/${aws.getCallerIdentityOutput({}, { parent: this }).accountId}/${args.invoicesProcessorQueue.name}`,
-        credentials: this.#role.arn,
+        credentials: this._role.arn,
       },
       { parent: this },
     );
 
-    this.#enqueueInvoiceResponses = new Responses(
+    this._enqueueInvoiceResponses = new Responses(
       "EnqueueInvoice",
       {
         statusCodes: ["200", "400", "403", "500", "503"],
         restApi: args.gateway.id,
-        resourceId: this.#invoicesResource.id,
-        httpMethod: this.#enqueueInvoiceMethod.httpMethod,
+        resourceId: this._invoicesResource.id,
+        httpMethod: this._enqueueInvoiceMethod.httpMethod,
       },
       { parent: this },
     );
 
-    this.#enqueueInvoiceCorsRoute = new CorsRoute(
+    this._enqueueInvoiceCorsRoute = new CorsRoute(
       "EnqueueInvoice",
       {
         restApiId: args.gateway.id,
-        resourceId: this.#invoicesResource.id,
+        resourceId: this._invoicesResource.id,
       },
       { parent: this },
     );
 
-    this.#cdnResource = new aws.apigateway.Resource(
+    this._cdnResource = new aws.apigateway.Resource(
       "CdnResource",
       {
         restApi: args.gateway.id,
@@ -577,17 +577,17 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#invalidationResource = new aws.apigateway.Resource(
+    this._invalidationResource = new aws.apigateway.Resource(
       "InvalidationResource",
       {
         restApi: args.gateway.id,
-        parentId: this.#cdnResource.id,
+        parentId: this._cdnResource.id,
         pathPart: "invalidation",
       },
       { parent: this },
     );
 
-    this.#invalidationRequestValidator = new aws.apigateway.RequestValidator(
+    this._invalidationRequestValidator = new aws.apigateway.RequestValidator(
       "InvalidationRequestValidator",
       {
         restApi: args.gateway.id,
@@ -597,7 +597,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#invalidationRequestModel = new aws.apigateway.Model(
+    this._invalidationRequestModel = new aws.apigateway.Model(
       "InvalidationRequestModel",
       {
         restApi: args.gateway.id,
@@ -626,27 +626,27 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#invalidationMethod = new aws.apigateway.Method(
+    this._invalidationMethod = new aws.apigateway.Method(
       "InvalidationMethod",
       {
         restApi: args.gateway.id,
-        resourceId: this.#invalidationResource.id,
+        resourceId: this._invalidationResource.id,
         httpMethod: "POST",
         authorization: "AWS_IAM",
-        requestValidatorId: this.#invalidationRequestValidator.id,
+        requestValidatorId: this._invalidationRequestValidator.id,
         requestModels: {
-          "application/json": this.#invalidationRequestModel.name,
+          "application/json": this._invalidationRequestModel.name,
         },
       },
       { parent: this },
     );
 
-    this.#invalidationIntegration = new aws.apigateway.Integration(
+    this._invalidationIntegration = new aws.apigateway.Integration(
       "InvalidationIntegration",
       {
         restApi: args.gateway.id,
-        resourceId: this.#invalidationResource.id,
-        httpMethod: this.#invalidationMethod.httpMethod,
+        resourceId: this._invalidationResource.id,
+        httpMethod: this._invalidationMethod.httpMethod,
         type: "AWS",
         integrationHttpMethod: "POST",
         requestParameters: {
@@ -671,32 +671,32 @@ export class Api extends pulumi.ComponentResource {
         },
         passthroughBehavior: "NEVER",
         uri: pulumi.interpolate`arn:aws:apigateway:${region}:cloudfront:path/${args.distributionId}/invalidation`,
-        credentials: this.#role.arn,
+        credentials: this._role.arn,
       },
       { parent: this },
     );
 
-    this.#invalidationResponses = new Responses(
+    this._invalidationResponses = new Responses(
       "Invalidation",
       {
         statusCodes: ["200", "400", "403", "404", "413", "500", "503"],
         restApi: args.gateway.id,
-        resourceId: this.#invalidationResource.id,
-        httpMethod: this.#invalidationMethod.httpMethod,
+        resourceId: this._invalidationResource.id,
+        httpMethod: this._invalidationMethod.httpMethod,
       },
       { parent: this },
     );
 
-    this.#invalidationCorsRoute = new CorsRoute(
+    this._invalidationCorsRoute = new CorsRoute(
       "Invalidation",
       {
         restApiId: args.gateway.id,
-        resourceId: this.#invalidationResource.id,
+        resourceId: this._invalidationResource.id,
       },
       { parent: this },
     );
 
-    this.#corsResponse4xx = new aws.apigateway.Response(
+    this._corsResponse4xx = new aws.apigateway.Response(
       "CorsResponse4xx",
       {
         restApiId: args.gateway.id,
@@ -712,7 +712,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#corsResponse5xx = new aws.apigateway.Response(
+    this._corsResponse5xx = new aws.apigateway.Response(
       "CorsResponse5xx",
       {
         restApiId: args.gateway.id,
@@ -728,7 +728,7 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#logGroup = new aws.cloudwatch.LogGroup(
+    this._logGroup = new aws.cloudwatch.LogGroup(
       "LogGroup",
       {
         name: pulumi.interpolate`/aws/vendedlogs/apis/${args.gateway.name}`,
@@ -741,45 +741,45 @@ export class Api extends pulumi.ComponentResource {
       .all([
         args.gateway,
 
-        this.#wellKnownResource,
-        this.#appSpecificResource,
-        ...this.#wellKnownAppSpecificRoutes.flatMap(({ triggers }) => triggers),
+        this._wellKnownResource,
+        this._appSpecificResource,
+        ...this._wellKnownAppSpecificRoutes.flatMap(({ triggers }) => triggers),
 
-        this.#parametersResource,
-        this.#parametersProxyResource,
-        this.#parametersProxyMethod,
-        this.#parametersProxyIntegration,
-        ...this.#parametersProxyResponses.triggers,
-        ...this.#parametersProxyCorsRoute.triggers,
+        this._parametersResource,
+        this._parametersProxyResource,
+        this._parametersProxyMethod,
+        this._parametersProxyIntegration,
+        ...this._parametersProxyResponses.triggers,
+        ...this._parametersProxyCorsRoute.triggers,
 
-        this.#usersResource,
-        ...this.#usersSyncRoute.triggers,
+        this._usersResource,
+        ...this._usersSyncRoute.triggers,
 
-        this.#papercutResource,
-        this.#papercutProxyResource,
-        this.#papercutProxyMethod,
-        this.#papercutProxyIntegration,
-        ...this.#papercutProxyCorsRoute.triggers,
+        this._papercutResource,
+        this._papercutProxyResource,
+        this._papercutProxyMethod,
+        this._papercutProxyIntegration,
+        ...this._papercutProxyCorsRoute.triggers,
 
-        this.#invoicesResource,
-        this.#enqueueInvoiceRequestValidator,
-        this.#enqueueInvoiceRequestModel,
-        this.#enqueueInvoiceMethod,
-        this.#enqueueInvoiceIntegration,
-        ...this.#enqueueInvoiceResponses.triggers,
-        ...this.#enqueueInvoiceCorsRoute.triggers,
+        this._invoicesResource,
+        this._enqueueInvoiceRequestValidator,
+        this._enqueueInvoiceRequestModel,
+        this._enqueueInvoiceMethod,
+        this._enqueueInvoiceIntegration,
+        ...this._enqueueInvoiceResponses.triggers,
+        ...this._enqueueInvoiceCorsRoute.triggers,
 
-        this.#cdnResource,
-        this.#invalidationResource,
-        this.#invalidationRequestValidator,
-        this.#invalidationRequestModel,
-        this.#invalidationMethod,
-        this.#invalidationIntegration,
-        ...this.#invalidationResponses.triggers,
-        ...this.#invalidationCorsRoute.triggers,
+        this._cdnResource,
+        this._invalidationResource,
+        this._invalidationRequestValidator,
+        this._invalidationRequestModel,
+        this._invalidationMethod,
+        this._invalidationIntegration,
+        ...this._invalidationResponses.triggers,
+        ...this._invalidationCorsRoute.triggers,
 
-        this.#corsResponse4xx,
-        this.#corsResponse5xx,
+        this._corsResponse4xx,
+        this._corsResponse5xx,
       ])
       // filter serializable outputs
       .apply((resources) =>
@@ -799,7 +799,7 @@ export class Api extends pulumi.ComponentResource {
         ),
       );
 
-    this.#deployment = new aws.apigateway.Deployment(
+    this._deployment = new aws.apigateway.Deployment(
       "Deployment",
       {
         restApi: args.gateway.id,
@@ -808,14 +808,14 @@ export class Api extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#stage = new aws.apigateway.Stage(
+    this._stage = new aws.apigateway.Stage(
       "Stage",
       {
         restApi: args.gateway.id,
         stageName: AppData.stage,
-        deployment: this.#deployment.id,
+        deployment: this._deployment.id,
         accessLogSettings: {
-          destinationArn: this.#logGroup.arn,
+          destinationArn: this._logGroup.arn,
           format: JSON.stringify({
             // request info
             requestTime: `"$context.requestTime"`,
@@ -842,44 +842,44 @@ export class Api extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      role: this.#role.id,
-      apiPolicy: this.#apiPolicy.id,
-      domainName: this.#domainName.id,
+      role: this._role.id,
+      apiPolicy: this._apiPolicy.id,
+      domainName: this._domainName.id,
 
-      wellKnownResource: this.#wellKnownResource.id,
-      appSpecificResource: this.#appSpecificResource.id,
+      wellKnownResource: this._wellKnownResource.id,
+      appSpecificResource: this._appSpecificResource.id,
 
-      parametersResource: this.#parametersResource.id,
-      parametersProxyResource: this.#parametersProxyResource.id,
-      parametersProxyMethod: this.#parametersProxyMethod.id,
-      parametersProxyIntegration: this.#parametersProxyIntegration.id,
+      parametersResource: this._parametersResource.id,
+      parametersProxyResource: this._parametersProxyResource.id,
+      parametersProxyMethod: this._parametersProxyMethod.id,
+      parametersProxyIntegration: this._parametersProxyIntegration.id,
 
-      usersResource: this.#usersResource.id,
+      usersResource: this._usersResource.id,
 
-      papercutResource: this.#papercutResource.id,
-      papercutProxyResource: this.#papercutProxyResource.id,
-      papercutProxyMethod: this.#papercutProxyMethod.id,
-      papercutProxyIntegration: this.#papercutProxyIntegration.id,
+      papercutResource: this._papercutResource.id,
+      papercutProxyResource: this._papercutProxyResource.id,
+      papercutProxyMethod: this._papercutProxyMethod.id,
+      papercutProxyIntegration: this._papercutProxyIntegration.id,
 
-      invoicesResource: this.#invoicesResource.id,
-      enqueueInvoiceRequestValidator: this.#enqueueInvoiceRequestValidator.id,
-      enqueueInvoiceRequestModel: this.#enqueueInvoiceRequestModel.id,
-      enqueueInvoiceMethod: this.#enqueueInvoiceMethod.id,
-      enqueueInvoiceIntegration: this.#enqueueInvoiceIntegration.id,
+      invoicesResource: this._invoicesResource.id,
+      enqueueInvoiceRequestValidator: this._enqueueInvoiceRequestValidator.id,
+      enqueueInvoiceRequestModel: this._enqueueInvoiceRequestModel.id,
+      enqueueInvoiceMethod: this._enqueueInvoiceMethod.id,
+      enqueueInvoiceIntegration: this._enqueueInvoiceIntegration.id,
 
-      cdnResource: this.#cdnResource.id,
-      invalidationResource: this.#invalidationResource.id,
-      invalidationRequestValidator: this.#invalidationRequestValidator.id,
-      invalidationRequestModel: this.#invalidationRequestModel.id,
-      invalidationMethod: this.#invalidationMethod.id,
-      invalidationIntegration: this.#invalidationIntegration.id,
+      cdnResource: this._cdnResource.id,
+      invalidationResource: this._invalidationResource.id,
+      invalidationRequestValidator: this._invalidationRequestValidator.id,
+      invalidationRequestModel: this._invalidationRequestModel.id,
+      invalidationMethod: this._invalidationMethod.id,
+      invalidationIntegration: this._invalidationIntegration.id,
 
-      corsResponse4xx: this.#corsResponse4xx.id,
-      corsResponse5xx: this.#corsResponse5xx.id,
+      corsResponse4xx: this._corsResponse4xx.id,
+      corsResponse5xx: this._corsResponse5xx.id,
 
-      logGroup: this.#logGroup.id,
-      deployment: this.#deployment.id,
-      stage: this.#stage.id,
+      logGroup: this._logGroup.id,
+      deployment: this._deployment.id,
+      stage: this._stage.id,
     });
   }
 }
@@ -892,12 +892,12 @@ interface WellKnownAppSpecificRouteArgs {
 }
 
 class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
-  #resource: aws.apigateway.Resource;
-  #method: aws.apigateway.Method;
-  #integration: aws.apigateway.Integration;
-  #methodResponse: aws.apigateway.MethodResponse;
-  #integrationResponse: aws.apigateway.IntegrationResponse;
-  #corsRoute: CorsRoute;
+  private _resource: aws.apigateway.Resource;
+  private _method: aws.apigateway.Method;
+  private _integration: aws.apigateway.Integration;
+  private _methodResponse: aws.apigateway.MethodResponse;
+  private _integrationResponse: aws.apigateway.IntegrationResponse;
+  private _corsRoute: CorsRoute;
 
   constructor(
     name: string,
@@ -913,7 +913,7 @@ class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
       opts,
     );
 
-    this.#resource = new aws.apigateway.Resource(
+    this._resource = new aws.apigateway.Resource(
       `${name}Resource`,
       {
         restApi: args.apiId,
@@ -923,75 +923,75 @@ class WellKnownAppSpecificRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#method = new aws.apigateway.Method(
+    this._method = new aws.apigateway.Method(
       `${name}Method`,
       {
         restApi: args.apiId,
-        resourceId: this.#resource.id,
+        resourceId: this._resource.id,
         httpMethod: "GET",
         authorization: "AWS_IAM",
       },
       { parent: this },
     );
 
-    this.#integration = new aws.apigateway.Integration(
+    this._integration = new aws.apigateway.Integration(
       `${name}Integration`,
       {
         restApi: args.apiId,
-        resourceId: this.#resource.id,
-        httpMethod: this.#method.httpMethod,
+        resourceId: this._resource.id,
+        httpMethod: this._method.httpMethod,
         type: "MOCK",
       },
       { parent: this },
     );
 
-    this.#methodResponse = new aws.apigateway.MethodResponse(
+    this._methodResponse = new aws.apigateway.MethodResponse(
       `${name}MethodResponse`,
       {
         restApi: args.apiId,
-        resourceId: this.#resource.id,
-        httpMethod: this.#method.httpMethod,
+        resourceId: this._resource.id,
+        httpMethod: this._method.httpMethod,
         statusCode: "200",
       },
       { parent: this },
     );
 
-    this.#integrationResponse = new aws.apigateway.IntegrationResponse(
+    this._integrationResponse = new aws.apigateway.IntegrationResponse(
       `${name}IntegrationResponse`,
       {
         restApi: args.apiId,
-        resourceId: this.#resource.id,
-        httpMethod: this.#method.httpMethod,
-        statusCode: this.#methodResponse.statusCode,
+        resourceId: this._resource.id,
+        httpMethod: this._method.httpMethod,
+        statusCode: this._methodResponse.statusCode,
         responseTemplates: args.responseTemplates,
       },
       { parent: this },
     );
 
-    this.#corsRoute = new CorsRoute(
+    this._corsRoute = new CorsRoute(
       `${name}WellKnownAppSpecificRoute`,
       {
         restApiId: args.apiId,
-        resourceId: this.#resource.id,
+        resourceId: this._resource.id,
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      resource: this.#resource.id,
-      method: this.#method.id,
-      integration: this.#integration.id,
-      methodResponse: this.#methodResponse.id,
-      integrationResponse: this.#integrationResponse.id,
+      resource: this._resource.id,
+      method: this._method.id,
+      integration: this._integration.id,
+      methodResponse: this._methodResponse.id,
+      integrationResponse: this._integrationResponse.id,
     });
   }
 
   get triggers() {
     return [
-      this.#resource,
-      this.#method,
-      this.#integration,
-      ...this.#corsRoute.triggers,
+      this._resource,
+      this._method,
+      this._integration,
+      ...this._corsRoute.triggers,
     ];
   }
 }
@@ -1005,11 +1005,11 @@ interface EventRouteArgs {
 }
 
 class EventRoute extends pulumi.ComponentResource {
-  #resource: aws.apigateway.Resource;
-  #method: aws.apigateway.Method;
-  #integration: aws.apigateway.Integration;
-  #responses: Responses;
-  #corsRoute: CorsRoute;
+  private _resource: aws.apigateway.Resource;
+  private _method: aws.apigateway.Method;
+  private _integration: aws.apigateway.Integration;
+  private _responses: Responses;
+  private _corsRoute: CorsRoute;
 
   constructor(
     name: string,
@@ -1025,7 +1025,7 @@ class EventRoute extends pulumi.ComponentResource {
       opts,
     );
 
-    this.#resource = new aws.apigateway.Resource(
+    this._resource = new aws.apigateway.Resource(
       `${name}Resource`,
       {
         restApi: args.restApiId,
@@ -1035,23 +1035,23 @@ class EventRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#method = new aws.apigateway.Method(
+    this._method = new aws.apigateway.Method(
       `${name}Method`,
       {
         restApi: args.restApiId,
-        resourceId: this.#resource.id,
+        resourceId: this._resource.id,
         httpMethod: "POST",
         authorization: "AWS_IAM",
       },
       { parent: this },
     );
 
-    this.#integration = new aws.apigateway.Integration(
+    this._integration = new aws.apigateway.Integration(
       `${name}Integration`,
       {
         restApi: args.restApiId,
-        resourceId: this.#resource.id,
-        httpMethod: this.#method.httpMethod,
+        resourceId: this._resource.id,
+        httpMethod: this._method.httpMethod,
         type: "AWS",
         integrationHttpMethod: "POST",
         requestParameters: {
@@ -1069,40 +1069,40 @@ class EventRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#responses = new Responses(
+    this._responses = new Responses(
       name,
       {
         statusCodes: ["200", "400", "403", "500", "503"],
         restApi: args.restApiId,
-        resourceId: this.#resource.id,
-        httpMethod: this.#method.httpMethod,
+        resourceId: this._resource.id,
+        httpMethod: this._method.httpMethod,
       },
       { parent: this },
     );
 
-    this.#corsRoute = new CorsRoute(
+    this._corsRoute = new CorsRoute(
       `${name}Event`,
       {
         restApiId: args.restApiId,
-        resourceId: this.#resource.id,
+        resourceId: this._resource.id,
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      resource: this.#resource.id,
-      method: this.#method.id,
-      integration: this.#integration.id,
+      resource: this._resource.id,
+      method: this._method.id,
+      integration: this._integration.id,
     });
   }
 
   get triggers() {
     return [
-      this.#resource,
-      this.#method,
-      this.#integration,
-      ...this.#responses.triggers,
-      ...this.#corsRoute.triggers,
+      this._resource,
+      this._method,
+      this._integration,
+      ...this._responses.triggers,
+      ...this._corsRoute.triggers,
     ];
   }
 }
@@ -1115,7 +1115,7 @@ interface ResponsesArgs {
 }
 
 class Responses extends pulumi.ComponentResource {
-  #responses: Array<
+  private _responses: Array<
     [
       ResponsesArgs["statusCodes"][number],
       {
@@ -1140,7 +1140,7 @@ class Responses extends pulumi.ComponentResource {
     );
 
     args.statusCodes.map((statusCode) =>
-      this.#responses.push([
+      this._responses.push([
         statusCode,
         {
           integration: new aws.apigateway.IntegrationResponse(
@@ -1169,7 +1169,7 @@ class Responses extends pulumi.ComponentResource {
     );
 
     this.registerOutputs(
-      this.#responses.reduce(
+      this._responses.reduce(
         (outputs, [statusCode, { integration, method }]) => {
           outputs[`integrationResponse${statusCode}`] = integration.id;
           outputs[`methodResponse${statusCode}`] = method.id;
@@ -1182,7 +1182,7 @@ class Responses extends pulumi.ComponentResource {
   }
 
   get triggers() {
-    return this.#responses.flatMap(([, { integration, method }]) => [
+    return this._responses.flatMap(([, { integration, method }]) => [
       integration,
       method,
     ]);
@@ -1195,10 +1195,10 @@ interface CorsRouteArgs {
 }
 
 class CorsRoute extends pulumi.ComponentResource {
-  #method: aws.apigateway.Method;
-  #integration: aws.apigateway.Integration;
-  #integrationResponse: aws.apigateway.IntegrationResponse;
-  #methodResponse: aws.apigateway.MethodResponse;
+  private _method: aws.apigateway.Method;
+  private _integration: aws.apigateway.Integration;
+  private _integrationResponse: aws.apigateway.IntegrationResponse;
+  private _methodResponse: aws.apigateway.MethodResponse;
 
   constructor(
     name: string,
@@ -1214,7 +1214,7 @@ class CorsRoute extends pulumi.ComponentResource {
       opts,
     );
 
-    this.#method = new aws.apigateway.Method(
+    this._method = new aws.apigateway.Method(
       `${name}CorsMethod`,
       {
         restApi: args.restApiId,
@@ -1225,12 +1225,12 @@ class CorsRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#integration = new aws.apigateway.Integration(
+    this._integration = new aws.apigateway.Integration(
       `${name}CorsIntegration`,
       {
         restApi: args.restApiId,
         resourceId: args.resourceId,
-        httpMethod: this.#method.httpMethod,
+        httpMethod: this._method.httpMethod,
         type: "MOCK",
         requestTemplates: {
           "application/json": JSON.stringify({ statusCode: 200 }),
@@ -1239,12 +1239,12 @@ class CorsRoute extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#integrationResponse = new aws.apigateway.IntegrationResponse(
+    this._integrationResponse = new aws.apigateway.IntegrationResponse(
       `${name}CorsIntegrationResponse`,
       {
         restApi: args.restApiId,
         resourceId: args.resourceId,
-        httpMethod: this.#method.httpMethod,
+        httpMethod: this._method.httpMethod,
         statusCode: "204",
         responseParameters: {
           "method.response.header.Access-Control-Allow-Headers": "'*'",
@@ -1253,16 +1253,16 @@ class CorsRoute extends pulumi.ComponentResource {
           "method.response.header.Access-Control-Allow-Origin": "'*'",
         },
       },
-      { parent: this, dependsOn: [this.#integration] },
+      { parent: this, dependsOn: [this._integration] },
     );
 
-    this.#methodResponse = new aws.apigateway.MethodResponse(
+    this._methodResponse = new aws.apigateway.MethodResponse(
       `${name}CorsMethodResponse`,
       {
         restApi: args.restApiId,
         resourceId: args.resourceId,
-        httpMethod: this.#method.httpMethod,
-        statusCode: this.#integrationResponse.statusCode,
+        httpMethod: this._method.httpMethod,
+        statusCode: this._integrationResponse.statusCode,
         responseParameters: {
           "method.response.header.Access-Control-Allow-Headers": true,
           "method.response.header.Access-Control-Allow-Methods": true,
@@ -1273,19 +1273,19 @@ class CorsRoute extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      method: this.#method.id,
-      integration: this.#integration.id,
-      integrationResponse: this.#integrationResponse.id,
-      methodResponse: this.#methodResponse.id,
+      method: this._method.id,
+      integration: this._integration.id,
+      integrationResponse: this._integrationResponse.id,
+      methodResponse: this._methodResponse.id,
     });
   }
 
   get triggers() {
     return [
-      this.#method,
-      this.#integration,
-      this.#integrationResponse,
-      this.#methodResponse,
+      this._method,
+      this._integration,
+      this._integrationResponse,
+      this._methodResponse,
     ];
   }
 }

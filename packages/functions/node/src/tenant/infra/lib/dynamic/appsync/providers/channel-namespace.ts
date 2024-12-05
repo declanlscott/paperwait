@@ -24,12 +24,12 @@ export interface ChannelNamespaceProviderOutputs
 export class ChannelNamespaceProvider
   implements pulumi.dynamic.ResourceProvider
 {
-  static #sts = new Sts.Client();
+  private static _sts = new Sts.Client();
 
-  static #getClient = async (roleArn: string) =>
+  private static _getClient = async (roleArn: string) =>
     new Appsync.Client({
       credentials: await Sts.getAssumeRoleCredentials(
-        ChannelNamespaceProvider.#sts,
+        ChannelNamespaceProvider._sts,
         {
           type: "arn",
           roleArn,
@@ -44,7 +44,7 @@ export class ChannelNamespaceProvider
   }: ChannelNamespaceProviderInputs): Promise<
     pulumi.dynamic.CreateResult<ChannelNamespaceProviderOutputs>
   > {
-    const client = await ChannelNamespaceProvider.#getClient(clientRoleArn);
+    const client = await ChannelNamespaceProvider._getClient(clientRoleArn);
 
     const output = await Appsync.createChannelNamespace(client, input);
 
@@ -60,7 +60,7 @@ export class ChannelNamespaceProvider
     id: string,
     props: ChannelNamespaceProviderOutputs,
   ): Promise<pulumi.dynamic.ReadResult<ChannelNamespaceProviderOutputs>> {
-    const client = await ChannelNamespaceProvider.#getClient(
+    const client = await ChannelNamespaceProvider._getClient(
       props.clientRoleArn,
     );
 
@@ -82,7 +82,7 @@ export class ChannelNamespaceProvider
     olds: ChannelNamespaceProviderOutputs,
     { clientRoleArn, ...input }: ChannelNamespaceProviderInputs,
   ): Promise<pulumi.dynamic.UpdateResult<ChannelNamespaceProviderOutputs>> {
-    const client = await ChannelNamespaceProvider.#getClient(clientRoleArn);
+    const client = await ChannelNamespaceProvider._getClient(clientRoleArn);
 
     const output = await Appsync.updateChannelNamespace(client, input);
 
@@ -94,7 +94,7 @@ export class ChannelNamespaceProvider
   }
 
   async delete(name: string, props: ChannelNamespaceProviderOutputs) {
-    const client = await ChannelNamespaceProvider.#getClient(
+    const client = await ChannelNamespaceProvider._getClient(
       props.clientRoleArn,
     );
 

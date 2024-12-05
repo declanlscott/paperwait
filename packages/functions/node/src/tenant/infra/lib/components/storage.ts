@@ -8,16 +8,16 @@ type Buckets = Record<"assets" | "documents", Bucket>;
 type Queues = Record<"invoicesProcessor", Queue>;
 
 export class Storage extends pulumi.ComponentResource {
-  static #instance: Storage;
+  private static _instance: Storage;
 
-  #buckets: Buckets = {} as Buckets;
-  #queues: Queues = {} as Queues;
-  #putParametersRole: aws.iam.Role;
+  private _buckets: Buckets = {} as Buckets;
+  private _queues: Queues = {} as Queues;
+  private _putParametersRole: aws.iam.Role;
 
   static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
-    if (!this.#instance) this.#instance = new Storage(opts);
+    if (!this._instance) this._instance = new Storage(opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(...[opts]: Parameters<typeof Storage.getInstance>) {
@@ -25,11 +25,11 @@ export class Storage extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Storage`, "Storage", {}, opts);
 
-    this.#buckets.assets = new Bucket("Assets", { parent: this });
+    this._buckets.assets = new Bucket("Assets", { parent: this });
 
-    this.#buckets.documents = new Bucket("Documents", { parent: this });
+    this._buckets.documents = new Bucket("Documents", { parent: this });
 
-    this.#queues.invoicesProcessor = new Queue(
+    this._queues.invoicesProcessor = new Queue(
       "InvoicesProcessor",
       {
         withDlq: true,
@@ -38,7 +38,7 @@ export class Storage extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#putParametersRole = new aws.iam.Role(
+    this._putParametersRole = new aws.iam.Role(
       "PutParametersRole",
       {
         name: Aws.tenant.putParametersRole.name,
@@ -76,7 +76,7 @@ export class Storage extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       "PutParametersRoleInlinePolicy",
       {
-        role: this.#putParametersRole.name,
+        role: this._putParametersRole.name,
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
@@ -102,39 +102,39 @@ export class Storage extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      putParametersRole: this.#putParametersRole.id,
+      putParametersRole: this._putParametersRole.id,
     });
   }
 
   get buckets() {
-    return this.#buckets;
+    return this._buckets;
   }
 
   get queues() {
-    return this.#queues;
+    return this._queues;
   }
 }
 
 class Bucket extends pulumi.ComponentResource {
-  #bucket: aws.s3.BucketV2;
-  #publicAccessBlock: aws.s3.BucketPublicAccessBlock;
-  #policy: aws.s3.BucketPolicy;
+  private _bucket: aws.s3.BucketV2;
+  private _publicAccessBlock: aws.s3.BucketPublicAccessBlock;
+  private _policy: aws.s3.BucketPolicy;
 
   constructor(name: string, opts: pulumi.ComponentResourceOptions) {
     const { AppData } = useResource();
 
     super(`${AppData.name}:tenant:aws:Bucket`, name, {}, opts);
 
-    this.#bucket = new aws.s3.BucketV2(
+    this._bucket = new aws.s3.BucketV2(
       `${name}Bucket`,
       { forceDestroy: true },
       { retainOnDelete: AppData.stage === "production", parent: this },
     );
 
-    this.#publicAccessBlock = new aws.s3.BucketPublicAccessBlock(
+    this._publicAccessBlock = new aws.s3.BucketPublicAccessBlock(
       `${name}PublicAccessBlock`,
       {
-        bucket: this.#bucket.bucket,
+        bucket: this._bucket.bucket,
         blockPublicAcls: true,
         blockPublicPolicy: true,
         ignorePublicAcls: true,
@@ -143,10 +143,10 @@ class Bucket extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#policy = new aws.s3.BucketPolicy(
+    this._policy = new aws.s3.BucketPolicy(
       `${name}Policy`,
       {
-        bucket: this.#bucket.bucket,
+        bucket: this._bucket.bucket,
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
@@ -158,15 +158,15 @@ class Bucket extends pulumi.ComponentResource {
                   },
                 ],
                 actions: ["s3:GetObject"],
-                resources: [pulumi.interpolate`${this.#bucket.arn}/*`],
+                resources: [pulumi.interpolate`${this._bucket.arn}/*`],
               },
               {
                 effect: "Deny",
                 principals: [{ type: "*", identifiers: ["*"] }],
                 actions: ["s3:*"],
                 resources: [
-                  this.#bucket.arn,
-                  pulumi.interpolate`${this.#bucket.arn}/*`,
+                  this._bucket.arn,
+                  pulumi.interpolate`${this._bucket.arn}/*`,
                 ],
                 conditions: [
                   {
@@ -181,13 +181,13 @@ class Bucket extends pulumi.ComponentResource {
           { parent: this },
         ).json,
       },
-      { parent: this, dependsOn: this.#publicAccessBlock },
+      { parent: this, dependsOn: this._publicAccessBlock },
     );
 
     new aws.s3.BucketCorsConfigurationV2(
       `${name}Cors`,
       {
-        bucket: this.#bucket.bucket,
+        bucket: this._bucket.bucket,
         corsRules: [
           {
             allowedHeaders: ["*"],
@@ -201,22 +201,22 @@ class Bucket extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      bucket: this.#bucket.id,
-      publicAccessBlock: this.#publicAccessBlock.id,
-      policy: this.#policy.id,
+      bucket: this._bucket.id,
+      publicAccessBlock: this._publicAccessBlock.id,
+      policy: this._policy.id,
     });
   }
 
   get regionalDomainName() {
-    return this.#bucket.bucketRegionalDomainName;
+    return this._bucket.bucketRegionalDomainName;
   }
 
   get name() {
-    return this.#bucket.bucket;
+    return this._bucket.bucket;
   }
 
   get arn() {
-    return this.#bucket.arn;
+    return this._bucket.arn;
   }
 }
 
@@ -226,8 +226,8 @@ interface QueueArgs {
 }
 
 class Queue extends pulumi.ComponentResource {
-  #dlq?: aws.sqs.Queue;
-  #queue: aws.sqs.Queue;
+  private _dlq?: aws.sqs.Queue;
+  private _queue: aws.sqs.Queue;
 
   constructor(
     name: string,
@@ -239,13 +239,13 @@ class Queue extends pulumi.ComponentResource {
     super(`${AppData.name}:tenant:aws:Queue`, name, args, opts);
 
     if (args.withDlq)
-      this.#dlq = new aws.sqs.Queue(
+      this._dlq = new aws.sqs.Queue(
         `${name}Dlq`,
         {},
         { retainOnDelete: AppData.stage === "production", parent: this },
       );
 
-    this.#queue = new aws.sqs.Queue(
+    this._queue = new aws.sqs.Queue(
       `${name}Queue`,
       {
         fifoQueue: args.fifo.enabled,
@@ -254,9 +254,9 @@ class Queue extends pulumi.ComponentResource {
           : undefined,
         visibilityTimeoutSeconds: 30,
         redrivePolicy:
-          args.withDlq && this.#dlq
+          args.withDlq && this._dlq
             ? pulumi.jsonStringify({
-                deadLetterTargetArn: this.#dlq.arn,
+                deadLetterTargetArn: this._dlq.arn,
                 maxReceiveCount: 3,
               })
             : undefined,
@@ -265,20 +265,20 @@ class Queue extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      dlq: this.#dlq?.id,
-      queue: this.#queue.id,
+      dlq: this._dlq?.id,
+      queue: this._queue.id,
     });
   }
 
   get arn() {
-    return this.#queue.arn;
+    return this._queue.arn;
   }
 
   get name() {
-    return this.#queue.name;
+    return this._queue.name;
   }
 
   get url() {
-    return this.#queue.url;
+    return this._queue.url;
   }
 }

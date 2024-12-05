@@ -21,21 +21,21 @@ export interface RouterArgs {
 }
 
 export class Router extends pulumi.ComponentResource {
-  static #instance: Router;
+  private static _instance: Router;
 
-  #keyGroup: aws.cloudfront.KeyGroup;
-  #apiCachePolicy: aws.cloudfront.CachePolicy;
-  #s3AccessControl: aws.cloudfront.OriginAccessControl;
-  #distribution: aws.cloudfront.Distribution;
-  #cname: cloudflare.Record;
+  private _keyGroup: aws.cloudfront.KeyGroup;
+  private _apiCachePolicy: aws.cloudfront.CachePolicy;
+  private _s3AccessControl: aws.cloudfront.OriginAccessControl;
+  private _distribution: aws.cloudfront.Distribution;
+  private _cname: cloudflare.Record;
 
   static getInstance(
     args: RouterArgs,
     opts: pulumi.ComponentResourceOptions,
   ): Router {
-    if (!this.#instance) this.#instance = new Router(args, opts);
+    if (!this._instance) this._instance = new Router(args, opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Router.getInstance>) {
@@ -43,13 +43,13 @@ export class Router extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Router`, "Router", args, opts);
 
-    this.#keyGroup = new aws.cloudfront.KeyGroup(
+    this._keyGroup = new aws.cloudfront.KeyGroup(
       "KeyGroup",
       { items: [args.keyPairId] },
       { parent: this },
     );
 
-    this.#apiCachePolicy = new aws.cloudfront.CachePolicy(
+    this._apiCachePolicy = new aws.cloudfront.CachePolicy(
       "ApiCachePolicy",
       {
         defaultTtl: 0,
@@ -80,7 +80,7 @@ export class Router extends pulumi.ComponentResource {
       originSslProtocols: ["TLSv1.2"],
     } satisfies CustomOriginConfig;
 
-    this.#s3AccessControl = new aws.cloudfront.OriginAccessControl(
+    this._s3AccessControl = new aws.cloudfront.OriginAccessControl(
       "S3AccessControl",
       {
         originAccessControlOriginType: "s3",
@@ -104,7 +104,7 @@ export class Router extends pulumi.ComponentResource {
       cachedMethods: ["GET", "HEAD"],
       defaultTtl: 0,
       compress: true,
-      cachePolicyId: this.#apiCachePolicy.id,
+      cachePolicyId: this._apiCachePolicy.id,
       originRequestPolicyId: aws.cloudfront
         .getOriginRequestPolicy(
           { name: allViewerExceptHostHeaderPolicyName },
@@ -118,7 +118,7 @@ export class Router extends pulumi.ComponentResource {
 
           return policy.id;
         }),
-      trustedKeyGroups: [this.#keyGroup.id],
+      trustedKeyGroups: [this._keyGroup.id],
     } satisfies BehaviorConfig;
 
     const bucketCacheBehaviorConfig = {
@@ -139,10 +139,10 @@ export class Router extends pulumi.ComponentResource {
 
           return policy.id;
         }),
-      trustedKeyGroups: [this.#keyGroup.id],
+      trustedKeyGroups: [this._keyGroup.id],
     } satisfies BehaviorConfig;
 
-    this.#distribution = new aws.cloudfront.Distribution(
+    this._distribution = new aws.cloudfront.Distribution(
       "Distribution",
       {
         enabled: true,
@@ -155,12 +155,12 @@ export class Router extends pulumi.ComponentResource {
           },
           {
             originId: "/assets/*",
-            originAccessControlId: this.#s3AccessControl.id,
+            originAccessControlId: this._s3AccessControl.id,
             ...args.origins.assets,
           },
           {
             originId: "/documents/*",
-            originAccessControlId: this.#s3AccessControl.id,
+            originAccessControlId: this._s3AccessControl.id,
             ...args.origins.documents,
           },
           {
@@ -220,7 +220,7 @@ export class Router extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#cname = new cloudflare.Record(
+    this._cname = new cloudflare.Record(
       "Cname",
       {
         zoneId: cloudflare.getZoneOutput(
@@ -229,23 +229,23 @@ export class Router extends pulumi.ComponentResource {
         ).id,
         name: args.domainName,
         type: "CNAME",
-        value: this.#distribution.domainName,
+        value: this._distribution.domainName,
         proxied: true,
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      keyGroup: this.#keyGroup.id,
-      apiCachePolicy: this.#apiCachePolicy.id,
-      s3AccessControl: this.#s3AccessControl.id,
-      distribution: this.#distribution.id,
-      cname: this.#cname.id,
+      keyGroup: this._keyGroup.id,
+      apiCachePolicy: this._apiCachePolicy.id,
+      s3AccessControl: this._s3AccessControl.id,
+      distribution: this._distribution.id,
+      cname: this._cname.id,
     });
   }
 
   get distributionId() {
-    return this.#distribution.id;
+    return this._distribution.id;
   }
 }
 

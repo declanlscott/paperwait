@@ -18,17 +18,17 @@ export interface ApiProviderOutputs extends ApiOutput {
 }
 
 export class ApiProvider implements pulumi.dynamic.ResourceProvider {
-  static #sts = new Sts.Client();
+  private static _sts = new Sts.Client();
 
-  #logicalName: string;
+  private _logicalName: string;
 
   constructor(name: string) {
-    this.#logicalName = logicalName(name);
+    this._logicalName = logicalName(name);
   }
 
-  static #getClient = async (roleArn: string) =>
+  private static _getClient = async (roleArn: string) =>
     new Appsync.Client({
-      credentials: await Sts.getAssumeRoleCredentials(ApiProvider.#sts, {
+      credentials: await Sts.getAssumeRoleCredentials(ApiProvider._sts, {
         type: "arn",
         roleArn,
         roleSessionName: "ApiProvider",
@@ -41,10 +41,10 @@ export class ApiProvider implements pulumi.dynamic.ResourceProvider {
   }: ApiProviderInputs): Promise<
     pulumi.dynamic.CreateResult<ApiProviderOutputs>
   > {
-    const client = await ApiProvider.#getClient(clientRoleArn);
+    const client = await ApiProvider._getClient(clientRoleArn);
 
     const output = await Appsync.createApi(client, {
-      name: physicalName(50, this.#logicalName),
+      name: physicalName(50, this._logicalName),
       ...input,
     });
 
@@ -63,7 +63,7 @@ export class ApiProvider implements pulumi.dynamic.ResourceProvider {
     id: string,
     props: ApiProviderOutputs,
   ): Promise<pulumi.dynamic.ReadResult<ApiProviderOutputs>> {
-    const client = await ApiProvider.#getClient(props.clientRoleArn);
+    const client = await ApiProvider._getClient(props.clientRoleArn);
 
     const output = await Appsync.getApi(client, { apiId: id });
     if (!output.api) throw new Error("Missing api");
@@ -81,7 +81,7 @@ export class ApiProvider implements pulumi.dynamic.ResourceProvider {
     olds: ApiProviderOutputs,
     { clientRoleArn, ...input }: ApiProviderInputs,
   ): Promise<pulumi.dynamic.UpdateResult<ApiProviderOutputs>> {
-    const client = await ApiProvider.#getClient(clientRoleArn);
+    const client = await ApiProvider._getClient(clientRoleArn);
 
     const output = await Appsync.updateApi(client, {
       apiId: id,
@@ -98,7 +98,7 @@ export class ApiProvider implements pulumi.dynamic.ResourceProvider {
   }
 
   async delete(id: string, props: ApiProviderOutputs) {
-    const client = await ApiProvider.#getClient(props.clientRoleArn);
+    const client = await ApiProvider._getClient(props.clientRoleArn);
 
     await Appsync.deleteApi(client, { apiId: id });
   }

@@ -5,14 +5,14 @@ import * as pulumi from "@pulumi/pulumi";
 import { useResource } from "../resource";
 
 export class Functions extends pulumi.ComponentResource {
-  static #instance: Functions;
+  private static _instance: Functions;
 
-  #papercutSecureReverseProxy: PapercutSecureReverseProxy;
+  private _papercutSecureReverseProxy: PapercutSecureReverseProxy;
 
   static getInstance(opts: pulumi.ComponentResourceOptions) {
-    if (!this.#instance) this.#instance = new Functions(opts);
+    if (!this._instance) this._instance = new Functions(opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(...[opts]: Parameters<typeof Functions.getInstance>) {
@@ -20,26 +20,26 @@ export class Functions extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Functions`, "Functions", {}, opts);
 
-    this.#papercutSecureReverseProxy = PapercutSecureReverseProxy.getInstance({
+    this._papercutSecureReverseProxy = PapercutSecureReverseProxy.getInstance({
       parent: this,
     });
   }
 
   get papercutSecureReverseProxy() {
-    return this.#papercutSecureReverseProxy;
+    return this._papercutSecureReverseProxy;
   }
 }
 
 class PapercutSecureReverseProxy extends pulumi.ComponentResource {
-  static #instance: PapercutSecureReverseProxy;
+  private static _instance: PapercutSecureReverseProxy;
 
-  #role: aws.iam.Role;
-  #function: aws.lambda.Function;
+  private _role: aws.iam.Role;
+  private _function: aws.lambda.Function;
 
   static getInstance(opts: pulumi.ComponentResourceOptions) {
-    if (!this.#instance) this.#instance = new PapercutSecureReverseProxy(opts);
+    if (!this._instance) this._instance = new PapercutSecureReverseProxy(opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(
@@ -54,7 +54,7 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
       opts,
     );
 
-    this.#role = new aws.iam.Role(
+    this._role = new aws.iam.Role(
       "Role",
       {
         assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
@@ -67,7 +67,7 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       "RoleInlinePolicy",
       {
-        role: this.#role.name,
+        role: this._role.name,
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
@@ -92,7 +92,7 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#function = new aws.lambda.Function(
+    this._function = new aws.lambda.Function(
       "Function",
       {
         s3Bucket: Code.bucket.name,
@@ -102,22 +102,22 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
         runtime: aws.lambda.Runtime.CustomAL2023,
         architectures: ["arm64"],
         timeout: 20,
-        role: this.#role.arn,
+        role: this._role.arn,
       },
       { parent: this },
     );
 
     this.registerOutputs({
-      role: this.#role.id,
-      function: this.#function.id,
+      role: this._role.id,
+      function: this._function.id,
     });
   }
 
   get functionArn() {
-    return this.#function.arn;
+    return this._function.arn;
   }
 
   get invokeArn() {
-    return this.#function.invokeArn;
+    return this._function.invokeArn;
   }
 }

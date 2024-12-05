@@ -8,20 +8,20 @@ export interface AccountArgs {
 }
 
 export class Account extends pulumi.ComponentResource {
-  static #instance: Account;
+  private static _instance: Account;
 
-  #account: aws.organizations.Account;
-  #assumeRoleArn: pulumi.Output<string>;
-  #provider: aws.Provider;
-  #budget: aws.budgets.Budget;
+  private _account: aws.organizations.Account;
+  private _assumeRoleArn: pulumi.Output<string>;
+  private _provider: aws.Provider;
+  private _budget: aws.budgets.Budget;
 
   static getInstance(
     args: AccountArgs,
     opts: pulumi.ComponentResourceOptions = {},
   ): Account {
-    if (!this.#instance) this.#instance = new Account(args, opts);
+    if (!this._instance) this._instance = new Account(args, opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Account.getInstance>) {
@@ -34,7 +34,7 @@ export class Account extends pulumi.ComponentResource {
     const emailSegments = Aws.organization.email.split("@");
     const email = pulumi.interpolate`${emailSegments[0]}+${name}@${emailSegments[1]}`;
 
-    this.#account = new aws.organizations.Account(
+    this._account = new aws.organizations.Account(
       "Account",
       {
         name,
@@ -46,18 +46,18 @@ export class Account extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#assumeRoleArn = pulumi.interpolate`arn:aws:iam::${this.#account.id}:role/${this.#account.roleName}`;
+    this._assumeRoleArn = pulumi.interpolate`arn:aws:iam::${this._account.id}:role/${this._account.roleName}`;
 
-    this.#provider = new aws.Provider(
+    this._provider = new aws.Provider(
       "Provider",
       {
         region: Aws.region as aws.Region,
-        assumeRole: { roleArn: this.#assumeRoleArn },
+        assumeRole: { roleArn: this._assumeRoleArn },
       },
       { parent: this },
     );
 
-    this.#budget = new aws.budgets.Budget(
+    this._budget = new aws.budgets.Budget(
       "Budget",
       {
         budgetType: "COST",
@@ -78,21 +78,21 @@ export class Account extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      account: this.#account.id,
-      provider: this.#provider.id,
-      budget: this.#budget.id,
+      account: this._account.id,
+      provider: this._provider.id,
+      budget: this._budget.id,
     });
   }
 
   get id() {
-    return this.#account.id;
+    return this._account.id;
   }
 
   get assumeRoleArn() {
-    return this.#assumeRoleArn;
+    return this._assumeRoleArn;
   }
 
   get provider() {
-    return this.#provider;
+    return this._provider;
   }
 }

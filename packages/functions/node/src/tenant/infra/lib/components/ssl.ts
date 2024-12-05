@@ -10,18 +10,18 @@ export interface SslArgs {
 }
 
 export class Ssl extends pulumi.ComponentResource {
-  static #instance: Ssl;
+  private static _instance: Ssl;
 
-  #certificate: aws.acm.Certificate;
-  #records: Array<cloudflare.Record> = [];
+  private _certificate: aws.acm.Certificate;
+  private _records: Array<cloudflare.Record> = [];
 
   static getInstance(
     args: SslArgs,
     opts: pulumi.ComponentResourceOptions,
   ): Ssl {
-    if (!this.#instance) this.#instance = new Ssl(args, opts);
+    if (!this._instance) this._instance = new Ssl(args, opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(...[args, opts]: Parameters<typeof Ssl.getInstance>) {
@@ -35,7 +35,7 @@ export class Ssl extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#certificate = new aws.acm.Certificate(
+    this._certificate = new aws.acm.Certificate(
       "Certificate",
       {
         domainName: pulumi.interpolate`${args.tenantId}.${AppData.domainName.fullyQualified}`,
@@ -44,9 +44,9 @@ export class Ssl extends pulumi.ComponentResource {
       { provider: usEast1Provider, parent: this },
     );
 
-    this.#certificate.domainValidationOptions.apply((options) =>
+    this._certificate.domainValidationOptions.apply((options) =>
       options.forEach((option, index) =>
-        this.#records.push(
+        this._records.push(
           new cloudflare.Record(
             `CertificateValidationRecord${index}`,
             {
@@ -65,16 +65,16 @@ export class Ssl extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      certificate: this.#certificate.id,
-      records: R.map(this.#records, R.prop("id")),
+      certificate: this._certificate.id,
+      records: R.map(this._records, R.prop("id")),
     });
   }
 
   get domainName() {
-    return this.#certificate.domainName;
+    return this._certificate.domainName;
   }
 
   get certificateArn() {
-    return this.#certificate.arn;
+    return this._certificate.arn;
   }
 }

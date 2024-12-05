@@ -9,20 +9,20 @@ export interface RealtimeArgs {
 }
 
 export class Realtime extends pulumi.ComponentResource {
-  static #instance: Realtime;
+  private static _instance: Realtime;
 
-  #api: appsync.Api;
-  #channelNamespace: appsync.ChannelNamespace;
-  #subscriberRole: aws.iam.Role;
-  #publisherRole: aws.iam.Role;
+  private _api: appsync.Api;
+  private _channelNamespace: appsync.ChannelNamespace;
+  private _subscriberRole: aws.iam.Role;
+  private _publisherRole: aws.iam.Role;
 
   static getInstance(
     args: RealtimeArgs,
     opts: pulumi.ComponentResourceOptions = {},
   ): Realtime {
-    if (!this.#instance) this.#instance = new Realtime(args, opts);
+    if (!this._instance) this._instance = new Realtime(args, opts);
 
-    return this.#instance;
+    return this._instance;
   }
 
   private constructor(
@@ -32,7 +32,7 @@ export class Realtime extends pulumi.ComponentResource {
 
     super(`${AppData.name}:tenant:aws:Realtime`, "Realtime", args, opts);
 
-    this.#api = new appsync.Api(
+    this._api = new appsync.Api(
       "Api",
       {
         eventConfig: {
@@ -46,10 +46,10 @@ export class Realtime extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#channelNamespace = new appsync.ChannelNamespace(
+    this._channelNamespace = new appsync.ChannelNamespace(
       "ChannelNamespace",
       {
-        apiId: this.#api.id,
+        apiId: this._api.id,
         name: "default",
         clientRoleArn: args.assumeRoleArn,
       },
@@ -85,7 +85,7 @@ export class Realtime extends pulumi.ComponentResource {
       { parent: this },
     ).json;
 
-    this.#subscriberRole = new aws.iam.Role(
+    this._subscriberRole = new aws.iam.Role(
       "SubscriberRole",
       { name: Aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
       { parent: this },
@@ -93,13 +93,13 @@ export class Realtime extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       "SubscriberRoleInlinePolicy",
       {
-        role: this.#subscriberRole.name,
+        role: this._subscriberRole.name,
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
               {
                 actions: ["appsync:EventConnect", "appsync:EventSubscribe"],
-                resources: [pulumi.interpolate`${this.#api.apiArn}/*`],
+                resources: [pulumi.interpolate`${this._api.apiArn}/*`],
               },
             ],
           },
@@ -109,7 +109,7 @@ export class Realtime extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this.#publisherRole = new aws.iam.Role(
+    this._publisherRole = new aws.iam.Role(
       "PublisherRole",
       { name: Aws.tenant.realtimeSubscriberRole.name, assumeRolePolicy },
       { parent: this },
@@ -117,13 +117,13 @@ export class Realtime extends pulumi.ComponentResource {
     new aws.iam.RolePolicy(
       "PublisherRoleInlinePolicy",
       {
-        role: this.#publisherRole.name,
+        role: this._publisherRole.name,
         policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
               {
                 actions: ["appsync:EventPublish"],
-                resources: [pulumi.interpolate`${this.#api.apiArn}/*`],
+                resources: [pulumi.interpolate`${this._api.apiArn}/*`],
               },
             ],
           },
@@ -134,17 +134,17 @@ export class Realtime extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
-      api: this.#api.id,
-      channelNamespace: this.#channelNamespace.id,
-      subscriberRole: this.#subscriberRole.id,
-      publisherRole: this.#publisherRole.id,
+      api: this._api.id,
+      channelNamespace: this._channelNamespace.id,
+      subscriberRole: this._subscriberRole.id,
+      publisherRole: this._publisherRole.id,
     });
   }
 
   get dns() {
     return {
-      http: this.#api.dns.HTTP,
-      realtime: this.#api.dns.REALTIME,
+      http: this._api.dns.HTTP,
+      realtime: this._api.dns.REALTIME,
     };
   }
 }
