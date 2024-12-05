@@ -1,14 +1,3 @@
-import {
-  CreateClusterCommand,
-  DeleteClusterCommand,
-  DSQLClient,
-  GetClusterCommand,
-  UpdateClusterCommand,
-  waitUntilClusterActive,
-  waitUntilClusterNotExists,
-} from "@aws-sdk/client-dsql";
-import { WaiterState } from "@smithy/util-waiter";
-
 import type {
   CreateClusterCommandInput,
   CreateClusterOutput,
@@ -19,63 +8,95 @@ type ClusterInput = CreateClusterCommandInput;
 export type ClusterProviderInputs = ClusterInput;
 
 type ClusterOutput = {
-  [TKey in keyof CreateClusterOutput]: NonNullable<CreateClusterOutput[TKey]>;
+  [TKey in keyof Omit<CreateClusterOutput, "creationTime">]: NonNullable<
+    CreateClusterOutput[TKey]
+  >;
+} & {
+  creationTime: string;
 };
 
-export type ClusterProviderOutputs = ClusterOutput;
+export interface ClusterProviderOutputs extends ClusterOutput {
+  tags: ClusterInput["tags"];
+}
 
 export class ClusterProvider implements $util.dynamic.ResourceProvider {
-  static #getClient = () => new DSQLClient();
+  private static _getSdk = async () => import("@aws-sdk/client-dsql");
 
-  static async #untilActive(identifier: string) {
-    const result = await waitUntilClusterActive(
-      { client: ClusterProvider.#getClient(), maxWaitTime: 900 },
-      { identifier },
+  private static _getClient = async () =>
+    ClusterProvider._getSdk().then((sdk) => new sdk.DSQLClient());
+
+  private static async _untilActive(identifier: string) {
+    const result = await ClusterProvider._getSdk().then(async (sdk) =>
+      sdk.waitUntilClusterActive(
+        {
+          client: await ClusterProvider._getClient(),
+          maxWaitTime: 900,
+        },
+        { identifier },
+      ),
     );
 
-    if (result.state !== WaiterState.SUCCESS)
+    if (result.state !== "SUCCESS")
       throw new Error(
         `Unsuccessfully waited for cluster "${identifier}" to be active, result state is "${result.state}": ${JSON.stringify(result.reason)}`,
       );
   }
 
-  static async #untilDeleted(identifier: string) {
-    const result = await waitUntilClusterNotExists(
-      { client: ClusterProvider.#getClient(), maxWaitTime: 900 },
-      { identifier },
+  private static async _untilDeleted(identifier: string) {
+    const result = await ClusterProvider._getSdk().then(async (sdk) =>
+      sdk.waitUntilClusterNotExists(
+        {
+          client: await ClusterProvider._getClient(),
+          maxWaitTime: 900,
+        },
+        { identifier },
+      ),
     );
 
-    if (result.state !== WaiterState.SUCCESS)
+    if (result.state !== "SUCCESS")
       throw new Error(
         `Unsuccessfully waited for cluster "${identifier}" to be deleted, result state is "${result.state}": ${JSON.stringify(result.reason)}`,
       );
   }
 
+  private static _isValidOutput(
+    output: Partial<ClusterOutput>,
+    metadata: unknown,
+  ): output is ClusterOutput {
+    const isValid = Object.values(output).every((value) => value !== undefined);
+
+    if (!isValid) console.error(metadata);
+
+    return isValid;
+  }
+
   async create(
     input: ClusterInput,
-  ): Promise<$util.dynamic.CreateResult<ClusterOutput>> {
-    const client = ClusterProvider.#getClient();
+  ): Promise<$util.dynamic.CreateResult<ClusterProviderOutputs>> {
+    const client = await ClusterProvider._getClient();
 
-    const output = await client.send(new CreateClusterCommand(input));
+    const output = await client.send(
+      await ClusterProvider._getSdk().then(
+        (sdk) => new sdk.CreateClusterCommand(input),
+      ),
+    );
 
     const cluster = {
       identifier: output.identifier,
       arn: output.arn,
       status: output.status,
-      creationTime: output.creationTime,
+      creationTime: output.creationTime?.toISOString(),
       deletionProtectionEnabled: output.deletionProtectionEnabled,
-    } as ClusterOutput;
+    };
 
-    if (Object.values(cluster).some((value) => value === undefined)) {
-      console.error(output.$metadata);
+    if (!ClusterProvider._isValidOutput(cluster, output.$metadata))
       throw new Error("Failed to create cluster");
-    }
 
-    await ClusterProvider.#untilActive(cluster.identifier);
+    await ClusterProvider._untilActive(cluster.identifier);
 
     return {
-      id: output.identifier!,
-      outs: cluster,
+      id: cluster.identifier,
+      outs: { ...cluster, tags: input.tags },
     };
   }
 
@@ -83,36 +104,30 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
     id: string,
     props: ClusterProviderOutputs,
   ): Promise<$util.dynamic.ReadResult<ClusterProviderOutputs>> {
-    const client = ClusterProvider.#getClient();
+    const client = await ClusterProvider._getClient();
 
     const output = await client.send(
-      new GetClusterCommand({
-        identifier: id,
-      }),
+      await ClusterProvider._getSdk().then(
+        (sdk) => new sdk.GetClusterCommand({ identifier: id }),
+      ),
     );
 
     const cluster = {
       identifier: output.identifier,
       arn: output.arn,
-      creationTime: output.creationTime,
+      status: output.status,
+      creationTime: output.creationTime?.toISOString(),
       deletionProtectionEnabled: output.deletionProtectionEnabled,
-    } as ClusterOutput;
+    };
 
-    if (Object.values(cluster).some((value) => value === undefined)) {
-      console.error(output.$metadata);
+    if (!ClusterProvider._isValidOutput(cluster, output.$metadata))
       throw new Error("Failed to read cluster");
-    }
 
     return {
       id,
       props: {
         ...props,
-        ...{
-          identifier: output.identifier!,
-          arn: output.arn!,
-          creationTime: output.creationTime!,
-          deletionProtectionEnabled: output.deletionProtectionEnabled!,
-        },
+        ...cluster,
       },
     };
   }
@@ -122,44 +137,56 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
     olds: ClusterProviderOutputs,
     input: ClusterProviderInputs,
   ): Promise<$util.dynamic.UpdateResult<ClusterProviderOutputs>> {
-    const client = ClusterProvider.#getClient();
+    const client = await ClusterProvider._getClient();
 
     const output = await client.send(
-      new UpdateClusterCommand({ identifier: id, ...input }),
+      await ClusterProvider._getSdk().then(
+        (sdk) => new sdk.UpdateClusterCommand({ identifier: id, ...input }),
+      ),
     );
 
     const cluster = {
       identifier: output.identifier,
       arn: output.arn,
-      creationTime: output.creationTime,
+      status: output.status,
+      creationTime: output.creationTime?.toISOString(),
       deletionProtectionEnabled: output.deletionProtectionEnabled,
-    } as ClusterOutput;
+    };
 
-    if (Object.values(cluster).some((value) => value === undefined)) {
-      console.error(output.$metadata);
+    if (!ClusterProvider._isValidOutput(cluster, output.$metadata))
       throw new Error("Failed to update cluster");
-    }
 
-    await ClusterProvider.#untilActive(cluster.identifier);
+    await ClusterProvider._untilActive(cluster.identifier);
 
     return {
       outs: {
         ...olds,
-        ...{
-          identifier: output.identifier!,
-          arn: output.arn!,
-          creationTime: output.creationTime!,
-          deletionProtectionEnabled: output.deletionProtectionEnabled!,
-        },
+        ...cluster,
+        tags: input.tags ?? olds.tags,
       },
     };
   }
 
   async delete(id: string) {
-    const client = ClusterProvider.#getClient();
+    const client = await ClusterProvider._getClient();
 
-    await client.send(new DeleteClusterCommand({ identifier: id }));
+    const output = await client.send(
+      await ClusterProvider._getSdk().then(
+        (sdk) => new sdk.DeleteClusterCommand({ identifier: id }),
+      ),
+    );
 
-    await ClusterProvider.#untilDeleted(id);
+    const cluster = {
+      identifier: output.identifier,
+      arn: output.arn,
+      status: output.status,
+      creationTime: output.creationTime?.toISOString(),
+      deletionProtectionEnabled: output.deletionProtectionEnabled,
+    };
+
+    if (!ClusterProvider._isValidOutput(cluster, output.$metadata))
+      throw new Error("Failed to delete cluster");
+
+    await ClusterProvider._untilDeleted(id);
   }
 }
