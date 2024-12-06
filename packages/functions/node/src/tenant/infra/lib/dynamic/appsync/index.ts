@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
 import * as pulumi from "@pulumi/pulumi";
 
 import { ApiProvider } from "./providers/api";
@@ -17,18 +20,8 @@ export type ApiOutputs = {
   [TKey in keyof ApiProviderOutputs]: pulumi.Output<ApiProviderOutputs[TKey]>;
 };
 
+export interface Api extends Omit<ApiOutputs, "clientRoleArn"> {}
 export class Api extends pulumi.dynamic.Resource {
-  readonly apiId!: ApiOutputs["apiId"];
-  readonly name!: ApiOutputs["name"];
-  readonly ownerContact!: ApiOutputs["ownerContact"];
-  readonly tags!: ApiOutputs["tags"];
-  readonly dns!: ApiOutputs["dns"];
-  readonly apiArn!: ApiOutputs["apiArn"];
-  readonly created!: ApiOutputs["created"];
-  readonly xrayEnabled!: ApiOutputs["xrayEnabled"];
-  readonly wafWebAclArn!: ApiOutputs["wafWebAclArn"];
-  readonly eventConfig!: ApiOutputs["eventConfig"];
-
   constructor(
     name: string,
     props: ApiInputs,
@@ -63,17 +56,9 @@ export type ChannelNamespaceOutputs = {
   >;
 };
 
+export interface ChannelNamespace
+  extends Omit<ChannelNamespaceOutputs, "clientRoleArn"> {}
 export class ChannelNamespace extends pulumi.dynamic.Resource {
-  readonly apiId!: ChannelNamespaceOutputs["apiId"];
-  readonly name!: ChannelNamespaceOutputs["name"];
-  readonly subscribeAuthModes!: ChannelNamespaceOutputs["subscribeAuthModes"];
-  readonly publishAuthModes!: ChannelNamespaceOutputs["publishAuthModes"];
-  readonly codeHandlers!: ChannelNamespaceOutputs["codeHandlers"];
-  readonly tags!: ChannelNamespaceOutputs["tags"];
-  readonly channelNamespaceArn!: ChannelNamespaceOutputs["channelNamespaceArn"];
-  readonly created!: ChannelNamespaceOutputs["created"];
-  readonly lastModified!: ChannelNamespaceOutputs["lastModified"];
-
   constructor(
     name: string,
     props: ChannelNamespaceInputs,
