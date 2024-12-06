@@ -84,7 +84,10 @@ declare module "sst" {
     }
     "Db": {
       "postgres": {
-        "url": string
+        "database": string
+        "hostname": string
+        "ssl": string
+        "user": string
       }
       "type": "sst.sst.Linkable"
     }

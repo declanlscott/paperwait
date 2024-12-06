@@ -19,13 +19,8 @@ export namespace Dsql {
     >;
   };
 
+  export interface Cluster extends ClusterOutputs {}
   export class Cluster extends $util.dynamic.Resource {
-    readonly identifier!: ClusterOutputs["identifier"];
-    readonly arn!: ClusterOutputs["arn"];
-    readonly status!: ClusterOutputs["status"];
-    readonly creationTime!: ClusterOutputs["creationTime"];
-    readonly deletionProtectionEnabled!: ClusterOutputs["deletionProtectionEnabled"];
-
     constructor(
       name: string,
       props: ClusterInputs,

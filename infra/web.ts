@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db, dsqlCluster } from "./db";
 import { appFqdn } from "./dns";
 import { appData, aws_, client } from "./misc";
 import { oauth2 } from "./oauth2";
@@ -42,36 +42,42 @@ sst.Linkable.wrap(sst.aws.Astro, (astro) => ({
   },
 }));
 
-export const web = new sst.aws.Astro("Web", {
-  path: "packages/web",
-  buildCommand: "pnpm build",
-  link: [appData, client, db, oauth2, tenantInfraQueue],
-  permissions: [
-    {
-      actions: ["execute-api:Invoke"],
-      resources: [
-        $interpolate`arn:aws:execute-api:${aws_.properties.region}:*:${appData.properties.stage}/*`,
-      ],
+export const web = new sst.aws.Astro(
+  "Web",
+  {
+    path: "packages/web",
+    buildCommand: "pnpm build",
+    link: [appData, client, db, oauth2, tenantInfraQueue],
+    permissions: [
+      {
+        actions: ["dsql:DbConnectAdmin"],
+        resources: [dsqlCluster.arn],
+      },
+      {
+        actions: ["execute-api:Invoke"],
+        resources: [
+          $interpolate`arn:aws:execute-api:${aws_.properties.region}:*:${appData.properties.stage}/*`,
+        ],
+      },
+      {
+        actions: ["sts:AssumeRole"],
+        resources: [
+          aws_.properties.tenant.realtimeSubscriberRole.name,
+          aws_.properties.tenant.realtimePublisherRole.name,
+          aws_.properties.tenant.putParametersRole.name,
+        ].map((roleName) => $interpolate`arn:aws:iam::*:role/${roleName}`),
+      },
+    ],
+    domain: {
+      name: appFqdn,
+      dns: sst.cloudflare.dns(),
     },
-    {
-      actions: ["sts:AssumeRole"],
-      resources: [
-        aws_.properties.tenant.realtimeSubscriberRole.name,
-        aws_.properties.tenant.realtimePublisherRole.name,
-        aws_.properties.tenant.putParametersRole.name,
-      ].map((roleName) => $interpolate`arn:aws:iam::*:role/${roleName}`),
-    },
-  ],
-  domain: {
-    name: appFqdn,
-    dns: sst.cloudflare.dns(),
-  },
-  server: {
-    edge:
-      $app.stage !== "production"
-        ? {
-            viewerRequest: {
-              injection: $interpolate`
+    server: {
+      edge:
+        $app.stage !== "production"
+          ? {
+              viewerRequest: {
+                injection: $interpolate`
 if (
   !event.request.headers.authorization ||
   event.request.headers.authorization.value !== "Basic ${basicAuth}"
@@ -83,13 +89,15 @@ if (
     }
   };
 }`,
-            },
-          }
-        : undefined,
-    architecture: "arm64",
-    install: ["sharp"],
+              },
+            }
+          : undefined,
+      architecture: "arm64",
+      install: ["sharp"],
+    },
   },
-});
+  { dependsOn: [dsqlCluster] },
+);
 
 export const outputs = {
   url: reverseProxy.url,

@@ -3,11 +3,11 @@ import type {
   CreateClusterOutput,
 } from "@aws-sdk/client-dsql";
 
-type ClusterInput = CreateClusterCommandInput;
+type ClusterInputs = CreateClusterCommandInput;
 
-export type ClusterProviderInputs = ClusterInput;
+export type ClusterProviderInputs = ClusterInputs;
 
-type ClusterOutput = {
+type ClusterOutputs = {
   [TKey in keyof Omit<CreateClusterOutput, "creationTime">]: NonNullable<
     CreateClusterOutput[TKey]
   >;
@@ -15,8 +15,8 @@ type ClusterOutput = {
   creationTime: string;
 };
 
-export interface ClusterProviderOutputs extends ClusterOutput {
-  tags: ClusterInput["tags"];
+export interface ClusterProviderOutputs extends ClusterOutputs {
+  tags: ClusterInputs["tags"];
 }
 
 export class ClusterProvider implements $util.dynamic.ResourceProvider {
@@ -60,9 +60,9 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
   }
 
   private static _isValidOutput(
-    output: Partial<ClusterOutput>,
+    output: Partial<ClusterOutputs>,
     metadata: unknown,
-  ): output is ClusterOutput {
+  ): output is ClusterOutputs {
     const isValid = Object.values(output).every((value) => value !== undefined);
 
     if (!isValid) console.error(metadata);
@@ -71,13 +71,13 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
   }
 
   async create(
-    input: ClusterInput,
+    inputs: ClusterInputs,
   ): Promise<$util.dynamic.CreateResult<ClusterProviderOutputs>> {
     const client = await ClusterProvider._getClient();
 
     const output = await client.send(
       await ClusterProvider._getSdk().then(
-        (sdk) => new sdk.CreateClusterCommand(input),
+        (sdk) => new sdk.CreateClusterCommand(inputs),
       ),
     );
 
@@ -96,7 +96,7 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
 
     return {
       id: cluster.identifier,
-      outs: { ...cluster, tags: input.tags },
+      outs: { ...cluster, status: "ACTIVE", tags: inputs.tags },
     };
   }
 
@@ -135,13 +135,13 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
   async update(
     id: string,
     olds: ClusterProviderOutputs,
-    input: ClusterProviderInputs,
+    news: ClusterProviderInputs,
   ): Promise<$util.dynamic.UpdateResult<ClusterProviderOutputs>> {
     const client = await ClusterProvider._getClient();
 
     const output = await client.send(
       await ClusterProvider._getSdk().then(
-        (sdk) => new sdk.UpdateClusterCommand({ identifier: id, ...input }),
+        (sdk) => new sdk.UpdateClusterCommand({ identifier: id, ...news }),
       ),
     );
 
@@ -162,12 +162,13 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
       outs: {
         ...olds,
         ...cluster,
-        tags: input.tags ?? olds.tags,
+        status: "ACTIVE",
+        tags: news.tags ?? olds.tags,
       },
     };
   }
 
-  async delete(id: string) {
+  async delete(id: string, _outs: ClusterProviderOutputs): Promise<void> {
     const client = await ClusterProvider._getClient();
 
     const output = await client.send(
