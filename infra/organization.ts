@@ -1,4 +1,4 @@
-import { bootstrapRoleArn } from "./secrets";
+export const bootstrapRoleArn = new sst.Secret("BootstrapRoleArn");
 
 export const bootstrapProvider = new aws.Provider("BootstrapProvider", {
   assumeRole: {

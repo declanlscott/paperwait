@@ -1,5 +1,5 @@
 import { physicalName } from "../.sst/platform/src/components/naming";
-import { db } from "./db";
+import { dsqlCluster } from "./db";
 import {
   appData,
   aws_,
@@ -7,15 +7,39 @@ import {
   cloudfrontPrivateKey,
   cloudfrontPublicKey,
 } from "./misc";
-import {
-  codeBucket,
-  invoicesProcessorDeadLetterQueue,
-  pulumiBucket,
-  repository,
-  tenantInfraQueue,
-} from "./storage";
+import { tenantsPrincipalOrgPath } from "./organization";
+import { invoicesProcessorDeadLetterQueue, tenantInfraQueue } from "./queues";
 import { link, normalizePath } from "./utils";
 import { web } from "./web";
+
+export const codeBucket = new sst.aws.Bucket("CodeBucket", {
+  versioning: true,
+  transform: {
+    policy: (args) => {
+      args.policy = sst.aws.iamEdit(args.policy, (policy) => {
+        policy.Statement.push({
+          Effect: "Allow",
+          Action: ["s3:GetObject"],
+          Resource: $interpolate`arn:aws:s3:::${args.bucket}/*`,
+          Principal: "*",
+          Condition: {
+            "ForAnyValue:StringEquals": {
+              "aws:PrincipalOrgPaths": [tenantsPrincipalOrgPath],
+            },
+          },
+        });
+      });
+    },
+  },
+});
+
+export const pulumiBucket = new sst.aws.Bucket("PulumiBucket");
+
+export const repository = new awsx.ecr.Repository(
+  "Repository",
+  { forceDelete: true },
+  { retainOnDelete: $app.stage === "production" },
+);
 
 sst.Linkable.wrap(sst.aws.Function, (fn) => ({
   properties: {
@@ -25,18 +49,17 @@ sst.Linkable.wrap(sst.aws.Function, (fn) => ({
     roleArn: fn.nodes.role.arn,
   },
   include: [
-    {
-      type: "aws.permission",
+    sst.aws.permission({
       actions: ["lambda:InvokeFunction"],
       resources: [fn.arn],
-    },
+    }),
   ],
 }));
 
 export const usersSync = new sst.aws.Function("UsersSync", {
   handler: "packages/functions/node/src/users-sync.handler",
   timeout: "20 seconds",
-  link: [appData, cloudfrontPrivateKey, db],
+  link: [appData, cloudfrontPrivateKey, dsqlCluster],
 });
 new aws.lambda.Permission("UsersSyncSchedulePermission", {
   function: usersSync.name,
@@ -54,22 +77,18 @@ new aws.lambda.Permission("UsersSyncRulePermission", {
 export const invoicesProcessor = new sst.aws.Function("InvoicesProcessor", {
   handler: "packages/functions/node/src/invoices-processor.handler",
   timeout: "20 seconds",
-  link: [appData, cloudfrontPrivateKey, db, invoicesProcessorDeadLetterQueue],
+  link: [
+    appData,
+    cloudfrontPrivateKey,
+    dsqlCluster,
+    invoicesProcessorDeadLetterQueue,
+  ],
 });
 new aws.lambda.Permission("InvoicesProcessorRulePermission", {
   function: invoicesProcessor.name,
   action: "lambda:InvokeFunction",
   principal: "events.amazonaws.com",
   principalOrgId: aws_.properties.organization.id,
-});
-
-export const dbGarbageCollection = new sst.aws.Cron("DbGarbageCollection", {
-  job: {
-    handler: "packages/functions/node/src/db-garbage-collection.handler",
-    timeout: "10 seconds",
-    link: [db],
-  },
-  schedule: "rate(1 day)",
 });
 
 const papercutSecureReverseProxySrcPath = normalizePath(
@@ -216,6 +235,6 @@ export const tenantInfraDispatcher = new sst.aws.Function(
   {
     handler: "packages/functions/node/src/tenant/infra-dispatcher.handler",
     url: { authorization: "iam" },
-    link: [db, tenantInfraQueue],
+    link: [dsqlCluster, tenantInfraQueue],
   },
 );

@@ -5,9 +5,10 @@ import {
   tenantAccountAccessRoleName,
   tenantsOrganizationalUnit,
 } from "./organization";
-import { replicacheLicenseKey } from "./secrets";
 
 export const isDev = $dev;
+
+export const replicacheLicenseKey = new sst.Secret("ReplicacheLicenseKey");
 
 export const client = new sst.Linkable("Client", {
   properties: {

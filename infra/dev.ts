@@ -1,7 +1,7 @@
-import { db } from "./db";
+import { dsqlCluster } from "./db";
 
 new sst.x.DevCommand("Studio", {
-  link: [db],
+  link: [dsqlCluster],
   dev: {
     command: "pnpm db:studio",
     directory: "packages/core",

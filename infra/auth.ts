@@ -1,5 +1,4 @@
 import { appFqdn } from "./dns";
-import { googleClientId, googleClientSecret } from "./secrets";
 
 const wellKnown = azuread.getApplicationPublishedAppIds();
 const microsoftGraphAppId = await wellKnown.then(
@@ -81,6 +80,9 @@ export const servicePrincipal = new azuread.ServicePrincipal(
   { clientId: entraIdApplication.clientId },
 );
 
+export const googleClientId = new sst.Secret("GoogleClientId");
+export const googleClientSecret = new sst.Secret("GoogleClientSecret");
+
 export const oauth2 = new sst.Linkable("Oauth2", {
   properties: {
     entraId: {
@@ -93,3 +95,21 @@ export const oauth2 = new sst.Linkable("Oauth2", {
     },
   },
 });
+
+export const authTable = new sst.aws.Dynamo("AuthTable", {
+  fields: {
+    pk: "string",
+    sk: "string",
+  },
+  ttl: "expiry",
+  primaryIndex: {
+    hashKey: "pk",
+    rangeKey: "sk",
+  },
+});
+
+// export const authorizer = new sst.aws.Function("Authorizer", {
+//   handler: "packages/functions/node/src/authorizer.handler",
+//   url: true,
+//   link: [authTable, oauth2],
+// });

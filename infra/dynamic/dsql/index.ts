@@ -1,3 +1,4 @@
+import { Link } from "../../../.sst/platform/src/components/link";
 import { physicalName } from "../../../.sst/platform/src/components/naming";
 import { ClusterProvider } from "./providers/cluster";
 
@@ -20,7 +21,7 @@ export namespace Dsql {
   };
 
   export interface Cluster extends ClusterOutputs {}
-  export class Cluster extends $util.dynamic.Resource {
+  export class Cluster extends $util.dynamic.Resource implements Link.Linkable {
     constructor(
       name: string,
       props: ClusterInputs,
@@ -44,6 +45,32 @@ export namespace Dsql {
         },
         opts,
       );
+    }
+
+    get endpoint() {
+      return $interpolate`${this.id}.${aws.getRegionOutput().name}.on.aws`;
+    }
+
+    getSSTLink(): Link.Definition<{
+      hostname: $util.Output<string>;
+      database: $util.Output<string>;
+      user: $util.Output<string>;
+      ssl: $util.Output<string>;
+    }> {
+      return {
+        properties: {
+          hostname: this.endpoint,
+          database: $output("postgres"),
+          user: $output("admin"),
+          ssl: $output("require"),
+        },
+        include: [
+          sst.aws.permission({
+            actions: ["dsql:DbConnectAdmin"],
+            resources: [this.arn],
+          }),
+        ],
+      };
     }
   }
 }

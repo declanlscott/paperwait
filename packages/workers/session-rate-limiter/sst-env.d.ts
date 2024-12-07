@@ -17,6 +17,10 @@ declare module "sst" {
       "stage": string
       "type": "sst.sst.Linkable"
     }
+    "AuthTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
     "Aws": {
       "account": {
         "id": string
@@ -82,18 +86,16 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "Db": {
-      "postgres": {
-        "database": string
-        "hostname": string
-        "ssl": string
-        "user": string
-      }
-      "type": "sst.sst.Linkable"
-    }
     "DomainName": {
       "type": "sst.sst.Secret"
       "value": string
+    }
+    "DsqlCluster": {
+      "database": string
+      "hostname": string
+      "ssl": string
+      "type": "pulumi-nodejs.dynamic.Resource"
+      "user": string
     }
     "GoogleClientId": {
       "type": "sst.sst.Secret"
