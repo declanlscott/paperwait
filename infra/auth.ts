@@ -1,3 +1,4 @@
+import { dsqlCluster } from "./db";
 import { appFqdn } from "./dns";
 
 const wellKnown = azuread.getApplicationPublishedAppIds();
@@ -108,8 +109,8 @@ export const authTable = new sst.aws.Dynamo("AuthTable", {
   },
 });
 
-// export const authorizer = new sst.aws.Function("Authorizer", {
-//   handler: "packages/functions/node/src/authorizer.handler",
-//   url: true,
-//   link: [authTable, oauth2],
-// });
+export const authorizer = new sst.aws.Function("Authorizer", {
+  handler: "packages/functions/node/src/authorizer.handler",
+  url: true,
+  link: [authTable, dsqlCluster, oauth2],
+});

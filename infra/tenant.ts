@@ -1,4 +1,5 @@
 import { physicalName } from "../.sst/platform/src/components/naming";
+import * as custom from "./custom";
 import { dsqlCluster } from "./db";
 import {
   appData,
@@ -41,22 +42,7 @@ export const repository = new awsx.ecr.Repository(
   { retainOnDelete: $app.stage === "production" },
 );
 
-sst.Linkable.wrap(sst.aws.Function, (fn) => ({
-  properties: {
-    name: fn.name,
-    arn: fn.arn,
-    invokeArn: fn.nodes.function.invokeArn,
-    roleArn: fn.nodes.role.arn,
-  },
-  include: [
-    sst.aws.permission({
-      actions: ["lambda:InvokeFunction"],
-      resources: [fn.arn],
-    }),
-  ],
-}));
-
-export const usersSync = new sst.aws.Function("UsersSync", {
+export const usersSync = new custom.aws.Function("UsersSync", {
   handler: "packages/functions/node/src/users-sync.handler",
   timeout: "20 seconds",
   link: [appData, cloudfrontPrivateKey, dsqlCluster],

@@ -1,6 +1,6 @@
-import { Dsql } from "./dynamic/dsql";
+import * as custom from "./custom";
 
-export const dsqlCluster = new Dsql.Cluster(
+export const dsqlCluster = new custom.aws.Dsql.Cluster(
   "DsqlCluster",
   { deletionProtectionEnabled: $app.stage === "production" },
   { retainOnDelete: $app.stage === "production" },

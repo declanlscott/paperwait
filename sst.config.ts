@@ -37,7 +37,7 @@ export default $config({
     const outputs = {};
 
     for (const dir of readdirSync("./infra")) {
-      if (dir === "dynamic") continue;
+      if (dir === "custom") continue;
       const infra = await import(`./infra/${dir}`);
 
       if (infra.outputs) Object.assign(outputs, infra.outputs);

@@ -20,6 +20,11 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Dynamo"
     }
+    "Authorizer": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
     "Aws": {
       "account": {
         "id": string
@@ -105,10 +110,7 @@ declare module "sst" {
       "value": string
     }
     "InvoicesProcessor": {
-      "arn": string
-      "invokeArn": string
       "name": string
-      "roleArn": string
       "type": "sst.aws.Function"
     }
     "InvoicesProcessorDeadLetterQueue": {
@@ -143,11 +145,9 @@ declare module "sst" {
       "url": string
     }
     "TenantInfraDispatcher": {
-      "arn": string
-      "invokeArn": string
       "name": string
-      "roleArn": string
       "type": "sst.aws.Function"
+      "url": string
     }
     "TenantInfraQueue": {
       "type": "sst.aws.Queue"
