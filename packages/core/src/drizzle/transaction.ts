@@ -1,10 +1,10 @@
 import { db } from ".";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
-import { HttpError } from "../utils/errors";
+import { ApplicationError, DatabaseError } from "../utils/errors";
 
 import type { ExtractTablesWithRelations } from "drizzle-orm";
-import type { PgTransaction, PgTransactionConfig } from "drizzle-orm/pg-core";
+import type { PgTransaction } from "drizzle-orm/pg-core";
 import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
 export type Transaction = PgTransaction<
@@ -48,63 +48,13 @@ export async function afterTransaction<
   }
 }
 
-export type TransactionResult<TOutput> =
-  | { status: "success"; output: TOutput }
-  | { status: "error"; error: unknown; shouldRethrow: boolean };
-
-export async function withTransaction<TOutput>(
-  callback: (tx: Transaction) => Promise<TOutput>,
-): Promise<TOutput> {
-  try {
-    const { tx } = TransactionContext.use();
-
-    return callback(tx);
-  } catch {
-    const effects: TransactionContext["effects"] = [];
-
-    const output = await db.transaction(async (tx) =>
-      TransactionContext.with({ tx, effects }, () => callback(tx)),
-    );
-
-    await Promise.all(effects.map((effect) => effect()));
-
-    return output;
-  }
-}
-
-export async function transact<
-  TOutput,
-  TOnRollback extends (e: unknown) => boolean | Promise<boolean>,
->(
-  callback: (tx: Transaction) => Promise<TOutput>,
-  options?: {
-    transaction?: PgTransactionConfig;
-    onRollback?: TOnRollback;
-  },
-): Promise<TransactionResult<TOutput>> {
-  try {
-    const output = await withTransaction(callback);
-
-    return { status: "success", output };
-  } catch (error) {
-    console.error(error);
-
-    if (!options?.onRollback)
-      return { status: "error", error, shouldRethrow: true };
-
-    const shouldRethrow = await Promise.resolve(options.onRollback(error));
-
-    return { status: "error", error, shouldRethrow };
-  }
-}
-
-export async function serializable<TOutput>(
+export async function createTransaction<TOutput>(
   callback: (tx: Transaction) => Promise<TOutput>,
 ) {
   for (let i = 0; i < Constants.DB_TRANSACTION_MAX_RETRIES; i++) {
-    const result = await transact(callback, {
-      transaction: { isolationLevel: "serializable" },
-      onRollback: (e) => {
+    const result = await transact({
+      transact: callback,
+      rollback: (e) => {
         if (shouldRetryTransaction(e)) {
           console.log(
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
@@ -127,14 +77,57 @@ export async function serializable<TOutput>(
     return result.output;
   }
 
-  throw new HttpError.InternalServerError(
-    "Failed to execute transaction after maximum number of retries, giving up.",
-  );
+  throw new DatabaseError.MaximumTransactionRetriesExceeded();
+}
+
+type TransactionResult<TOutput> =
+  | { status: "success"; output: TOutput }
+  | { status: "error"; error: unknown; shouldRethrow: boolean };
+
+async function transact<
+  TOutput,
+  TRollback extends (e: unknown) => boolean | Promise<boolean>,
+>(callbacks: {
+  transact: (tx: Transaction) => Promise<TOutput>;
+  rollback?: TRollback;
+}): Promise<TransactionResult<TOutput>> {
+  try {
+    const output = await callbacks.transact(TransactionContext.use().tx);
+
+    return { status: "success", output };
+  } catch (error) {
+    if (error instanceof ApplicationError.MissingContext) {
+      const effects: TransactionContext["effects"] = [];
+
+      try {
+        const output = await db.transaction(async (tx) =>
+          TransactionContext.with({ tx, effects }, () =>
+            callbacks.transact(tx),
+          ),
+        );
+
+        await Promise.all(effects.map((effect) => effect()));
+
+        return { status: "success", output };
+      } catch (error) {
+        console.error(error);
+
+        if (!callbacks.rollback)
+          return { status: "error", error, shouldRethrow: true };
+
+        const shouldRethrow = await Promise.resolve(callbacks.rollback(error));
+
+        return { status: "error", error, shouldRethrow };
+      }
+    }
+
+    return { status: "error", error, shouldRethrow: true };
+  }
 }
 
 /**
  * Check error code to determine if we should retry a transaction.
- * Because we are using SERIALIZABLE isolation level, we need to be prepared to retry transactions.
+ * Because Aurora DSQL uses REPEATABLE READ isolation level, we need to be prepared to retry transactions.
  *
  * See https://stackoverflow.com/questions/60339223/node-js-transaction-coflicts-in-postgresql-optimistic-concurrency-control-and, https://www.postgresql.org/docs/10/errcodes-appendix.html and
  * https://stackoverflow.com/a/16409293/749644

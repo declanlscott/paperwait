@@ -1,5 +1,5 @@
 import { vValidator } from "@hono/valibot-validator";
-import { transact } from "@printworks/core/drizzle/transaction";
+import { createTransaction } from "@printworks/core/drizzle/transaction";
 import { registrationSchema } from "@printworks/core/tenants/shared";
 import { licensesTable, tenantsTable } from "@printworks/core/tenants/sql";
 import { and, eq } from "drizzle-orm";
@@ -11,7 +11,7 @@ export default new Hono().post(
   async (c) => {
     const registration = c.req.valid("form");
 
-    const result = await transact(async (tx) => {
+    const tenant = await createTransaction(async (tx) => {
       const tenant = await tx
         .insert(tenantsTable)
         .values({
@@ -38,8 +38,6 @@ export default new Hono().post(
       return tenant;
     });
 
-    if (result.status === "error") throw result.error;
-
-    return c.redirect(`/tenant/${result.output.slug}`);
+    return c.redirect(`/tenant/${tenant.slug}`);
   },
 );

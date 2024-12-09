@@ -6,7 +6,7 @@ import * as v from "valibot";
 
 import { AccessControl } from "../access-control";
 import { useAuthenticated, useTenant } from "../actors";
-import { serializable, useTransaction } from "../drizzle/transaction";
+import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { Realtime } from "../realtime";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
@@ -197,168 +197,170 @@ export namespace Replicache {
       const cookieOrder = pullRequest.cookie?.order ?? 0;
 
       // 3: Begin transaction
-      const result: PullTransactionResult = await serializable(async (tx) => {
-        // 1: Fetch previous client view record
-        const prevClientView = pullRequest.cookie
-          ? await tx
-              .select({ record: replicacheClientViewsTable.record })
-              .from(replicacheClientViewsTable)
+      const result: PullTransactionResult = await createTransaction(
+        async (tx) => {
+          // 1: Fetch previous client view record
+          const prevClientView = pullRequest.cookie
+            ? await tx
+                .select({ record: replicacheClientViewsTable.record })
+                .from(replicacheClientViewsTable)
+                .where(
+                  and(
+                    eq(
+                      replicacheClientViewsTable.clientGroupId,
+                      pullRequest.clientGroupID,
+                    ),
+                    eq(replicacheClientViewsTable.version, cookieOrder),
+                    eq(replicacheClientViewsTable.tenantId, user.tenantId),
+                  ),
+                )
+                .then((rows) => rows.at(0))
+            : undefined;
+
+          // 2: Initialize base client view record
+          const baseCvr = buildCvr({
+            variant: "base",
+            prev: prevClientView?.record,
+          });
+
+          // 4: Get client group
+          const baseClientGroup =
+            (await clientGroupFromId(pullRequest.clientGroupID)) ??
+            ({
+              id: pullRequest.clientGroupID,
+              tenantId: user.tenantId,
+              cvrVersion: 0,
+              userId: user.id,
+            } satisfies OmitTimestamps<ReplicacheClientGroup>);
+
+          // 5: Verify requesting client group owns requested client
+          if (baseClientGroup.userId !== user.id)
+            throw new ReplicacheError.Unauthorized(
+              `User "${user.id}" does not own client group "${baseClientGroup.id}"`,
+            );
+
+          const metadata = (await Promise.all([
+            ...syncedTables.map(async (table) => {
+              const name = table._.name;
+
+              // 6: Read all id/version pairs from the database that should be in the client view
+              const metadata = R.uniqueBy(
+                await AccessControl.resourceMetadataFactory[user.profile.role][
+                  name
+                ](),
+                R.prop("id"),
+              );
+
+              return [name, metadata] satisfies SyncedTableMetadata;
+            }),
+            [
+              replicacheClientsTable._.name,
+              // 7: Read all clients in the client group
+              await clientMetadataFromGroupId(baseClientGroup.id),
+            ] satisfies NonSyncedTableMetadata,
+          ])) satisfies Array<TableMetadata>;
+
+          // 8: Build next client view record
+          const nextCvr = buildCvr({ variant: "next", metadata });
+
+          // 9: Calculate diff
+          const diff = diffCvr(baseCvr, nextCvr);
+
+          // 10: If diff is empty, return no-op
+          if (prevClientView && isCvrDiffEmpty(diff)) return null;
+
+          // 11: Read only the data that changed
+          const data = await Promise.all(
+            syncedTables.map(async (table) => {
+              const name = table._.name;
+
+              if (diff[name].puts.length === 0)
+                return [
+                  name,
+                  { puts: [], dels: diff[name].dels },
+                ] as const satisfies TableData;
+
+              const puts: TablePatchData<SyncedTable>["puts"] = [];
+              for (const ids of R.chunk(
+                diff[name].puts,
+                Constants.REPLICACHE_PULL_CHUNK_SIZE,
+              )) {
+                const data = await dataFactory[name](ids);
+
+                puts.push(...data);
+              }
+
+              return [
+                name,
+                { puts, dels: diff[name].dels },
+              ] as const satisfies TableData;
+            }),
+          );
+
+          // 12: Changed clients - no need to re-read clients from database,
+          // we already have their versions.
+          const clients = diff[replicacheClientsTable._.name].puts.reduce(
+            (clients, clientId) => {
+              clients[clientId] =
+                nextCvr[replicacheClientsTable._.name][clientId];
+              return clients;
+            },
+            {} as ClientViewRecordEntries<typeof replicacheClientsTable>,
+          );
+
+          // 13: new client view record version
+          const nextCvrVersion =
+            Math.max(cookieOrder, baseClientGroup.cvrVersion) + 1;
+
+          const nextClientGroup = {
+            ...baseClientGroup,
+            cvrVersion: nextCvrVersion,
+          };
+
+          await Promise.all([
+            // 14: Write client group record
+            putClientGroup(nextClientGroup),
+            // 16-17: Generate client view record id, store client view record
+            tx.insert(replicacheClientViewsTable).values({
+              clientGroupId: baseClientGroup.id,
+              tenantId: user.tenantId,
+              version: nextCvrVersion,
+              record: nextCvr,
+            }),
+            // Delete old client view records
+            tx
+              .delete(replicacheClientViewsTable)
               .where(
                 and(
                   eq(
                     replicacheClientViewsTable.clientGroupId,
-                    pullRequest.clientGroupID,
+                    baseClientGroup.id,
                   ),
-                  eq(replicacheClientViewsTable.version, cookieOrder),
                   eq(replicacheClientViewsTable.tenantId, user.tenantId),
-                ),
-              )
-              .then((rows) => rows.at(0))
-          : undefined;
-
-        // 2: Initialize base client view record
-        const baseCvr = buildCvr({
-          variant: "base",
-          prev: prevClientView?.record,
-        });
-
-        // 4: Get client group
-        const baseClientGroup =
-          (await clientGroupFromId(pullRequest.clientGroupID)) ??
-          ({
-            id: pullRequest.clientGroupID,
-            tenantId: user.tenantId,
-            cvrVersion: 0,
-            userId: user.id,
-          } satisfies OmitTimestamps<ReplicacheClientGroup>);
-
-        // 5: Verify requesting client group owns requested client
-        if (baseClientGroup.userId !== user.id)
-          throw new ReplicacheError.Unauthorized(
-            `User "${user.id}" does not own client group "${baseClientGroup.id}"`,
-          );
-
-        const metadata = (await Promise.all([
-          ...syncedTables.map(async (table) => {
-            const name = table._.name;
-
-            // 6: Read all id/version pairs from the database that should be in the client view
-            const metadata = R.uniqueBy(
-              await AccessControl.resourceMetadataFactory[user.profile.role][
-                name
-              ](),
-              R.prop("id"),
-            );
-
-            return [name, metadata] satisfies SyncedTableMetadata;
-          }),
-          [
-            replicacheClientsTable._.name,
-            // 7: Read all clients in the client group
-            await clientMetadataFromGroupId(baseClientGroup.id),
-          ] satisfies NonSyncedTableMetadata,
-        ])) satisfies Array<TableMetadata>;
-
-        // 8: Build next client view record
-        const nextCvr = buildCvr({ variant: "next", metadata });
-
-        // 9: Calculate diff
-        const diff = diffCvr(baseCvr, nextCvr);
-
-        // 10: If diff is empty, return no-op
-        if (prevClientView && isCvrDiffEmpty(diff)) return null;
-
-        // 11: Read only the data that changed
-        const data = await Promise.all(
-          syncedTables.map(async (table) => {
-            const name = table._.name;
-
-            if (diff[name].puts.length === 0)
-              return [
-                name,
-                { puts: [], dels: diff[name].dels },
-              ] as const satisfies TableData;
-
-            const puts: TablePatchData<SyncedTable>["puts"] = [];
-            for (const ids of R.chunk(
-              diff[name].puts,
-              Constants.REPLICACHE_PULL_CHUNK_SIZE,
-            )) {
-              const data = await dataFactory[name](ids);
-
-              puts.push(...data);
-            }
-
-            return [
-              name,
-              { puts, dels: diff[name].dels },
-            ] as const satisfies TableData;
-          }),
-        );
-
-        // 12: Changed clients - no need to re-read clients from database,
-        // we already have their versions.
-        const clients = diff[replicacheClientsTable._.name].puts.reduce(
-          (clients, clientId) => {
-            clients[clientId] =
-              nextCvr[replicacheClientsTable._.name][clientId];
-            return clients;
-          },
-          {} as ClientViewRecordEntries<typeof replicacheClientsTable>,
-        );
-
-        // 13: new client view record version
-        const nextCvrVersion =
-          Math.max(cookieOrder, baseClientGroup.cvrVersion) + 1;
-
-        const nextClientGroup = {
-          ...baseClientGroup,
-          cvrVersion: nextCvrVersion,
-        };
-
-        await Promise.all([
-          // 14: Write client group record
-          putClientGroup(nextClientGroup),
-          // 16-17: Generate client view record id, store client view record
-          tx.insert(replicacheClientViewsTable).values({
-            clientGroupId: baseClientGroup.id,
-            tenantId: user.tenantId,
-            version: nextCvrVersion,
-            record: nextCvr,
-          }),
-          // Delete old client view records
-          tx
-            .delete(replicacheClientViewsTable)
-            .where(
-              and(
-                eq(
-                  replicacheClientViewsTable.clientGroupId,
-                  baseClientGroup.id,
-                ),
-                eq(replicacheClientViewsTable.tenantId, user.tenantId),
-                lt(
-                  replicacheClientViewsTable.updatedAt,
-                  sub(new Date(), Constants.REPLICACHE_LIFETIME),
+                  lt(
+                    replicacheClientViewsTable.updatedAt,
+                    sub(new Date(), Constants.REPLICACHE_LIFETIME),
+                  ),
                 ),
               ),
-            ),
-        ]);
+          ]);
 
-        // 15: Commit transaction
-        return {
-          data,
-          clients,
-          cvr: {
-            prev: {
-              value: prevClientView?.record,
+          // 15: Commit transaction
+          return {
+            data,
+            clients,
+            cvr: {
+              prev: {
+                value: prevClientView?.record,
+              },
+              next: {
+                value: nextCvr,
+                version: nextCvrVersion,
+              },
             },
-            next: {
-              value: nextCvr,
-              version: nextCvrVersion,
-            },
-          },
-        };
-      });
+          };
+        },
+      );
 
       // 10: If transaction result returns empty diff, return no-op
       if (!result)
@@ -443,7 +445,7 @@ export namespace Replicache {
         }),
         async (mutation) =>
           // 2: Begin transaction
-          serializable(async () => {
+          createTransaction(async () => {
             const { user } = useAuthenticated();
             const clientGroupId = pushRequest.clientGroupID;
 

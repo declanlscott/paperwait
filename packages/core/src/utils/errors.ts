@@ -9,10 +9,11 @@ export namespace ApplicationError {
     | "Unauthenticated"
     | "EntityNotFound"
     | "AccessDenied"
+    | "MissingContext"
     | "MissingContextProvider";
 
   export class Error extends globalThis.Error {
-    public declare readonly name: ErrorName;
+    declare public readonly name: ErrorName;
 
     constructor(message: string) {
       super(message);
@@ -53,6 +54,14 @@ export namespace ApplicationError {
     }
   }
 
+  export class MissingContext extends ApplicationError.Error {
+    public readonly name = "MissingContext";
+
+    constructor(name: string) {
+      super(`"${name}" context not found`);
+    }
+  }
+
   export class MissingContextProvider extends ApplicationError.Error {
     public readonly name = "MissingContextProvider";
 
@@ -82,7 +91,7 @@ export namespace HttpError {
     | "ServiceUnavailable";
 
   export class Error extends globalThis.Error {
-    public declare readonly name: ErrorName;
+    declare public readonly name: ErrorName;
     public readonly statusCode: number;
 
     constructor(message: string, statusCode: number) {
@@ -212,7 +221,7 @@ export namespace ReplicacheError {
   export type ErrorName = UnrecoverableErrorName | RecoverableErrorName;
 
   export abstract class Error extends globalThis.Error {
-    public declare readonly name: ErrorName;
+    declare public readonly name: ErrorName;
 
     constructor(message: string) {
       super(message);
@@ -220,7 +229,7 @@ export namespace ReplicacheError {
   }
 
   export abstract class UnrecoverableError extends ReplicacheError.Error {
-    public declare readonly name: UnrecoverableErrorName;
+    declare public readonly name: UnrecoverableErrorName;
 
     constructor(message: string) {
       super(message);
@@ -228,7 +237,7 @@ export namespace ReplicacheError {
   }
 
   export abstract class RecoverableError extends ReplicacheError.Error {
-    public declare readonly name: RecoverableErrorName;
+    declare public readonly name: RecoverableErrorName;
 
     constructor(message: string) {
       super(message);
@@ -264,6 +273,19 @@ export namespace ReplicacheError {
 
     constructor(message = "Client state not found") {
       super(message);
+    }
+  }
+}
+
+export namespace DatabaseError {
+  export class MaximumTransactionRetriesExceeded extends globalThis.Error {
+    public readonly name = "MaxRetriesExceeded";
+
+    constructor(message?: string) {
+      super(
+        message ??
+          "Failed to execute transaction after maximum number of retries, giving up.",
+      );
     }
   }
 }

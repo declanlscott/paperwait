@@ -1,4 +1,4 @@
-import { withTransaction } from "@printworks/core/drizzle/transaction";
+import { createTransaction } from "@printworks/core/drizzle/transaction";
 import { Oauth2 } from "@printworks/core/oauth2";
 import { withOauth2 } from "@printworks/core/oauth2/context";
 import { useAuthenticated } from "@printworks/core/sessions/context";
@@ -22,7 +22,7 @@ export const authorization = (
 export const provider = createMiddleware(async (_, next) =>
   withOauth2(
     {
-      provider: await withTransaction(() =>
+      provider: await createTransaction(() =>
         Oauth2.fromSessionId(useAuthenticated().session.id).catch(
           (error: Error): never => {
             console.error(error);

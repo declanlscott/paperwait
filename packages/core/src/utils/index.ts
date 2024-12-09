@@ -6,15 +6,9 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { sha256 } from "@oslojs/crypto/sha2";
-import { encodeHexLowerCase } from "@oslojs/encoding";
-import {
-  joseAlgorithmHS256,
-  JWSRegisteredHeaders,
-  JWTClaims,
-  parseJWT,
-} from "@oslojs/jwt";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
+
+import { ApplicationError } from "./errors";
 
 export namespace Utils {
   export const xmlBuilder = new XMLBuilder({ preserveOrder: true });
@@ -26,7 +20,7 @@ export namespace Utils {
     return {
       use: () => {
         const context = storage.getStore();
-        if (!context) throw new Error(`${name} context not found`);
+        if (!context) throw new ApplicationError.MissingContext(name);
 
         return context;
       },
@@ -35,25 +29,6 @@ export namespace Utils {
         callback: TCallback,
       ) => storage.run(context, callback),
     };
-  }
-
-  export const hashToken = (token: string) =>
-    encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-
-  export async function parseJwt(jwt: string) {
-    const [header, payload] = parseJWT(jwt);
-
-    const headerParameters = new JWSRegisteredHeaders(header);
-    if (headerParameters.algorithm() !== joseAlgorithmHS256)
-      throw new Error("Unsupported algorithm");
-
-    const claims = new JWTClaims(payload);
-    if (claims.hasExpiration() && !claims.verifyExpiration())
-      throw new Error("Expired token");
-    if (claims.hasNotBefore() && !claims.verifyNotBefore())
-      throw new Error("Invalid token");
-
-    return payload;
   }
 
   export function parseResource<TResource extends Record<string, unknown>>(
