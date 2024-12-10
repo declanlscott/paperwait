@@ -1,11 +1,11 @@
-import { Link } from "~/.sst/platform/src/components/link.js";
-import { physicalName } from "~/.sst/platform/src/components/naming.js";
-import { ClusterProvider } from "./providers/cluster.js";
+import { Link } from "~/.sst/platform/src/components/link";
+import { physicalName } from "~/.sst/platform/src/components/naming";
+import { ClusterProvider } from "./providers/cluster";
 
 import type {
   ClusterProviderInputs,
   ClusterProviderOutputs,
-} from "./providers/cluster.js";
+} from "./providers/cluster";
 
 export namespace Dsql {
   export type ClusterInputs = {
