@@ -97,14 +97,6 @@ declare module "sst" {
       "type": "pulumi-nodejs.dynamic.Resource"
       "user": string
     }
-    "GoogleClientId": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
-    "GoogleClientSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "InvoicesProcessor": {
       "name": string
       "type": "sst.aws.Function"
@@ -115,10 +107,6 @@ declare module "sst" {
     }
     "Oauth2": {
       "entraId": {
-        "clientId": string
-        "clientSecret": string
-      }
-      "google": {
         "clientId": string
         "clientSecret": string
       }
