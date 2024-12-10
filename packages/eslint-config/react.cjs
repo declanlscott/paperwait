@@ -3,7 +3,8 @@ module.exports = {
   extends: [
     "./base.cjs",
     "plugin:react-hooks/recommended",
-    "plugin:@tanstack/eslint-plugin-query/recommended",
+    "plugin:@tanstack/eslint-plugin-router/recommended",
+    "plugin:@tanstack/eslint-plugin-query/recommended"
   ],
   env: {
     browser: true,
