@@ -39,10 +39,10 @@ export const tenantsTable = pgTable(
     oauth2ProviderId: text("oauth2_provider_id"),
     ...timestamps,
   },
-  (table) => ({
-    slugIndex: index("slug_idx").on(table.slug),
-    nameIndex: index("name_idx").on(table.name),
-  }),
+  (table) => [
+    index("slug_idx").on(table.slug),
+    index("name_idx").on(table.name),
+  ],
 );
 export type TenantsTable = typeof tenantsTable;
 export type Tenant = InferSelectModel<TenantsTable>;

@@ -10,13 +10,10 @@ import type { InferSelectModel } from "drizzle-orm";
 export const usersTable = tenantTable(
   usersTableName,
   { username: text("username").notNull() },
-  (table) => ({
-    uniqueUsername: unique("unique_username").on(
-      table.username,
-      table.tenantId,
-    ),
-    usernameIndex: index("username_idx").on(table.username),
-  }),
+  (table) => [
+    unique("unique_username").on(table.username, table.tenantId),
+    index("username_idx").on(table.username),
+  ],
 );
 
 export type UsersTable = typeof usersTable;
@@ -32,20 +29,19 @@ export const userProfilesTable = tenantTable(
     name: text("name").notNull(),
     email: text("email").notNull(),
   },
-  (table) => ({
-    uniqueUserId: unique("unique_user_id").on(table.userId, table.tenantId),
-    uniqueOauth2UserId: unique("unique_oauth2_user_id").on(
-      table.oauth2UserId,
-      table.tenantId,
-    ),
-    uniqueEmail: unique("unique_email").on(table.email, table.tenantId),
-    oauth2UserIdIndex: index("oauth2_user_id_idx").on(table.oauth2UserId),
-    roleIndex: index("role_idx").on(table.role),
-  }),
+  (table) => [
+    unique("unique_user_id").on(table.userId, table.tenantId),
+    unique("unique_oauth2_user_id").on(table.oauth2UserId, table.tenantId),
+    unique("unique_email").on(table.email, table.tenantId),
+    index("oauth2_user_id_idx").on(table.oauth2UserId),
+    index("role_idx").on(table.role),
+  ],
 );
 
 export type UserProfilesTable = typeof userProfilesTable;
 
 export type UserProfile = InferSelectModel<UserProfilesTable>;
 
-export type UserWithProfile = User & { profile: UserProfile };
+export interface UserWithProfile extends User {
+  profile: UserProfile;
+}

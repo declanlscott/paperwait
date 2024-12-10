@@ -17,10 +17,10 @@ export const productsTable = tenantTable(
     roomId: id("room_id").notNull(),
     config: jsonb("config").$type<ProductConfiguration>().notNull(),
   },
-  (table) => ({
-    statusIndex: index("status_idx").on(table.status),
-    roomIdIndex: index("room_id_idx").on(table.roomId),
-  }),
+  (table) => [
+    index("status_idx").on(table.status),
+    index("room_id_idx").on(table.roomId),
+  ],
 );
 
 export type ProductsTable = typeof productsTable;

@@ -16,9 +16,7 @@ export const invoicesTable = tenantTable(
     chargedAt: timestamp("charged_at", { mode: "string" }),
     orderId: id("order_id").notNull(),
   },
-  (table) => ({
-    orderIdIndex: index("order_id_idx").on(table.orderId),
-  }),
+  (table) => [index("order_id_idx").on(table.orderId)],
 );
 
 export type InvoicesTable = typeof invoicesTable;

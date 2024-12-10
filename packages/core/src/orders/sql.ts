@@ -25,12 +25,10 @@ export const ordersTable = tenantTable(
     }).notNull(),
     approvedAt: timestamp("approved_at"),
   },
-  (table) => ({
-    customerIdIndex: index("customer_id_idx").on(table.customerId),
-    billingAccountIdIndex: index("billing_account_id_idx").on(
-      table.billingAccountId,
-    ),
-  }),
+  (table) => [
+    index("customer_id_idx").on(table.customerId),
+    index("billing_account_id_idx").on(table.billingAccountId),
+  ],
 );
 
 export type OrdersTable = typeof ordersTable;

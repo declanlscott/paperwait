@@ -29,10 +29,10 @@ export const roomsTable = tenantTable(
     status: roomStatus("status").notNull(),
     details: text("details"),
   },
-  (table) => ({
-    uniqueName: unique("unique_name").on(table.name, table.tenantId),
-    statusIndex: index("status_idx").on(table.status),
-  }),
+  (table) => [
+    unique("unique_name").on(table.name, table.tenantId),
+    index("status_idx").on(table.status),
+  ],
 );
 export type RoomsTable = typeof roomsTable;
 export type Room = InferSelectModel<RoomsTable>;
@@ -48,12 +48,12 @@ export const workflowStatusesTable = pgTable(
     roomId: id("room_id").notNull(),
     tenantId: id("tenant_id").notNull(),
   },
-  (table) => ({
-    primary: primaryKey({
+  (table) => [
+    primaryKey({
       columns: [table.id, table.roomId, table.tenantId],
     }),
-    uniqueIndex: unique("unique_index").on(table.index, table.roomId),
-  }),
+    unique("unique_index").on(table.index, table.roomId),
+  ],
 );
 export type WorkflowStatusesTable = typeof workflowStatusesTable;
 export type WorkflowStatus = InferSelectModel<WorkflowStatusesTable>;
@@ -73,11 +73,12 @@ export const deliveryOptionsTable = pgTable(
     roomId: id("room_id").notNull(),
     tenantId: id("tenant_id").notNull(),
   },
-  (table) => ({
-    primary: primaryKey({
+  (table) => [
+    primaryKey({
       columns: [table.id, table.roomId, table.tenantId],
     }),
-  }),
+    unique("unique_index").on(table.index, table.roomId),
+  ],
 );
 export type DeliveryOptionsTable = typeof deliveryOptionsTable;
 export type DeliveryOption = InferSelectModel<DeliveryOptionsTable>;

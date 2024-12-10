@@ -37,10 +37,10 @@ export const replicacheClientGroupsTable = pgTable(
     cvrVersion: integer("cvr_version").notNull(),
     ...timestamps,
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.id, table.tenantId] }),
-    updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
-  }),
+  (table) => [
+    primaryKey({ columns: [table.id, table.tenantId] }),
+    index("updated_at_idx").on(table.updatedAt),
+  ],
 );
 export type ReplicacheClientGroupsTable = typeof replicacheClientGroupsTable;
 export type ReplicacheClientGroup =
@@ -57,11 +57,11 @@ export const replicacheClientsTable = pgTable(
       .default(0),
     ...timestamps,
   },
-  (table) => ({
-    primary: primaryKey({ columns: [table.id, table.tenantId] }),
-    clientGroupIdIndex: index("client_group_id_idx").on(table.clientGroupId),
-    updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
-  }),
+  (table) => [
+    primaryKey({ columns: [table.id, table.tenantId] }),
+    index("client_group_id_idx").on(table.clientGroupId),
+    index("updated_at_idx").on(table.updatedAt),
+  ],
 );
 export type ReplicacheClientsTable = typeof replicacheClientsTable;
 export type ReplicacheClient = InferSelectModel<ReplicacheClientsTable>;
@@ -75,12 +75,12 @@ export const replicacheClientViewsTable = pgTable(
     record: jsonb("record").$type<ClientViewRecord>().notNull(),
     ...timestamps,
   },
-  (table) => ({
-    primary: primaryKey({
+  (table) => [
+    primaryKey({
       columns: [table.clientGroupId, table.version, table.tenantId],
     }),
-    updatedAtIndex: index("updated_at_idx").on(table.updatedAt),
-  }),
+    index("updated_at_idx").on(table.updatedAt),
+  ],
 );
 export type ReplicacheClientViewsTable = typeof replicacheClientViewsTable;
 export type ReplicacheClientView = InferSelectModel<ReplicacheClientViewsTable>;

@@ -3,10 +3,11 @@ import { pgTable, primaryKey } from "drizzle-orm/pg-core";
 import { generateId } from "../utils/shared";
 import { id, timestamps } from "./columns";
 
-import type { BuildColumns } from "drizzle-orm";
+import type { BuildColumns, BuildExtraConfigColumns } from "drizzle-orm";
 import type {
   PgColumnBuilderBase,
-  PgTableExtraConfig,
+  PgTableExtraConfigValue,
+  PgTableWithColumns,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -24,26 +25,30 @@ export const tenantIdColumns = {
 /**
  * Wrapper for tenant owned tables with timestamps and default ID
  */
-export function tenantTable<
+export const tenantTable = <
   TTableName extends string,
   TColumnsMap extends Record<string, PgColumnBuilderBase>,
 >(
   name: TTableName,
   columns: TColumnsMap,
   extraConfig?: (
-    self: BuildColumns<
+    self: BuildExtraConfigColumns<
       TTableName,
       TColumnsMap & typeof tenantIdColumns & typeof timestamps,
       "pg"
     >,
-  ) => PgTableExtraConfig,
-) {
-  return pgTable(
-    name,
-    { ...tenantIdColumns, ...timestamps, ...columns },
-    (table) => ({
-      primary: primaryKey({ columns: [table.id, table.tenantId] }),
-      ...extraConfig,
-    }),
-  );
-}
+  ) => Array<PgTableExtraConfigValue>,
+): PgTableWithColumns<{
+  name: TTableName;
+  schema: undefined;
+  columns: BuildColumns<
+    TTableName,
+    TColumnsMap & typeof tenantIdColumns & typeof timestamps,
+    "pg"
+  >;
+  dialect: "pg";
+}> =>
+  pgTable(name, { ...tenantIdColumns, ...timestamps, ...columns }, (table) => [
+    primaryKey({ columns: [table.id, table.tenantId] }),
+    ...(extraConfig?.(table) ?? []),
+  ]);
