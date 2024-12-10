@@ -32,23 +32,26 @@ export const withResource = <TCallback extends () => ReturnType<TCallback>>(
     callback,
   );
 
-export const link = (...params: Parameters<typeof injectLinkables>) => ({
+export const link = (...args: Parameters<typeof injectLinkables>) => ({
   environment: {
-    variables: injectLinkables(...params),
+    variables: injectLinkables(...args),
   },
 });
 
-export const injectLinkables = (
+export function injectLinkables(
   linkables: {
     [TKey in keyof Resource]?: pulumi.Input<Record<string, unknown>>;
   },
-  prefix = resourcePrefix,
-) =>
-  Object.entries(linkables).reduce(
-    (vars, [name, props]) => {
-      vars[`${prefix}${name}`] = pulumi.jsonStringify(pulumi.output(props));
+  prefix = "CUSTOM_RESOURCE",
+) {
+  const vars: Record<string, pulumi.Output<string>> = {};
+  for (const logicalName in linkables) {
+    const value = linkables[logicalName as keyof Resource];
 
-      return vars;
-    },
-    {} as Record<string, pulumi.Output<string>>,
-  );
+    vars[`${prefix}_${logicalName}`] = pulumi.jsonStringify(
+      pulumi.output(value),
+    );
+  }
+
+  return vars;
+}

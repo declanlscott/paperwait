@@ -95,7 +95,12 @@ export const diffCvr = (prev: ClientViewRecord, next: ClientViewRecord) =>
     }, {} as ClientViewRecordDiff),
   );
 
-export const isCvrDiffEmpty = (diff: ClientViewRecordDiff) =>
-  Object.values(diff).every(
-    ({ puts, dels }) => puts.length === 0 && dels.length === 0,
-  );
+export function isCvrDiffEmpty(diff: ClientViewRecordDiff) {
+  for (const tableName in diff) {
+    const { puts, dels } = diff[tableName as keyof ClientViewRecordDiff];
+
+    if (puts.length > 0 || dels.length > 0) return false;
+  }
+
+  return true;
+}

@@ -5,23 +5,24 @@ import type { Resource } from "sst";
 export const normalizePath = (path: string, root = $cli.paths.root) =>
   join(root, path);
 
-export const link = (...params: Parameters<typeof injectLinkables>) => ({
+export const link = (...args: Parameters<typeof injectLinkables>) => ({
   environment: {
-    variables: injectLinkables(...params),
+    variables: injectLinkables(...args),
   },
 });
 
-export const injectLinkables = (
+export function injectLinkables(
   linkables: {
     [TKey in keyof Resource]?: $util.Input<Record<string, unknown>>;
   },
-  prefix = "CUSTOM_RESOURCE_",
-) =>
-  Object.entries(linkables).reduce(
-    (vars, [name, props]) => {
-      vars[`${prefix}${name}`] = $jsonStringify($output(props));
+  prefix = "CUSTOM_RESOURCE",
+) {
+  const vars: Record<string, $util.Output<string>> = {};
+  for (const logicalName in linkables) {
+    const value = linkables[logicalName as keyof Resource];
 
-      return vars;
-    },
-    {} as Record<string, $util.Output<string>>,
-  );
+    vars[`${prefix}_${logicalName}`] = $jsonStringify($output(value));
+  }
+
+  return vars;
+}

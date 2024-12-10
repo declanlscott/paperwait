@@ -35,15 +35,13 @@ export namespace Utils {
     prefix: string,
     input: Record<string, string | undefined>,
   ): TResource {
-    const raw = Object.entries(input).reduce(
-      (raw, [key, value]) => {
-        if (key.startsWith(prefix) && value)
-          raw[key.slice(prefix.length)] = JSON.parse(value);
+    const raw: Record<string, unknown> = {};
+    for (const key in input) {
+      const value = input[key];
 
-        return raw;
-      },
-      {} as Record<string, unknown>,
-    );
+      if (key.startsWith(prefix) && value)
+        raw[key.slice(prefix.length)] = JSON.parse(value);
+    }
 
     return new Proxy(raw, {
       get(target, prop: string) {

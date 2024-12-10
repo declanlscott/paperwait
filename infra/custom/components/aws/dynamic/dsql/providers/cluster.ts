@@ -63,11 +63,13 @@ export class ClusterProvider implements $util.dynamic.ResourceProvider {
     output: Partial<ClusterOutputs>,
     metadata: unknown,
   ): output is ClusterOutputs {
-    const isValid = Object.values(output).every((value) => value !== undefined);
+    for (const key in output)
+      if (output[key as keyof ClusterOutputs] === undefined) {
+        console.error(metadata);
+        return false;
+      }
 
-    if (!isValid) console.error(metadata);
-
-    return isValid;
+    return true;
   }
 
   async create(
