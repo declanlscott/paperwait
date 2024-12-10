@@ -1,13 +1,15 @@
 import { dsqlCluster } from "./db";
-import { appFqdn } from "./dns";
+import { appFqdn, domainName } from "./dns";
+
+const oauthAppName =
+  $app.stage === "production"
+    ? $app.name.charAt(0).toUpperCase() + $app.name.slice(1)
+    : `${$app.name}-${$app.stage}`;
 
 export const entraIdApplication = new azuread.ApplicationRegistration(
   "EntraIdApplicationRegistration",
   {
-    displayName:
-      $app.stage === "production"
-        ? $app.name.charAt(0).toUpperCase() + $app.name.slice(1)
-        : `${$app.name}-${$app.stage}`,
+    displayName: oauthAppName,
     signInAudience: "AzureADMultipleOrgs",
     implicitAccessTokenIssuanceEnabled: true,
     implicitIdTokenIssuanceEnabled: true,
@@ -63,18 +65,11 @@ export const entraIdClientSecret = new azuread.ApplicationPassword(
   },
 );
 
-export const googleClientId = new sst.Secret("GoogleClientId");
-export const googleClientSecret = new sst.Secret("GoogleClientSecret");
-
 export const oauth2 = new sst.Linkable("Oauth2", {
   properties: {
     entraId: {
       clientId: entraIdApplication.clientId,
       clientSecret: entraIdClientSecret.value,
-    },
-    google: {
-      clientId: googleClientId.value,
-      clientSecret: googleClientSecret.value,
     },
   },
 });
