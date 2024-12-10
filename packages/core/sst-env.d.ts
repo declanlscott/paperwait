@@ -16,13 +16,8 @@ declare module "sst" {
       "stage": string
       "type": "sst.sst.Linkable"
     }
-    "AuthTable": {
-      "name": string
-      "type": "sst.aws.Dynamo"
-    }
-    "Authorizer": {
-      "name": string
-      "type": "sst.aws.Function"
+    "Auth": {
+      "type": "sst.aws.Auth"
       "url": string
     }
     "Aws": {

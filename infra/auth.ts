@@ -1,62 +1,49 @@
 import { dsqlCluster } from "./db";
 import { appFqdn } from "./dns";
 
-const wellKnown = azuread.getApplicationPublishedAppIds();
-const microsoftGraphAppId = await wellKnown.then(
-  ({ result }) => result?.MicrosoftGraph,
+export const entraIdApplication = new azuread.ApplicationRegistration(
+  "EntraIdApplicationRegistration",
+  {
+    displayName:
+      $app.stage === "production"
+        ? $app.name.charAt(0).toUpperCase() + $app.name.slice(1)
+        : `${$app.name}-${$app.stage}`,
+    signInAudience: "AzureADMultipleOrgs",
+    implicitAccessTokenIssuanceEnabled: true,
+    implicitIdTokenIssuanceEnabled: true,
+    homepageUrl: $interpolate`https://${appFqdn}`,
+  },
 );
 
-const { oauth2PermissionScopeIds } = new azuread.ServicePrincipal(
-  "MicrosoftGraphServicePrincipal",
+export const entraIdApplicationIServicePrincipal = new azuread.ServicePrincipal(
+  "EntraIdApplicationServicePrincipal",
+  { clientId: entraIdApplication.clientId },
+);
+
+const wellKnown = azuread.getApplicationPublishedAppIds();
+const graphAppId = await wellKnown.then(({ result }) => result?.MicrosoftGraph);
+
+const graphServicePrincipal = new azuread.ServicePrincipal(
+  "GraphServicePrincipal",
   {
-    clientId: microsoftGraphAppId,
+    clientId: graphAppId,
     useExisting: true,
   },
 );
 
-export const entraIdApplication = new azuread.Application(
-  "EntraIdApplication",
+export const entraIdApplicationApiAccess = new azuread.ApplicationApiAccess(
+  "EntraIdApplicationApiAccess",
   {
-    displayName: $interpolate`${$app.name}-${$app.stage}`,
-    preventDuplicateNames: true,
-    signInAudience: "AzureADMultipleOrgs",
-    web: {
-      redirectUris: [
-        "http://localhost:4321/api/auth/callback",
-        $interpolate`https://${appFqdn}/api/auth/callback`,
-      ],
-    },
-    requiredResourceAccesses: [
-      {
-        resourceAppId: microsoftGraphAppId,
-        resourceAccesses: [
-          {
-            id: oauth2PermissionScopeIds["openid"],
-            type: "Scope",
-          },
-          {
-            id: oauth2PermissionScopeIds["profile"],
-            type: "Scope",
-          },
-          {
-            id: oauth2PermissionScopeIds["email"],
-            type: "Scope",
-          },
-          {
-            id: oauth2PermissionScopeIds["offline_access"],
-            type: "Scope",
-          },
-          {
-            id: oauth2PermissionScopeIds["User.Read"],
-            type: "Scope",
-          },
-          {
-            id: oauth2PermissionScopeIds["User.ReadBasic.All"],
-            type: "Scope",
-          },
-        ],
-      },
-    ],
+    applicationId: entraIdApplication.id,
+    apiClientId: graphAppId,
+    scopeIds: [
+      "openid",
+      "profile",
+      "email",
+      "offline_access",
+      "User.Read",
+      "User.ReadBasic.All",
+    ].map((scope) => graphServicePrincipal.oauth2PermissionScopeIds[scope]),
   },
 );
 
@@ -76,11 +63,6 @@ export const entraIdClientSecret = new azuread.ApplicationPassword(
   },
 );
 
-export const servicePrincipal = new azuread.ServicePrincipal(
-  "EntraIdServicePrincipal",
-  { clientId: entraIdApplication.clientId },
-);
-
 export const googleClientId = new sst.Secret("GoogleClientId");
 export const googleClientSecret = new sst.Secret("GoogleClientSecret");
 
@@ -97,20 +79,21 @@ export const oauth2 = new sst.Linkable("Oauth2", {
   },
 });
 
-export const authTable = new sst.aws.Dynamo("AuthTable", {
-  fields: {
-    pk: "string",
-    sk: "string",
+export const auth = new sst.aws.Auth("Auth", {
+  authorizer: {
+    handler: "packages/functions/node/src/authorizer.handler",
+    link: [dsqlCluster, oauth2],
+    architecture: "arm64",
   },
-  ttl: "expiry",
-  primaryIndex: {
-    hashKey: "pk",
-    rangeKey: "sk",
+  domain: {
+    name: $interpolate`auth.${appFqdn}`,
+    dns: sst.cloudflare.dns(),
   },
 });
 
-export const authorizer = new sst.aws.Function("Authorizer", {
-  handler: "packages/functions/node/src/authorizer.handler",
-  url: true,
-  link: [authTable, dsqlCluster, oauth2],
-});
+export const entraIdApplicationRedirectUris =
+  new azuread.ApplicationRedirectUris("EntraIdApplicationRedirectUris", {
+    applicationId: entraIdApplication.id,
+    type: "Web",
+    redirectUris: [$interpolate`${auth.url}/callback`],
+  });

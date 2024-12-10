@@ -12,8 +12,8 @@ importers:
         specifier: ^3.706.0
         version: 3.706.0
       '@openauthjs/openauth':
-        specifier: ^0.0.18
-        version: 0.0.18(arctic@2.3.0)(hono@4.6.13)
+        specifier: ^0.0.20
+        version: 0.0.20(arctic@2.3.0)(hono@4.6.13)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -30,8 +30,8 @@ importers:
         specifier: ^15.0.1
         version: 15.0.1
       sst:
-        specifier: ^3.3.59
-        version: 3.3.59(hono@4.6.13)(valibot@1.0.0-beta.8(typescript@5.7.2))
+        specifier: ^3.3.61
+        version: 3.3.61(hono@4.6.13)(valibot@1.0.0-beta.8(typescript@5.7.2))
       superjson:
         specifier: ^2.2.2
         version: 2.2.2
@@ -99,6 +99,9 @@ importers:
       '@aws-sdk/util-format-url':
         specifier: ^3.696.0
         version: 3.696.0
+      '@microsoft/microsoft-graph-client':
+        specifier: ^3.0.7
+        version: 3.0.7
       '@smithy/protocol-http':
         specifier: ^4.1.7
         version: 4.1.7
@@ -1947,6 +1950,24 @@ packages:
   '@mdx-js/mdx@3.1.0':
     resolution: {integrity: sha512-/QxEhPAvGwbQmy1Px8F899L5Uc2KZ6JtXwlCgJmjSTBedwOZkByYcBG4GceIGPXRDsmfxhHazuS+hlOShRLeDw==}
 
+  '@microsoft/microsoft-graph-client@3.0.7':
+    resolution: {integrity: sha512-/AazAV/F+HK4LIywF9C+NYHcJo038zEnWkteilcxC1FM/uK/4NVGDKGrxx7nNq1ybspAroRKT4I1FHfxQzxkUw==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      '@azure/identity': '*'
+      '@azure/msal-browser': '*'
+      buffer: '*'
+      stream-browserify: '*'
+    peerDependenciesMeta:
+      '@azure/identity':
+        optional: true
+      '@azure/msal-browser':
+        optional: true
+      buffer:
+        optional: true
+      stream-browserify:
+        optional: true
+
   '@monaco-editor/loader@1.4.0':
     resolution: {integrity: sha512-00ioBig0x642hytVspPl7DbQyaSWRaolYie/UFNjoTdvoKPzo6xrXLhTk9ixgIKcLH5b5vDOjVNiGyY+uDCUlg==}
     peerDependencies:
@@ -2029,8 +2050,8 @@ packages:
     resolution: {integrity: sha512-y7efHHwghQfk28G2z3tlZ67pLG0XdfYbcVG26r7YIXALRsrVQcTq4/tdenSmdOrEsNahIYA/eh8aEVROWGFUDg==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  '@openauthjs/openauth@0.0.18':
-    resolution: {integrity: sha512-pijhuf6WKm1WCotwoLCwCgjPofiCcVMOwLrEDl4ga1Ga9WMrh/b4mqn8wGu1YVtea0rip5F47ssiEVgkobL15A==}
+  '@openauthjs/openauth@0.0.20':
+    resolution: {integrity: sha512-ZjHq1HGPV27Brptzo7Fx/Z6oFka7fz/NY0Y2qNmbPqfwJDWmOlyhVvnHYU0KCJCvAA5bUHVIiS+68nHfFXh/Xg==}
     peerDependencies:
       arctic: ^2.2.2
       hono: ^4.0.0
@@ -6447,33 +6468,33 @@ packages:
     resolution: {integrity: sha512-MGrFH9Z4NP9Iyhqn16sDtBpRRNJ0Y2hNa6D65h736fVSaPCHr4DM4sWUNvVaSuC+0OBGhwsrydQwmgfg5LncqQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  sst-darwin-arm64@3.3.59:
-    resolution: {integrity: sha512-v8E3pg3JK7LDFOD0ot5N+HMNOA6MDHczx1M1SsJnMcNZPLTFH/Dn1B3roUaTP55+8jLKtqSJhnp9kLtTPHR1GQ==}
+  sst-darwin-arm64@3.3.61:
+    resolution: {integrity: sha512-yeDXrERpsGjI0UOebDbNOTFdsGvijpWTvuOYth34y/36YfzwdR4I2QWkcj6IsIrelYUkBGfUy00LK6pKMEjvIw==}
     cpu: [arm64]
     os: [darwin]
 
-  sst-darwin-x64@3.3.59:
-    resolution: {integrity: sha512-SOOvHPxdxXwcMEwfdDXFiaMqZTdy1UcTL74omKGAn3i0pdoDN+FK2KPa865gNd1dzyYg0P6QXcUu9hI92g9Cyg==}
+  sst-darwin-x64@3.3.61:
+    resolution: {integrity: sha512-98CK1K/IXQGlLdt15/2ASSmbgPSUb0WNtnsRXHk4I0+FpkqwMqvALuyZ+0HkpaZoEkzvh/BwyEgPgdspI4UZFQ==}
     cpu: [x64]
     os: [darwin]
 
-  sst-linux-arm64@3.3.59:
-    resolution: {integrity: sha512-C7RjmuO0RR6xhmz0EZDcL6FhPCInwj5odehJZkbrvW0SObdoBLZLeDF0Or/7DKKh9VuSes/dpN1UvuUtMVE5Cg==}
+  sst-linux-arm64@3.3.61:
+    resolution: {integrity: sha512-cgPiJInjfe5nSKehPPkucrevMJEkAe9yUF5Fe0V/bzNFwEfqpsK9oYHfNv/D7CAhgA+wCzbcSpUPuyAAnyFdJA==}
     cpu: [arm64]
     os: [linux]
 
-  sst-linux-x64@3.3.59:
-    resolution: {integrity: sha512-7XZaYHl7Uun9q6koMEIICvw/+BX18hqiVmBjaC2p6J6x5tw+z7kfpK3x+yD26HLHoFNhpIBLb+6Nqj7XDyCa/Q==}
+  sst-linux-x64@3.3.61:
+    resolution: {integrity: sha512-TXrncdA1JfwrCx4KVKiXrpzP8n4RWjyjUjVJfp4Q7BKQFot4chDr8klvgKVuHskL/gZMof6AeCfWqnwYxVaUYw==}
     cpu: [x64]
     os: [linux]
 
-  sst-linux-x86@3.3.59:
-    resolution: {integrity: sha512-GA8dZw6ty12ZwvpdVXkKBtdNwNuGF8vIcOKSzAQ6eC2UmywHlvQNgz2fiWMPVz94QLnNHCHAZlL6XAR7fz7n4Q==}
+  sst-linux-x86@3.3.61:
+    resolution: {integrity: sha512-+cENCq43ACwXoy3y6VpsQL2sSGPX5LtQ366j7tTdrE/wU/UCQe7ambe2TpD3kT3XAgKfw1NCeOxty946DpfPsw==}
     cpu: [x86]
     os: [linux]
 
-  sst@3.3.59:
-    resolution: {integrity: sha512-WzKYWMf41n/TMEVp54tEITvmZQ0iZHf2whevpqqS85dAGP6w74NbEkwPNAB5oU2RlA2sj8GgMF76NdctsYQ0JA==}
+  sst@3.3.61:
+    resolution: {integrity: sha512-mb6SMjCUBDG0LjPU4iz+gRe97mVyTjn3tdwZ11doyiD5RV0nFcqqHxKbN42aDFMWnC78IYJJQzWkhvDzU4OCeg==}
     hasBin: true
     peerDependencies:
       hono: 4.x
@@ -9173,6 +9194,11 @@ snapshots:
       - acorn
       - supports-color
 
+  '@microsoft/microsoft-graph-client@3.0.7':
+    dependencies:
+      '@babel/runtime': 7.26.0
+      tslib: 2.8.1
+
   '@monaco-editor/loader@1.4.0(monaco-editor@0.52.0)':
     dependencies:
       monaco-editor: 0.52.0
@@ -9327,7 +9353,7 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@openauthjs/openauth@0.0.18(arctic@2.3.0)(hono@4.6.13)':
+  '@openauthjs/openauth@0.0.20(arctic@2.3.0)(hono@4.6.13)':
     dependencies:
       '@standard-schema/spec': 1.0.0-beta.3
       arctic: 2.3.0
@@ -15116,33 +15142,33 @@ snapshots:
     dependencies:
       minipass: 7.1.2
 
-  sst-darwin-arm64@3.3.59:
+  sst-darwin-arm64@3.3.61:
     optional: true
 
-  sst-darwin-x64@3.3.59:
+  sst-darwin-x64@3.3.61:
     optional: true
 
-  sst-linux-arm64@3.3.59:
+  sst-linux-arm64@3.3.61:
     optional: true
 
-  sst-linux-x64@3.3.59:
+  sst-linux-x64@3.3.61:
     optional: true
 
-  sst-linux-x86@3.3.59:
+  sst-linux-x86@3.3.61:
     optional: true
 
-  sst@3.3.59(hono@4.6.13)(valibot@1.0.0-beta.8(typescript@5.7.2)):
+  sst@3.3.61(hono@4.6.13)(valibot@1.0.0-beta.8(typescript@5.7.2)):
     dependencies:
       aws4fetch: 1.0.20
       jose: 5.2.3
       openid-client: 5.6.4
     optionalDependencies:
       hono: 4.6.13
-      sst-darwin-arm64: 3.3.59
-      sst-darwin-x64: 3.3.59
-      sst-linux-arm64: 3.3.59
-      sst-linux-x64: 3.3.59
-      sst-linux-x86: 3.3.59
+      sst-darwin-arm64: 3.3.61
+      sst-darwin-x64: 3.3.61
+      sst-linux-arm64: 3.3.61
+      sst-linux-x64: 3.3.61
+      sst-linux-x86: 3.3.61
       valibot: 1.0.0-beta.8(typescript@5.7.2)
 
   stacktracey@2.1.8:

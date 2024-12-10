@@ -9,13 +9,13 @@
   },
   "dependencies": {
     "@aws-sdk/client-dsql": "^3.706.0",
-    "@openauthjs/openauth": "^0.0.18",
+    "@openauthjs/openauth": "^0.0.20",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.37.0",
     "hono": "^4.6.13",
     "remeda": "^2.17.4",
     "replicache": "^15.0.1",
-    "sst": "^3.3.59",
+    "sst": "^3.3.61",
     "superjson": "^2.2.2",
     "valibot": "beta"
   },

@@ -1,4 +1,4 @@
-import { authorizer } from "./auth";
+import { auth } from "./auth";
 import { dsqlCluster } from "./db";
 import { appFqdn } from "./dns";
 import { appData, aws_, client } from "./misc";
@@ -47,7 +47,7 @@ sst.Linkable.wrap(sst.aws.Astro, (astro) => ({
 export const web = new sst.aws.Astro("Web", {
   path: "packages/web",
   buildCommand: "pnpm build",
-  link: [appData, authorizer, client, dsqlCluster, tenantInfraQueue],
+  link: [appData, auth, client, dsqlCluster, tenantInfraQueue],
   permissions: [
     {
       actions: ["execute-api:Invoke"],
