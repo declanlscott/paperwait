@@ -11,7 +11,7 @@ import {
 import { buildConflictUpdateColumns } from "../drizzle/columns";
 import {
   afterTransaction,
-  serializable,
+  createTransaction,
   useTransaction,
 } from "../drizzle/transaction";
 import { ordersTable } from "../orders/sql";
@@ -45,7 +45,7 @@ export namespace Users {
 
     const next = new Set(await PapercutRpc.listUserAccounts());
 
-    await serializable(async (tx) => {
+    await createTransaction(async (tx) => {
       const prev = await tx
         .select({
           username: usersTable.username,
