@@ -97,7 +97,10 @@ declare module "sst" {
       "user": string
     }
     "InvoicesProcessor": {
+      "arn": string
+      "invokeArn": string
       "name": string
+      "roleArn": string
       "type": "sst.aws.Function"
     }
     "InvoicesProcessorDeadLetterQueue": {

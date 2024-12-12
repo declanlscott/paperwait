@@ -61,7 +61,7 @@ new aws.lambda.Permission("UsersSyncRulePermission", {
   principalOrgId: aws_.properties.organization.id,
 });
 
-export const invoicesProcessor = new sst.aws.Function("InvoicesProcessor", {
+export const invoicesProcessor = new custom.aws.Function("InvoicesProcessor", {
   handler: "packages/functions/node/src/invoices-processor.handler",
   timeout: "20 seconds",
   link: [
