@@ -2,23 +2,18 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import * as R from "remeda";
 
 import { AccessControl } from "../access-control";
-import { useTenant } from "../actors";
 import {
   billingAccountCustomerAuthorizationsTable,
   billingAccountManagerAuthorizationsTable,
   billingAccountsTable,
 } from "../billing-accounts/sql";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
-import {
-  afterTransaction,
-  createTransaction,
-  useTransaction,
-} from "../drizzle/transaction";
+import { afterTransaction, useTransaction } from "../drizzle/context";
 import { ordersTable } from "../orders/sql";
 import { PapercutRpc } from "../papercut/rpc";
 import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
-import { Sessions } from "../sessions";
+import { useTenant } from "../tenants/context";
 import { ApplicationError, HttpError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import {
@@ -45,7 +40,7 @@ export namespace Users {
 
     const next = new Set(await PapercutRpc.listUserAccounts());
 
-    await createTransaction(async (tx) => {
+    await useTransaction(async (tx) => {
       const prev = await tx
         .select({
           username: usersTable.username,
@@ -330,10 +325,7 @@ export namespace Users {
           );
 
         await afterTransaction(() =>
-          Promise.all([
-            Sessions.invalidateUser(id),
-            Replicache.poke([formatChannel("tenant", tenant.id)]),
-          ]),
+          Replicache.poke([formatChannel("tenant", tenant.id)]),
         );
       });
     },

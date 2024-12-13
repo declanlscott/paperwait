@@ -2,14 +2,12 @@ import { and, eq, isNull } from "drizzle-orm";
 import { Resource } from "sst";
 
 import { AccessControl } from "../access-control";
-import { useTenant } from "../actors";
-import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { afterTransaction, useTransaction } from "../drizzle/context";
 import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
-import { Sessions } from "../sessions";
-import { Users } from "../users";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
+import { useTenant } from "./context";
 import { updateTenantMutationArgsSchema } from "./shared";
 import { licensesTable, tenantsTable } from "./sql";
 
@@ -29,13 +27,6 @@ export namespace Tenants {
       args: [{ name: tenantsTable._.name, id: values.id }],
     });
 
-    const usersToLogout: Awaited<ReturnType<typeof Users.fromRoles>> = [];
-    if (values.status === "suspended") {
-      usersToLogout.push(
-        ...(await Users.fromRoles(["operator", "manager", "customer"])),
-      );
-    }
-
     return useTransaction(async (tx) => {
       await tx
         .update(tenantsTable)
@@ -43,10 +34,7 @@ export namespace Tenants {
         .where(eq(tenantsTable.id, tenant.id));
 
       await afterTransaction(() =>
-        Promise.all([
-          ...usersToLogout.map((user) => Sessions.invalidateUser(user.id)),
-          Replicache.poke([formatChannel("tenant", tenant.id)]),
-        ]),
+        Replicache.poke([formatChannel("tenant", tenant.id)]),
       );
     });
   });

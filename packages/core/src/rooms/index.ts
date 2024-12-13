@@ -2,12 +2,12 @@ import { and, eq, gte, inArray, notInArray } from "drizzle-orm";
 import * as R from "remeda";
 
 import { AccessControl } from "../access-control";
-import { useTenant } from "../actors";
 import { buildConflictUpdateColumns } from "../drizzle/columns";
-import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { afterTransaction, useTransaction } from "../drizzle/context";
 import { productsTable } from "../products/sql";
 import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
+import { useTenant } from "../tenants/context";
 import { Constants } from "../utils/constants";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";

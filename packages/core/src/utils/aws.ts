@@ -37,9 +37,12 @@ import {
 import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { getSignedUrl as _getSignedUrl } from "@aws-sdk/cloudfront-signer";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import { DsqlSigner } from "@aws-sdk/dsql-signer";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { formatUrl as _formatUrl } from "@aws-sdk/util-format-url";
 import { SignatureV4 as _SignatureV4 } from "@smithy/signature-v4";
+
+import { Utils } from ".";
 
 import type {
   CreateApiCommandInput,
@@ -66,67 +69,112 @@ import type {
   PutParameterCommandInput,
 } from "@aws-sdk/client-ssm";
 import type { AssumeRoleCommandInput } from "@aws-sdk/client-sts";
+import type { DsqlSignerConfig } from "@aws-sdk/dsql-signer";
 import type { SignatureV4Init } from "@smithy/signature-v4";
 import type { NonNullableProperties, StartsWith } from "./types";
+
+export type AwsContext = {
+  appsync?: { client: AppSyncClient };
+  dsql?: { signer: DsqlSigner };
+  sqs?: { client: SQSClient };
+  s3?: { client: S3Client };
+  sigv4?: { signer: _SignatureV4 };
+  ssm?: { client: SSMClient };
+  sts?: { client: STSClient };
+};
+
+export const AwsContext = Utils.createContext<AwsContext>("Aws");
+
+export function useAws<TServiceName extends keyof AwsContext>(
+  serviceName: TServiceName,
+) {
+  const service = AwsContext.use()[serviceName];
+  if (!service)
+    throw new Error(`Missing "${serviceName}" service in aws context`);
+
+  return service;
+}
+
+export const withAws = async <
+  TGetContext extends () => AwsContext | Promise<AwsContext>,
+  TCallback extends () => ReturnType<TCallback>,
+  TGetDependencies extends () => AwsContext | Promise<AwsContext>,
+>(
+  getContext: TGetContext,
+  callback: TCallback,
+  getDependencies?: TGetDependencies,
+) =>
+  getDependencies
+    ? AwsContext.with(await Promise.resolve(getDependencies()), async () =>
+        AwsContext.with(await Promise.resolve(getContext()), callback),
+      )
+    : AwsContext.with(await Promise.resolve(getContext()), callback);
 
 export namespace Appsync {
   export const Client = AppSyncClient;
   export type Client = AppSyncClient;
 
   export const createApi = async (
-    client: Client,
     input: NonNullableProperties<CreateApiCommandInput>,
-  ) => client.send(new CreateApiCommand(input));
+  ) => useAws("appsync").client.send(new CreateApiCommand(input));
 
   export const getApi = async (
-    client: Client,
     input: NonNullableProperties<GetApiCommandInput>,
-  ) => client.send(new GetApiCommand(input));
+  ) => useAws("appsync").client.send(new GetApiCommand(input));
 
   export const updateApi = async (
-    client: Client,
     input: NonNullableProperties<UpdateApiCommandInput>,
-  ) => client.send(new UpdateApiCommand(input));
+  ) => useAws("appsync").client.send(new UpdateApiCommand(input));
 
   export const deleteApi = async (
-    client: Client,
     input: NonNullableProperties<DeleteApiCommandInput>,
-  ) => client.send(new DeleteApiCommand(input));
+  ) => useAws("appsync").client.send(new DeleteApiCommand(input));
 
   export const createChannelNamespace = async (
-    client: Client,
     input: NonNullableProperties<CreateChannelNamespaceCommandInput>,
-  ) => client.send(new CreateChannelNamespaceCommand(input));
+  ) => useAws("appsync").client.send(new CreateChannelNamespaceCommand(input));
 
   export const getChannelNamespace = async (
-    client: Client,
     input: NonNullableProperties<GetChannelNamespaceCommandInput>,
-  ) => client.send(new GetChannelNamespaceCommand(input));
+  ) => useAws("appsync").client.send(new GetChannelNamespaceCommand(input));
 
   export const updateChannelNamespace = async (
-    client: Client,
     input: NonNullableProperties<UpdateChannelNamespaceCommandInput>,
-  ) => client.send(new UpdateChannelNamespaceCommand(input));
+  ) => useAws("appsync").client.send(new UpdateChannelNamespaceCommand(input));
 
   export const deleteChannelNamespace = async (
-    client: Client,
     input: NonNullableProperties<DeleteChannelNamespaceCommandInput>,
-  ) => client.send(new DeleteChannelNamespaceCommand(input));
+  ) => useAws("appsync").client.send(new DeleteChannelNamespaceCommand(input));
 }
 
 export namespace Cloudfront {
   export const buildUrl = <TPath extends string>({
-    protocol = "https",
+    protocol = "https:",
     fqdn,
     path,
   }: {
     protocol?: string;
     fqdn: string;
     path: StartsWith<"/", TPath>;
-  }) => new URL(`${protocol}://${fqdn}${path}`);
+  }) => new URL(`${protocol}//${fqdn}${path}`);
 
   export const getSignedUrl = (...args: Parameters<typeof _getSignedUrl>) =>
     new URL(_getSignedUrl(...args));
+}
+
+export namespace Dsql {
+  interface BuildSignerProps extends Omit<DsqlSignerConfig, "region"> {
+    region: NonNullable<DsqlSignerConfig["region"]>;
+  }
+
+  export const buildSigner = ({
+    credentials = fromNodeProviderChain(),
+    sha256 = Sha256,
+    ...props
+  }: BuildSignerProps) => new DsqlSigner({ credentials, sha256, ...props });
+
+  export const generateToken = () =>
+    useAws("dsql").signer.getDbConnectAdminAuthToken();
 }
 
 export namespace S3 {
@@ -136,26 +184,23 @@ export namespace S3 {
   export type Client = S3Client;
 
   export const getSignedPutUrl = (
-    client: Client,
     input: NonNullableProperties<PutObjectCommandInput>,
     args?: RequestPresigningArguments,
-  ) => getSignedUrl(client, new PutObjectCommand(input), args);
+  ) => getSignedUrl(useAws("s3").client, new PutObjectCommand(input), args);
 
   export const getSignedGetUrl = (
-    client: Client,
     input: NonNullableProperties<GetObjectCommandInput>,
     args?: RequestPresigningArguments,
-  ) => getSignedUrl(client, new GetObjectCommand(input), args);
+  ) => getSignedUrl(useAws("s3").client, new GetObjectCommand(input), args);
 
   export const deleteObject = async (
-    client: Client,
     input: NonNullableProperties<DeleteObjectCommandInput>,
-  ) => client.send(new DeleteObjectCommand(input));
+  ) => useAws("s3").client.send(new DeleteObjectCommand(input));
 }
 
 export namespace SignatureV4 {
   interface BuildSignerProps
-    extends Exclude<Partial<SignatureV4Init>, "region" | "service"> {
+    extends Omit<Partial<SignatureV4Init>, "region" | "service"> {
     region: SignatureV4Init["region"];
     service: SignatureV4Init["service"];
   }
@@ -174,14 +219,12 @@ export namespace Sqs {
   export type Client = SQSClient;
 
   export const sendMessage = async (
-    client: Client,
     input: NonNullableProperties<SendMessageCommandInput>,
-  ) => client.send(new SendMessageCommand(input));
+  ) => useAws("sqs").client.send(new SendMessageCommand(input));
 
   export const sendMessageBatch = async (
-    client: Client,
     input: NonNullableProperties<SendMessageBatchCommandInput>,
-  ) => client.send(new SendMessageBatchCommand(input));
+  ) => useAws("sqs").client.send(new SendMessageBatchCommand(input));
 }
 
 export namespace Ssm {
@@ -189,15 +232,13 @@ export namespace Ssm {
   export type Client = SSMClient;
 
   export const putParameter = async (
-    client: Client,
     input: NonNullableProperties<PutParameterCommandInput>,
-  ) => client.send(new PutParameterCommand(input));
+  ) => useAws("ssm").client.send(new PutParameterCommand(input));
 
   export async function getParameter(
-    client: Client,
     input: NonNullableProperties<GetParameterCommandInput>,
   ) {
-    const { Parameter, $metadata } = await client.send(
+    const { Parameter, $metadata } = await useAws("ssm").client.send(
       new GetParameterCommand(input),
     );
     if (!Parameter?.Value)
@@ -210,9 +251,8 @@ export namespace Ssm {
   }
 
   export const deleteParameter = async (
-    client: Client,
     input: NonNullableProperties<DeleteParameterCommandInput>,
-  ) => client.send(new DeleteParameterCommand(input));
+  ) => useAws("ssm").client.send(new DeleteParameterCommand(input));
 }
 
 export namespace Sts {
@@ -220,12 +260,10 @@ export namespace Sts {
   export type Client = STSClient;
 
   export const assumeRole = async (
-    client: Client,
     input: NonNullableProperties<AssumeRoleCommandInput>,
-  ) => client.send(new AssumeRoleCommand(input));
+  ) => useAws("sts").client.send(new AssumeRoleCommand(input));
 
   export async function getAssumeRoleCredentials(
-    client: Client,
     input: (
       | { type: "arn"; roleArn: string }
       | { type: "name"; accountId: string; roleName: string }
@@ -233,7 +271,7 @@ export namespace Sts {
       roleSessionName: string;
     },
   ) {
-    const { Credentials } = await assumeRole(client, {
+    const { Credentials } = await assumeRole({
       RoleArn:
         input.type === "arn"
           ? input.roleArn

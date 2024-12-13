@@ -1,4 +1,4 @@
-import { Sqs } from "@printworks/core/utils/aws";
+import { Sqs, withAws } from "@printworks/core/utils/aws";
 import { Resource } from "sst";
 import * as v from "valibot";
 
@@ -10,37 +10,40 @@ export const handler: EventBridgeHandler<
   "InvoicesProcessor",
   string,
   void
-> = async (event) => {
-  const { Records } = JSON.parse(event.detail) as SQSEvent;
+> = async (event) =>
+  withAws(
+    () => ({ sqs: { client: new Sqs.Client() } }),
+    async () => {
+      const { Records } = JSON.parse(event.detail) as SQSEvent;
 
-  const failures: Array<SQSRecord> = [];
+      const failures: Array<SQSRecord> = [];
 
-  for (const record of Records)
-    try {
-      await processRecord(record);
-    } catch (e) {
-      console.error("Failed to process record: ", record, e);
+      for (const record of Records)
+        try {
+          await processRecord(record);
+        } catch (e) {
+          console.error("Failed to process record: ", record, e);
 
-      failures.push(record);
-    }
+          failures.push(record);
+        }
 
-  if (failures.length === Records.length)
-    throw new Error("Failed to process all records");
+      if (failures.length === Records.length)
+        throw new Error("Failed to process all records");
 
-  try {
-    const sqs = new Sqs.Client();
-    for (const failure of failures)
-      await Sqs.sendMessage(sqs, {
-        QueueUrl: Resource.InvoicesProcessorDeadLetterQueue.url,
-        MessageBody: JSON.stringify(failure),
-      });
-  } catch (e) {
-    console.error(
-      "Failed to send invoices processor failures to dead letter queue: ",
-      e,
-    );
-  }
-};
+      try {
+        for (const failure of failures)
+          await Sqs.sendMessage({
+            QueueUrl: Resource.InvoicesProcessorDeadLetterQueue.url,
+            MessageBody: JSON.stringify(failure),
+          });
+      } catch (e) {
+        console.error(
+          "Failed to send invoices processor failures to dead letter queue: ",
+          e,
+        );
+      }
+    },
+  );
 
 async function processRecord(record: SQSRecord) {
   const { tenantId, orderId } = v.parse(

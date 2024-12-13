@@ -4,10 +4,6 @@ import * as pulumi from "@pulumi/pulumi";
 import * as appsync from "../dynamic/appsync";
 import { useResource } from "../resource";
 
-export interface RealtimeArgs {
-  assumeRoleArn: pulumi.Input<string>;
-}
-
 export class Realtime extends pulumi.ComponentResource {
   private static _instance: Realtime;
 
@@ -17,7 +13,7 @@ export class Realtime extends pulumi.ComponentResource {
   private _publisherRole: aws.iam.Role;
 
   static getInstance(
-    args: RealtimeArgs,
+    args = {},
     opts: pulumi.ComponentResourceOptions = {},
   ): Realtime {
     if (!this._instance) this._instance = new Realtime(args, opts);
@@ -41,7 +37,6 @@ export class Realtime extends pulumi.ComponentResource {
           defaultPublishAuthModes: [{ authType: "AWS_IAM" }],
           defaultSubscribeAuthModes: [{ authType: "AWS_IAM" }],
         },
-        clientRoleArn: args.assumeRoleArn,
       },
       { parent: this },
     );
@@ -51,7 +46,6 @@ export class Realtime extends pulumi.ComponentResource {
       {
         apiId: this._api.id,
         name: "default",
-        clientRoleArn: args.assumeRoleArn,
       },
       { parent: this },
     );

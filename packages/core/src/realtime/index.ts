@@ -1,9 +1,8 @@
 import { HttpRequest } from "@smithy/protocol-http";
 import * as R from "remeda";
-import { Resource } from "sst";
 
 import { Api } from "../api";
-import { SignatureV4, Sts, Util } from "../utils/aws";
+import { useAws, Util } from "../utils/aws";
 
 export namespace Realtime {
   export const getUrl = async () =>
@@ -20,21 +19,10 @@ export namespace Realtime {
   }
 
   export async function publish(channel: string, events: Array<string>) {
-    const signer = SignatureV4.buildSigner({
-      region: Resource.Aws.region,
-      service: "appsync",
-      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
-        type: "name",
-        accountId: await Api.getAccountId(),
-        roleName: Resource.Aws.tenant.realtimePublisherRole.name,
-        roleSessionName: "RealtimePublisher",
-      }),
-    });
-
     const hostname = await Api.getAppsyncHttpDomainName();
 
     for (const batch of R.chunk(events, 5)) {
-      const req = await signer.sign(
+      const req = await useAws("sigv4").signer.sign(
         new HttpRequest({
           method: "POST",
           protocol: "https:",

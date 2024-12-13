@@ -5,9 +5,10 @@ import { deserialize, serialize } from "superjson";
 import * as v from "valibot";
 
 import { AccessControl } from "../access-control";
-import { useAuthenticated, useTenant } from "../actors";
-import { createTransaction, useTransaction } from "../drizzle/transaction";
+import { useAuthenticated } from "../auth/context";
+import { createTransaction, useTransaction } from "../drizzle/context";
 import { Realtime } from "../realtime";
+import { useTenant } from "../tenants/context";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
 import { ReplicacheError } from "../utils/errors";
@@ -53,10 +54,8 @@ import type { ReplicacheClient, ReplicacheClientGroup } from "./sql";
 
 export namespace Replicache {
   export const clientGroupFromId = async (id: ClientGroupID) =>
-    useTransaction(async (tx) => {
-      const tenant = useTenant();
-
-      return tx
+    useTransaction(async (tx) =>
+      tx
         .select({
           id: replicacheClientGroupsTable.id,
           tenantId: replicacheClientGroupsTable.tenantId,
@@ -67,11 +66,11 @@ export namespace Replicache {
         .where(
           and(
             eq(replicacheClientGroupsTable.id, id),
-            eq(replicacheClientGroupsTable.tenantId, tenant.id),
+            eq(replicacheClientGroupsTable.tenantId, useTenant().id),
           ),
         )
-        .then((rows) => rows.at(0));
-    });
+        .then((rows) => rows.at(0)),
+    );
 
   export const clientMetadataFromGroupId = async (
     groupId: ReplicacheClientGroup["id"],

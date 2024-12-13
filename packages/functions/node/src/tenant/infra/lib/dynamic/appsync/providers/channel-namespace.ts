@@ -1,13 +1,11 @@
-import { Appsync, Sts } from "@printworks/core/utils/aws";
+import { Appsync } from "@printworks/core/utils/aws";
 
 import type * as pulumi from "@pulumi/pulumi";
 
 type ChannelNamespaceInput = Parameters<
   typeof Appsync.createChannelNamespace
->[1];
-export interface ChannelNamespaceProviderInputs extends ChannelNamespaceInput {
-  clientRoleArn: string;
-}
+>[0];
+export type ChannelNamespaceProviderInputs = ChannelNamespaceInput;
 
 type ChannelNamespaceOutput = Required<
   NonNullable<
@@ -16,43 +14,21 @@ type ChannelNamespaceOutput = Required<
     >["channelNamespace"]
   >
 >;
-export interface ChannelNamespaceProviderOutputs
-  extends ChannelNamespaceOutput {
-  clientRoleArn: string;
-}
+export type ChannelNamespaceProviderOutputs = ChannelNamespaceOutput;
 
 export class ChannelNamespaceProvider
   implements pulumi.dynamic.ResourceProvider
 {
-  private static _sts = new Sts.Client();
-
-  private static _getClient = async (roleArn: string) =>
-    new Appsync.Client({
-      credentials: await Sts.getAssumeRoleCredentials(
-        ChannelNamespaceProvider._sts,
-        {
-          type: "arn",
-          roleArn,
-          roleSessionName: "ChannelNamespaceProvider",
-        },
-      ),
-    });
-
-  async create({
-    clientRoleArn,
-    ...input
-  }: ChannelNamespaceProviderInputs): Promise<
-    pulumi.dynamic.CreateResult<ChannelNamespaceProviderOutputs>
-  > {
-    const client = await ChannelNamespaceProvider._getClient(clientRoleArn);
-
-    const output = await Appsync.createChannelNamespace(client, input);
+  async create(
+    inputs: ChannelNamespaceProviderInputs,
+  ): Promise<pulumi.dynamic.CreateResult<ChannelNamespaceProviderOutputs>> {
+    const output = await Appsync.createChannelNamespace(inputs);
 
     const channelNamespace = output.channelNamespace as ChannelNamespaceOutput;
 
     return {
       id: channelNamespace.name,
-      outs: { ...channelNamespace, clientRoleArn },
+      outs: channelNamespace,
     };
   }
 
@@ -60,11 +36,7 @@ export class ChannelNamespaceProvider
     id: string,
     props: ChannelNamespaceProviderOutputs,
   ): Promise<pulumi.dynamic.ReadResult<ChannelNamespaceProviderOutputs>> {
-    const client = await ChannelNamespaceProvider._getClient(
-      props.clientRoleArn,
-    );
-
-    const output = await Appsync.getChannelNamespace(client, {
+    const output = await Appsync.getChannelNamespace({
       apiId: props.apiId,
       name: props.name,
     });
@@ -80,25 +52,19 @@ export class ChannelNamespaceProvider
   async update(
     _name: string,
     olds: ChannelNamespaceProviderOutputs,
-    { clientRoleArn, ...input }: ChannelNamespaceProviderInputs,
+    news: ChannelNamespaceProviderInputs,
   ): Promise<pulumi.dynamic.UpdateResult<ChannelNamespaceProviderOutputs>> {
-    const client = await ChannelNamespaceProvider._getClient(clientRoleArn);
-
-    const output = await Appsync.updateChannelNamespace(client, input);
+    const output = await Appsync.updateChannelNamespace(news);
 
     const channelNamespace = output.channelNamespace as ChannelNamespaceOutput;
 
     return {
-      outs: { ...olds, clientRoleArn, ...channelNamespace },
+      outs: { ...olds, ...channelNamespace },
     };
   }
 
   async delete(name: string, props: ChannelNamespaceProviderOutputs) {
-    const client = await ChannelNamespaceProvider._getClient(
-      props.clientRoleArn,
-    );
-
-    await Appsync.deleteChannelNamespace(client, {
+    await Appsync.deleteChannelNamespace({
       apiId: props.apiId,
       name,
     });

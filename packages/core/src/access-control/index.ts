@@ -1,14 +1,14 @@
 import { and, arrayOverlaps, eq, isNull, or, sql } from "drizzle-orm";
 
-import { useAuthenticated, useTenant } from "../actors";
 import { announcementsTable } from "../announcements/sql";
+import { useAuthenticated } from "../auth/context";
 import {
   billingAccountCustomerAuthorizationsTable,
   billingAccountManagerAuthorizationsTable,
   billingAccountsTable,
 } from "../billing-accounts/sql";
 import { commentsTable } from "../comments/sql";
-import { useTransaction } from "../drizzle/transaction";
+import { useTransaction } from "../drizzle/context";
 import { invoicesTable } from "../invoices/sql";
 import { ordersTableName } from "../orders/shared";
 import { ordersTable } from "../orders/sql";
@@ -18,6 +18,7 @@ import {
   roomsTable,
   workflowStatusesTable,
 } from "../rooms/sql";
+import { useTenant } from "../tenants/context";
 import { tenantsTable } from "../tenants/sql";
 import { userProfilesTable, usersTable } from "../users/sql";
 import { Constants } from "../utils/constants";
@@ -26,7 +27,7 @@ import type { SQL } from "drizzle-orm";
 import type { PgSelectBase } from "drizzle-orm/pg-core";
 import type { BillingAccount } from "../billing-accounts/sql";
 import type { Comment } from "../comments/sql";
-import type { TxOrDb } from "../drizzle/transaction";
+import type { TxOrDb } from "../drizzle/context";
 import type { Order } from "../orders/sql";
 import type { Metadata } from "../replicache/data";
 import type { UserRole } from "../users/shared";

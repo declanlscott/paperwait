@@ -1,4 +1,4 @@
-import type { Authenticated, Unauthenticated } from "../sessions/shared";
+import type { Authenticated, Unauthenticated } from "../auth/shared";
 import type { Tenant } from "../tenants/sql";
 
 export type UserActor = {

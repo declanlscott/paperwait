@@ -1,5 +1,5 @@
 import { tenantInfraProgramInputSchema } from "@printworks/core/tenants/shared";
-import { Ssm } from "@printworks/core/utils/aws";
+import { Ssm, Sts, withAws } from "@printworks/core/utils/aws";
 import { nanoIdSchema } from "@printworks/core/utils/shared";
 import { version as awsPluginVersion } from "@pulumi/aws/package.json";
 import { version as cloudflarePluginVersion } from "@pulumi/cloudflare/package.json";
@@ -12,21 +12,29 @@ import { useResource, withResource } from "./lib/resource";
 import type { SQSBatchItemFailure, SQSHandler, SQSRecord } from "aws-lambda";
 
 export const handler: SQSHandler = async (event) =>
-  withResource(async () => {
-    const batchItemFailures: Array<SQSBatchItemFailure> = [];
+  withResource(() =>
+    withAws(
+      () => ({
+        ssm: { client: new Ssm.Client() },
+        sts: { client: new Sts.Client() },
+      }),
+      async () => {
+        const batchItemFailures: Array<SQSBatchItemFailure> = [];
 
-    for (const record of event.Records) {
-      try {
-        await processRecord(record);
-      } catch (e) {
-        console.error("Failed to process record: ", record, e);
+        for (const record of event.Records) {
+          try {
+            await processRecord(record);
+          } catch (e) {
+            console.error("Failed to process record: ", record, e);
 
-        batchItemFailures.push({ itemIdentifier: record.messageId });
-      }
-    }
+            batchItemFailures.push({ itemIdentifier: record.messageId });
+          }
+        }
 
-    return { batchItemFailures };
-  });
+        return { batchItemFailures };
+      },
+    ),
+  );
 
 async function processRecord(record: SQSRecord) {
   const { AppData, Aws, PulumiBucket } = useResource();
@@ -70,7 +78,7 @@ async function processRecord(record: SQSRecord) {
   console.log("Successfully installed plugins");
 
   console.log("Retrieving Cloudflare API token ...");
-  const cloudflareApiToken = await Ssm.getParameter(new Ssm.Client(), {
+  const cloudflareApiToken = await Ssm.getParameter({
     Name: `/${AppData.name}/${AppData.stage}/cloudflare/api-token`,
     WithDecryption: true,
   });

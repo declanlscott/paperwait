@@ -2,9 +2,25 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { Resource } from "sst";
 
+import { Dsql, withAws } from "../utils/aws";
+
 export const db = drizzle(
-  postgres(Resource.Db.postgres.url, {
-    prepare: false,
+  postgres({
+    host: Resource.DsqlCluster.hostname,
+    database: Resource.DsqlCluster.database,
+    user: Resource.DsqlCluster.user,
+    password: await withAws(
+      () => ({
+        dsql: {
+          signer: Dsql.buildSigner({
+            hostname: Resource.DsqlCluster.hostname,
+            region: Resource.Aws.region,
+          }),
+        },
+      }),
+      async () => Dsql.generateToken(),
+    ),
+    ssl: "require",
   }),
   { logger: true },
 );

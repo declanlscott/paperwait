@@ -1,3 +1,4 @@
+import { Appsync, Sts, withAws } from "@printworks/core/utils/aws";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -9,104 +10,129 @@ import { Realtime } from "./components/realtime";
 import { Router } from "./components/router";
 import { Ssl } from "./components/ssl";
 import { Storage } from "./components/storage";
-import { useResource, withResource } from "./resource";
+import { useResource } from "./resource";
 
 import type { TenantInfraProgramInput } from "@printworks/core/tenants/shared";
 
 export const getProgram =
-  (tenantId: string, input: TenantInfraProgramInput) => async () =>
-    withResource(() => {
-      const { usersSyncSchedule, timezone } = input;
-      const { AppData, CloudfrontPublicKey, InvoicesProcessor, UsersSync } =
-        useResource();
+  (tenantId: string, input: TenantInfraProgramInput) => async () => {
+    const { usersSyncSchedule, timezone } = input;
+    const { AppData, Aws, CloudfrontPublicKey, InvoicesProcessor, UsersSync } =
+      useResource();
 
-      const account = Account.getInstance({ tenantId });
+    const account = Account.getInstance({ tenantId });
 
-      const cloudfrontPublicKey = new aws.cloudfront.PublicKey(
-        "CloudfrontPublicKey",
-        { encodedKey: CloudfrontPublicKey.pem },
-        { provider: account.provider },
-      );
+    const cloudfrontPublicKey = new aws.cloudfront.PublicKey(
+      "CloudfrontPublicKey",
+      { encodedKey: CloudfrontPublicKey.pem },
+      { provider: account.provider },
+    );
 
-      const ssl = Ssl.getInstance(
-        { tenantId },
-        { providers: [account.provider] },
-      );
+    const ssl = Ssl.getInstance(
+      { tenantId },
+      { providers: [account.provider] },
+    );
 
-      const gateway = new aws.apigateway.RestApi(
-        "Gateway",
-        { endpointConfiguration: { types: "REGIONAL" } },
-        { provider: account.provider },
-      );
+    const gateway = new aws.apigateway.RestApi(
+      "Gateway",
+      { endpointConfiguration: { types: "REGIONAL" } },
+      { provider: account.provider },
+    );
 
-      const storage = Storage.getInstance({ providers: [account.provider] });
+    const storage = Storage.getInstance({ providers: [account.provider] });
 
-      const realtime = Realtime.getInstance({
-        assumeRoleArn: account.assumeRoleArn,
-      });
+    // NOTE: Since the realtime component uses dynamic providers, we need to manually
+    // provide credentials for the appsync client via iam role chaining
+    const realtime = account.assumeRoleArn.apply(async (roleArn) =>
+      withAws(
+        async () => ({
+          appsync: {
+            client: new Appsync.Client({
+              credentials: await Sts.getAssumeRoleCredentials({
+                type: "arn",
+                roleArn,
+                roleSessionName: "AppsyncClient",
+              }),
+            }),
+          },
+        }),
+        () => Realtime.getInstance(),
+        async () => ({
+          sts: {
+            client: new Sts.Client({
+              credentials: await Sts.getAssumeRoleCredentials({
+                type: "arn",
+                roleArn: Aws.organization.managementRole.arn,
+                roleSessionName: "StsClient",
+              }),
+            }),
+          },
+        }),
+      ),
+    );
 
-      const router = Router.getInstance(
-        {
-          domainName: ssl.domainName,
-          certificateArn: ssl.certificateArn,
-          keyPairId: cloudfrontPublicKey.id,
-          origins: {
-            api: {
-              domainName: pulumi.interpolate`${gateway.id}.execute-api.${aws.getRegionOutput({}, { provider: account.provider }).name}.amazonaws.com`,
-              originPath: `/${AppData.stage}`,
-            },
-            assets: {
-              domainName: storage.buckets.assets.regionalDomainName,
-            },
-            documents: {
-              domainName: storage.buckets.documents.regionalDomainName,
-            },
+    const router = Router.getInstance(
+      {
+        domainName: ssl.domainName,
+        certificateArn: ssl.certificateArn,
+        keyPairId: cloudfrontPublicKey.id,
+        origins: {
+          api: {
+            domainName: pulumi.interpolate`${gateway.id}.execute-api.${aws.getRegionOutput({}, { provider: account.provider }).name}.amazonaws.com`,
+            originPath: `/${AppData.stage}`,
+          },
+          assets: {
+            domainName: storage.buckets.assets.regionalDomainName,
+          },
+          documents: {
+            domainName: storage.buckets.documents.regionalDomainName,
           },
         },
-        { providers: [account.provider] },
-      );
+      },
+      { providers: [account.provider] },
+    );
 
-      const functions = Functions.getInstance({
-        providers: [account.provider],
-      });
-
-      Api.getInstance(
-        {
-          gateway,
-          tenantId,
-          domainName: ssl.domainName,
-          certificateArn: ssl.certificateArn,
-          cloudfrontKeyPairId: cloudfrontPublicKey.id,
-          appsyncDns: realtime.dns,
-          papercutSecureReverseProxyFunction: {
-            invokeArn: functions.papercutSecureReverseProxy.invokeArn,
-          },
-          invoicesProcessorQueue: {
-            arn: storage.queues.invoicesProcessor.arn,
-            name: storage.queues.invoicesProcessor.name,
-            url: storage.queues.invoicesProcessor.url,
-          },
-          distributionId: router.distributionId,
-        },
-        { providers: [account.provider] },
-      );
-
-      Events.getInstance(
-        {
-          tenantId,
-          domainName: ssl.domainName,
-          events: {
-            usersSync: {
-              functionArn: pulumi.output(UsersSync.arn),
-              scheduleExpression: `cron(${usersSyncSchedule})`,
-              timezone,
-            },
-            invoicesProcessor: {
-              queueArn: storage.queues.invoicesProcessor.arn,
-              functionArn: pulumi.output(InvoicesProcessor.arn),
-            },
-          },
-        },
-        { providers: [account.provider] },
-      );
+    const functions = Functions.getInstance({
+      providers: [account.provider],
     });
+
+    Api.getInstance(
+      {
+        gateway,
+        tenantId,
+        domainName: ssl.domainName,
+        certificateArn: ssl.certificateArn,
+        cloudfrontKeyPairId: cloudfrontPublicKey.id,
+        appsyncDns: realtime.dns,
+        papercutSecureReverseProxyFunction: {
+          invokeArn: functions.papercutSecureReverseProxy.invokeArn,
+        },
+        invoicesProcessorQueue: {
+          arn: storage.queues.invoicesProcessor.arn,
+          name: storage.queues.invoicesProcessor.name,
+          url: storage.queues.invoicesProcessor.url,
+        },
+        distributionId: router.distributionId,
+      },
+      { providers: [account.provider] },
+    );
+
+    Events.getInstance(
+      {
+        tenantId,
+        domainName: ssl.domainName,
+        events: {
+          usersSync: {
+            functionArn: pulumi.output(UsersSync.arn),
+            scheduleExpression: `cron(${usersSyncSchedule})`,
+            timezone,
+          },
+          invoicesProcessor: {
+            queueArn: storage.queues.invoicesProcessor.arn,
+            functionArn: pulumi.output(InvoicesProcessor.arn),
+          },
+        },
+      },
+      { providers: [account.provider] },
+    );
+  };

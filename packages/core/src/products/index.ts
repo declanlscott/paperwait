@@ -1,10 +1,10 @@
 import { and, eq, inArray } from "drizzle-orm";
 
 import { AccessControl } from "../access-control";
-import { useTenant } from "../actors";
-import { afterTransaction, useTransaction } from "../drizzle/transaction";
+import { afterTransaction, useTransaction } from "../drizzle/context";
 import { formatChannel } from "../realtime/shared";
 import { Replicache } from "../replicache";
+import { useTenant } from "../tenants/context";
 import { ApplicationError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import {

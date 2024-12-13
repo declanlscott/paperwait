@@ -15,13 +15,14 @@ export type Transaction = PgTransaction<
 
 export type TxOrDb = Transaction | typeof db;
 
-type TransactionContext<
+export type TransactionContext<
   TEffect extends () => ReturnType<TEffect> = () => unknown,
 > = {
   tx: Transaction;
   effects: Array<TEffect>;
 };
-const TransactionContext =
+
+export const TransactionContext =
   Utils.createContext<TransactionContext>("Transaction");
 
 export async function useTransaction<
@@ -80,7 +81,7 @@ export async function createTransaction<TOutput>(
   throw new DatabaseError.MaximumTransactionRetriesExceeded();
 }
 
-type TransactionResult<TOutput> =
+type Result<TOutput> =
   | { status: "success"; output: TOutput }
   | { status: "error"; error: unknown; shouldRethrow: boolean };
 
@@ -90,7 +91,7 @@ async function transact<
 >(callbacks: {
   transact: (tx: Transaction) => Promise<TOutput>;
   rollback?: TRollback;
-}): Promise<TransactionResult<TOutput>> {
+}): Promise<Result<TOutput>> {
   try {
     const output = await callbacks.transact(TransactionContext.use().tx);
 

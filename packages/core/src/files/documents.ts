@@ -1,28 +1,17 @@
-import { Resource } from "sst";
 import * as v from "valibot";
 
 import { Api } from "../api";
-import { Ssm, Sts } from "../utils/aws";
+import { Ssm } from "../utils/aws";
 import { Constants } from "../utils/constants";
 import { HttpError } from "../utils/errors";
 
 export namespace Documents {
-  export async function setMimeTypes(mimeTypes: Array<string>) {
-    const ssm = new Ssm.Client({
-      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
-        type: "name",
-        accountId: await Api.getAccountId(),
-        roleName: Resource.Aws.tenant.putParametersRole.name,
-        roleSessionName: "SetDocumentsMimeTypes",
-      }),
-    });
-
-    await Ssm.putParameter(ssm, {
+  export const setMimeTypes = async (mimeTypes: Array<string>) =>
+    Ssm.putParameter({
       Name: Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
       Value: JSON.stringify(mimeTypes),
       Type: "StringList",
     });
-  }
 
   export async function getMimeTypes() {
     const res = await Api.send(
@@ -34,22 +23,12 @@ export namespace Documents {
     return v.parse(v.array(v.string()), await res.json());
   }
 
-  export async function setSizeLimit(byteSize: number) {
-    const ssm = new Ssm.Client({
-      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
-        type: "name",
-        accountId: await Api.getAccountId(),
-        roleName: Resource.Aws.tenant.putParametersRole.name,
-        roleSessionName: "SetDocumentsSizeLimit",
-      }),
-    });
-
-    await Ssm.putParameter(ssm, {
+  export const setSizeLimit = async (byteSize: number) =>
+    Ssm.putParameter({
       Name: Constants.DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME,
       Value: byteSize.toString(),
       Type: "String",
     });
-  }
 
   export async function getSizeLimit() {
     const res = await Api.send(

@@ -9,7 +9,7 @@ import type {
   ReadTransaction,
   WriteTransaction,
 } from "replicache";
-import type { Authenticated } from "../sessions/shared";
+import type { Authenticated } from "../auth/shared";
 import type { usersTableName } from "../users/shared";
 import type { UserWithProfile } from "../users/sql";
 import type { SyncedTableName, TableByName } from "../utils/tables";
