@@ -27,14 +27,15 @@ import type { UserRole } from "../users/shared";
 import type { User, UserWithProfile } from "../users/sql";
 import type { SyncedTableName } from "../utils/tables";
 import type { AnyError, CustomError, InferCustomError } from "../utils/types";
+import type { Action, Resource } from "./shared";
 
 export namespace AccessControl {
   type PermissionsFactory = Record<
     UserRole,
     Record<
-      SyncedTableName,
+      Resource,
       Record<
-        "create" | "update" | "delete",
+        Action,
         | boolean
         | ((
             tx: WriteTransaction,
@@ -97,6 +98,11 @@ export namespace AccessControl {
         create: true,
         update: true,
         delete: true,
+      },
+      services: {
+        create: false,
+        update: true,
+        delete: false,
       },
       [tenantsTableName]: {
         create: false,
@@ -187,6 +193,11 @@ export namespace AccessControl {
       [roomsTableName]: {
         create: false,
         update: true,
+        delete: false,
+      },
+      services: {
+        create: false,
+        update: false,
         delete: false,
       },
       [tenantsTableName]: {
@@ -420,6 +431,11 @@ export namespace AccessControl {
         update: false,
         delete: false,
       },
+      services: {
+        create: false,
+        update: false,
+        delete: false,
+      },
       [tenantsTableName]: {
         create: false,
         update: false,
@@ -573,6 +589,11 @@ export namespace AccessControl {
         update: false,
         delete: false,
       },
+      services: {
+        create: false,
+        update: false,
+        delete: false,
+      },
       [tenantsTableName]: {
         create: false,
         update: false,
@@ -593,7 +614,7 @@ export namespace AccessControl {
 
   export async function check<
     TResource extends SyncedTableName,
-    TAction extends "create" | "update" | "delete",
+    TAction extends Action,
     TPermission extends
       (typeof permissionsFactory)[UserRole][TResource][TAction],
   >(

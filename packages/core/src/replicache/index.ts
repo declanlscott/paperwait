@@ -185,7 +185,7 @@ export namespace Replicache {
   export const pull = fn(
     pullRequestSchema,
     async (pullRequest): Promise<PullResponseV1> => {
-      const { user } = useAuthenticated();
+      const { user, tenant } = useAuthenticated();
 
       if (pullRequest.pullVersion !== 1)
         return {
@@ -210,7 +210,7 @@ export namespace Replicache {
                       pullRequest.clientGroupID,
                     ),
                     eq(replicacheClientViewsTable.version, cookieOrder),
-                    eq(replicacheClientViewsTable.tenantId, user.tenantId),
+                    eq(replicacheClientViewsTable.tenantId, tenant.id),
                   ),
                 )
                 .then((rows) => rows.at(0))
@@ -227,7 +227,7 @@ export namespace Replicache {
             (await clientGroupFromId(pullRequest.clientGroupID)) ??
             ({
               id: pullRequest.clientGroupID,
-              tenantId: user.tenantId,
+              tenantId: tenant.id,
               cvrVersion: 0,
               userId: user.id,
             } satisfies OmitTimestamps<ReplicacheClientGroup>);
@@ -244,9 +244,9 @@ export namespace Replicache {
 
               // 6: Read all id/version pairs from the database that should be in the client view
               const metadata = R.uniqueBy(
-                await AccessControl.resourceMetadataFactory[user.profile.role][
-                  name
-                ](),
+                await AccessControl.syncedTableResourceMetadataFactory[
+                  user.profile.role
+                ][name](),
                 R.prop("id"),
               );
 
@@ -322,7 +322,7 @@ export namespace Replicache {
             // 16-17: Generate client view record id, store client view record
             tx.insert(replicacheClientViewsTable).values({
               clientGroupId: baseClientGroup.id,
-              tenantId: user.tenantId,
+              tenantId: tenant.id,
               version: nextCvrVersion,
               record: nextCvr,
             }),
@@ -335,7 +335,7 @@ export namespace Replicache {
                     replicacheClientViewsTable.clientGroupId,
                     baseClientGroup.id,
                   ),
-                  eq(replicacheClientViewsTable.tenantId, user.tenantId),
+                  eq(replicacheClientViewsTable.tenantId, tenant.id),
                   lt(
                     replicacheClientViewsTable.updatedAt,
                     sub(new Date(), Constants.REPLICACHE_LIFETIME),

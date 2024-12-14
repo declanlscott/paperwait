@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { oauth2ProvidersSchema } from "../oauth2/shared";
+import { oauth2ProvidersSchema } from "../auth/shared";
 import { Constants } from "../utils/constants";
 import { nanoIdSchema, timestampsSchema } from "../utils/shared";
 

@@ -53,7 +53,7 @@ export namespace PapercutRpc {
     amount: number,
     comment: string,
   ) {
-    const authToken = await Papercut.getAuthToken();
+    const authToken = await Papercut.getServerAuthToken();
 
     const res = await Api.send(path, {
       method: "POST",
@@ -108,7 +108,7 @@ export namespace PapercutRpc {
     sharedAccountName: string,
     propertyNames: Array<string>,
   ) {
-    const authToken = await Papercut.getAuthToken();
+    const authToken = await Papercut.getServerAuthToken();
 
     const res = await Api.send(path, {
       method: "POST",
@@ -234,7 +234,7 @@ export namespace PapercutRpc {
   }
 
   export async function listSharedAccounts() {
-    const authToken = await Papercut.getAuthToken();
+    const authToken = await Papercut.getServerAuthToken();
 
     const all: Array<string> = [];
     let offset = 0;
@@ -284,7 +284,7 @@ export namespace PapercutRpc {
   }
 
   export async function listUserAccounts() {
-    const authToken = await Papercut.getAuthToken();
+    const authToken = await Papercut.getServerAuthToken();
 
     const all: Array<string> = [];
     let offset = 0;
@@ -336,7 +336,7 @@ export namespace PapercutRpc {
     username: string,
     ignoreUserAccountSelectionConfig: boolean,
   ) {
-    const authToken = await Papercut.getAuthToken();
+    const authToken = await Papercut.getServerAuthToken();
 
     const all: Array<string> = [];
     let offset = 0;

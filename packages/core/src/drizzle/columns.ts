@@ -1,5 +1,5 @@
 import { getTableColumns, sql } from "drizzle-orm";
-import { char, customType, timestamp } from "drizzle-orm/pg-core";
+import { char, timestamp } from "drizzle-orm/pg-core";
 
 import { Constants } from "../utils/constants";
 import { generateId } from "../utils/shared";
@@ -59,16 +59,5 @@ export function buildConflictUpdateColumns<
     {} as Record<TColumnName, SQL>,
   );
 }
-
-/**
- * Custom BigInt column with mapping to string data type.
- */
-export const bigintString = customType<{
-  driverData: string;
-  data: string;
-}>({
-  dataType: () => "bigint",
-  fromDriver: (value) => BigInt(value).toString(10),
-});
 
 export type OmitTimestamps<TTable> = Omit<TTable, keyof typeof timestamps>;
