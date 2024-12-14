@@ -116,7 +116,7 @@ export class Api extends pulumi.ComponentResource {
           {
             statements: [
               {
-                actions: ["ssm:GetParameter", "kms:Decrypt"],
+                actions: ["ssm:GetParameter"],
                 resources: [
                   Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
                   Constants.DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME,
@@ -125,6 +125,15 @@ export class Api extends pulumi.ComponentResource {
                   (name) =>
                     pulumi.interpolate`arn:aws:ssm::${aws.getCallerIdentityOutput({}, { parent: this }).accountId}:parameter${name}`,
                 ),
+              },
+              {
+                actions: ["kms:Decrypt"],
+                resources: [
+                  aws.kms.getKeyOutput(
+                    { keyId: "alias/aws/ssm" },
+                    { parent: this },
+                  ).arn,
+                ],
               },
               {
                 actions: ["events:PutEvents"],

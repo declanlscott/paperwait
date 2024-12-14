@@ -52,3 +52,11 @@ export type RestoreUserProfileMutationArgs = v.InferOutput<
 >;
 
 export const userProfilesTableName = "user_profiles";
+
+export const userProfileSchema = v.object({
+  ...tenantTableSchema.entries,
+  oauth2UserId: v.string(),
+  role: v.picklist(userRoles),
+  name: v.string(),
+  email: v.string(),
+});

@@ -72,9 +72,9 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
           {
             statements: [
               {
-                actions: ["ssm:GetParameter", "kms:Decrypt"],
+                actions: ["ssm:GetParameter"],
                 resources: [
-                  Constants.PAPERCUT_SERVER_URL_PARAMETER_NAME,
+                  Constants.TAILNET_PAPERCUT_SERVER_URI_PARAMETER_NAME,
                   Constants.TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME,
                 ].map(
                   (name) =>
@@ -83,6 +83,15 @@ class PapercutSecureReverseProxy extends pulumi.ComponentResource {
                         .accountId
                     }:parameter${name}`,
                 ),
+              },
+              {
+                actions: ["kms:Decrypt"],
+                resources: [
+                  aws.kms.getKeyOutput(
+                    { keyId: "alias/aws/ssm" },
+                    { parent: this },
+                  ).arn,
+                ],
               },
             ],
           },

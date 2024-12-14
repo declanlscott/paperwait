@@ -1,63 +1,24 @@
-import { Resource } from "sst";
-
 import { Api } from "../api";
-import { Ssm, Sts } from "../utils/aws";
+import { Ssm } from "../utils/aws";
 import { Constants } from "../utils/constants";
 import { HttpError } from "../utils/errors";
 
 export namespace Papercut {
-  export async function setTailscaleOauthClient(id: string, secret: string) {
-    const ssm = new Ssm.Client({
-      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
-        type: "name",
-        accountId: await Api.getAccountId(),
-        roleName: Resource.Aws.tenant.putParametersRole.name,
-        roleSessionName: "SetTailscaleOauthClient",
-      }),
-    });
-
-    await Ssm.putParameter(ssm, {
-      Name: Constants.TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME,
-      Value: JSON.stringify({ id, secret }),
-      Type: "SecureString",
-    });
-  }
-
-  export async function setServerUrl(url: string) {
-    const ssm = new Ssm.Client({
-      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
-        type: "name",
-        accountId: await Api.getAccountId(),
-        roleName: Resource.Aws.tenant.putParametersRole.name,
-        roleSessionName: "SetPapercutServerUrl",
-      }),
-    });
-
-    await Ssm.putParameter(ssm, {
-      Name: Constants.PAPERCUT_SERVER_URL_PARAMETER_NAME,
-      Value: url,
+  export const setTailnetServerUri = async (uri: string) =>
+    Ssm.putParameter({
+      Name: Constants.TAILNET_PAPERCUT_SERVER_URI_PARAMETER_NAME,
+      Value: uri,
       Type: "String",
     });
-  }
 
-  export async function setAuthToken(token: string) {
-    const ssm = new Ssm.Client({
-      credentials: await Sts.getAssumeRoleCredentials(new Sts.Client(), {
-        type: "name",
-        accountId: await Api.getAccountId(),
-        roleName: Resource.Aws.tenant.putParametersRole.name,
-        roleSessionName: "SetPapercutAuthToken",
-      }),
-    });
-
-    await Ssm.putParameter(ssm, {
+  export const setServerAuthToken = async (token: string) =>
+    Ssm.putParameter({
       Name: Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME,
       Value: token,
       Type: "SecureString",
     });
-  }
 
-  export async function getAuthToken() {
+  export async function getServerAuthToken() {
     const res = await Api.send(
       `/parameters${Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME}?withDecryption=true`,
     );

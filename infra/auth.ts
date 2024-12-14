@@ -65,6 +65,8 @@ export const entraIdClientSecret = new azuread.ApplicationPassword(
   },
 );
 
+// TODO: Google oauth
+
 export const oauth2 = new sst.Linkable("Oauth2", {
   properties: {
     entraId: {

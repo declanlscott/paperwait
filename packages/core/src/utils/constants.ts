@@ -7,6 +7,9 @@
 import type { Duration } from "date-fns";
 
 export namespace Constants {
+  export const ENTRA_ID = "entra-id";
+  export const GOOGLE = "google";
+
   export const DB_SCHEMA_VERSION = 1;
   export const DB_TRANSACTION_MAX_RETRIES = 10;
   export const POSTGRES_SERIALIZATION_FAILURE_ERROR_CODE = "40001";
@@ -26,7 +29,8 @@ export namespace Constants {
     "/app/settings/documents/mime-types";
   export const DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME =
     "/app/settings/documents/size-limit";
-  export const PAPERCUT_SERVER_URL_PARAMETER_NAME = "/papercut/server/url";
+  export const TAILNET_PAPERCUT_SERVER_URI_PARAMETER_NAME =
+    "/papercut/server/tailnet-uri";
   export const PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME =
     "/papercut/server/auth-token";
   export const TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME =

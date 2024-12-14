@@ -22,8 +22,8 @@ import type { User } from "@printworks/core/users/sql";
 import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
 
 export const useQuery = <TData, TDefaultData = undefined>(
-  ...params: Parameters<typeof useSubscribe<TData, TDefaultData>>
-) => useSubscribe(...params);
+  ...args: Parameters<typeof useSubscribe<TData, TDefaultData>>
+) => useSubscribe(...args);
 
 export const queryFactory = {
   tenant: () => async (tx) =>
@@ -76,7 +76,7 @@ export function useMutator() {
 }
 
 export function useMutationOptionsFactory() {
-  const { client } = useApi();
+  const api = useApi();
 
   const factory = useMemo(
     () =>
@@ -84,24 +84,23 @@ export function useMutationOptionsFactory() {
         papercutCredentials: () => ({
           mutationKey: ["papercut", "credentials"] as const,
           mutationFn: async (json: PapercutParameter) => {
-            const res = await client.api.integrations.papercut.credentials.$put(
-              { json },
-            );
+            const res = await api.integrations.papercut.credentials.$put({
+              json,
+            });
             if (!res.ok) throw new Error(res.statusText);
           },
         }),
         healthCheckPapercut: () => ({
           mutationKey: ["papercut", "health-check"] as const,
           mutationFn: async () => {
-            const res =
-              await client.api.integrations.papercut["health-check"].$post();
+            const res = await api.integrations.papercut["health-check"].$post();
             if (!res.ok) throw new Error(res.statusText);
           },
         }),
         syncPapercutAccounts: () => ({
           mutationKey: ["papercut", "accounts", "sync"] as const,
           mutationFn: async () => {
-            const res = await client.api.integrations.papercut.accounts.$put({
+            const res = await api.integrations.papercut.accounts.$put({
               json: undefined,
             });
             if (!res.ok) throw new Error(res.statusText);

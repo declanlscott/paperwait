@@ -171,8 +171,12 @@ new aws.iam.RolePolicy("TenantInfraFunctionRoleInlinePolicy", {
         resources: [pulumiBucket.arn, $interpolate`${pulumiBucket.arn}/*`],
       },
       {
-        actions: ["ssm:GetParameter", "kms:Decrypt"],
+        actions: ["ssm:GetParameter"],
         resources: [cloudflareApiTokenParameter.arn],
+      },
+      {
+        actions: ["kms:Decrypt"],
+        resources: [aws.kms.getKeyOutput({ keyId: "alias/aws/ssm" }).arn],
       },
       {
         actions: ["sts:AssumeRole"],
