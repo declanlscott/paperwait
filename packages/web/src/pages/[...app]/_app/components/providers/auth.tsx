@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ApplicationError, HttpError } from "@printworks/core/utils/errors";
-import { enforceRbac } from "@printworks/core/utils/shared";
 import { redirect } from "@tanstack/react-router";
 import { createStore } from "zustand";
 
@@ -10,12 +9,12 @@ import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
-import type { Auth } from "@printworks/core/sessions/shared";
+import type { UserActor } from "@printworks/core/actors/shared";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { AppRouter } from "~/app/types";
 
 interface AuthStoreProviderProps extends PropsWithChildren {
-  auth: Auth;
+  auth: UserActor["properties"];
   router: AppRouter;
 }
 

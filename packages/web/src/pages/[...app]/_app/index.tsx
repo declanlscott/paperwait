@@ -2,6 +2,7 @@ import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { Toaster } from "sonner";
+import { deserialize } from "superjson";
 
 import { AuthStoreProvider } from "~/app/components/providers/auth";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
@@ -14,13 +15,14 @@ import { routeTree } from "~/app/routeTree.gen";
 
 import type { UserActor } from "@printworks/core/actors/shared";
 import type { Resource } from "sst";
+import type { SuperJSONResult } from "superjson";
 import type { AppRouter, Slot } from "~/app/types";
 
 const queryClient = new QueryClient();
 
 export interface AppProps extends Partial<Slot> {
-  clientResource: Resource["Client"];
-  auth: UserActor["properties"];
+  clientResource: SuperJSONResult;
+  auth: SuperJSONResult;
 }
 
 export function App(props: AppProps) {
@@ -47,9 +49,14 @@ export function App(props: AppProps) {
     ?.style.setProperty("display", "none");
 
   return (
-    <ResourceProvider resource={clientResource}>
+    <ResourceProvider
+      resource={deserialize<Resource["Client"]>(clientResource)}
+    >
       <SlotProvider slot={{ loadingIndicator, logo }}>
-        <AuthStoreProvider auth={auth} router={router}>
+        <AuthStoreProvider
+          auth={deserialize<UserActor["properties"]>(auth)}
+          router={router}
+        >
           <ReplicacheProvider router={router}>
             <QueryClientProvider client={queryClient}>
               <AppRouter router={router} />

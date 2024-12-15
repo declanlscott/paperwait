@@ -1,7 +1,8 @@
 ---
-import { assertActor } from "@printworks/core/actors";
+import { assertActor } from "@printworks/core/actors/context";
 import { Icon } from "astro-icon/components";
 import { Resource } from "sst";
+import { serialize } from "superjson";
 
 import { App } from "~/app/index";
 import AppLoadingIndicator from "~/components/app-loading-indicator.astro";
@@ -10,8 +11,8 @@ import Layout from "~/layouts/app.astro";
 import type { AppProps } from "~/app/index";
 
 const appProps = {
-  clientResource: Resource.Client,
-  auth: assertActor("user").properties,
+  clientResource: serialize(Resource.Client),
+  auth: serialize(assertActor("user").properties),
 } satisfies AppProps;
 ---
 
