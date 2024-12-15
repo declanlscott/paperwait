@@ -13,7 +13,7 @@ import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
-import type { UserActor } from "@printworks/core/actors/shared";
+import type { Auth } from "@printworks/core/auth/shared";
 import type { Resource } from "sst";
 import type { SuperJSONResult } from "superjson";
 import type { AppRouter, Slot } from "~/app/types";
@@ -53,10 +53,7 @@ export function App(props: AppProps) {
       resource={deserialize<Resource["Client"]>(clientResource)}
     >
       <SlotProvider slot={{ loadingIndicator, logo }}>
-        <AuthStoreProvider
-          auth={deserialize<UserActor["properties"]>(auth)}
-          router={router}
-        >
+        <AuthStoreProvider auth={deserialize<Auth>(auth)} router={router}>
           <ReplicacheProvider router={router}>
             <QueryClientProvider client={queryClient}>
               <AppRouter router={router} />

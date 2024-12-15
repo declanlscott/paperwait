@@ -9,12 +9,12 @@ import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
-import type { UserActor } from "@printworks/core/actors/shared";
+import type { Auth } from "@printworks/core/auth/shared";
 import type { AuthStore } from "~/app/lib/contexts";
 import type { AppRouter } from "~/app/types";
 
 interface AuthStoreProviderProps extends PropsWithChildren {
-  auth: UserActor["properties"];
+  auth: Auth;
   router: AppRouter;
 }
 
