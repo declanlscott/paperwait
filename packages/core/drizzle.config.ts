@@ -9,6 +9,7 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     host: Resource.DsqlCluster.hostname,
+    port: Resource.DsqlCluster.port,
     database: Resource.DsqlCluster.database,
     user: Resource.DsqlCluster.user,
     password: await withAws(

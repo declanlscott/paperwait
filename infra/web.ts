@@ -60,6 +60,7 @@ export const web = new sst.aws.Astro("Web", {
       resources: [
         aws_.properties.tenant.realtimeSubscriberRole.name,
         aws_.properties.tenant.realtimePublisherRole.name,
+        aws_.properties.tenant.bucketsAccessRole.name,
         aws_.properties.tenant.putParametersRole.name,
       ].map((roleName) => $interpolate`arn:aws:iam::*:role/${roleName}`),
     },

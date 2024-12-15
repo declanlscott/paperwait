@@ -14,7 +14,7 @@ import * as v from "valibot";
 export default new Hono<{
   Variables: {
     client: (tenantId: string) => ReturnType<typeof createClient>;
-    redirectUri: (tenantId: string) => string;
+    redirectUri: (tenantId: string, redirectPath?: string) => string;
   };
 }>()
   .use((c, next) => {
@@ -22,9 +22,11 @@ export default new Hono<{
       createClient({ clientID: ["web", tenantId].join(":") }),
     );
 
-    c.set("redirectUri", (tenantId) => {
+    c.set("redirectUri", (tenantId, redirectPath) => {
       const redirectUri = new URL("/callback", new URL(c.req.url).origin);
       redirectUri.searchParams.set("tenantId", tenantId);
+      if (redirectPath)
+        redirectUri.searchParams.set("redirectPath", redirectPath);
 
       return redirectUri.toString();
     });
@@ -33,7 +35,10 @@ export default new Hono<{
   })
   .get(
     "/authorize",
-    vValidator("query", v.object({ tenant: v.string() })),
+    vValidator(
+      "query",
+      v.object({ tenant: v.string(), redirectPath: v.optional(v.string()) }),
+    ),
     async (c) => {
       const tenant = await useTransaction((tx) =>
         tx
@@ -70,25 +75,36 @@ export default new Hono<{
           `"${Constants.GOOGLE}" oauth2 provider not yet implemented`,
         );
 
-      const authorizer = c
+      const authorizer = await c
         .get("client")(tenant.id)
-        .authorize(c.get("redirectUri")(tenant.id), "code", {
-          provider: tenant.oauth2ProviderType,
-        });
+        .authorize(
+          c.get("redirectUri")(tenant.id, c.req.valid("query").redirectPath),
+          "code",
+          { provider: tenant.oauth2ProviderType },
+        );
 
-      return c.redirect(authorizer, 302);
+      return c.redirect(authorizer.url, 302);
     },
   )
   .get(
     "/callback",
-    vValidator("query", v.object({ tenantId: nanoIdSchema, code: v.string() })),
+    vValidator(
+      "query",
+      v.object({
+        tenantId: nanoIdSchema,
+        redirectPath: v.optional(v.string()),
+        code: v.string(),
+      }),
+    ),
     async (c) => {
-      const tenantId = c.req.valid("query").tenantId;
+      const { tenantId, redirectPath, code } = c.req.valid("query");
 
-      const tokens = await c
+      const exchanged = await c
         .get("client")(tenantId)
-        .exchange(c.req.valid("query").code, c.get("redirectUri")(tenantId));
+        .exchange(code, c.get("redirectUri")(tenantId, redirectPath));
+      if (exchanged.err) throw new HttpError.BadRequest(exchanged.err.message);
 
+      const tokens = exchanged.tokens;
       for (const key in tokens)
         setCookie(c, `${key}_token`, tokens[key as keyof typeof tokens], {
           httpOnly: true,
@@ -97,6 +113,6 @@ export default new Hono<{
           maxAge: 31449600, // 1 year
         });
 
-      return c.redirect("/", 302);
+      return c.redirect(redirectPath ?? "/", 302);
     },
   );

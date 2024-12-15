@@ -6,10 +6,10 @@ import {
 } from "@printworks/core/utils/errors";
 import { Hono } from "hono";
 
-import { authorization } from "~/api/middleware";
+import { authn } from "~/api/middleware/auth";
 
 export default new Hono()
-  .use(authorization())
+  .use(authn)
   .post("/pull", async (c) => {
     const pullRequest: unknown = await c.req.json();
 

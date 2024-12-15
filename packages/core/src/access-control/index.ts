@@ -1,7 +1,7 @@
 import { and, arrayOverlaps, eq, isNull, or, sql } from "drizzle-orm";
 
 import { announcementsTable } from "../announcements/sql";
-import { useAuthenticated } from "../auth/context";
+import { useAuthn } from "../auth/context";
 import {
   billingAccountCustomerAuthorizationsTable,
   billingAccountManagerAuthorizationsTable,
@@ -472,7 +472,7 @@ export namespace AccessControl {
               or(
                 isNull(invoicesTable.deletedAt),
                 and(
-                  eq(ordersTable.customerId, useAuthenticated().user.id),
+                  eq(ordersTable.customerId, useAuthn().user.id),
                   isNull(invoicesTable.deletedAt),
                 ),
               ),
@@ -505,7 +505,7 @@ export namespace AccessControl {
               or(
                 isNull(ordersTable.deletedAt),
                 and(
-                  eq(ordersTable.customerId, useAuthenticated().user.id),
+                  eq(ordersTable.customerId, useAuthn().user.id),
                   isNull(ordersTable.deletedAt),
                 ),
               ),
@@ -591,7 +591,7 @@ export namespace AccessControl {
             )
             .where(
               and(
-                eq(ordersTable.customerId, useAuthenticated().user.id),
+                eq(ordersTable.customerId, useAuthn().user.id),
                 arrayOverlaps(commentsTable.visibleTo, ["customer"]),
                 isNull(commentsTable.deletedAt),
               ),
@@ -620,7 +620,7 @@ export namespace AccessControl {
             )
             .where(
               and(
-                eq(ordersTable.customerId, useAuthenticated().user.id),
+                eq(ordersTable.customerId, useAuthn().user.id),
                 isNull(invoicesTable.deletedAt),
               ),
             ),
@@ -631,7 +631,7 @@ export namespace AccessControl {
             tx,
           ).where(
             and(
-              eq(ordersTable.customerId, useAuthenticated().user.id),
+              eq(ordersTable.customerId, useAuthn().user.id),
               isNull(ordersTable.deletedAt),
             ),
           ),
@@ -721,6 +721,16 @@ export namespace AccessControl {
         update: false,
         delete: false,
       },
+      ["documents-mime-types"]: {
+        create: false,
+        update: true,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: true,
+        delete: false,
+      },
       [invoicesTable._.name]: {
         create: true,
         update: false,
@@ -794,7 +804,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthenticated().user.id),
+                  eq(commentsTable.authorId, useAuthn().user.id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -808,11 +818,21 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthenticated().user.id),
+                  eq(commentsTable.authorId, useAuthn().user.id),
                 ),
               )
               .then((rows) => rows.length > 0),
           ),
+      },
+      ["documents-mime-types"]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: false,
+        delete: false,
       },
       [deliveryOptionsTable._.name]: {
         create: true,
@@ -852,7 +872,7 @@ export namespace AccessControl {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: (userId: User["id"]) => userId !== useAuthenticated().user.id,
+        delete: (userId: User["id"]) => userId !== useAuthn().user.id,
       },
       [workflowStatusesTable._.name]: {
         create: true,
@@ -892,7 +912,7 @@ export namespace AccessControl {
                   eq(billingAccountsTable.tenantId, useTenant().id),
                   eq(
                     billingAccountManagerAuthorizationsTable.managerId,
-                    useAuthenticated().user.id,
+                    useAuthn().user.id,
                   ),
                   isNull(billingAccountsTable.deletedAt),
                   isNull(billingAccountManagerAuthorizationsTable.deletedAt),
@@ -947,13 +967,13 @@ export namespace AccessControl {
                     and(
                       eq(
                         billingAccountManagerAuthorizationsTable.managerId,
-                        useAuthenticated().user.id,
+                        useAuthn().user.id,
                       ),
                       isNull(
                         billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
-                    eq(ordersTable.customerId, useAuthenticated().user.id),
+                    eq(ordersTable.customerId, useAuthn().user.id),
                   ),
                 ),
               )
@@ -968,7 +988,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthenticated().user.id),
+                  eq(commentsTable.authorId, useAuthn().user.id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -982,11 +1002,21 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthenticated().user.id),
+                  eq(commentsTable.authorId, useAuthn().user.id),
                 ),
               )
               .then((rows) => rows.length > 0),
           ),
+      },
+      ["documents-mime-types"]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: false,
+        delete: false,
       },
       [deliveryOptionsTable._.name]: {
         create: false,
@@ -1067,13 +1097,13 @@ export namespace AccessControl {
                     and(
                       eq(
                         billingAccountManagerAuthorizationsTable.managerId,
-                        useAuthenticated().user.id,
+                        useAuthn().user.id,
                       ),
                       isNull(
                         billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
-                    eq(ordersTable.customerId, useAuthenticated().user.id),
+                    eq(ordersTable.customerId, useAuthn().user.id),
                   ),
                 ),
               )
@@ -1121,13 +1151,13 @@ export namespace AccessControl {
                     and(
                       eq(
                         billingAccountManagerAuthorizationsTable.managerId,
-                        useAuthenticated().user.id,
+                        useAuthn().user.id,
                       ),
                       isNull(
                         billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
-                    eq(ordersTable.customerId, useAuthenticated().user.id),
+                    eq(ordersTable.customerId, useAuthn().user.id),
                   ),
                 ),
               )
@@ -1157,7 +1187,7 @@ export namespace AccessControl {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: (userId: User["id"]) => userId === useAuthenticated().user.id,
+        delete: (userId: User["id"]) => userId === useAuthn().user.id,
       },
       [workflowStatusesTable._.name]: {
         create: false,
@@ -1196,7 +1226,7 @@ export namespace AccessControl {
                 and(
                   eq(ordersTable.id, orderId),
                   eq(ordersTable.tenantId, useTenant().id),
-                  eq(ordersTable.customerId, useAuthenticated().user.id),
+                  eq(ordersTable.customerId, useAuthn().user.id),
                   isNull(ordersTable.deletedAt),
                 ),
               )
@@ -1211,7 +1241,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthenticated().user.id),
+                  eq(commentsTable.authorId, useAuthn().user.id),
                   isNull(commentsTable.deletedAt),
                 ),
               )
@@ -1226,12 +1256,22 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthenticated().user.id),
+                  eq(commentsTable.authorId, useAuthn().user.id),
                   isNull(commentsTable.deletedAt),
                 ),
               )
               .then((rows) => rows.length > 0),
           ),
+      },
+      ["documents-mime-types"]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: false,
+        delete: false,
       },
       [deliveryOptionsTable._.name]: {
         create: false,
@@ -1286,7 +1326,7 @@ export namespace AccessControl {
                 and(
                   eq(ordersTable.id, orderId),
                   eq(ordersTable.tenantId, useTenant().id),
-                  eq(ordersTable.customerId, useAuthenticated().user.id),
+                  eq(ordersTable.customerId, useAuthn().user.id),
                   eq(workflowStatusesTable.type, "Review"),
                   isNull(ordersTable.deletedAt),
                 ),
@@ -1309,7 +1349,7 @@ export namespace AccessControl {
                 and(
                   eq(ordersTable.id, orderId),
                   eq(ordersTable.tenantId, useTenant().id),
-                  eq(ordersTable.customerId, useAuthenticated().user.id),
+                  eq(ordersTable.customerId, useAuthn().user.id),
                   eq(workflowStatusesTable.type, "Review"),
                   isNull(ordersTable.deletedAt),
                 ),
@@ -1340,7 +1380,7 @@ export namespace AccessControl {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: (userId: User["id"]) => userId === useAuthenticated().user.id,
+        delete: (userId: User["id"]) => userId === useAuthn().user.id,
       },
       [workflowStatusesTable._.name]: {
         create: false,
@@ -1363,7 +1403,7 @@ export namespace AccessControl {
       : Array<never>
   ) {
     const permission = (permissionsFactory as PermissionsFactory)[
-      useAuthenticated().user.profile.role
+      useAuthn().user.profile.role
     ][resource][action];
 
     return new Promise<boolean>((resolve) => {

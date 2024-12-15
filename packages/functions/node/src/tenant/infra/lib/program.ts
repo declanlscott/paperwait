@@ -104,6 +104,7 @@ export const getProgram =
         certificateArn: ssl.certificateArn,
         cloudfrontKeyPairId: cloudfrontPublicKey.id,
         appsyncDns: realtime.dns,
+        buckets: storage.buckets,
         papercutSecureReverseProxyFunction: {
           invokeArn: functions.papercutSecureReverseProxy.invokeArn,
         },

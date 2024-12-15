@@ -46,6 +46,21 @@ export namespace Api {
     return res.text();
   }
 
+  export async function getBuckets() {
+    const res = await send(
+      `/.well-known/appspecific/${Utils.reverseDns(Tenants.getFqdn())}.buckets.json`,
+    );
+    if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+
+    return v.parse(
+      v.object({
+        assets: v.string(),
+        documents: v.string(),
+      }),
+      await res.json(),
+    );
+  }
+
   export async function syncUsers() {
     const res = await send("/users/sync", { method: "POST" });
     if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
@@ -105,7 +120,7 @@ export namespace Api {
         new URLSearchParams(url.searchParams).entries(),
       ),
       headers: Object.fromEntries(new Headers(init?.headers).entries()),
-      body: init?.body?.toString(),
+      body: init?.body,
     });
 
     // NOTE: Requests to `/.well-known` should not use a signed URL

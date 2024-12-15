@@ -4,14 +4,15 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { useResource } from "../resource";
 
-type Buckets = Record<"assets" | "documents", Bucket>;
-type Queues = Record<"invoicesProcessor", Queue>;
+export type Buckets = Record<"assets" | "documents", Bucket>;
+export type Queues = Record<"invoicesProcessor", Queue>;
 
 export class Storage extends pulumi.ComponentResource {
   private static _instance: Storage;
 
   private _buckets: Buckets = {} as Buckets;
   private _queues: Queues = {} as Queues;
+  private _bucketsAccessRole: aws.iam.Role;
   private _putParametersRole: aws.iam.Role;
 
   static getInstance(opts: pulumi.ComponentResourceOptions): Storage {
@@ -38,38 +39,70 @@ export class Storage extends pulumi.ComponentResource {
       { parent: this },
     );
 
-    this._putParametersRole = new aws.iam.Role(
-      "PutParametersRole",
+    const assumeRolePolicy = aws.iam.getPolicyDocumentOutput(
       {
-        name: Aws.tenant.putParametersRole.name,
-        assumeRolePolicy: aws.iam.getPolicyDocumentOutput(
+        statements: [
+          {
+            principals: [
+              {
+                type: "AWS",
+                identifiers: [Web.server.role.principal],
+              },
+            ],
+            actions: ["sts:AssumeRole"],
+            conditions:
+              Web.server.role.principal === "*"
+                ? [
+                    {
+                      test: "StringLike",
+                      variable: "aws:PrincipalArn",
+                      values: [
+                        pulumi.interpolate`arn:aws:iam::${Aws.account.id}:role/*`,
+                      ],
+                    },
+                  ]
+                : undefined,
+          },
+        ],
+      },
+      { parent: this },
+    ).json;
+
+    this._bucketsAccessRole = new aws.iam.Role(
+      "BucketsAccessRole",
+      {
+        name: Aws.tenant.bucketsAccessRole.name,
+        assumeRolePolicy: assumeRolePolicy,
+      },
+      { parent: this },
+    );
+    new aws.iam.RolePolicy(
+      "BucketsAccessRoleInlinePolicy",
+      {
+        role: this._bucketsAccessRole.name,
+        policy: aws.iam.getPolicyDocumentOutput(
           {
             statements: [
               {
-                principals: [
-                  {
-                    type: "AWS",
-                    identifiers: [Web.server.role.principal],
-                  },
+                actions: ["s3:GetObject", "s3:PutObject"],
+                resources: [
+                  pulumi.interpolate`${this._buckets.assets.arn}/*`,
+                  pulumi.interpolate`${this._buckets.documents.arn}/*`,
                 ],
-                actions: ["sts:AssumeRole"],
-                conditions:
-                  Web.server.role.principal === "*"
-                    ? [
-                        {
-                          test: "StringLike",
-                          variable: "aws:PrincipalArn",
-                          values: [
-                            pulumi.interpolate`arn:aws:iam::${Aws.account.id}:role/*`,
-                          ],
-                        },
-                      ]
-                    : undefined,
               },
             ],
           },
           { parent: this },
         ).json,
+      },
+      { parent: this },
+    );
+
+    this._putParametersRole = new aws.iam.Role(
+      "PutParametersRole",
+      {
+        name: Aws.tenant.putParametersRole.name,
+        assumeRolePolicy: assumeRolePolicy,
       },
       { parent: this },
     );
@@ -85,7 +118,7 @@ export class Storage extends pulumi.ComponentResource {
                 resources: [
                   Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
                   Constants.DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME,
-                  Constants.PAPERCUT_SERVER_URL_PARAMETER_NAME,
+                  Constants.TAILNET_PAPERCUT_SERVER_URI_PARAMETER_NAME,
                   Constants.PAPERCUT_SERVER_AUTH_TOKEN_PARAMETER_NAME,
                   Constants.TAILSCALE_OAUTH_CLIENT_PARAMETER_NAME,
                 ].map(
@@ -102,6 +135,7 @@ export class Storage extends pulumi.ComponentResource {
     );
 
     this.registerOutputs({
+      bucketsAccessRole: this._bucketsAccessRole.id,
       putParametersRole: this._putParametersRole.id,
     });
   }

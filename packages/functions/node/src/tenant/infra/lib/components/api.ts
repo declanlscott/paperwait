@@ -5,6 +5,8 @@ import * as pulumi from "@pulumi/pulumi";
 
 import { useResource } from "../resource";
 
+import type { Buckets } from "src/tenant/infra/lib/components/storage";
+
 export interface ApiArgs {
   gateway: aws.apigateway.RestApi;
   tenantId: pulumi.Input<string>;
@@ -15,6 +17,7 @@ export interface ApiArgs {
     http: pulumi.Input<string>;
     realtime: pulumi.Input<string>;
   };
+  buckets: pulumi.Input<Buckets>;
   papercutSecureReverseProxyFunction: {
     invokeArn: aws.lambda.Function["invokeArn"];
   };
@@ -298,6 +301,26 @@ export class Api extends pulumi.ComponentResource {
           ),
           responseTemplates: {
             "text/plain": args.appsyncDns.realtime,
+          },
+        },
+        { parent: this },
+      ),
+    );
+
+    this._wellKnownAppSpecificRoutes.push(
+      new WellKnownAppSpecificRoute(
+        "Buckets",
+        {
+          apiId: args.gateway.id,
+          parentId: this._appSpecificResource.id,
+          pathPart: args.domainName.apply(
+            (domainName) => `${Utils.reverseDns(domainName)}.buckets.json`,
+          ),
+          responseTemplates: {
+            "application/json": pulumi.jsonStringify({
+              assets: pulumi.output(args.buckets).assets.name,
+              documents: pulumi.output(args.buckets).documents.name,
+            }),
           },
         },
         { parent: this },

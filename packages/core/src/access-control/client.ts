@@ -74,6 +74,16 @@ export namespace AccessControl {
         update: true,
         delete: true,
       },
+      ["documents-mime-types"]: {
+        create: false,
+        update: true,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: true,
+        delete: false,
+      },
       [deliveryOptionsTableName]: {
         create: true,
         update: true,
@@ -169,6 +179,16 @@ export namespace AccessControl {
             return false;
           }
         },
+      },
+      ["documents-mime-types"]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: false,
+        delete: false,
       },
       [deliveryOptionsTableName]: {
         create: true,
@@ -317,6 +337,16 @@ export namespace AccessControl {
             return false;
           }
         },
+      },
+      ["documents-mime-types"]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: false,
+        delete: false,
       },
       [deliveryOptionsTableName]: {
         create: false,
@@ -509,6 +539,16 @@ export namespace AccessControl {
             return false;
           }
         },
+      },
+      ["documents-mime-types"]: {
+        create: false,
+        update: false,
+        delete: false,
+      },
+      ["documents-size-limit"]: {
+        create: false,
+        update: false,
+        delete: false,
       },
       [deliveryOptionsTableName]: {
         create: false,

@@ -6,12 +6,23 @@ import { Constants } from "../utils/constants";
 import { HttpError } from "../utils/errors";
 
 export namespace Documents {
-  export const setMimeTypes = async (mimeTypes: Array<string>) =>
-    Ssm.putParameter({
-      Name: Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME,
+  export async function getBucketName() {
+    const buckets = await Api.getBuckets();
+
+    return buckets.documents;
+  }
+
+  export async function setMimeTypes(mimeTypes: Array<string>) {
+    const name = Constants.DOCUMENTS_MIME_TYPES_PARAMETER_NAME;
+
+    await Ssm.putParameter({
+      Name: name,
       Value: JSON.stringify(mimeTypes),
       Type: "StringList",
     });
+
+    await Api.invalidateCache([`/parameters${name}`]);
+  }
 
   export async function getMimeTypes() {
     const res = await Api.send(
@@ -23,12 +34,17 @@ export namespace Documents {
     return v.parse(v.array(v.string()), await res.json());
   }
 
-  export const setSizeLimit = async (byteSize: number) =>
-    Ssm.putParameter({
-      Name: Constants.DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME,
+  export async function setSizeLimit(byteSize: number) {
+    const name = Constants.DOCUMENTS_SIZE_LIMIT_PARAMETER_NAME;
+
+    await Ssm.putParameter({
+      Name: name,
       Value: byteSize.toString(),
       Type: "String",
     });
+
+    await Api.invalidateCache([`/parameters${name}`]);
+  }
 
   export async function getSizeLimit() {
     const res = await Api.send(

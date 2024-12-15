@@ -7,6 +7,7 @@ import { Dsql, withAws } from "../utils/aws";
 export const db = drizzle(
   postgres({
     host: Resource.DsqlCluster.hostname,
+    port: Resource.DsqlCluster.port,
     database: Resource.DsqlCluster.database,
     user: Resource.DsqlCluster.user,
     password: await withAws(

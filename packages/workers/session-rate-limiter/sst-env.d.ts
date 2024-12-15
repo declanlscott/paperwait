@@ -40,6 +40,9 @@ declare module "sst" {
         "accountAccessRole": {
           "name": string
         }
+        "bucketsAccessRole": {
+          "name": string
+        }
         "putParametersRole": {
           "name": string
         }
@@ -93,6 +96,7 @@ declare module "sst" {
     "DsqlCluster": {
       "database": string
       "hostname": string
+      "port": number
       "ssl": string
       "type": "pulumi-nodejs.dynamic.Resource"
       "user": string

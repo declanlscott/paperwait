@@ -12,8 +12,8 @@ importers:
         specifier: ^3.712.0
         version: 3.712.0
       '@openauthjs/openauth':
-        specifier: ^0.1.2
-        version: 0.1.2(arctic@2.3.0)(hono@4.6.13)
+        specifier: ^0.2.3
+        version: 0.2.3(arctic@2.3.0)(hono@4.6.13)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -2049,8 +2049,8 @@ packages:
     resolution: {integrity: sha512-y7efHHwghQfk28G2z3tlZ67pLG0XdfYbcVG26r7YIXALRsrVQcTq4/tdenSmdOrEsNahIYA/eh8aEVROWGFUDg==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  '@openauthjs/openauth@0.1.2':
-    resolution: {integrity: sha512-AdI8RiNzTroUbRI2sLBgS3wbEVMgrnuM2HX7Gso325vwA3Ob3KdWTPvw+W26CAH5HQi1UchW/L/2bGfwcoWMcA==}
+  '@openauthjs/openauth@0.2.3':
+    resolution: {integrity: sha512-AEvpc8Ib1p7PZpUf3UHq73ve37pDbuP6mhw57bUSHq/FF9BA2suupGvFkF9bE2bX3zoyKkS5Vd2ZLMWy3zLn7A==}
     peerDependencies:
       arctic: ^2.2.2
       hono: ^4.0.0
@@ -9308,7 +9308,7 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@openauthjs/openauth@0.1.2(arctic@2.3.0)(hono@4.6.13)':
+  '@openauthjs/openauth@0.2.3(arctic@2.3.0)(hono@4.6.13)':
     dependencies:
       '@standard-schema/spec': 1.0.0-beta.3
       arctic: 2.3.0

@@ -5,7 +5,7 @@ import { deserialize, serialize } from "superjson";
 import * as v from "valibot";
 
 import { AccessControl } from "../access-control";
-import { useAuthenticated } from "../auth/context";
+import { useAuthn } from "../auth/context";
 import { createTransaction, useTransaction } from "../drizzle/context";
 import { Realtime } from "../realtime";
 import { useTenant } from "../tenants/context";
@@ -185,7 +185,7 @@ export namespace Replicache {
   export const pull = fn(
     pullRequestSchema,
     async (pullRequest): Promise<PullResponseV1> => {
-      const { user, tenant } = useAuthenticated();
+      const { user, tenant } = useAuthn();
 
       if (pullRequest.pullVersion !== 1)
         return {
@@ -445,7 +445,7 @@ export namespace Replicache {
         async (mutation) =>
           // 2: Begin transaction
           createTransaction(async () => {
-            const { user } = useAuthenticated();
+            const { user } = useAuthn();
             const clientGroupId = pushRequest.clientGroupID;
 
             // 3: Get client group
