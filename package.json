@@ -12,10 +12,10 @@
     "@openauthjs/openauth": "^0.2.3",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.38.2",
-    "hono": "^4.6.13",
+    "hono": "^4.6.14",
     "remeda": "^2.17.4",
     "replicache": "^15.0.1",
-    "sst": "^3.4.3",
+    "sst": "^3.4.5",
     "superjson": "^2.2.2",
     "valibot": "beta"
   },
