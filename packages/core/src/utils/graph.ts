@@ -8,14 +8,7 @@ export type GraphContext = GraphClient;
 export const GraphContext = Utils.createContext<GraphContext>("Graph");
 
 export const useGraph = GraphContext.use;
-
-export const withGraph = <
-  TGraphContext extends GraphContext,
-  TCallback extends () => ReturnType<TCallback>,
->(
-  context: TGraphContext,
-  callback: TCallback,
-) => GraphContext.with(context, callback);
+export const withGraph = GraphContext.with;
 
 export namespace Graph {
   export const Client = GraphClient;
