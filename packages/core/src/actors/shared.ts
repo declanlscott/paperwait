@@ -1,16 +1,33 @@
-import type { Authenticated, Unauthenticated } from "../auth/shared";
-import type { Tenant } from "../tenants/sql";
+import * as v from "valibot";
 
-export type UserActor = {
-  type: "user";
-  properties: Authenticated | Unauthenticated;
-};
+import { nanoIdSchema } from "../utils/shared";
 
-export type SystemActor = {
-  type: "system";
-  properties: {
-    tenantId: Tenant["id"];
-  };
-};
+export const publicActorSchema = v.object({
+  type: v.literal("public"),
+  properties: v.object({}),
+});
+export type PublicActor = v.InferOutput<typeof publicActorSchema>;
 
-export type Actor = UserActor | SystemActor;
+export const userActorSchema = v.object({
+  type: v.literal("user"),
+  properties: v.object({
+    id: nanoIdSchema,
+    tenantId: nanoIdSchema,
+  }),
+});
+export type UserActor = v.InferOutput<typeof userActorSchema>;
+
+export const systemActorSchema = v.object({
+  type: v.literal("system"),
+  properties: v.object({
+    tenantId: nanoIdSchema,
+  }),
+});
+export type SystemActor = v.InferOutput<typeof systemActorSchema>;
+
+export const actorSchema = v.variant("type", [
+  publicActorSchema,
+  userActorSchema,
+  systemActorSchema,
+]);
+export type Actor = v.InferOutput<typeof actorSchema>;

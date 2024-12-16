@@ -7,9 +7,11 @@ import {
 import { Hono } from "hono";
 
 import { authn } from "~/api/middleware/auth";
+import { user } from "~/api/middleware/user";
 
 export default new Hono()
   .use(authn)
+  .use(user)
   .post("/pull", async (c) => {
     const pullRequest: unknown = await c.req.json();
 

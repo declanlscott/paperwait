@@ -5,10 +5,10 @@ import { deserialize, serialize } from "superjson";
 import * as v from "valibot";
 
 import { AccessControl } from "../access-control";
-import { useAuthn } from "../auth/context";
 import { createTransaction, useTransaction } from "../drizzle/context";
 import { Realtime } from "../realtime";
 import { useTenant } from "../tenants/context";
+import { useUser } from "../users/context";
 import { Utils } from "../utils";
 import { Constants } from "../utils/constants";
 import { ReplicacheError } from "../utils/errors";
@@ -185,8 +185,6 @@ export namespace Replicache {
   export const pull = fn(
     pullRequestSchema,
     async (pullRequest): Promise<PullResponseV1> => {
-      const { user, tenant } = useAuthn();
-
       if (pullRequest.pullVersion !== 1)
         return {
           error: "VersionNotSupported",
@@ -210,7 +208,7 @@ export namespace Replicache {
                       pullRequest.clientGroupID,
                     ),
                     eq(replicacheClientViewsTable.version, cookieOrder),
-                    eq(replicacheClientViewsTable.tenantId, tenant.id),
+                    eq(replicacheClientViewsTable.tenantId, useTenant().id),
                   ),
                 )
                 .then((rows) => rows.at(0))
@@ -227,15 +225,15 @@ export namespace Replicache {
             (await clientGroupFromId(pullRequest.clientGroupID)) ??
             ({
               id: pullRequest.clientGroupID,
-              tenantId: tenant.id,
+              tenantId: useTenant().id,
               cvrVersion: 0,
-              userId: user.id,
+              userId: useUser().id,
             } satisfies OmitTimestamps<ReplicacheClientGroup>);
 
           // 5: Verify requesting client group owns requested client
-          if (baseClientGroup.userId !== user.id)
+          if (baseClientGroup.userId !== useUser().id)
             throw new ReplicacheError.Unauthorized(
-              `User "${user.id}" does not own client group "${baseClientGroup.id}"`,
+              `User "${useUser().id}" does not own client group "${baseClientGroup.id}"`,
             );
 
           const metadata = (await Promise.all([
@@ -245,7 +243,7 @@ export namespace Replicache {
               // 6: Read all id/version pairs from the database that should be in the client view
               const metadata = R.uniqueBy(
                 await AccessControl.syncedTableResourceMetadataFactory[
-                  user.profile.role
+                  useUser().profile.role
                 ][name](),
                 R.prop("id"),
               );
@@ -322,7 +320,7 @@ export namespace Replicache {
             // 16-17: Generate client view record id, store client view record
             tx.insert(replicacheClientViewsTable).values({
               clientGroupId: baseClientGroup.id,
-              tenantId: tenant.id,
+              tenantId: useTenant().id,
               version: nextCvrVersion,
               record: nextCvr,
             }),
@@ -335,7 +333,7 @@ export namespace Replicache {
                     replicacheClientViewsTable.clientGroupId,
                     baseClientGroup.id,
                   ),
-                  eq(replicacheClientViewsTable.tenantId, tenant.id),
+                  eq(replicacheClientViewsTable.tenantId, useTenant().id),
                   lt(
                     replicacheClientViewsTable.updatedAt,
                     sub(new Date(), Constants.REPLICACHE_LIFETIME),
@@ -445,7 +443,6 @@ export namespace Replicache {
         async (mutation) =>
           // 2: Begin transaction
           createTransaction(async () => {
-            const { user } = useAuthn();
             const clientGroupId = pushRequest.clientGroupID;
 
             // 3: Get client group
@@ -453,15 +450,15 @@ export namespace Replicache {
               (await clientGroupFromId(clientGroupId)) ??
               ({
                 id: clientGroupId,
-                tenantId: user.tenantId,
+                tenantId: useTenant().id,
                 cvrVersion: 0,
-                userId: user.id,
+                userId: useUser().id,
               } satisfies OmitTimestamps<ReplicacheClientGroup>);
 
             // 4: Verify requesting user owns the client group
-            if (clientGroup.userId !== user.id)
+            if (clientGroup.userId !== useUser().id)
               throw new ReplicacheError.Unauthorized(
-                `User "${user.id}" does not own client group "${clientGroupId}"`,
+                `User "${useUser().id}" does not own client group "${clientGroupId}"`,
               );
 
             // 5: Get client
@@ -469,7 +466,7 @@ export namespace Replicache {
               (await clientFromId(mutation.clientID)) ??
               ({
                 id: mutation.clientID,
-                tenantId: user.tenantId,
+                tenantId: useTenant().id,
                 clientGroupId: clientGroupId,
                 lastMutationId: 0,
               } satisfies OmitTimestamps<ReplicacheClient>);

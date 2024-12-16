@@ -683,7 +683,7 @@ export namespace AccessControl {
 
   export async function enforce<
     TResource extends SyncedTableName,
-    TAction extends "create" | "update" | "delete",
+    TAction extends Action,
     TPermission extends
       (typeof permissionsFactory)[UserRole][TResource][TAction],
     TMaybeError extends AnyError | undefined,

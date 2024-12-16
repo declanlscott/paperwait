@@ -1,12 +1,12 @@
 import { AccessControl } from "@printworks/core/access-control";
-import { useAuthn } from "@printworks/core/auth/context";
+import { assertActor } from "@printworks/core/actors/context";
 import { HttpError } from "@printworks/core/utils/errors";
 import { createMiddleware } from "hono/factory";
 
 import type { Action, Resource } from "@printworks/core/access-control/shared";
 
 export const authn = createMiddleware((_, next) => {
-  useAuthn();
+  assertActor("user");
 
   return next();
 });

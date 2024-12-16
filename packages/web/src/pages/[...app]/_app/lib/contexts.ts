@@ -1,11 +1,15 @@
 import { createContext } from "react";
 
-import type { Auth, Authenticated } from "@printworks/core/sessions/shared";
+import type { Actor } from "@printworks/core/actors/shared";
+import type { Auth, Authenticated } from "@printworks/core/auth/shared";
 import type { UserRole } from "@printworks/core/users/shared";
 import type { Replicache } from "replicache";
 import type { Resource } from "sst";
 import type { StoreApi } from "zustand";
 import type { CommandBarPage, Slot } from "~/app/types";
+
+export type ActorContext = Actor;
+export const ActorContext = createContext<ActorContext | null>(null);
 
 export type AuthActions = {
   reset: () => void;

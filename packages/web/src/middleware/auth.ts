@@ -1,9 +1,6 @@
 import { createClient } from "@openauthjs/openauth/client";
 import { withActor } from "@printworks/core/actors/context";
 import { subjects } from "@printworks/core/auth/shared";
-import { createTransaction } from "@printworks/core/drizzle/context";
-import { Tenants } from "@printworks/core/tenants";
-import { Users } from "@printworks/core/users";
 import { defineMiddleware } from "astro:middleware";
 
 import { isPrerenderedPage } from "~/middleware/utils";
@@ -37,37 +34,19 @@ export const auth = defineMiddleware(async (ctx, next) => {
             },
           );
 
-        const [user, tenant] = await withActor(
+        return withActor(
           {
-            type: "system",
-            properties: { tenantId: verified.subject.properties.tenantId },
+            type: "user",
+            properties: {
+              id: verified.subject.properties.id,
+              tenantId: verified.subject.properties.tenantId,
+            },
           },
-          () =>
-            createTransaction(async () =>
-              Promise.all([
-                Users.read([verified.subject.properties.id]).then((rows) =>
-                  rows.at(0),
-                ),
-                Tenants.read().then((rows) => rows.at(0)),
-              ]),
-            ),
+          next,
         );
-
-        if (user && tenant)
-          return withActor(
-            { type: "user", properties: { isAuthed: true, user, tenant } },
-            next,
-          );
-
-        if (!user) console.log("Missing user", verified.subject.properties.id);
-        if (!tenant)
-          console.log("Missing tenant", verified.subject.properties.tenantId);
       }
     }
   }
 
-  return withActor(
-    { type: "user", properties: { isAuthed: false, user: null, tenant: null } },
-    next,
-  );
+  return withActor({ type: "public", properties: {} }, next);
 });

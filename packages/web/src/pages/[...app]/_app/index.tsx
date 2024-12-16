@@ -2,9 +2,8 @@ import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { Toaster } from "sonner";
-import { deserialize } from "superjson";
 
-import { AuthStoreProvider } from "~/app/components/providers/auth";
+import { ActorProvider } from "~/app/components/providers/actor";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
 import { ResourceProvider } from "~/app/components/providers/resource";
 import { SlotProvider } from "~/app/components/providers/slot";
@@ -13,20 +12,19 @@ import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { routeTree } from "~/app/routeTree.gen";
 
-import type { Auth } from "@printworks/core/auth/shared";
+import type { Actor } from "@printworks/core/actors/shared";
 import type { Resource } from "sst";
-import type { SuperJSONResult } from "superjson";
 import type { AppRouter, Slot } from "~/app/types";
 
 const queryClient = new QueryClient();
 
 export interface AppProps extends Partial<Slot> {
-  clientResource: SuperJSONResult;
-  auth: SuperJSONResult;
+  clientResource: Resource["Client"];
+  actor: Actor;
 }
 
 export function App(props: AppProps) {
-  const { clientResource, auth, loadingIndicator, logo } = props;
+  const { clientResource, actor, loadingIndicator, logo } = props;
 
   const [router] = useState(() =>
     createRouter({
@@ -49,11 +47,9 @@ export function App(props: AppProps) {
     ?.style.setProperty("display", "none");
 
   return (
-    <ResourceProvider
-      resource={deserialize<Resource["Client"]>(clientResource)}
-    >
+    <ResourceProvider resource={clientResource}>
       <SlotProvider slot={{ loadingIndicator, logo }}>
-        <AuthStoreProvider auth={deserialize<Auth>(auth)} router={router}>
+        <ActorProvider actor={actor}>
           <ReplicacheProvider router={router}>
             <QueryClientProvider client={queryClient}>
               <AppRouter router={router} />
@@ -61,7 +57,7 @@ export function App(props: AppProps) {
               <Toaster richColors />
             </QueryClientProvider>
           </ReplicacheProvider>
-        </AuthStoreProvider>
+        </ActorProvider>
       </SlotProvider>
     </ResourceProvider>
   );

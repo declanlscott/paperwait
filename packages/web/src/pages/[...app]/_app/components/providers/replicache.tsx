@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { useAuth } from "@printworks/core/sessions/context";
 import { Replicache } from "replicache";
 import { serialize } from "superjson";
 
 import { ReplicacheContext } from "~/app/lib/contexts";
+import { useActor } from "~/app/lib/hooks/actor";
 import { useApi } from "~/app/lib/hooks/api";
-import { useAuthActions } from "~/app/lib/hooks/auth";
 import { useResource } from "~/app/lib/hooks/resource";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 import type { PropsWithChildren } from "react";
-import type { PusherResult, PushResponse } from "replicache";
 import type { AppRouter } from "~/app/types";
 
 interface ReplicacheProviderProps extends PropsWithChildren {
@@ -19,51 +17,40 @@ interface ReplicacheProviderProps extends PropsWithChildren {
 }
 
 export function ReplicacheProvider(props: ReplicacheProviderProps) {
+  const actor = useActor();
+
+  const [replicache, setReplicache] = useState<ReplicacheContext | null>(() =>
+    actor.type === "user" ? { status: "initializing" } : null,
+  );
+
+  const { replicacheLicenseKey, isDev } = useResource();
+
   const api = useApi();
 
   const { invalidate, navigate } = props.router;
 
-  const { user } = useAuth();
-  const [replicache, setReplicache] = useState<ReplicacheContext | null>(() =>
-    user ? { status: "initializing" } : null,
-  );
+  const getAuth = useCallback(async () => {
+    await invalidate().finally(
+      () => void navigate({ to: "/login", search: initialLoginSearchParams }),
+    );
 
-  const { replicacheLicenseKey, isDev } = useResource();
-  const { reset } = useAuthActions();
-
-  const getAuth = useCallback(
-    async (replicache: Replicache) => {
-      reset();
-
-      await invalidate().finally(
-        () =>
-          void navigate({
-            to: "/login",
-            search: initialLoginSearchParams,
-          }),
-      );
-
-      return null;
-    },
-    [reset, invalidate, navigate],
-  );
+    return null;
+  }, [invalidate, navigate]);
 
   useEffect(() => {
-    if (!user) return;
+    if (actor.type !== "user") return;
 
     const client = new Replicache({
-      name: user.id,
+      name: actor.properties.id,
       licenseKey: replicacheLicenseKey,
-      pushURL: "/api/replicache/push",
-      pullURL: "/api/replicache/pull",
       logLevel: isDev ? "info" : "error",
+      pullURL: "/api/replicache/pull",
       pusher: async (req) => {
         const res = await api.replicache.push.$post({
           json: {
             ...req,
             mutations: req.mutations.map((mutation) => ({
               ...mutation,
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
               args: serialize(mutation.args),
             })),
           },
@@ -88,15 +75,16 @@ export function ReplicacheProvider(props: ReplicacheProviderProps) {
       },
     });
 
-    client.getAuth = () => getAuth(client);
+    client.getAuth = getAuth;
 
     setReplicache(() => ({ status: "ready", client }));
 
     return () => {
-      setReplicache(() => (user ? { status: "initializing" } : null));
+      setReplicache(() => ({ status: "initializing" }));
+
       void client.close();
     };
-  }, [user, replicacheLicenseKey, isDev, api, getAuth]);
+  }, [actor, getAuth, replicacheLicenseKey, isDev, api]);
 
   const { loadingIndicator } = useSlot();
 

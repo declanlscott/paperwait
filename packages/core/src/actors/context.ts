@@ -14,7 +14,15 @@ export function assertActor<TActorType extends Actor["type"]>(
   const actor = useActor();
 
   if (actor.type !== type)
-    throw new Error(`Expected actor type ${type}, got ${actor.type}`);
+    throw new Error(`Expected actor type "${type}", got "${actor.type}"`);
 
   return actor as Extract<Actor, { type: TActorType }>;
+}
+
+export function assertNonPublicActor() {
+  const actor = useActor();
+
+  if (actor.type === "public") throw new Error("Expected non-public actor");
+
+  return actor;
 }

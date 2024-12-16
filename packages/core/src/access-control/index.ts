@@ -1,7 +1,6 @@
 import { and, arrayOverlaps, eq, isNull, or, sql } from "drizzle-orm";
 
 import { announcementsTable } from "../announcements/sql";
-import { useAuthn } from "../auth/context";
 import {
   billingAccountCustomerAuthorizationsTable,
   billingAccountManagerAuthorizationsTable,
@@ -20,6 +19,7 @@ import {
 } from "../rooms/sql";
 import { useTenant } from "../tenants/context";
 import { tenantsTable } from "../tenants/sql";
+import { useUser } from "../users/context";
 import { userProfilesTable, usersTable } from "../users/sql";
 import { Constants } from "../utils/constants";
 
@@ -472,7 +472,7 @@ export namespace AccessControl {
               or(
                 isNull(invoicesTable.deletedAt),
                 and(
-                  eq(ordersTable.customerId, useAuthn().user.id),
+                  eq(ordersTable.customerId, useUser().id),
                   isNull(invoicesTable.deletedAt),
                 ),
               ),
@@ -505,7 +505,7 @@ export namespace AccessControl {
               or(
                 isNull(ordersTable.deletedAt),
                 and(
-                  eq(ordersTable.customerId, useAuthn().user.id),
+                  eq(ordersTable.customerId, useUser().id),
                   isNull(ordersTable.deletedAt),
                 ),
               ),
@@ -591,7 +591,7 @@ export namespace AccessControl {
             )
             .where(
               and(
-                eq(ordersTable.customerId, useAuthn().user.id),
+                eq(ordersTable.customerId, useUser().id),
                 arrayOverlaps(commentsTable.visibleTo, ["customer"]),
                 isNull(commentsTable.deletedAt),
               ),
@@ -620,7 +620,7 @@ export namespace AccessControl {
             )
             .where(
               and(
-                eq(ordersTable.customerId, useAuthn().user.id),
+                eq(ordersTable.customerId, useUser().id),
                 isNull(invoicesTable.deletedAt),
               ),
             ),
@@ -631,7 +631,7 @@ export namespace AccessControl {
             tx,
           ).where(
             and(
-              eq(ordersTable.customerId, useAuthn().user.id),
+              eq(ordersTable.customerId, useUser().id),
               isNull(ordersTable.deletedAt),
             ),
           ),
@@ -804,7 +804,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthn().user.id),
+                  eq(commentsTable.authorId, useUser().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -818,7 +818,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthn().user.id),
+                  eq(commentsTable.authorId, useUser().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -872,7 +872,7 @@ export namespace AccessControl {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: (userId: User["id"]) => userId !== useAuthn().user.id,
+        delete: (userId: User["id"]) => userId !== useUser().id,
       },
       [workflowStatusesTable._.name]: {
         create: true,
@@ -912,7 +912,7 @@ export namespace AccessControl {
                   eq(billingAccountsTable.tenantId, useTenant().id),
                   eq(
                     billingAccountManagerAuthorizationsTable.managerId,
-                    useAuthn().user.id,
+                    useUser().id,
                   ),
                   isNull(billingAccountsTable.deletedAt),
                   isNull(billingAccountManagerAuthorizationsTable.deletedAt),
@@ -967,13 +967,13 @@ export namespace AccessControl {
                     and(
                       eq(
                         billingAccountManagerAuthorizationsTable.managerId,
-                        useAuthn().user.id,
+                        useUser().id,
                       ),
                       isNull(
                         billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
-                    eq(ordersTable.customerId, useAuthn().user.id),
+                    eq(ordersTable.customerId, useUser().id),
                   ),
                 ),
               )
@@ -988,7 +988,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthn().user.id),
+                  eq(commentsTable.authorId, useUser().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -1002,7 +1002,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthn().user.id),
+                  eq(commentsTable.authorId, useUser().id),
                 ),
               )
               .then((rows) => rows.length > 0),
@@ -1097,13 +1097,13 @@ export namespace AccessControl {
                     and(
                       eq(
                         billingAccountManagerAuthorizationsTable.managerId,
-                        useAuthn().user.id,
+                        useUser().id,
                       ),
                       isNull(
                         billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
-                    eq(ordersTable.customerId, useAuthn().user.id),
+                    eq(ordersTable.customerId, useUser().id),
                   ),
                 ),
               )
@@ -1151,13 +1151,13 @@ export namespace AccessControl {
                     and(
                       eq(
                         billingAccountManagerAuthorizationsTable.managerId,
-                        useAuthn().user.id,
+                        useUser().id,
                       ),
                       isNull(
                         billingAccountManagerAuthorizationsTable.deletedAt,
                       ),
                     ),
-                    eq(ordersTable.customerId, useAuthn().user.id),
+                    eq(ordersTable.customerId, useUser().id),
                   ),
                 ),
               )
@@ -1187,7 +1187,7 @@ export namespace AccessControl {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: (userId: User["id"]) => userId === useAuthn().user.id,
+        delete: (userId: User["id"]) => userId === useUser().id,
       },
       [workflowStatusesTable._.name]: {
         create: false,
@@ -1226,7 +1226,7 @@ export namespace AccessControl {
                 and(
                   eq(ordersTable.id, orderId),
                   eq(ordersTable.tenantId, useTenant().id),
-                  eq(ordersTable.customerId, useAuthn().user.id),
+                  eq(ordersTable.customerId, useUser().id),
                   isNull(ordersTable.deletedAt),
                 ),
               )
@@ -1241,7 +1241,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthn().user.id),
+                  eq(commentsTable.authorId, useUser().id),
                   isNull(commentsTable.deletedAt),
                 ),
               )
@@ -1256,7 +1256,7 @@ export namespace AccessControl {
                 and(
                   eq(commentsTable.id, commentId),
                   eq(commentsTable.tenantId, useTenant().id),
-                  eq(commentsTable.authorId, useAuthn().user.id),
+                  eq(commentsTable.authorId, useUser().id),
                   isNull(commentsTable.deletedAt),
                 ),
               )
@@ -1326,7 +1326,7 @@ export namespace AccessControl {
                 and(
                   eq(ordersTable.id, orderId),
                   eq(ordersTable.tenantId, useTenant().id),
-                  eq(ordersTable.customerId, useAuthn().user.id),
+                  eq(ordersTable.customerId, useUser().id),
                   eq(workflowStatusesTable.type, "Review"),
                   isNull(ordersTable.deletedAt),
                 ),
@@ -1349,7 +1349,7 @@ export namespace AccessControl {
                 and(
                   eq(ordersTable.id, orderId),
                   eq(ordersTable.tenantId, useTenant().id),
-                  eq(ordersTable.customerId, useAuthn().user.id),
+                  eq(ordersTable.customerId, useUser().id),
                   eq(workflowStatusesTable.type, "Review"),
                   isNull(ordersTable.deletedAt),
                 ),
@@ -1380,7 +1380,7 @@ export namespace AccessControl {
       [usersTable._.name]: {
         create: false,
         update: false,
-        delete: (userId: User["id"]) => userId === useAuthn().user.id,
+        delete: (userId: User["id"]) => userId === useUser().id,
       },
       [workflowStatusesTable._.name]: {
         create: false,
@@ -1403,7 +1403,7 @@ export namespace AccessControl {
       : Array<never>
   ) {
     const permission = (permissionsFactory as PermissionsFactory)[
-      useAuthn().user.profile.role
+      useUser().profile.role
     ][resource][action];
 
     return new Promise<boolean>((resolve) => {
