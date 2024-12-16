@@ -4,23 +4,6 @@ import * as v from "valibot";
 import { Constants } from "../utils/constants";
 import { nanoIdSchema, timestampsSchema } from "../utils/shared";
 
-import type { Tenant } from "../tenants/sql";
-import type { UserWithProfile } from "../users/sql";
-
-export type Authenticated = {
-  isAuthed: true;
-  user: UserWithProfile;
-  tenant: Tenant;
-};
-
-export type Unauthenticated = {
-  isAuthed: false;
-  user: null;
-  tenant: null;
-};
-
-export type Auth = Authenticated | Unauthenticated;
-
 export const oauth2ProvidersTableName = "oauth2_providers";
 
 export const oauth2ProviderTypes = [

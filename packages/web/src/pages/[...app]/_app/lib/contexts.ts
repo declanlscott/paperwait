@@ -1,11 +1,11 @@
 import { createContext } from "react";
 
 import type { Actor } from "@printworks/core/actors/shared";
-import type { Auth, Authenticated } from "@printworks/core/auth/shared";
 import type { UserRole } from "@printworks/core/users/shared";
 import type { Replicache } from "replicache";
 import type { Resource } from "sst";
 import type { StoreApi } from "zustand";
+import type { Mutators } from "~/app/lib/hooks/replicache";
 import type { CommandBarPage, Slot } from "~/app/types";
 
 export type ActorContext = Actor;
@@ -24,13 +24,8 @@ export const AuthContext = createContext<StoreApi<AuthStore> | null>(null);
 export const AuthenticatedContext = createContext<Authenticated | null>(null);
 
 export type ReplicacheContext =
-  | {
-      status: "initializing";
-    }
-  | {
-      status: "ready";
-      client: Replicache;
-    };
+  | { status: "initializing" }
+  | { status: "ready"; client: Replicache<Mutators> };
 export const ReplicacheContext = createContext<ReplicacheContext | null>(null);
 
 export type ResourceContext = Resource["Client"];

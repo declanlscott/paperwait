@@ -2,6 +2,7 @@ import * as R from "remeda";
 import { deserialize, serialize } from "superjson";
 import * as v from "valibot";
 
+import { usersTableName } from "../users/shared";
 import { ApplicationError } from "../utils/errors";
 
 import type {
@@ -9,47 +10,37 @@ import type {
   ReadTransaction,
   WriteTransaction,
 } from "replicache";
-import type { Authenticated } from "../auth/shared";
-import type { usersTableName } from "../users/shared";
-import type { UserWithProfile } from "../users/sql";
+import type { User, UserWithProfile } from "../users/sql";
 import type { SyncedTableName, TableByName } from "../utils/tables";
-import type { MutationName, Serialized } from "./shared";
+import type { Serialized } from "./shared";
 
 export namespace Replicache {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export type OptimisticMutator<TSchema extends v.GenericSchema> = (
     tx: WriteTransaction,
     args: v.InferOutput<TSchema>,
   ) => Promise<void>;
-
-  export type AuthenticatedOptimisticMutator<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TSchema extends v.GenericSchema = any,
-  > = (user: Authenticated["user"]) => OptimisticMutator<TSchema>;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  export type OptimisticMutatorFactory<TSchema extends v.GenericSchema = any> =
-    Record<MutationName, OptimisticMutator<TSchema>>;
 
   export const optimisticMutator =
     <
       TSchema extends v.GenericSchema,
       TAuthorizer extends (
         tx: WriteTransaction,
-        user: Authenticated["user"],
+        user: DeepReadonlyObject<UserWithProfile>,
         args: v.InferOutput<TSchema>,
       ) => ReturnType<TAuthorizer>,
-      TMutator extends Replicache.OptimisticMutator<TSchema>,
+      TMutator extends OptimisticMutator<TSchema>,
     >(
       schema: TSchema,
       authorizer: TAuthorizer,
       getMutator: (context: {
-        user: Authenticated["user"];
+        user: DeepReadonlyObject<UserWithProfile>;
         authorized: Awaited<ReturnType<TAuthorizer>>;
       }) => TMutator,
     ) =>
-    (user: Authenticated["user"]) =>
+    (userId: User["id"]) =>
     async (tx: WriteTransaction, args: v.InferInput<TSchema>) => {
+      const user = await get(tx, usersTableName, userId);
+
       const values = v.parse(schema, args);
 
       const authorized = await Promise.resolve(authorizer(tx, user, values));

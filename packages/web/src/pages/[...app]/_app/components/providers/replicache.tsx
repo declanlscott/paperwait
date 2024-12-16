@@ -5,6 +5,7 @@ import { serialize } from "superjson";
 import { ReplicacheContext } from "~/app/lib/contexts";
 import { useActor } from "~/app/lib/hooks/actor";
 import { useApi } from "~/app/lib/hooks/api";
+import { useMutators } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { initialLoginSearchParams } from "~/app/lib/schemas";
@@ -25,6 +26,8 @@ export function ReplicacheProvider(props: ReplicacheProviderProps) {
 
   const { replicacheLicenseKey, isDev } = useResource();
 
+  const mutators = useMutators();
+
   const api = useApi();
 
   const { invalidate, navigate } = props.router;
@@ -38,12 +41,13 @@ export function ReplicacheProvider(props: ReplicacheProviderProps) {
   }, [invalidate, navigate]);
 
   useEffect(() => {
-    if (actor.type !== "user") return;
+    if (actor.type !== "user") return setReplicache(() => null);
 
     const client = new Replicache({
       name: actor.properties.id,
       licenseKey: replicacheLicenseKey,
       logLevel: isDev ? "info" : "error",
+      mutators,
       pullURL: "/api/replicache/pull",
       pusher: async (req) => {
         const res = await api.replicache.push.$post({
@@ -84,7 +88,7 @@ export function ReplicacheProvider(props: ReplicacheProviderProps) {
 
       void client.close();
     };
-  }, [actor, getAuth, replicacheLicenseKey, isDev, api]);
+  }, [actor, mutators, getAuth, replicacheLicenseKey, isDev, api]);
 
   const { loadingIndicator } = useSlot();
 

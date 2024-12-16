@@ -12,7 +12,6 @@ import { usersTableName } from "@printworks/core/users/shared";
 import * as R from "remeda";
 
 import { useApi } from "~/app/lib/hooks/api";
-import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useSubscribe } from "~/app/lib/hooks/replicache";
 
 import type { BillingAccount } from "@printworks/core/billing-accounts/sql";
@@ -69,46 +68,11 @@ export const queryFactory = {
     Replicache.get(tx, productsTableName, productId),
 } satisfies QueryFactory;
 
-export function useMutator() {
-  const { replicache } = useAuthenticated();
-
-  return replicache.mutate;
-}
-
 export function useMutationOptionsFactory() {
   const api = useApi();
 
-  const factory = useMemo(
-    () =>
-      ({
-        papercutCredentials: () => ({
-          mutationKey: ["papercut", "credentials"] as const,
-          mutationFn: async (json: PapercutParameter) => {
-            const res = await api.integrations.papercut.credentials.$put({
-              json,
-            });
-            if (!res.ok) throw new Error(res.statusText);
-          },
-        }),
-        healthCheckPapercut: () => ({
-          mutationKey: ["papercut", "health-check"] as const,
-          mutationFn: async () => {
-            const res = await api.integrations.papercut["health-check"].$post();
-            if (!res.ok) throw new Error(res.statusText);
-          },
-        }),
-        syncPapercutAccounts: () => ({
-          mutationKey: ["papercut", "accounts", "sync"] as const,
-          mutationFn: async () => {
-            const res = await api.integrations.papercut.accounts.$put({
-              json: undefined,
-            });
-            if (!res.ok) throw new Error(res.statusText);
-          },
-        }),
-      }) satisfies MutationOptionsFactory,
-    [client],
-  );
+  // TODO
+  const factory = useMemo(() => ({}) satisfies MutationOptionsFactory, [api]);
 
   return factory;
 }

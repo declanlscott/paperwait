@@ -19,7 +19,7 @@ import {
 import { tenantsTableName } from "../tenants/shared";
 import { usersTableName } from "../users/shared";
 
-import type { WriteTransaction } from "replicache";
+import type { DeepReadonlyObject, WriteTransaction } from "replicache";
 import type { BillingAccount } from "../billing-accounts/sql";
 import type { Comment } from "../comments/sql";
 import type { Order } from "../orders/sql";
@@ -39,7 +39,7 @@ export namespace AccessControl {
         | boolean
         | ((
             tx: WriteTransaction,
-            user: UserWithProfile,
+            user: DeepReadonlyObject<UserWithProfile>,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ...input: Array<any>
           ) => boolean | Promise<boolean>)
@@ -659,12 +659,12 @@ export namespace AccessControl {
       (typeof permissionsFactory)[UserRole][TResource][TAction],
   >(
     tx: WriteTransaction,
-    user: UserWithProfile,
+    user: DeepReadonlyObject<UserWithProfile>,
     resource: TResource,
     action: TAction,
     ...input: TPermission extends (
       tx: WriteTransaction,
-      user: UserWithProfile,
+      user: DeepReadonlyObject<UserWithProfile>,
       ...input: infer TInput
     ) => unknown
       ? TInput
