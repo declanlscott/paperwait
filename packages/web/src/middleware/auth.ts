@@ -1,13 +1,10 @@
 import { createClient } from "@openauthjs/openauth/client";
 import { withActor } from "@printworks/core/actors/context";
+import { Auth } from "@printworks/core/auth";
 import { subjects } from "@printworks/core/auth/shared";
 import { defineMiddleware } from "astro:middleware";
 
-import { isPrerenderedPage } from "~/middleware/utils";
-
 export const auth = defineMiddleware(async (ctx, next) => {
-  if (isPrerenderedPage(ctx.request.url)) return next();
-
   const accessToken = ctx.cookies.get("access_token");
   if (accessToken) {
     const refreshToken = ctx.cookies.get("refresh_token");
@@ -22,17 +19,12 @@ export const auth = defineMiddleware(async (ctx, next) => {
 
     if (!verified.err) {
       if (verified.tokens) {
-        for (const key in verified.tokens)
-          ctx.cookies.set(
-            `${key}_token`,
-            verified.tokens[key as keyof typeof verified.tokens],
-            {
-              httpOnly: true,
-              sameSite: "lax",
-              path: "/",
-              maxAge: 31449600, // 1 year
-            },
-          );
+        const tokensCookieAttributes = Auth.buildTokensCookieAttributes(
+          verified.tokens,
+        );
+
+        for (const tokenCookieAttributes of tokensCookieAttributes)
+          ctx.cookies.set(...tokenCookieAttributes);
 
         return withActor(
           {

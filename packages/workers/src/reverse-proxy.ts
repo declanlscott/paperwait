@@ -1,4 +1,3 @@
-import { Constants } from "@printworks/core/utils/constants";
 import { HttpError } from "@printworks/core/utils/errors";
 import { Hono } from "hono";
 import { getConnInfo } from "hono/cloudflare-workers";
@@ -15,7 +14,7 @@ export default new Hono<{
   };
 }>()
   .use("/api/*", async (c, next) => {
-    const token = getCookie(c, Constants.SESSION_COOKIE_NAME);
+    const token = getCookie(c, "session_token");
 
     let outcome: RateLimitOutcome;
     if (token) outcome = await c.env.SESSION_RATE_LIMITER.limit({ key: token });

@@ -1,5 +1,6 @@
 import { vValidator } from "@hono/valibot-validator";
 import { createClient } from "@openauthjs/openauth/client";
+import { Auth } from "@printworks/core/auth";
 import { oauth2ProvidersTable } from "@printworks/core/auth/sql";
 import { useTransaction } from "@printworks/core/drizzle/context";
 import { tenantsTable } from "@printworks/core/tenants/sql";
@@ -104,14 +105,12 @@ export default new Hono<{
         .exchange(code, c.get("redirectUri")(tenantId, redirectPath));
       if (exchanged.err) throw new HttpError.BadRequest(exchanged.err.message);
 
-      const tokens = exchanged.tokens;
-      for (const key in tokens)
-        setCookie(c, `${key}_token`, tokens[key as keyof typeof tokens], {
-          httpOnly: true,
-          sameSite: "lax",
-          path: "/",
-          maxAge: 31449600, // 1 year
-        });
+      const tokensCookieAttributes = Auth.buildTokensCookieAttributes(
+        exchanged.tokens,
+      );
+
+      for (const tokenCookieAttributes of tokensCookieAttributes)
+        setCookie(c, ...tokenCookieAttributes);
 
       return c.redirect(redirectPath ?? "/", 302);
     },
