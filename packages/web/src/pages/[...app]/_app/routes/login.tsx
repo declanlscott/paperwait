@@ -19,7 +19,7 @@ export const Route = createFileRoute("/login")({
       search,
     ),
   beforeLoad: ({ context }) => {
-    if (context.authStore.user) throw redirect({ to: "/dashboard" });
+    if (context.actor.type === "user") throw redirect({ to: "/dashboard" });
   },
   component: Component,
 });

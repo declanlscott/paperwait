@@ -38,9 +38,10 @@ export function App(props: AppProps) {
       routeTree,
       context: {
         // These will be set after we wrap the app router in providers
-        resource: undefined!,
+        actor: undefined!,
         auth: undefined!,
         replicache: undefined!,
+        resource: undefined!,
         queryClient,
       },
       defaultPendingComponent: () => loadingIndicator,
@@ -75,9 +76,9 @@ type AppRouterProps = {
 };
 
 function AppRouter(props: AppRouterProps) {
-  const resource = useResource();
-  const replicache = useReplicache();
   const actor = useActor();
+  const replicache = useReplicache();
+  const resource = useResource();
 
   const authenticateRoute: AuthActions["authenticateRoute"] = useCallback(
     (from) => {
@@ -87,7 +88,7 @@ function AppRouter(props: AppRouterProps) {
           search: { redirect: from, ...initialLoginSearchParams },
         });
 
-      return actor.properties;
+      return actor;
     },
     [actor],
   );
@@ -119,7 +120,7 @@ function AppRouter(props: AppRouterProps) {
   return (
     <RouterProvider
       router={props.router}
-      context={{ resource, auth, replicache, queryClient }}
+      context={{ actor, auth, replicache, resource, queryClient }}
     />
   );
 }

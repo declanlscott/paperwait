@@ -82,7 +82,7 @@ const routeId = "/_authenticated/users/";
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
     context.replicache.query((tx) =>
-      context.auth.authorizeRoute(tx, context.userId, routeId),
+      context.auth.authorizeRoute(tx, context.actor.properties.id, routeId),
     ),
   loader: async ({ context }) => {
     const initialUsers = await context.replicache.query(queryFactory.users());

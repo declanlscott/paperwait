@@ -1,6 +1,6 @@
 import { createContext } from "react";
 
-import type { Actor, UserActor } from "@printworks/core/actors/shared";
+import type { Actor } from "@printworks/core/actors/shared";
 import type { UserRole } from "@printworks/core/users/shared";
 import type { User, UserWithProfile } from "@printworks/core/users/sql";
 import type { ReadTransaction, Replicache } from "replicache";
@@ -18,7 +18,7 @@ export type ActorContext = Actor;
 export const ActorContext = createContext<ActorContext | null>(null);
 
 export type AuthActions = {
-  authenticateRoute: (from: string) => UserActor["properties"];
+  authenticateRoute: (from: string) => Extract<Actor, { type: "user" }>;
   authorizeRoute: <
     TRouteId extends AuthenticatedEagerRouteId,
     TPermission extends (typeof routePermissions)[TRouteId][UserRole],

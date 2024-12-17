@@ -9,6 +9,7 @@ import {
 
 import type { QueryClient } from "@tanstack/react-query";
 import type {
+  ActorContext,
   AuthActions,
   ReplicacheContext,
   ResourceContext,
@@ -24,9 +25,10 @@ const TanStackRouterDevtools = import.meta.env.DEV
   : () => null;
 
 type RouterContext = {
-  resource: ResourceContext;
+  actor: ActorContext;
   auth: AuthActions;
   replicache: ReplicacheContext;
+  resource: ResourceContext;
   queryClient: QueryClient;
 };
 

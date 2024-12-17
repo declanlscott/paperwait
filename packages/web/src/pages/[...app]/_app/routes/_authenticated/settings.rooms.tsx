@@ -72,7 +72,7 @@ const routeId = "/_authenticated/settings/rooms";
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
     context.replicache.query((tx) =>
-      context.auth.authorizeRoute(tx, context.userId, routeId),
+      context.auth.authorizeRoute(tx, context.actor.properties.id, routeId),
     ),
   loader: async ({ context }) => {
     const initialProducts = await context.replicache.query(

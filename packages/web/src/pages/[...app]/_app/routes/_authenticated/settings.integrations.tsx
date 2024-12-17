@@ -44,7 +44,7 @@ const routeId = "/_authenticated/settings/integrations";
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
     context.replicache.query((tx) =>
-      context.auth.authorizeRoute(tx, context.userId, routeId),
+      context.auth.authorizeRoute(tx, context.actor.properties.id, routeId),
     ),
   component: Component,
   errorComponent: ErrorComponent,
