@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { queryFactory } from "~/app/lib/hooks/data";
 
@@ -10,18 +10,14 @@ export const Route = createFileRoute(routeId)({
       context.auth.authorizeRoute(tx, context.actor.properties.id, routeId),
     ),
   loader: async ({ context, params }) => {
-    const [roomResult, productResult] = await Promise.allSettled([
+    const [initialRoom, initialProduct] = await Promise.all([
       context.replicache.query(queryFactory.room(params.roomId)),
       context.replicache.query(queryFactory.product(params.productId)),
     ]);
 
-    if (roomResult.status === "rejected" || !roomResult.value) throw notFound();
-    if (productResult.status === "rejected" || !productResult.value)
-      throw notFound();
-
     return {
-      initialRoom: roomResult.value,
-      initialProduct: productResult.value,
+      initialRoom,
+      initialProduct,
     };
   },
   component: Component,

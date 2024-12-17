@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 import { roomStatuses } from "@printworks/core/rooms/shared";
+import { ApplicationError } from "@printworks/core/utils/errors";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Delete, HousePlus, Lock, LockOpen, Pencil, Save } from "lucide-react";
 
@@ -42,7 +43,6 @@ export const Route = createFileRoute(routeId)({
     const initialRoom = await context.replicache.query(
       queryFactory.room(params.roomId),
     );
-    if (!initialRoom) throw notFound();
 
     return { initialRoom };
   },

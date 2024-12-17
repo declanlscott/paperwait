@@ -1,7 +1,9 @@
 import { lazy, Suspense } from "react";
 import { RouterProvider } from "react-aria-components";
+import { ApplicationError } from "@printworks/core/utils/errors";
 import {
   createRootRouteWithContext,
+  notFound,
   Outlet,
   ScrollRestoration,
   useRouter,
@@ -34,6 +36,11 @@ type RouterContext = {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: Component,
+  onError: (error) => {
+    if (error instanceof ApplicationError.EntityNotFound) throw notFound();
+
+    throw error;
+  },
 });
 
 function Component() {

@@ -5,6 +5,7 @@ import {
   workflowConfigurationSchema,
   workflowStatusTypes,
 } from "@printworks/core/rooms/shared";
+import { ApplicationError } from "@printworks/core/utils/errors";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { valibotValidator } from "@tanstack/valibot-form-adapter";
@@ -72,7 +73,6 @@ export const Route = createFileRoute(routeId)({
     const initialRoom = await context.replicache.query(
       queryFactory.room(params.roomId),
     );
-    if (!initialRoom) throw notFound();
 
     return { initialRoom };
   },
