@@ -12,24 +12,22 @@ import {
 } from "~/styles/components/primitives/breadcrumbs";
 
 import type { ComponentProps } from "react";
-import type {
-  BreadcrumbProps as AriaBreadcrumbProps,
-  BreadcrumbsProps as AriaBreadcrumbsProps,
-  LinkProps as AriaLinkProps,
-} from "react-aria-components";
 
-export type BreadcrumbsProps<T extends object> = AriaBreadcrumbsProps<T>;
-export const Breadcrumbs = <T extends object>({
+export interface BreadcrumbsProps<TItem extends object>
+  extends ComponentProps<typeof AriaBreadcrumbs> {
+  items: Iterable<TItem> | undefined;
+}
+export const Breadcrumbs = <TItem extends object>({
   className,
   ...props
-}: BreadcrumbsProps<T>) => (
+}: BreadcrumbsProps<TItem>) => (
   <AriaBreadcrumbs
     className={breadcrumbsStyles().root({ className })}
     {...props}
   />
 );
 
-export type BreadcrumbItemProps = AriaBreadcrumbProps;
+export type BreadcrumbItemProps = ComponentProps<typeof AriaBreadcrumb>;
 export const BreadcrumbItem = ({
   className,
   ...props
@@ -42,8 +40,11 @@ export const BreadcrumbItem = ({
   />
 );
 
-export type BreadcrumbLinkProps = AriaLinkProps;
-export const BreadcrumbLink = ({ className, ...props }: AriaLinkProps) => (
+export type BreadcrumbLinkProps = ComponentProps<typeof AriaLink>;
+export const BreadcrumbLink = ({
+  className,
+  ...props
+}: BreadcrumbLinkProps) => (
   <AriaLink
     className={composeRenderProps(className, (className, renderProps) =>
       breadcrumbLinkStyles({ className, ...renderProps }),
@@ -85,7 +86,7 @@ export const BreadcrumbEllipsis = ({
   </span>
 );
 
-export type BreadcrumbPageProps = Omit<AriaLinkProps, "href">;
+export type BreadcrumbPageProps = ComponentProps<typeof AriaLink>;
 export const BreadcrumbPage = ({
   className,
   ...props

@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import {
   Input as AriaInput,
   TextArea as AriaTextArea,
@@ -11,10 +10,7 @@ import {
   textAreaStyles,
 } from "~/styles/components/primitives/text-field";
 
-import type {
-  InputProps as AriaInputProps,
-  TextAreaProps as AriaTextAreaProps,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
 import type {
   InputStyles,
   TextAreaStyles,
@@ -22,28 +18,23 @@ import type {
 
 export const TextField = AriaTextField;
 
-export interface InputProps extends AriaInputProps, InputStyles {}
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, ...props }, ref) => (
-    <AriaInput
-      {...props}
-      ref={ref}
-      className={composeRenderProps(className, (className, renderProps) =>
-        inputStyles({ className, ...renderProps }),
-      )}
-    />
-  ),
+export type InputProps = ComponentProps<typeof AriaInput> & InputStyles;
+export const Input = ({ className, ...props }: InputProps) => (
+  <AriaInput
+    {...props}
+    className={composeRenderProps(className, (className, renderProps) =>
+      inputStyles({ className, ...renderProps }),
+    )}
+  />
 );
 
-export interface TextAreaProps extends AriaTextAreaProps, TextAreaStyles {}
-export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({ className, ...props }, ref) => (
-    <AriaTextArea
-      {...props}
-      ref={ref}
-      className={composeRenderProps(className, (className, renderProps) =>
-        textAreaStyles({ className, ...renderProps }),
-      )}
-    />
-  ),
+export type TextAreaProps = ComponentProps<typeof AriaTextArea> &
+  TextAreaStyles;
+export const TextArea = ({ className, ...props }: TextAreaProps) => (
+  <AriaTextArea
+    {...props}
+    className={composeRenderProps(className, (className, renderProps) =>
+      textAreaStyles({ className, ...renderProps }),
+    )}
+  />
 );

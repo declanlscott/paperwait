@@ -25,14 +25,12 @@ import {
   comboboxStyles,
 } from "~/styles/components/primitives/combobox";
 
-import type { ReactNode } from "react";
+import type { ComponentProps } from "react";
 import type {
-  ComboBoxProps as AriaComboboxProps,
-  InputProps as AriaInputProps,
   ListBoxProps as AriaListBoxProps,
-  PopoverProps as AriaPopoverProps,
-  ValidationResult as AriaValidationResult,
+  ValidationResult,
 } from "react-aria-components";
+import type { PopoverProps } from "~/app/components/ui/primitives/popover";
 
 export const BaseCombobox = AriaCombobox;
 
@@ -44,7 +42,7 @@ export const ComboboxSection = ListBoxSection;
 
 export const ComboboxCollection = ListBoxCollection;
 
-export type ComboboxInputProps = AriaInputProps;
+export type ComboboxInputProps = ComponentProps<typeof AriaInput>;
 export const ComboboxInput = ({ className, ...props }: ComboboxInputProps) => (
   <AriaInput
     className={composeRenderProps(className, (className, renderProps) =>
@@ -54,21 +52,31 @@ export const ComboboxInput = ({ className, ...props }: ComboboxInputProps) => (
   />
 );
 
-export type ComboboxPopoverProps = AriaPopoverProps;
-export const ComboboxPopover = ({ className, ...props }: AriaPopoverProps) => (
+export type ComboboxPopoverProps = PopoverProps;
+export const ComboboxPopover = ({
+  className,
+  ...props
+}: ComboboxPopoverProps) => (
   <Popover
-    className={composeRenderProps(className, (className, renderProps) =>
-      comboboxPopoverStyles({ className, ...renderProps }),
+    className={composeRenderProps(
+      className,
+      (className, { placement, ...renderProps }) =>
+        comboboxPopoverStyles({
+          className,
+          placement: placement ?? undefined,
+          ...renderProps,
+        }),
     )}
     {...props}
   />
 );
 
-export type ComboboxListBoxProps<T extends object> = AriaListBoxProps<T>;
-export const ComboboxListBox = <T extends object>({
+export type ComboboxListBoxProps<TItem extends object> =
+  AriaListBoxProps<TItem> & ComponentProps<typeof AriaListBox>;
+export const ComboboxListBox = <TItem extends object>({
   className,
   ...props
-}: ComboboxListBoxProps<T>) => (
+}: ComboboxListBoxProps<TItem>) => (
   <AriaListBox
     className={composeRenderProps(className, (className, renderProps) =>
       comboboxStyles().listBox({ className, ...renderProps }),
@@ -77,22 +85,22 @@ export const ComboboxListBox = <T extends object>({
   />
 );
 
-export interface ComboboxProps<T extends object>
-  extends Omit<AriaComboboxProps<T>, "children"> {
+export interface ComboboxProps<TItem extends object>
+  extends Omit<ComponentProps<typeof BaseCombobox>, "children"> {
   label?: string;
   description?: string | null;
-  errorMessage?: string | ((validation: AriaValidationResult) => string);
-  children: ReactNode | ((item: T) => ReactNode);
+  errorMessage?: string | ((validation: ValidationResult) => string);
+  children: ComboboxListBoxProps<TItem>["children"];
 }
-export const Combobox = <T extends object>({
+export const Combobox = <TItem extends object>({
   label,
   description,
   errorMessage,
   className,
   children,
   ...props
-}: ComboboxProps<T>) => (
-  <Combobox
+}: ComboboxProps<TItem>) => (
+  <BaseCombobox
     className={composeRenderProps(className, (className, renderProps) =>
       comboboxStyles().root({ className, ...renderProps }),
     )}
@@ -119,5 +127,5 @@ export const Combobox = <T extends object>({
     <ComboboxPopover>
       <ComboboxListBox>{children}</ComboboxListBox>
     </ComboboxPopover>
-  </Combobox>
+  </BaseCombobox>
 );

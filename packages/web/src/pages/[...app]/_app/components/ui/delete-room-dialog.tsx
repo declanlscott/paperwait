@@ -41,7 +41,7 @@ export function DeleteRoomDialog(props: DeleteRoomDialogProps) {
 
   return (
     <DialogOverlay isDismissable={false} {...props.dialogOverlayProps}>
-      <DialogContent role="alertdialog">
+      <DialogContent dialogProps={{ role: "alertdialog" }}>
         {({ close }) => (
           <>
             <DialogHeader>

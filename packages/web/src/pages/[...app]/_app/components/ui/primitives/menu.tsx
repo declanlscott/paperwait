@@ -3,9 +3,9 @@ import {
   Keyboard as AriaKeyboard,
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
+  MenuSection as AriaMenuSection,
   MenuTrigger as AriaMenuTrigger,
   Popover as AriaPopover,
-  Section as AriaSection,
   Separator as AriaSeparator,
   SubmenuTrigger as AriaSubmenuTrigger,
   composeRenderProps,
@@ -14,21 +14,16 @@ import { Check, Circle } from "lucide-react";
 
 import { menuStyles } from "~/styles/components/primitives/menu";
 
-import type { ComponentProps, HTMLAttributes } from "react";
-import type {
-  MenuItemProps as AriaMenuItemProps,
-  MenuProps as AriaMenuProps,
-  PopoverProps as AriaPopoverProps,
-  SeparatorProps as AriaSeparatorProps,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
+import type { MenuProps as AriaMenuProps } from "react-aria-components";
 
 export const MenuTrigger = AriaMenuTrigger;
 
 export const SubmenuTrigger = AriaSubmenuTrigger;
 
-export const MenuSection = AriaSection;
+export const MenuSection = AriaMenuSection;
 
-export type MenuPopoverProps = AriaPopoverProps;
+export type MenuPopoverProps = ComponentProps<typeof AriaPopover>;
 export const MenuPopover = ({
   className,
   offset = 4,
@@ -36,22 +31,29 @@ export const MenuPopover = ({
 }: MenuPopoverProps) => (
   <AriaPopover
     offset={offset}
-    className={composeRenderProps(className, (className, renderProps) =>
-      menuStyles().popover({ ...renderProps, className }),
+    className={composeRenderProps(
+      className,
+      (className, { placement, ...renderProps }) =>
+        menuStyles().popover({
+          ...renderProps,
+          placement: placement ?? undefined,
+          className,
+        }),
     )}
     {...props}
   />
 );
 
-export type MenuProps<T> = AriaMenuProps<T>;
-export const Menu = <T extends object>({
+export type MenuProps<TItem> = AriaMenuProps<TItem> &
+  ComponentProps<typeof AriaMenu>;
+export const Menu = <TItem extends object>({
   className,
   ...props
-}: MenuProps<T>) => (
+}: MenuProps<TItem>) => (
   <AriaMenu className={menuStyles().root({ className })} {...props} />
 );
 
-export interface MenuItemProps extends AriaMenuItemProps {
+export interface MenuItemProps extends ComponentProps<typeof AriaMenuItem> {
   isInset?: boolean;
 }
 export const MenuItem = ({ className, isInset, ...props }: MenuItemProps) => (
@@ -79,17 +81,17 @@ export const MenuHeader = ({
   />
 );
 
-export type MenuSeparatorProps = AriaSeparatorProps;
+export type MenuSeparatorProps = ComponentProps<typeof AriaSeparator>;
 export const MenuSeparator = ({ className, ...props }: MenuSeparatorProps) => (
   <AriaSeparator className={menuStyles().separator({ className })} {...props} />
 );
 
-export type MenuKeyboardProps = HTMLAttributes<HTMLSpanElement>;
+export type MenuKeyboardProps = ComponentProps<typeof AriaKeyboard>;
 export const MenuKeyboard = ({ className, ...props }: MenuKeyboardProps) => (
   <AriaKeyboard className={menuStyles().keyboard({ className })} {...props} />
 );
 
-export type MenuCheckboxItemProps = AriaMenuItemProps;
+export type MenuCheckboxItemProps = ComponentProps<typeof AriaMenuItem>;
 export const MenuCheckboxItem = ({
   className,
   children,
@@ -113,7 +115,7 @@ export const MenuCheckboxItem = ({
   </AriaMenuItem>
 );
 
-export type MenuRadioItemProps = AriaMenuItemProps;
+export type MenuRadioItemProps = ComponentProps<typeof AriaMenuItem>;
 export const MenuRadioItem = ({
   className,
   children,

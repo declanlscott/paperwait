@@ -5,9 +5,9 @@ import {
 
 import { iconButtonStyles } from "~/styles/components/primitives/icon-button";
 
-import type { ButtonProps as AriaButtonProps } from "react-aria-components";
+import type { ComponentProps } from "react";
 
-export type IconButtonProps = AriaButtonProps;
+export type IconButtonProps = ComponentProps<typeof AriaButton>;
 
 export const IconButton = ({ className, ...props }: IconButtonProps) => (
   <AriaButton

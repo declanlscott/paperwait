@@ -322,6 +322,9 @@ importers:
       '@printworks/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@react-types/shared':
+        specifier: ^3.26.0
+        version: 3.26.0(react@19.0.0)
       '@types/react':
         specifier: ^19.0.1
         version: 19.0.1

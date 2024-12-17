@@ -5,9 +5,9 @@ import {
 
 import { dropzoneStyles } from "~/styles/components/primitives/dropzone";
 
-import type { DropZoneProps as AriaDropzoneProps } from "react-aria-components";
+import type { ComponentProps } from "react";
 
-export type DropzoneProps = AriaDropzoneProps;
+export type DropzoneProps = ComponentProps<typeof AriaDropzone>;
 
 export const Dropzone = ({ className, ...props }: DropzoneProps) => (
   <AriaDropzone

@@ -8,28 +8,25 @@ import {
 
 import { tabsStyles } from "~/styles/components/primitives/tabs";
 
-import type {
-  TabListProps as AriaTabListProps,
-  TabPanelProps as AriaTabPanelProps,
-  TabProps as AriaTabProps,
-  TabsProps as AriaTabsProps,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
+import type { TabListProps as AriaTabListProps } from "react-aria-components";
 
-export function Tabs({ className, ...props }: AriaTabsProps) {
-  return (
-    <AriaTabs
-      className={composeRenderProps(className, (className, renderProps) =>
-        tabsStyles().root({ className, ...renderProps }),
-      )}
-      {...props}
-    />
-  );
-}
+export type TabsProps = ComponentProps<typeof AriaTabs>;
+export const Tabs = ({ className, ...props }: TabsProps) => (
+  <AriaTabs
+    className={composeRenderProps(className, (className, renderProps) =>
+      tabsStyles().root({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export const TabList = <T extends object>({
+export type TabListProps<TItem extends object> = AriaTabListProps<TItem> &
+  ComponentProps<typeof AriaTabList>;
+export const TabList = <TItem extends object>({
   className,
   ...props
-}: AriaTabListProps<T>) => (
+}: TabListProps<TItem>) => (
   <AriaTabList
     className={composeRenderProps(className, (className, renderProps) =>
       tabsStyles().list({ className, ...renderProps }),
@@ -38,7 +35,8 @@ export const TabList = <T extends object>({
   />
 );
 
-export const Tab = ({ className, ...props }: AriaTabProps) => (
+export type TabProps = ComponentProps<typeof AriaTab>;
+export const Tab = ({ className, ...props }: TabProps) => (
   <AriaTab
     className={composeRenderProps(className, (className, renderProps) =>
       tabsStyles().tab({ className, ...renderProps }),
@@ -47,7 +45,8 @@ export const Tab = ({ className, ...props }: AriaTabProps) => (
   />
 );
 
-export const TabPanel = ({ className, ...props }: AriaTabPanelProps) => (
+export type TabPanelProps = ComponentProps<typeof AriaTabPanel>;
+export const TabPanel = ({ className, ...props }: TabPanelProps) => (
   <AriaTabPanel
     className={composeRenderProps(className, (className, renderProps) =>
       tabsStyles().panel({ className, ...renderProps }),

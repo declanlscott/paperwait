@@ -19,15 +19,7 @@ import {
   colorSwatchPickerItemStyles,
 } from "~/styles/components/primitives/color";
 
-import type {
-  ColorAreaProps as AriaColorAreaProps,
-  ColorSwatchPickerItemProps as AriaColorSwatchPickerItemProps,
-  ColorSwatchPickerProps as AriaColorSwatchPickerProps,
-  ColorSwatchProps as AriaColorSwatchProps,
-  ColorThumbProps as AriaColorThumbProps,
-  ColorWheelProps as AriaColorWheelProps,
-  SliderTrackProps as AriaSliderTrackProps,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
 
 export const ColorSlider = AriaColorSlider;
 
@@ -40,100 +32,93 @@ export const ColorPicker = AriaColorPicker;
 export const SliderOutput = AriaSliderOutput;
 
 export interface ColorWheelProps
-  extends Omit<AriaColorWheelProps, "outerRadius" | "innerRadius"> {
+  extends Omit<
+    ComponentProps<typeof AriaColorWheel>,
+    "outerRadius" | "innerRadius"
+  > {
   outerRadius?: number;
   innerRadius?: number;
 }
-export function ColorWheel({
+export const ColorWheel = ({
   className,
   outerRadius = 100,
   innerRadius = 74,
   ...props
-}: ColorWheelProps) {
-  return (
-    <AriaColorWheel
-      innerRadius={innerRadius}
-      outerRadius={outerRadius}
-      className={className}
-      {...props}
-    />
-  );
-}
+}: ColorWheelProps) => (
+  <AriaColorWheel
+    innerRadius={innerRadius}
+    outerRadius={outerRadius}
+    className={className}
+    {...props}
+  />
+);
 
-export type ColorAreaProps = AriaColorAreaProps;
-export function ColorArea({ className, ...props }: ColorAreaProps) {
-  return (
-    <AriaColorArea
-      className={composeRenderProps(className, (className, renderProps) =>
-        colorStyles().area({ className, ...renderProps }),
-      )}
-      {...props}
-    />
-  );
-}
+export type ColorAreaProps = ComponentProps<typeof AriaColorArea>;
+export const ColorArea = ({ className, ...props }: ColorAreaProps) => (
+  <AriaColorArea
+    className={composeRenderProps(className, (className, renderProps) =>
+      colorStyles().area({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export type SliderTrackProps = AriaSliderTrackProps;
-export function SliderTrack({ className, ...props }: SliderTrackProps) {
-  return (
-    <AriaSliderTrack
-      className={composeRenderProps(className, (className, renderProps) =>
-        colorStyles().sliderTrack({ className, ...renderProps }),
-      )}
-      {...props}
-    />
-  );
-}
+export type SliderTrackProps = ComponentProps<typeof AriaSliderTrack>;
+export const SliderTrack = ({ className, ...props }: SliderTrackProps) => (
+  <AriaSliderTrack
+    className={composeRenderProps(className, (className, renderProps) =>
+      colorStyles().sliderTrack({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export type ColorThumbProps = AriaColorThumbProps;
-export function ColorThumb({ className, ...props }: ColorThumbProps) {
-  return (
-    <AriaColorThumb
-      className={composeRenderProps(className, (className, renderProps) =>
-        colorStyles().thumb({ className, ...renderProps }),
-      )}
-      {...props}
-    />
-  );
-}
+export type ColorThumbProps = ComponentProps<typeof AriaColorThumb>;
+export const ColorThumb = ({ className, ...props }: ColorThumbProps) => (
+  <AriaColorThumb
+    className={composeRenderProps(className, (className, renderProps) =>
+      colorStyles().thumb({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export type ColorSwatchPickerProps = AriaColorSwatchPickerProps;
-export function ColorSwatchPicker({
+export type ColorSwatchPickerProps = ComponentProps<
+  typeof AriaColorSwatchPicker
+>;
+export const ColorSwatchPicker = ({
   className,
   ...props
-}: ColorSwatchPickerProps) {
-  return (
-    <AriaColorSwatchPicker
-      className={composeRenderProps(className, (className, renderProps) =>
-        colorStyles().swatchPicker({ className, ...renderProps }),
-      )}
-      {...props}
-    />
-  );
-}
+}: ColorSwatchPickerProps) => (
+  <AriaColorSwatchPicker
+    className={composeRenderProps(className, (className, renderProps) =>
+      colorStyles().swatchPicker({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export type ColorSwatchPickerItemProps = AriaColorSwatchPickerItemProps;
-export function ColorSwatchPickerItem({
+export type ColorSwatchPickerItemProps = ComponentProps<
+  typeof AriaColorSwatchPickerItem
+>;
+export const ColorSwatchPickerItem = ({
   className,
   ...props
-}: ColorSwatchPickerItemProps) {
-  return (
-    <AriaColorSwatchPickerItem
-      className={composeRenderProps(className, (className, renderProps) =>
-        colorSwatchPickerItemStyles({ className, ...renderProps }),
-      )}
-      {...props}
-    />
-  );
-}
+}: ColorSwatchPickerItemProps) => (
+  <AriaColorSwatchPickerItem
+    className={composeRenderProps(className, (className, renderProps) =>
+      colorSwatchPickerItemStyles({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);
 
-export type ColorSwatchProps = AriaColorSwatchProps;
-export function ColorSwatch({ className, ...props }: ColorSwatchProps) {
-  return (
-    <AriaColorSwatch
-      className={composeRenderProps(className, (className, renderProps) =>
-        colorStyles().swatch({ className, ...renderProps }),
-      )}
-      {...props}
-    />
-  );
-}
+export type ColorSwatchProps = ComponentProps<typeof AriaColorSwatch>;
+export const ColorSwatch = ({ className, ...props }: ColorSwatchProps) => (
+  <AriaColorSwatch
+    className={composeRenderProps(className, (className, renderProps) =>
+      colorStyles().swatch({ className, ...renderProps }),
+    )}
+    {...props}
+  />
+);

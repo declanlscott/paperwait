@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import {
   Button as AriaButton,
   composeRenderProps,
@@ -12,42 +11,39 @@ import {
   commandStyles,
 } from "~/styles/components/primitives/command";
 
-import type {
-  ComponentPropsWithoutRef,
-  ElementRef,
-  HTMLAttributes,
-} from "react";
-import type {
-  ButtonProps as AriaButtonProps,
-  DialogProps as AriaDialogProps,
-} from "react-aria-components";
+import type { ComponentProps, DetailedHTMLProps, HTMLAttributes } from "react";
 
-export const Command = forwardRef<
-  ElementRef<typeof CommandPrimitive>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive>
->(({ className, ...props }, ref) => (
+export type CommandProps = ComponentProps<typeof CommandPrimitive>;
+export const Command = ({ className, ...props }: CommandProps) => (
   <CommandPrimitive
-    ref={ref}
     className={commandStyles().root({ className })}
     {...props}
   />
-));
+);
 
-export interface CommandDialogProps extends AriaDialogProps {
-  commandProps?: ComponentPropsWithoutRef<typeof CommandPrimitive>;
+export interface CommandDialogProps extends ComponentProps<typeof Dialog> {
+  commandProps: CommandProps | undefined;
+  dialogContentProps: ComponentProps<typeof DialogContent> | undefined;
 }
 export const CommandDialog = ({
   children,
   commandProps,
+  dialogContentProps,
   ...props
 }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-lg" position="top">
+      <DialogContent
+        className="overflow-hidden p-0 shadow-lg"
+        position="top"
+        {...dialogContentProps}
+      >
         {(values) => (
           <Command
             {...commandProps}
-            className={commandStyles().dialogContent()}
+            className={commandStyles().dialogContent({
+              className: commandProps?.className,
+            })}
           >
             {typeof children === "function" ? children(values) : children}
           </Command>
@@ -58,21 +54,24 @@ export const CommandDialog = ({
 };
 
 export interface CommandInputProps
-  extends ComponentPropsWithoutRef<typeof CommandPrimitive.Input> {
+  extends ComponentProps<typeof CommandPrimitive.Input> {
   back?: {
-    buttonProps: AriaButtonProps;
+    buttonProps: ComponentProps<typeof AriaButton>;
   };
 }
-export const CommandInput = forwardRef<
-  ElementRef<typeof CommandPrimitive.Input>,
-  CommandInputProps
->(({ className, back, ...props }, ref) => (
+export const CommandInput = ({
+  className,
+  back,
+  ...props
+}: CommandInputProps) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
     {back ? (
       <AriaButton
         {...back.buttonProps}
-        className={composeRenderProps("", (className, renderProps) =>
-          commandBackButtonStyles({ ...renderProps, className }),
+        className={composeRenderProps(
+          back.buttonProps.className,
+          (className, renderProps) =>
+            commandBackButtonStyles({ ...renderProps, className }),
         )}
       >
         <ArrowLeft className="size-4" />
@@ -82,74 +81,61 @@ export const CommandInput = forwardRef<
     )}
 
     <CommandPrimitive.Input
-      ref={ref}
       className={commandStyles().input({ className })}
       {...props}
     />
   </div>
-));
+);
 
-export const CommandList = forwardRef<
-  ElementRef<typeof CommandPrimitive.List>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, ...props }, ref) => (
+export type CommandListProps = ComponentProps<typeof CommandPrimitive.List>;
+export const CommandList = ({ className, ...props }: CommandListProps) => (
   <CommandPrimitive.List
-    ref={ref}
     className={commandStyles().list({ className })}
     {...props}
   />
-));
+);
 
-export const CommandEmpty = forwardRef<
-  ElementRef<typeof CommandPrimitive.Empty>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
->((props, ref) => (
-  <CommandPrimitive.Empty
-    ref={ref}
-    className="py-6 text-center text-sm"
-    {...props}
-  />
-));
+export type CommandEmptyProps = ComponentProps<typeof CommandPrimitive.Empty>;
+export const CommandEmpty = (props: CommandEmptyProps) => (
+  <CommandPrimitive.Empty className="py-6 text-center text-sm" {...props} />
+);
 
-export const CommandGroup = forwardRef<
-  ElementRef<typeof CommandPrimitive.Group>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
->(({ className, ...props }, ref) => (
+export type CommandGroupProps = ComponentProps<typeof CommandPrimitive.Group>;
+export const CommandGroup = ({ className, ...props }: CommandGroupProps) => (
   <CommandPrimitive.Group
-    ref={ref}
     className={commandStyles().group({ className })}
     {...props}
   />
-));
+);
 
-export const CommandSeparator = forwardRef<
-  ElementRef<typeof CommandPrimitive.Separator>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
->(({ className, ...props }, ref) => (
+export type CommandSeparatorProps = ComponentProps<
+  typeof CommandPrimitive.Separator
+>;
+export const CommandSeparator = ({
+  className,
+  ...props
+}: CommandSeparatorProps) => (
   <CommandPrimitive.Separator
-    ref={ref}
     className={commandStyles().separator({ className })}
     {...props}
   />
-));
+);
 
-export const CommandItem = forwardRef<
-  ElementRef<typeof CommandPrimitive.Item>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
->(({ className, ...props }, ref) => (
+export type CommandItemProps = ComponentProps<typeof CommandPrimitive.Item>;
+export const CommandItem = ({ className, ...props }: CommandItemProps) => (
   <CommandPrimitive.Item
-    ref={ref}
     className={commandStyles().item({ className })}
     {...props}
   />
-));
+);
 
-export type CommandShortcutProps = HTMLAttributes<HTMLSpanElement>;
+export type CommandShortcutProps = DetailedHTMLProps<
+  HTMLAttributes<HTMLSpanElement>,
+  HTMLSpanElement
+>;
 export const CommandShortcut = ({
   className,
   ...props
-}: CommandShortcutProps) => {
-  return (
-    <span className={commandStyles().shortcut({ className })} {...props} />
-  );
-};
+}: CommandShortcutProps) => (
+  <span className={commandStyles().shortcut({ className })} {...props} />
+);

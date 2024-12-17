@@ -17,67 +17,61 @@ import {
 } from "~/styles/components/primitives/checkbox";
 import { composeTwRenderProps } from "~/styles/utils";
 
-import type { ReactNode } from "react";
-import type {
-  CheckboxGroupProps as AriaCheckboxGroupProps,
-  CheckboxProps as AriaCheckboxProps,
-  ValidationResult,
-} from "react-aria-components";
+import type { ComponentProps, ReactNode } from "react";
+import type { ValidationResult } from "react-aria-components";
 import type { CheckboxStyles } from "~/styles/components/primitives/checkbox";
 
-export interface CheckboxProps extends AriaCheckboxProps, CheckboxStyles {}
-
-export function Checkbox(props: CheckboxProps) {
-  return (
-    <AriaCheckbox
-      {...props}
-      className={composeRenderProps(props.className, (className, renderProps) =>
-        checkboxStyles({ ...renderProps, className }),
-      )}
-    >
-      {({ isSelected, isIndeterminate, ...renderProps }) => (
-        <>
-          <div
-            className={boxStyles({
-              isSelected: isSelected || isIndeterminate,
-              ...renderProps,
-            })}
-          >
-            {isIndeterminate ? (
-              <Minus aria-hidden className={checkStyles} />
-            ) : isSelected ? (
-              <Check aria-hidden className={checkStyles} />
-            ) : null}
-          </div>
-
-          {props.children}
-        </>
-      )}
-    </AriaCheckbox>
-  );
+export interface CheckboxProps
+  extends Omit<ComponentProps<typeof AriaCheckbox>, "children">,
+    CheckboxStyles {
+  children: ReactNode;
 }
+export const Checkbox = (props: CheckboxProps) => (
+  <AriaCheckbox
+    {...props}
+    className={composeRenderProps(props.className, (className, renderProps) =>
+      checkboxStyles({ ...renderProps, className }),
+    )}
+  >
+    {({ isSelected, isIndeterminate, ...renderProps }) => (
+      <>
+        <div
+          className={boxStyles({
+            isSelected: isSelected || isIndeterminate,
+            ...renderProps,
+          })}
+        >
+          {isIndeterminate ? (
+            <Minus aria-hidden className={checkStyles} />
+          ) : isSelected ? (
+            <Check aria-hidden className={checkStyles} />
+          ) : null}
+        </div>
+
+        {props.children}
+      </>
+    )}
+  </AriaCheckbox>
+);
 
 export interface CheckboxGroupProps
-  extends Omit<AriaCheckboxGroupProps, "children"> {
+  extends Omit<ComponentProps<typeof AriaCheckboxGroup>, "children"> {
   children?: ReactNode;
   label?: string;
   description?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
 }
+export const CheckboxGroup = ({ className, ...props }: CheckboxGroupProps) => (
+  <AriaCheckboxGroup
+    className={composeTwRenderProps(className, "flex flex-col gap-2")}
+    {...props}
+  >
+    <Label>{props.label}</Label>
 
-export function CheckboxGroup(props: CheckboxGroupProps) {
-  return (
-    <AriaCheckboxGroup
-      {...props}
-      className={composeTwRenderProps(props.className, "flex flex-col gap-2")}
-    >
-      <Label>{props.label}</Label>
+    {props.children}
 
-      {props.children}
+    {props.description && <Description>{props.description}</Description>}
 
-      {props.description && <Description>{props.description}</Description>}
-
-      <FieldError>{props.errorMessage}</FieldError>
-    </AriaCheckboxGroup>
-  );
-}
+    <FieldError>{props.errorMessage}</FieldError>
+  </AriaCheckboxGroup>
+);

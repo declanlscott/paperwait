@@ -276,7 +276,7 @@ function TenantStatusSelect() {
         isOpen={isConfirmationDialogOpen}
         onOpenChange={setIsConfirmationDialogOpen}
       >
-        <DialogContent role="alertdialog">
+        <DialogContent dialogProps={{ role: "alertdialog" }}>
           {({ close }) => (
             <>
               <DialogHeader>

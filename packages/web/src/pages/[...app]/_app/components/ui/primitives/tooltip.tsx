@@ -5,11 +5,11 @@ import {
 
 import { tooltipStyles } from "~/styles/components/primitives/tooltip";
 
-import type { TooltipProps as AriaTooltipProps } from "react-aria-components";
+import type { ComponentProps } from "react";
 
 export { TooltipTrigger } from "react-aria-components";
 
-export type TooltipProps = AriaTooltipProps;
+export type TooltipProps = ComponentProps<typeof AriaTooltip>;
 export function Tooltip({ className, offset = 4, ...props }: TooltipProps) {
   return (
     <AriaTooltip

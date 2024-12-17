@@ -52,7 +52,7 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
 
   return (
     <DialogOverlay isDismissable={false} {...props.dialogOverlayProps}>
-      <DialogContent role="alertdialog">
+      <DialogContent dialogProps={{ role: "alertdialog" }}>
         {({ close }) => (
           <>
             <DialogHeader>

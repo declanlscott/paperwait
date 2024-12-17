@@ -13,47 +13,36 @@ import {
 } from "~/styles/components/primitives/field";
 import { composeTwRenderProps } from "~/styles/utils";
 
-import type {
-  FieldErrorProps as AriaFieldErrorProps,
-  GroupProps as AriaGroupProps,
-  LabelProps as AriaLabelProps,
-  TextProps as AriaTextProps,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
 
-export type LabelProps = AriaLabelProps;
+export type LabelProps = ComponentProps<typeof AriaLabel>;
 export function Label({ className, ...props }: LabelProps) {
-  return <AriaLabel {...props} className={labelStyles({ className })} />;
+  return <AriaLabel className={labelStyles({ className })} {...props} />;
 }
 
-export type DescriptionProps = AriaTextProps;
-export function Description(props: DescriptionProps) {
-  return (
-    <AriaText
-      {...props}
-      slot="description"
-      className={twMerge("text-muted-foreground text-sm")}
-    />
-  );
-}
+export type DescriptionProps = ComponentProps<typeof AriaText>;
+export const Description = ({ className, ...props }: DescriptionProps) => (
+  <AriaText
+    slot="description"
+    className={twMerge("text-muted-foreground text-sm", className)}
+    {...props}
+  />
+);
 
-export type FieldErrorProps = AriaFieldErrorProps;
-export function FieldError(props: FieldErrorProps) {
-  return (
-    <AriaFieldError
-      {...props}
-      className={composeTwRenderProps(props.className, "text-sm text-red-500")}
-    />
-  );
-}
+export type FieldErrorProps = ComponentProps<typeof AriaFieldError>;
+export const FieldError = ({ className, ...props }: FieldErrorProps) => (
+  <AriaFieldError
+    className={composeTwRenderProps(className, "text-sm text-red-500")}
+    {...props}
+  />
+);
 
-export type FieldGroupProps = AriaGroupProps;
-export function FieldGroup(props: FieldGroupProps) {
-  return (
-    <AriaGroup
-      {...props}
-      className={composeRenderProps(props.className, (className, renderProps) =>
-        fieldGroupStyles({ ...renderProps, className }),
-      )}
-    />
-  );
-}
+export type FieldGroupProps = ComponentProps<typeof AriaGroup>;
+export const FieldGroup = ({ className, ...props }: FieldGroupProps) => (
+  <AriaGroup
+    className={composeRenderProps(className, (className, renderProps) =>
+      fieldGroupStyles({ ...renderProps, className }),
+    )}
+    {...props}
+  />
+);

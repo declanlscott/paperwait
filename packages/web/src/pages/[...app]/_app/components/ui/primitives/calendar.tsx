@@ -23,23 +23,15 @@ import {
   calendarStyles,
 } from "~/styles/components/primitives/calendar";
 
-import type { HTMLAttributes } from "react";
-import type {
-  CalendarCellProps as AriaCalendarCellProps,
-  CalendarGridBodyProps as AriaCalendarGridBodyProps,
-  CalendarGridHeaderProps as AriaCalendarGridHeaderProps,
-  CalendarGridProps as AriaCalendarGridProps,
-  CalendarHeaderCellProps as AriaCalendarHeaderCellProps,
-  CalendarProps as AriaCalendarProps,
-  DateValue as AriaDateValue,
-  RangeCalendarProps as AriaRangeCalendarProps,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
+import type { DateValue } from "react-aria-components";
+import type { RangeValue } from "@react-types/shared";
 
 export const BaseCalendar = AriaCalendar;
 
 export const BaseRangeCalendar = AriaRangeCalendar;
 
-export type CalendarHeadingProps = HTMLAttributes<HTMLElement>;
+export type CalendarHeadingProps = ComponentProps<"header">;
 export const CalendarHeading = (props: CalendarHeadingProps) => {
   const { direction } = useLocale();
 
@@ -76,7 +68,7 @@ export const CalendarHeading = (props: CalendarHeadingProps) => {
   );
 };
 
-export type CalendarGridProps = AriaCalendarGridProps;
+export type CalendarGridProps = ComponentProps<typeof AriaCalendarGrid>;
 export const CalendarGrid = ({ className, ...props }: CalendarGridProps) => (
   <AriaCalendarGrid
     className={calendarStyles().grid({ className })}
@@ -84,12 +76,16 @@ export const CalendarGrid = ({ className, ...props }: CalendarGridProps) => (
   />
 );
 
-export type CalendarGridHeaderProps = AriaCalendarGridHeaderProps;
+export type CalendarGridHeaderProps = ComponentProps<
+  typeof AriaCalendarGridHeader
+>;
 export const CalendarGridHeader = ({ ...props }: CalendarGridHeaderProps) => (
   <AriaCalendarGridHeader {...props} />
 );
 
-export type CalendarHeaderCellProps = AriaCalendarHeaderCellProps;
+export type CalendarHeaderCellProps = ComponentProps<
+  typeof AriaCalendarHeaderCell
+>;
 export const CalendarHeaderCell = ({
   className,
   ...props
@@ -100,7 +96,7 @@ export const CalendarHeaderCell = ({
   />
 );
 
-export type CalendarGridBodyProps = AriaCalendarGridBodyProps;
+export type CalendarGridBodyProps = ComponentProps<typeof AriaCalendarGridBody>;
 export const CalendarGridBody = ({
   className,
   ...props
@@ -111,7 +107,7 @@ export const CalendarGridBody = ({
   />
 );
 
-export type CalendarCellProps = AriaCalendarCellProps;
+export type CalendarCellProps = ComponentProps<typeof AriaCalendarCell>;
 export function CalendarCell({ className, ...props }: CalendarCellProps) {
   const isRange = Boolean(useContext(AriaRangeCalendarStateContext));
 
@@ -137,52 +133,52 @@ export function CalendarCell({ className, ...props }: CalendarCellProps) {
   );
 }
 
-export interface CalendarProps<T extends AriaDateValue>
-  extends AriaCalendarProps<T> {
+export interface CalendarProps<TValue extends DateValue>
+  extends ComponentProps<typeof BaseCalendar> {
+  value: TValue | null | undefined;
   errorMessage?: string;
 }
-export function Calendar<T extends AriaDateValue>({
+export const Calendar = <TValue extends DateValue>({
   errorMessage,
   className,
   ...props
-}: CalendarProps<T>) {
-  return (
-    <BaseCalendar
-      className={composeRenderProps(className, (className) =>
-        calendarStyles().root({ className }),
-      )}
-      {...props}
-    >
-      <CalendarHeading />
+}: CalendarProps<TValue>) => (
+  <BaseCalendar
+    className={composeRenderProps(className, (className) =>
+      calendarStyles().root({ className }),
+    )}
+    {...props}
+  >
+    <CalendarHeading />
 
-      <CalendarGrid>
-        <CalendarGridHeader>
-          {(day) => <CalendarHeaderCell>{day}</CalendarHeaderCell>}
-        </CalendarGridHeader>
+    <CalendarGrid>
+      <CalendarGridHeader>
+        {(day) => <CalendarHeaderCell>{day}</CalendarHeaderCell>}
+      </CalendarGridHeader>
 
-        <CalendarGridBody>
-          {(date) => <CalendarCell date={date} />}
-        </CalendarGridBody>
-      </CalendarGrid>
+      <CalendarGridBody>
+        {(date) => <CalendarCell date={date} />}
+      </CalendarGridBody>
+    </CalendarGrid>
 
-      {errorMessage && (
-        <AriaText className="text-destructive text-sm" slot="errorMessage">
-          {errorMessage}
-        </AriaText>
-      )}
-    </BaseCalendar>
-  );
-}
+    {errorMessage && (
+      <AriaText className="text-destructive text-sm" slot="errorMessage">
+        {errorMessage}
+      </AriaText>
+    )}
+  </BaseCalendar>
+);
 
-export interface RangeCalendarProps<T extends AriaDateValue>
-  extends AriaRangeCalendarProps<T> {
+export interface RangeCalendarProps<TValue extends DateValue>
+  extends ComponentProps<typeof BaseRangeCalendar> {
+  value: RangeValue<TValue> | null | undefined;
   errorMessage?: string;
 }
-export const RangeCalendar = <T extends AriaDateValue>({
+export const RangeCalendar = <TValue extends DateValue>({
   errorMessage,
   className,
   ...props
-}: RangeCalendarProps<T>) => (
+}: RangeCalendarProps<TValue>) => (
   <BaseRangeCalendar
     className={composeRenderProps(className, (className) =>
       calendarStyles().root({ className }),

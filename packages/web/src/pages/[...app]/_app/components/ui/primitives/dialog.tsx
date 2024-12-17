@@ -11,19 +11,15 @@ import { X } from "lucide-react";
 import { IconButton } from "~/app/components/ui/primitives/icon-button";
 import { dialogStyles } from "~/styles/components/primitives/dialog";
 
-import type { ComponentProps, HTMLAttributes } from "react";
-import type {
-  DialogProps as AriaDialogProps,
-  HeadingProps as AriaHeadingProps,
-  ModalOverlayProps as AriaModalOverlayProps,
-} from "react-aria-components";
+import type { ComponentProps } from "react";
+import type { DialogProps as AriaDialogProps } from "react-aria-components";
 import type { DialogStyles } from "~/styles/components/primitives/dialog";
 
 export const DialogTrigger = AriaDialogTrigger;
 
 export const Dialog = AriaDialog;
 
-export type DialogOverlayProps = AriaModalOverlayProps;
+export type DialogOverlayProps = ComponentProps<typeof AriaModalOverlay>;
 export const DialogOverlay = ({
   className,
   isDismissable = true,
@@ -42,16 +38,16 @@ export interface DialogContentProps
   extends Omit<ComponentProps<typeof AriaModal>, "children">,
     DialogStyles {
   children?: AriaDialogProps["children"];
-  role?: AriaDialogProps["role"];
   closeButton?: boolean;
+  dialogProps?: ComponentProps<typeof Dialog>;
 }
 export const DialogContent = ({
   className,
   children,
   side,
-  role,
   closeButton = true,
   position = "center",
+  dialogProps,
   ...props
 }: DialogContentProps) => (
   <AriaModal
@@ -62,7 +58,13 @@ export const DialogContent = ({
     )}
     {...props}
   >
-    <Dialog role={role} className={dialogStyles().root({ side })}>
+    <Dialog
+      {...dialogProps}
+      className={dialogStyles().root({
+        side,
+        className: dialogProps?.className,
+      })}
+    >
       {(values) => (
         <>
           {typeof children === "function" ? children(values) : children}
@@ -82,17 +84,17 @@ export const DialogContent = ({
   </AriaModal>
 );
 
-export type DialogHeaderProps = HTMLAttributes<HTMLDivElement>;
+export type DialogHeaderProps = ComponentProps<"div">;
 export const DialogHeader = ({ className, ...props }: DialogHeaderProps) => (
   <div className={dialogStyles().header({ className })} {...props} />
 );
 
-export type DialogFooterProps = HTMLAttributes<HTMLDivElement>;
+export type DialogFooterProps = ComponentProps<"div">;
 export const DialogFooter = ({ className, ...props }: DialogFooterProps) => (
   <div className={dialogStyles().footer({ className })} {...props} />
 );
 
-export type DialogTitleProps = AriaHeadingProps;
+export type DialogTitleProps = ComponentProps<typeof AriaHeading>;
 export const DialogTitle = ({ className, ...props }: DialogTitleProps) => (
   <AriaHeading
     slot="title"
