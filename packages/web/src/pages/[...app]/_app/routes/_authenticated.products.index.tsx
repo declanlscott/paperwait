@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_authenticated/products/")({
+const routeId = "/_authenticated/products/";
+
+export const Route = createFileRoute(routeId)({
+  beforeLoad: ({ context }) =>
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   component: Component,
 });
 

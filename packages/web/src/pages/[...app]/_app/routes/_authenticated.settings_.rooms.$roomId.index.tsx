@@ -31,24 +31,23 @@ import { labelStyles } from "~/styles/components/primitives/field";
 
 import type { RoomStatus } from "@printworks/core/rooms/shared";
 
-export const Route = createFileRoute("/_authenticated/settings/rooms/$roomId/")(
-  {
-    beforeLoad: ({ context }) =>
-      context.authStore.actions.authorizeRoute(context.user, [
-        "administrator",
-        "operator",
-      ]),
-    loader: async ({ context, params }) => {
-      const initialRoom = await context.replicache.query(
-        queryFactory.room(params.roomId),
-      );
-      if (!initialRoom) throw notFound();
+const routeId = "/_authenticated/settings/rooms/$roomId/";
 
-      return { initialRoom };
-    },
-    component: Component,
+export const Route = createFileRoute(routeId)({
+  beforeLoad: ({ context }) =>
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
+  loader: async ({ context, params }) => {
+    const initialRoom = await context.replicache.query(
+      queryFactory.room(params.roomId),
+    );
+    if (!initialRoom) throw notFound();
+
+    return { initialRoom };
   },
-);
+  component: Component,
+});
 
 function Component() {
   return (

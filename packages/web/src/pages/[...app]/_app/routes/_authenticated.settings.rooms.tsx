@@ -67,12 +67,13 @@ import type {
 } from "@tanstack/react-table";
 import type { DeepReadonlyObject } from "replicache";
 
-export const Route = createFileRoute("/_authenticated/settings/rooms")({
+const routeId = "/_authenticated/settings/rooms";
+
+export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
-    context.authStore.actions.authorizeRoute(context.user, [
-      "administrator",
-      "operator",
-    ]),
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   loader: async ({ context }) => {
     const initialProducts = await context.replicache.query(
       queryFactory.products(),

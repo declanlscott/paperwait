@@ -38,7 +38,13 @@ import { labelStyles } from "~/styles/components/primitives/field";
 
 import type { TenantStatus } from "@printworks/core/tenants/shared";
 
-export const Route = createFileRoute("/_authenticated/settings/")({
+const routeId = "/_authenticated/settings/";
+
+export const Route = createFileRoute(routeId)({
+  beforeLoad: ({ context }) =>
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   component: Component,
 });
 

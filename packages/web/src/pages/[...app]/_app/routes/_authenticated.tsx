@@ -6,15 +6,17 @@ import { initialLoginSearchParams } from "~/app/lib/schemas";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
-    const authed = context.authStore.actions.authenticateRoute(location.href);
+    const { id: userId, tenantId } = context.auth.authenticateRoute(
+      location.href,
+    );
 
     if (context.replicache.status !== "ready")
       throw redirect({
         to: "/login",
-        search: { redirect: true, ...initialLoginSearchParams },
+        search: { redirect: location.href, ...initialLoginSearchParams },
       });
 
-    return { ...authed, replicache: context.replicache.client };
+    return { userId, tenantId, replicache: context.replicache.client };
   },
   loader: async ({ context }) => {
     const initialTenant = await context.replicache.query(queryFactory.tenant());

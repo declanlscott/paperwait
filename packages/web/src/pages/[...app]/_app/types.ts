@@ -2,12 +2,13 @@ import type { ComponentProps, ReactNode } from "react";
 import type { Link as AriaLink } from "react-aria-components";
 import type { Room } from "@printworks/core/rooms/sql";
 import type { UserRole } from "@printworks/core/users/shared";
-import type { StartsWith } from "@printworks/core/utils/types";
+import type { EndsWith, StartsWith } from "@printworks/core/utils/types";
 import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import type { MutationOptions } from "@tanstack/react-query";
 import type {
   createRouter,
   NavigateOptions,
+  RoutesById,
   ToOptions,
   TrailingSlashOption,
 } from "@tanstack/react-router";
@@ -46,27 +47,38 @@ export type Slot = {
   logo: ReactNode;
 };
 
+/** Deduplicate route ids, filtering out lazy routes from the union */
+export type EagerRouteId<
+  TRouteId extends string,
+  TInput extends string = TRouteId,
+> =
+  TRouteId extends EndsWith<"/", TInput> // check if id ends with trailing slash
+    ? TRouteId // if so, keep id with trailing slash
+    : `${TRouteId}/` extends TInput // otherwise, check if id with trailing slash exists
+      ? never // if so, remove id with trailing slash
+      : TRouteId; // otherwise, keep id without trailing slash
+
+export type AuthenticatedEagerRouteId = EagerRouteId<
+  StartsWith<"/_authenticated/", keyof RoutesById<typeof routeTree>>
+>;
+
+export type RoutePath = Exclude<NonNullable<ToOptions["to"]>, "" | "." | "..">;
+
 export type CommandBarPage =
   | { type: "home" }
   | { type: "room"; roomId: Room["id"] }
   | {
       type: "room-settings-select-room";
-      to: StartsWith<"/settings/rooms/$roomId", NonNullable<ToOptions["to"]>>;
+      to: StartsWith<"/settings/rooms/$roomId", RoutePath>;
     }
   | {
       type: "product-settings-select-room";
-      to: StartsWith<
-        "/settings/rooms/$roomId/products/$productId",
-        NonNullable<ToOptions["to"]>
-      >;
+      to: StartsWith<"/settings/rooms/$roomId/products/$productId", RoutePath>;
     }
   | {
       type: "product-settings-select-product";
       roomId: Room["id"];
-      to: StartsWith<
-        "/settings/rooms/$roomId/products/$productId",
-        NonNullable<ToOptions["to"]>
-      >;
+      to: StartsWith<"/settings/rooms/$roomId/products/$productId", RoutePath>;
     };
 
 export type QueryFactory = Record<

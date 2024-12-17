@@ -2,14 +2,13 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import { queryFactory } from "~/app/lib/hooks/data";
 
-export const Route = createFileRoute(
-  "/_authenticated/settings/rooms/$roomId/products/$productId/",
-)({
+const routeId = "/_authenticated/settings/rooms/$roomId/products/$productId/";
+
+export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
-    context.authStore.actions.authorizeRoute(context.user, [
-      "administrator",
-      "operator",
-    ]),
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   loader: async ({ context, params }) => {
     const [roomResult, productResult] = await Promise.allSettled([
       context.replicache.query(queryFactory.room(params.roomId)),

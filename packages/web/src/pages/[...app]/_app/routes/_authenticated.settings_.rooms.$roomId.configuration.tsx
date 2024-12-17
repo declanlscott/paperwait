@@ -61,14 +61,13 @@ import type {
   WorkflowStatusType,
 } from "@printworks/core/rooms/shared";
 
-export const Route = createFileRoute(
-  "/_authenticated/settings/rooms/$roomId/configuration",
-)({
+const routeId = "/_authenticated/settings/rooms/$roomId/configuration";
+
+export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
-    context.authStore.actions.authorizeRoute(context.user, [
-      "administrator",
-      "operator",
-    ]),
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   loader: async ({ context, params }) => {
     const initialRoom = await context.replicache.query(
       queryFactory.room(params.roomId),

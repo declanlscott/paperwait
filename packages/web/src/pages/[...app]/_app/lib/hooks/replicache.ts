@@ -26,7 +26,7 @@ export function useReplicache() {
   if (replicache.status !== "ready")
     throw new ApplicationError.Error("Replicache is not in ready state");
 
-  return replicache.client;
+  return replicache;
 }
 
 export interface UseSubscribeOptions<TData, TDefaultData>
@@ -49,7 +49,7 @@ export function useSubscribe<TData, TDefaultData = undefined>(
   const [data, setData] = useState<TData>();
 
   useEffect(() => {
-    const unsubscribe = replicache.subscribe(query, {
+    const unsubscribe = replicache.client.subscribe(query, {
       onData: (data) => {
         setData(() => data);
 
@@ -65,7 +65,7 @@ export function useSubscribe<TData, TDefaultData = undefined>(
       setData(undefined);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [replicache]);
+  }, [replicache.client]);
 
   if (!data) return defaultData as TDefaultData;
 
@@ -78,7 +78,7 @@ export function useIsSyncing() {
   const replicache = useReplicache();
 
   useEffect(() => {
-    replicache.onSync = setIsSyncing;
+    replicache.client.onSync = setIsSyncing;
   }, [replicache]);
 
   return isSyncing;

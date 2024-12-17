@@ -1,25 +1,25 @@
 import { ApplicationError } from "@printworks/core/utils/errors";
 
-import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useUser } from "~/app/lib/hooks/user";
 
-import type { PapercutAccount } from "@printworks/core/papercut/sql";
+import type { BillingAccount } from "@printworks/core/billing-accounts/sql";
 import type { User } from "@printworks/core/users/sql";
 
 export function useManager() {
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   if (user.profile.role !== "manager")
-    throw new ApplicationError.AccessDenied("Manager role required");
+    throw new ApplicationError.AccessDenied();
 
-  const papercutAccountIds = useQuery(
-    queryFactory.managedPapercutAccountIds(user.id),
-    { defaultData: [] as Array<PapercutAccount["id"]> },
+  const billingAccountIds = useQuery(
+    queryFactory.managedBillingAccountIds(user.id),
+    { defaultData: [] as Array<BillingAccount["id"]> },
   );
 
   const customerIds = useQuery(queryFactory.managedCustomerIds(user.id), {
     defaultData: [] as Array<User["id"]>,
   });
 
-  return { papercutAccountIds, customerIds };
+  return { billingAccountIds, customerIds };
 }

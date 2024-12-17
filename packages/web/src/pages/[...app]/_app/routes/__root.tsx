@@ -9,7 +9,7 @@ import {
 
 import type { QueryClient } from "@tanstack/react-query";
 import type {
-  AuthStore,
+  AuthActions,
   ReplicacheContext,
   ResourceContext,
 } from "~/app/lib/contexts";
@@ -25,7 +25,7 @@ const TanStackRouterDevtools = import.meta.env.DEV
 
 type RouterContext = {
   resource: ResourceContext;
-  authStore: AuthStore;
+  auth: AuthActions;
   replicache: ReplicacheContext;
   queryClient: QueryClient;
 };

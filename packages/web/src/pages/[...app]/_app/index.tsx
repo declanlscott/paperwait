@@ -1,19 +1,26 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { Replicache } from "@printworks/core/replicache/client";
+import { usersTableName } from "@printworks/core/users/shared";
+import { ApplicationError } from "@printworks/core/utils/errors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { createRouter, redirect, RouterProvider } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 
 import { ActorProvider } from "~/app/components/providers/actor";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
 import { ResourceProvider } from "~/app/components/providers/resource";
 import { SlotProvider } from "~/app/components/providers/slot";
-import { useAuthStore } from "~/app/lib/hooks/auth";
+import { routePermissions } from "~/app/lib/access-control";
+import { useActor } from "~/app/lib/hooks/actor";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
+import { initialLoginSearchParams } from "~/app/lib/schemas";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { Actor } from "@printworks/core/actors/shared";
 import type { Resource } from "sst";
+import type { RoutePermissions } from "~/app/lib/access-control";
+import type { AuthActions } from "~/app/lib/contexts";
 import type { AppRouter, Slot } from "~/app/types";
 
 const queryClient = new QueryClient();
@@ -32,7 +39,7 @@ export function App(props: AppProps) {
       context: {
         // These will be set after we wrap the app router in providers
         resource: undefined!,
-        authStore: undefined!,
+        auth: undefined!,
         replicache: undefined!,
         queryClient,
       },
@@ -69,13 +76,50 @@ type AppRouterProps = {
 
 function AppRouter(props: AppRouterProps) {
   const resource = useResource();
-  const authStore = useAuthStore((store) => store);
   const replicache = useReplicache();
+  const actor = useActor();
+
+  const authenticateRoute: AuthActions["authenticateRoute"] = useCallback(
+    (from) => {
+      if (actor.type !== "user")
+        throw redirect({
+          to: "/login",
+          search: { redirect: from, ...initialLoginSearchParams },
+        });
+
+      return actor.properties;
+    },
+    [actor],
+  );
+
+  const authorizeRoute: AuthActions["authorizeRoute"] = useCallback(
+    async (tx, userId, routeId, ...input) => {
+      const user = await Replicache.get(tx, usersTableName, userId);
+
+      const permission = (routePermissions as RoutePermissions)[routeId][
+        user.profile.role
+      ];
+
+      const access = await new Promise<boolean>((resolve) => {
+        if (typeof permission === "boolean") return resolve(permission);
+
+        return resolve(permission(tx, user, ...input));
+      });
+
+      if (!access) throw new ApplicationError.AccessDenied();
+    },
+    [],
+  );
+
+  const auth = useMemo(
+    () => ({ authenticateRoute, authorizeRoute }),
+    [authenticateRoute, authorizeRoute],
+  );
 
   return (
     <RouterProvider
       router={props.router}
-      context={{ resource, authStore, replicache, queryClient }}
+      context={{ resource, auth, replicache, queryClient }}
     />
   );
 }

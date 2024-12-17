@@ -4,7 +4,13 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Dropzone } from "~/app/components/ui/primitives/dropzone";
 
-export const Route = createFileRoute("/_authenticated/settings/images")({
+const routeId = "/_authenticated/settings/images";
+
+export const Route = createFileRoute(routeId)({
+  beforeLoad: ({ context }) =>
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   component: Component,
 });
 

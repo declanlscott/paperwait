@@ -3,6 +3,11 @@ export type StartsWith<
   TValue extends string,
 > = TValue extends `${TPrefix}${string}` ? TValue : never;
 
+export type EndsWith<
+  TSuffix extends string,
+  TValue extends string,
+> = TValue extends `${string}${TSuffix}` ? TValue : never;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyError = new (...args: Array<any>) => Error;
 

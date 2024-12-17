@@ -77,7 +77,13 @@ import type {
   VisibilityState,
 } from "@tanstack/react-table";
 
-export const Route = createFileRoute("/_authenticated/users/")({
+const routeId = "/_authenticated/users/";
+
+export const Route = createFileRoute(routeId)({
+  beforeLoad: ({ context }) =>
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   loader: async ({ context }) => {
     const initialUsers = await context.replicache.query(queryFactory.users());
 

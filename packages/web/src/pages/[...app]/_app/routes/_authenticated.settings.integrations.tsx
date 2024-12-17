@@ -39,9 +39,13 @@ import { labelStyles } from "~/styles/components/primitives/field";
 import type { ComponentProps } from "react";
 import type { ErrorRouteComponent } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_authenticated/settings/integrations")({
+const routeId = "/_authenticated/settings/integrations";
+
+export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
-    context.authStore.actions.authorizeRoute(context.user, ["administrator"]),
+    context.replicache.query((tx) =>
+      context.auth.authorizeRoute(tx, context.userId, routeId),
+    ),
   component: Component,
   errorComponent: ErrorComponent,
 });
