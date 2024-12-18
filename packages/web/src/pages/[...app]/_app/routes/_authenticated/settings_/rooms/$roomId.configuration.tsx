@@ -1,14 +1,12 @@
 import { FileTrigger } from "react-aria-components";
 import {
-  deliveryOptionAttributesSchema,
-  deliveryOptionsConfigurationSchema,
-  workflowConfigurationSchema,
+  deliveryOptionsSchema,
+  workflowSchema,
   workflowStatusTypes,
 } from "@printworks/core/rooms/shared";
-import { ApplicationError } from "@printworks/core/utils/errors";
+import { formatPascalCase } from "@printworks/core/utils/shared";
 import { useForm } from "@tanstack/react-form";
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import { valibotValidator } from "@tanstack/valibot-form-adapter";
+import { createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ChevronUp, Import, Plus, Save, X } from "lucide-react";
 import * as R from "remeda";
 import { toast } from "sonner";
@@ -55,14 +53,9 @@ import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem } from "~/app/lib/ui";
 import { cardStyles } from "~/styles/components/primitives/card";
 
-import type {
-  DeliveryOptionsConfiguration,
-  RoomConfiguration,
-  WorkflowConfiguration,
-  WorkflowStatusType,
-} from "@printworks/core/rooms/shared";
+import type { PostReviewWorkflowStatusType } from "@printworks/core/rooms/shared";
 
-const routeId = "/_authenticated/settings/rooms/$roomId/configuration";
+const routeId = "/_authenticated/settings_/rooms/$roomId/configuration";
 
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
@@ -70,11 +63,12 @@ export const Route = createFileRoute(routeId)({
       context.auth.authorizeRoute(tx, context.actor.properties.id, routeId),
     ),
   loader: async ({ context, params }) => {
-    const initialRoom = await context.replicache.query(
-      queryFactory.room(params.roomId),
-    );
+    const [initialDeliveryOptions, initialWorkflow] = await Promise.all([
+      context.replicache.query(queryFactory.deliveryOptions(params.roomId)),
+      context.replicache.query(queryFactory.workflow(params.roomId)),
+    ]);
 
-    return { initialRoom };
+    return { initialDeliveryOptions, initialWorkflow };
   },
   component: Component,
 });
@@ -90,37 +84,20 @@ function Component() {
 }
 
 function WorkflowCard() {
-  const { roomId } = Route.useParams();
-  const { initialRoom } = Route.useLoaderData();
+  const roomId = Route.useParams().roomId;
 
-  const room = useQuery(queryFactory.room(roomId), {
-    defaultData: initialRoom,
+  const workflow = useQuery(queryFactory.workflow(roomId), {
+    defaultData: Route.useLoaderData().initialWorkflow,
   });
 
-  const { updateRoom } = useMutator();
+  const { setWorkflow } = useMutator();
 
   const form = useForm({
-    defaultValues: {
-      workflow: v.parse(workflowConfigurationSchema, room?.config.workflow),
-    },
-    validatorAdapter: valibotValidator(),
-    validators: {
-      onBlur: v.object({ workflow: workflowConfigurationSchema }),
-    },
-    onSubmit: async ({ value: { workflow } }) => {
-      if (room) {
-        const config = room.config as RoomConfiguration;
-
-        if (!R.isDeepEqual(workflow, config.workflow))
-          await updateRoom({
-            id: room.id,
-            config: {
-              ...config,
-              workflow,
-            },
-            updatedAt: new Date().toISOString(),
-          });
-      }
+    defaultValues: { workflow },
+    validators: { onBlur: v.object({ workflow: workflowSchema }) },
+    onSubmit: async ({ value }) => {
+      if (!R.isDeepEqual(value.workflow, workflow))
+        await setWorkflow({ workflow: value.workflow, roomId });
     },
   });
 
@@ -141,16 +118,10 @@ function WorkflowCard() {
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.values.workflow]}
           >
-            {([canSubmit, workflow]) => (
+            {([canSubmit, value]) => (
               <Button
                 type="submit"
-                isDisabled={
-                  !canSubmit ||
-                  R.isDeepEqual(
-                    workflow,
-                    room?.config.workflow as WorkflowConfiguration,
-                  )
-                }
+                isDisabled={!canSubmit || R.isDeepEqual(value, workflow)}
               >
                 <Save className="mr-2 size-5" />
                 Save
@@ -179,20 +150,13 @@ function WorkflowCard() {
       </CardHeader>
 
       <form.Field name="workflow" mode="array">
-        {({
-          state,
-          removeValue,
-          moveValue,
-          pushValue,
-          validateSync,
-          setValue,
-        }) => (
+        {({ state, removeValue, moveValue, pushValue, validate, setValue }) => (
           <>
             <CardContent>
               <ol className="space-y-4">
                 {state.value.map((status, i) => (
                   <li
-                    key={i}
+                    key={status.id}
                     className={cardStyles().base({
                       className:
                         "bg-muted/20 relative grid grid-cols-2 gap-2 p-4",
@@ -202,10 +166,10 @@ function WorkflowCard() {
                       <IconButton
                         onPress={() => {
                           moveValue(i, i + 1);
-                          validateSync("blur");
+                          void validate("blur");
                         }}
                         isDisabled={i === state.value.length - 1}
-                        aria-label={`Move ${status.name} down`}
+                        aria-label={`Move ${status.id} down`}
                       >
                         <ChevronDown />
                       </IconButton>
@@ -213,25 +177,25 @@ function WorkflowCard() {
                       <IconButton
                         onPress={() => {
                           moveValue(i, i - 1);
-                          validateSync("blur");
+                          void validate("blur");
                         }}
                         isDisabled={i === 0}
-                        aria-label={`Move ${status.name} up`}
+                        aria-label={`Move ${status.id} up`}
                       >
                         <ChevronUp />
                       </IconButton>
 
                       <IconButton
                         onPress={() =>
-                          removeValue(i).then(() => validateSync("blur"))
+                          removeValue(i).then(() => void validate("blur"))
                         }
-                        aria-label={`Remove ${status.name}`}
+                        aria-label={`Remove ${status.id}`}
                       >
                         <X />
                       </IconButton>
                     </div>
 
-                    <form.Field name={`workflow[${i}].name`}>
+                    <form.Field name={`workflow[${i}].id`}>
                       {({ name, state, handleChange, handleBlur }) => (
                         <div>
                           <Label htmlFor={name}>Name</Label>
@@ -256,7 +220,9 @@ function WorkflowCard() {
                             aria-label="type"
                             selectedKey={state.value}
                             onSelectionChange={(value) =>
-                              handleChange(value as WorkflowStatusType)
+                              handleChange(
+                                value as PostReviewWorkflowStatusType,
+                              )
                             }
                             onBlur={handleBlur}
                           >
@@ -399,10 +365,7 @@ function WorkflowCard() {
                           return toast.error("Invalid JSON syntax.");
                         }
 
-                        const result = v.safeParse(
-                          workflowConfigurationSchema,
-                          data,
-                        );
+                        const result = v.safeParse(workflowSchema, data);
 
                         if (!result.success) {
                           console.error(result.issues);
@@ -430,8 +393,9 @@ function WorkflowCard() {
                 variant="secondary"
                 onPress={() =>
                   pushValue({
-                    name: "",
+                    id: "",
                     type: "New",
+                    color: null,
                     charging: false,
                   })
                 }
@@ -449,41 +413,24 @@ function WorkflowCard() {
 
 function DeliveryOptionsCard() {
   const { roomId } = Route.useParams();
-  const { initialRoom } = Route.useLoaderData();
 
-  const room = useQuery(queryFactory.room(roomId), {
-    defaultData: initialRoom,
+  const deliveryOptions = useQuery(queryFactory.deliveryOptions(roomId), {
+    defaultData: Route.useLoaderData().initialDeliveryOptions,
   });
 
-  const { updateRoom } = useMutator();
+  const { setDeliveryOptions } = useMutator();
 
   const form = useForm({
-    defaultValues: {
-      deliveryOptions: v.parse(
-        deliveryOptionAttributesSchema,
-        room?.config.deliveryOptions,
-      ),
-    },
-    validatorAdapter: valibotValidator(),
+    defaultValues: { deliveryOptions },
     validators: {
-      onBlur: v.object({ deliveryOptions: deliveryOptionAttributesSchema }),
+      onBlur: v.object({ deliveryOptions: deliveryOptionsSchema }),
     },
-    onSubmit: async ({ value: { deliveryOptions } }) => {
-      if (room) {
-        const config = room.config as RoomConfiguration;
-
-        if (!R.isDeepEqual(deliveryOptions, config.deliveryOptions))
-          await updateRoom({
-            id: room.id,
-            config: {
-              ...config,
-              deliveryOptions,
-            },
-            updatedAt: new Date().toISOString(),
-          });
-      }
+    onSubmit: async ({ value }) => {
+      if (!R.isDeepEqual(value.deliveryOptions, deliveryOptions))
+        await setDeliveryOptions({ options: value.deliveryOptions, roomId });
     },
   });
+
   return (
     <form
       className={cardStyles().base()}
@@ -504,17 +451,10 @@ function DeliveryOptionsCard() {
               state.values.deliveryOptions,
             ]}
           >
-            {([canSubmit, deliveryOptions]) => (
+            {([canSubmit, value]) => (
               <Button
                 type="submit"
-                isDisabled={
-                  !canSubmit ||
-                  R.isDeepEqual(
-                    deliveryOptions,
-                    room?.config
-                      .deliveryOptions as DeliveryOptionsConfiguration,
-                  )
-                }
+                isDisabled={!canSubmit || R.isDeepEqual(value, deliveryOptions)}
               >
                 <Save className="mr-2 size-5" />
                 Save
@@ -524,9 +464,8 @@ function DeliveryOptionsCard() {
         </div>
 
         <CardDescription>
-          Delivery options are the methods by which orders can be delivered to
-          customers. Delivery options are displayed in the New Order form for
-          customers.
+          Delivery options are the methods by which orders can be delivered and
+          are displayed in the New Order form for customers.
         </CardDescription>
 
         <form.Subscribe selector={(state) => state.errors}>
@@ -543,14 +482,7 @@ function DeliveryOptionsCard() {
       </CardHeader>
 
       <form.Field name="deliveryOptions" mode="array">
-        {({
-          state,
-          removeValue,
-          moveValue,
-          pushValue,
-          validateSync,
-          setValue,
-        }) => (
+        {({ state, removeValue, moveValue, pushValue, validate, setValue }) => (
           <>
             <CardContent>
               <ol className="space-y-4">
@@ -566,10 +498,10 @@ function DeliveryOptionsCard() {
                       <IconButton
                         onPress={() => {
                           moveValue(i, i + 1);
-                          validateSync("blur");
+                          void validate("blur");
                         }}
                         isDisabled={i === state.value.length - 1}
-                        aria-label={`Move ${option.name} down`}
+                        aria-label={`Move ${option.id} down`}
                       >
                         <ChevronDown />
                       </IconButton>
@@ -577,25 +509,25 @@ function DeliveryOptionsCard() {
                       <IconButton
                         onPress={() => {
                           moveValue(i, i - 1);
-                          validateSync("blur");
+                          void validate("blur");
                         }}
                         isDisabled={i === 0}
-                        aria-label={`Move ${option.name} up`}
+                        aria-label={`Move ${option.id} up`}
                       >
                         <ChevronUp />
                       </IconButton>
 
                       <IconButton
                         onPress={() =>
-                          removeValue(i).then(() => validateSync("blur"))
+                          removeValue(i).then(() => void validate("blur"))
                         }
-                        aria-label={`Remove ${option.name}`}
+                        aria-label={`Remove ${option.id}`}
                       >
                         <X />
                       </IconButton>
                     </div>
 
-                    <form.Field name={`deliveryOptions[${i}].name`}>
+                    <form.Field name={`deliveryOptions[${i}].id`}>
                       {({ name, state, handleChange, handleBlur }) => (
                         <div>
                           <Label htmlFor={name}>Name</Label>
@@ -643,7 +575,7 @@ function DeliveryOptionsCard() {
                     <form.Field name={`deliveryOptions[${i}].cost`}>
                       {({ name, state, handleChange, handleBlur }) => (
                         <NumberField
-                          value={state.value ?? 0}
+                          value={Number(state.value)}
                           onChange={handleChange}
                           onBlur={handleBlur}
                           formatOptions={{
@@ -692,10 +624,7 @@ function DeliveryOptionsCard() {
                           return toast.error("Invalid JSON syntax.");
                         }
 
-                        const result = v.safeParse(
-                          deliveryOptionsConfigurationSchema,
-                          data,
-                        );
+                        const result = v.safeParse(deliveryOptionsSchema, data);
 
                         if (!result.success) {
                           console.error(result.issues);
@@ -725,7 +654,7 @@ function DeliveryOptionsCard() {
                 variant="secondary"
                 onPress={() =>
                   pushValue({
-                    name: "",
+                    id: "",
                     description: "",
                     detailsLabel: "",
                     cost: 0,

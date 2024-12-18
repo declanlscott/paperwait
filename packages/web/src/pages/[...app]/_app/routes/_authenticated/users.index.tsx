@@ -1,8 +1,6 @@
 import { useCallback, useState } from "react";
-import { mutationRbac } from "@printworks/core/replicache/shared";
 import { userRoles } from "@printworks/core/users/shared";
 import { Utils } from "@printworks/core/utils/client";
-import { enforceRbac } from "@printworks/core/utils/shared";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   flexRender,
@@ -21,8 +19,11 @@ import {
   UserRoundX,
 } from "lucide-react";
 
+import {
+  EnforceAbac,
+  EnforceRouteAbac,
+} from "~/app/components/ui/access-control";
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
-import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import {
   Avatar,
   AvatarFallback,
@@ -64,18 +65,19 @@ import {
 } from "~/app/components/ui/primitives/table";
 import { Input } from "~/app/components/ui/primitives/text-field";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
-import { useAuthenticated } from "~/app/lib/hooks/auth";
-import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
-import { useManager } from "~/app/lib/hooks/manager";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useReplicache } from "~/app/lib/hooks/replicache";
+import { useManager, useUser } from "~/app/lib/hooks/user";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { UserRole } from "@printworks/core/users/shared";
-import type { User, UserWithProfile } from "@printworks/core/users/sql";
+import type { UserWithProfile } from "@printworks/core/users/sql";
 import type {
   ColumnDef,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
+import type { DeepReadonlyObject } from "replicache";
 
 const routeId = "/_authenticated/users/";
 
@@ -165,7 +167,7 @@ const columns = [
     enableHiding: false,
     cell: ({ row }) => <UserActionsMenu user={row.original} />,
   },
-] satisfies Array<ColumnDef<UserWithProfile>>;
+] satisfies Array<ColumnDef<DeepReadonlyObject<UserWithProfile>>>;
 
 function UsersCard() {
   const { initialUsers } = Route.useLoaderData();
@@ -198,7 +200,7 @@ function UsersCard() {
     },
   });
 
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   const shouldShowColumn = useCallback(
     (columnId: string) => {
@@ -347,29 +349,34 @@ function UsersCard() {
 }
 
 interface UserRoleCellProps {
-  user: UserWithProfile;
+  user: DeepReadonlyObject<UserWithProfile>;
 }
 function UserRoleCell(props: UserRoleCellProps) {
   const role = props.user.profile.role;
 
-  const { updateUserRole } = useMutator();
+  const { updateUserProfileRole } = useReplicache().client.mutate;
 
-  const { user } = useAuthenticated();
+  const user = useUser();
   const isSelf = user.id === props.user.id;
 
-  const mutate = async (role: User["role"]) =>
-    await updateUserRole({
+  const mutate = async (role: UserRole) =>
+    await updateUserProfileRole({
       id: props.user.id,
       role,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     });
 
   return (
     <>
-      <EnforceRbac roles={["administrator"]}>
-        {isSelf ? (
-          <Badge variant={role}>{role}</Badge>
-        ) : (
+      {isSelf ? (
+        <Badge variant={role}>{role}</Badge>
+      ) : (
+        <EnforceAbac
+          resource="users"
+          action="update"
+          input={[]}
+          unauthorized={<Badge variant={role}>{role}</Badge>}
+        >
           <Select
             aria-label="role"
             selectedKey={role}
@@ -389,23 +396,19 @@ function UserRoleCell(props: UserRoleCellProps) {
               </SelectListBox>
             </SelectPopover>
           </Select>
-        )}
-      </EnforceRbac>
-
-      <EnforceRbac roles={["operator", "manager", "customer"]}>
-        <Badge variant={role}>{role}</Badge>
-      </EnforceRbac>
+        </EnforceAbac>
+      )}
     </>
   );
 }
 
 interface UserActionsMenuProps {
-  user: User;
+  user: DeepReadonlyObject<UserWithProfile>;
 }
 function UserActionsMenu(props: UserActionsMenuProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(() => false);
 
-  const { restoreUser } = useMutator();
+  const { restoreUserProfile } = useReplicache().client.mutate;
 
   return (
     <MenuTrigger>
@@ -418,7 +421,10 @@ function UserActionsMenu(props: UserActionsMenuProps) {
           <MenuSection>
             <MenuHeader>Actions</MenuHeader>
 
-            <EnforceRbac roles={["administrator", "operator"]}>
+            <EnforceRouteAbac
+              routeId="/_authenticated/users/$userId"
+              input={[props.user.id]}
+            >
               <MenuItem
                 href={{
                   to: "/users/$userId",
@@ -428,11 +434,7 @@ function UserActionsMenu(props: UserActionsMenuProps) {
                 <Activity className="mr-2 size-4" />
                 Activity
               </MenuItem>
-            </EnforceRbac>
-
-            <EnforceRbac roles={["manager"]}>
-              <ManagerUserActionItems user={props.user} />
-            </EnforceRbac>
+            </EnforceRouteAbac>
           </MenuSection>
 
           {props.user.deletedAt ? (
@@ -441,7 +443,7 @@ function UserActionsMenu(props: UserActionsMenuProps) {
 
               <MenuSection>
                 <MenuItem
-                  onAction={() => restoreUser({ id: props.user.id })}
+                  onAction={() => restoreUserProfile({ id: props.user.id })}
                   className="text-green-600"
                 >
                   <UserRoundCheck className="mr-2 size-4" />
@@ -475,34 +477,5 @@ function UserActionsMenu(props: UserActionsMenuProps) {
         }}
       />
     </MenuTrigger>
-  );
-}
-
-interface ManagerUserActionItemsProps {
-  user: User;
-}
-function ManagerUserActionItems(props: ManagerUserActionItemsProps) {
-  const { customerIds } = useManager();
-
-  if (!customerIds.includes(props.user.id)) return null;
-
-  return (
-    <>
-      <UserActivityItem user={props.user} />
-    </>
-  );
-}
-
-interface UserActivityItemProps {
-  user: User;
-}
-function UserActivityItem(props: UserActivityItemProps) {
-  return (
-    <MenuItem
-      href={{ to: "/users/$userId", params: { userId: props.user.id } }}
-    >
-      <Activity className="mr-2 size-4" />
-      Activity
-    </MenuItem>
   );
 }

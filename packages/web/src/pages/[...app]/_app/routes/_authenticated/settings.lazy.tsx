@@ -1,7 +1,7 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 
 import { SettingsLayout } from "~/app/layouts/settings";
-import { useAuthenticated } from "~/app/lib/hooks/auth";
+import { useUser } from "~/app/lib/hooks/user";
 import { linksFactory } from "~/app/lib/links";
 
 export const Route = createLazyFileRoute("/_authenticated/settings")({
@@ -9,7 +9,7 @@ export const Route = createLazyFileRoute("/_authenticated/settings")({
 });
 
 function Component() {
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   return <SettingsLayout links={linksFactory.settings()[user.profile.role]} />;
 }

@@ -5,9 +5,9 @@ import { SlotContext } from "~/app/lib/contexts";
 import type { PropsWithChildren } from "react";
 import type { Slot } from "~/app/types";
 
-interface SlotProviderProps extends PropsWithChildren {
+type SlotProviderProps = PropsWithChildren<{
   slot: Slot;
-}
+}>;
 
 export function SlotProvider(props: SlotProviderProps) {
   const [slot] = useState(() => props.slot);

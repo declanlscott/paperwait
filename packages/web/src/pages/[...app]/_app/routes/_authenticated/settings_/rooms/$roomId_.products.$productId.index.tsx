@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { queryFactory } from "~/app/lib/hooks/data";
 
-const routeId = "/_authenticated/settings/rooms/$roomId/products/$productId/";
+const routeId = "/_authenticated/settings_/rooms/$roomId_/products/$productId/";
 
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>

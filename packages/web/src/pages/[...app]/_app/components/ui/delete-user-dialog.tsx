@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 
-import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   DialogContent,
@@ -12,8 +11,8 @@ import {
 } from "~/app/components/ui/primitives/dialog";
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/text-field";
-import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
 import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { useUser } from "~/app/lib/hooks/user";
 
 import type { User } from "@printworks/core/users/sql";
 import type { DialogOverlayProps } from "~/app/components/ui/primitives/dialog";
@@ -24,29 +23,25 @@ export interface DeleteUserDialogProps {
 }
 
 export function DeleteUserDialog(props: DeleteUserDialogProps) {
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   const userToDelete = useQuery(queryFactory.user(props.userId));
 
   const isSelf = user?.id === props.userId;
 
-  const { deleteUser } = useMutator();
+  const { deleteUserProfile } = useMutator();
 
   const targetConfirmationText = "delete";
   const [confirmationText, setConfirmationText] = useState(() => "");
 
   const isConfirmed = confirmationText === targetConfirmationText;
 
-  const logout = useLogout();
-
   async function mutate() {
     if (isConfirmed) {
-      await deleteUser({
+      await deleteUserProfile({
         id: props.userId,
-        deletedAt: new Date().toISOString(),
+        deletedAt: new Date(),
       });
-
-      if (isSelf) await logout();
     }
   }
 
@@ -70,11 +65,9 @@ export function DeleteUserDialog(props: DeleteUserDialogProps) {
                 deletion.
               </p>
 
-              <EnforceRbac roles={["administrator"]}>
-                <p className="text-muted-foreground text-sm">
-                  This action can be undone by an administrator.
-                </p>
-              </EnforceRbac>
+              <p className="text-muted-foreground text-sm">
+                This action can be undone by an administrator.
+              </p>
 
               <p className="text-muted-foreground text-sm">
                 To confirm deletion, enter "{targetConfirmationText}" in the

@@ -5,6 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { Check, CircleCheck, CircleDashed, Home, LogOut } from "lucide-react";
 
+import { EnforceAbac } from "~/app/components/ui/access-control";
 import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Avatar, AvatarImage } from "~/app/components/ui/primitives/avatar";
 import {
@@ -322,7 +323,7 @@ function RoomCommand(props: RoomCommandProps) {
                 </p>
               </CommandItem>
 
-              <EnforceRbac roles={["administrator", "operator"]}>
+              <EnforceAbac resource="rooms" action="update" input={[]}>
                 {room.status === "draft" ? (
                   <CommandItem onSelect={() => updateRoomStatus("published")}>
                     <CircleCheck className="mr-2 size-5" />
@@ -340,7 +341,7 @@ function RoomCommand(props: RoomCommandProps) {
                     </p>
                   </CommandItem>
                 )}
-              </EnforceRbac>
+              </EnforceAbac>
             </>
           )}
         </CommandGroup>

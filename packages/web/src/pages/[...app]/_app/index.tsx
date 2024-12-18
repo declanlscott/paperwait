@@ -10,7 +10,7 @@ import { ActorProvider } from "~/app/components/providers/actor";
 import { ReplicacheProvider } from "~/app/components/providers/replicache";
 import { ResourceProvider } from "~/app/components/providers/resource";
 import { SlotProvider } from "~/app/components/providers/slot";
-import { routePermissions } from "~/app/lib/access-control";
+import { checkRoutePermission } from "~/app/lib/access-control";
 import { useActor } from "~/app/lib/hooks/actor";
 import { useReplicache } from "~/app/lib/hooks/replicache";
 import { useResource } from "~/app/lib/hooks/resource";
@@ -18,10 +18,13 @@ import { initialLoginSearchParams } from "~/app/lib/schemas";
 import { routeTree } from "~/app/routeTree.gen";
 
 import type { Actor } from "@printworks/core/actors/shared";
+import type { UserRole } from "@printworks/core/users/shared";
+import type { User, UserWithProfile } from "@printworks/core/users/sql";
+import type { DeepReadonlyObject, ReadTransaction } from "replicache";
 import type { Resource } from "sst";
-import type { RoutePermissions } from "~/app/lib/access-control";
+import type { routePermissions } from "~/app/lib/access-control";
 import type { AuthActions } from "~/app/lib/contexts";
-import type { AppRouter, Slot } from "~/app/types";
+import type { AppRouter, AuthenticatedEagerRouteId, Slot } from "~/app/types";
 
 const queryClient = new QueryClient();
 
@@ -93,24 +96,30 @@ function AppRouter(props: AppRouterProps) {
     [actor],
   );
 
-  const authorizeRoute: AuthActions["authorizeRoute"] = useCallback(
-    async (tx, userId, routeId, ...input) => {
+  const authorizeRoute = useCallback(
+    async <
+      TRouteId extends AuthenticatedEagerRouteId,
+      TPermission extends (typeof routePermissions)[UserRole][TRouteId],
+    >(
+      tx: ReadTransaction,
+      userId: User["id"],
+      routeId: TRouteId,
+      ...input: TPermission extends (
+        tx: ReadTransaction,
+        user: DeepReadonlyObject<UserWithProfile>,
+        ...input: infer TInput
+      ) => unknown
+        ? TInput
+        : Array<never>
+    ) => {
       const user = await Replicache.get(tx, usersTableName, userId);
 
-      const permission = (routePermissions as RoutePermissions)[routeId][
-        user.profile.role
-      ];
-
-      const access = await new Promise<boolean>((resolve) => {
-        if (typeof permission === "boolean") return resolve(permission);
-
-        return resolve(permission(tx, user, ...input));
-      });
+      const access = await checkRoutePermission(tx, user, routeId, ...input);
 
       if (!access) throw new ApplicationError.AccessDenied();
     },
     [],
-  );
+  ) as AuthActions["authorizeRoute"];
 
   const auth = useMemo(
     () => ({ authenticateRoute, authorizeRoute }),

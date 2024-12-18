@@ -689,7 +689,7 @@ export namespace AccessControl {
     >
   >;
 
-  const permissionsFactory = {
+  export const permissionsFactory = {
     administrator: {
       [announcementsTable._.name]: {
         create: true,

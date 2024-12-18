@@ -4,8 +4,8 @@ import { tenantStatuses } from "@printworks/core/tenants/shared";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 
+import { EnforceAbac } from "~/app/components/ui/access-control";
 import { DeleteUserDialog } from "~/app/components/ui/delete-user-dialog";
-import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   Card,
@@ -31,8 +31,9 @@ import {
 } from "~/app/components/ui/primitives/select";
 import { Input } from "~/app/components/ui/primitives/text-field";
 import { Toggle } from "~/app/components/ui/primitives/toggle";
-import { useAuthenticated } from "~/app/lib/hooks/auth";
-import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useReplicache } from "~/app/lib/hooks/replicache";
+import { useUser } from "~/app/lib/hooks/user";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
 
@@ -53,9 +54,9 @@ const authenticatedRouteApi = getRouteApi("/_authenticated");
 function Component() {
   return (
     <div className="grid gap-6">
-      <EnforceRbac roles={["administrator"]}>
+      <EnforceAbac resource="tenants" action="update" input={[]}>
         <OrganizationCard />
-      </EnforceRbac>
+      </EnforceAbac>
 
       <DangerZoneCard />
     </div>
@@ -74,7 +75,7 @@ function OrganizationCard() {
   const [fullName, setFullName] = useState(() => tenant?.name);
   const [shortName, setShortName] = useState(() => tenant?.slug);
 
-  const { updateTenant } = useMutator();
+  const { updateTenant } = useReplicache().client.mutate;
 
   async function mutateName() {
     if (tenant && fullName) {
@@ -84,7 +85,7 @@ function OrganizationCard() {
       await updateTenant({
         id: tenant.id,
         name: fullName,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       });
     }
   }
@@ -97,7 +98,7 @@ function OrganizationCard() {
       await updateTenant({
         id: tenant.id,
         slug,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       });
     }
   }
@@ -168,16 +169,16 @@ function DangerZoneCard() {
       <CardContent className="grid gap-6">
         <DeleteAccount />
 
-        <EnforceRbac roles={["administrator"]}>
+        <EnforceAbac resource="tenants" action="update" input={[]}>
           <TenantStatusSelect />
-        </EnforceRbac>
+        </EnforceAbac>
       </CardContent>
     </Card>
   );
 }
 
 function DeleteAccount() {
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   return (
     <div className="flex justify-between gap-4">
@@ -206,7 +207,7 @@ function TenantStatusSelect() {
     defaultData: initialTenant,
   });
 
-  const { updateTenant } = useMutator();
+  const { updateTenant } = useReplicache().client.mutate;
 
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(
     () => false,
@@ -224,7 +225,7 @@ function TenantStatusSelect() {
       await updateTenant({
         id: tenant.id,
         status,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       });
     }
   }

@@ -13,10 +13,8 @@ import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { buttonStyles } from "~/styles/components/primitives/button";
 
 export const Route = createLazyFileRoute(
-  "/_authenticated/settings/rooms/$roomId/products/$productId",
-)({
-  component: Component,
-});
+  "/_authenticated/settings_/rooms/$roomId_/products/$productId",
+)({ component: Component });
 
 function Component() {
   const { roomId } = Route.useParams();

@@ -10,22 +10,20 @@ import {
   BreadcrumbSeparator,
 } from "~/app/components/ui/primitives/breadcrumbs";
 import { SettingsLayout } from "~/app/layouts/settings";
-import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useUser } from "~/app/lib/hooks/user";
 import { linksFactory } from "~/app/lib/links";
 import { buttonStyles } from "~/styles/components/primitives/button";
 
 export const Route = createLazyFileRoute(
-  "/_authenticated/settings/rooms/$roomId",
-)({
-  component: Component,
-});
+  "/_authenticated/settings_/rooms/$roomId",
+)({ component: Component });
 
 function Component() {
   const { roomId } = Route.useParams();
   const room = useQuery(queryFactory.room(roomId));
 
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   return (
     <SettingsLayout

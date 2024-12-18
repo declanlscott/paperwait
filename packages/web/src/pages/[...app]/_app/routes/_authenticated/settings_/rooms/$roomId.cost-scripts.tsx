@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const routeId = "/_authenticated/settings/rooms/$roomId/products";
+const routeId = "/_authenticated/settings_/rooms/$roomId/cost-scripts";
 
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>

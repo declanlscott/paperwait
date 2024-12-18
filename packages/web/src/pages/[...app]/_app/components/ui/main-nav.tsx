@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 import { CommandBar } from "~/app/components/ui/command-bar";
-import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
   BaseCombobox,
@@ -30,11 +29,11 @@ import {
 } from "~/app/components/ui/primitives/tooltip";
 import { UserMenu } from "~/app/components/ui/user-menu";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
-import { useAuthenticated } from "~/app/lib/hooks/auth";
 import { useCommandBarActions } from "~/app/lib/hooks/command-bar";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
 import { useIsSyncing } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
+import { useUser } from "~/app/lib/hooks/user";
 import { linksFactory } from "~/app/lib/links";
 import { linkStyles, logoStyles } from "~/styles/components/main-nav";
 
@@ -114,13 +113,11 @@ function RoomSelector() {
                   <div className="flex w-full items-center justify-between">
                     {room.name}
 
-                    <EnforceRbac roles={["administrator", "operator"]}>
-                      {room.status === "draft" ? (
-                        <CircleDashed className="size-4 opacity-50" />
-                      ) : (
-                        <CircleCheck className="size-4 opacity-50" />
-                      )}
-                    </EnforceRbac>
+                    {room.status === "draft" ? (
+                      <CircleDashed className="size-4 opacity-50" />
+                    ) : (
+                      <CircleCheck className="size-4 opacity-50" />
+                    )}
                   </div>
                 </ComboboxItem>
               )}
@@ -133,7 +130,7 @@ function RoomSelector() {
 }
 
 function NavList() {
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   return (
     <ul className="flex items-center">

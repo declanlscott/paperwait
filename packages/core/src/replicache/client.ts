@@ -85,11 +85,11 @@ export namespace Replicache {
       ),
     );
 
-  export const set = async (
+  export const set = async <TTableName extends SyncedTableName>(
     tx: WriteTransaction,
-    name: SyncedTableName,
+    name: TTableName,
     id: string,
-    value: unknown,
+    value: DeepReadonlyObject<TableByName<TTableName>["$inferSelect"]>,
   ) => tx.set(`${name}/${id}`, serialize(value) as Serialized);
 
   export async function del(

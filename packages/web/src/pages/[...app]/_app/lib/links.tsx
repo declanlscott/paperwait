@@ -45,9 +45,9 @@ const settingsGeneralLink = {
   icon: <Settings />,
 } satisfies AppLink;
 
-const settingsIntegrationsLink = {
+const settingsServicesLink = {
   name: "Integrations",
-  props: { href: linkOptions({ to: "/settings/integrations" }) },
+  props: { href: linkOptions({ to: "/settings/services" }) },
   icon: <Blocks />,
 } satisfies AppLink;
 
@@ -128,7 +128,7 @@ export const linksFactory = {
   settings: () => ({
     administrator: [
       settingsGeneralLink,
-      settingsIntegrationsLink,
+      settingsServicesLink,
       roomsSettingsLink,
       imagesSettingsLink,
     ],

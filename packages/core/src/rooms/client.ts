@@ -135,14 +135,20 @@ export namespace Rooms {
         args: [{ name: roomsTableName }],
       }),
     () =>
-      async (tx, { workflow }) => {
-        for (const status of workflow)
-          await Replicache.set(
-            tx,
-            workflowStatusesTableName,
-            status.id,
-            status,
-          );
+      async (tx, { workflow, roomId }) => {
+        const room = await Replicache.get(tx, roomsTableName, roomId);
+
+        let index = 0;
+        for (const status of workflow) {
+          await Replicache.set(tx, workflowStatusesTableName, status.id, {
+            ...status,
+            index,
+            roomId,
+            tenantId: room.tenantId,
+          });
+
+          index++;
+        }
 
         await R.pipe(
           await Replicache.scan(tx, workflowStatusesTableName),
@@ -165,9 +171,20 @@ export namespace Rooms {
         args: [{ name: deliveryOptionsTableName }],
       }),
     () =>
-      async (tx, { options }) => {
-        for (const option of options)
-          await Replicache.set(tx, deliveryOptionsTableName, option.id, option);
+      async (tx, { options, roomId }) => {
+        const room = await Replicache.get(tx, roomsTableName, roomId);
+
+        let index = 0;
+        for (const option of options) {
+          await Replicache.set(tx, deliveryOptionsTableName, option.id, {
+            ...option,
+            index,
+            roomId,
+            tenantId: room.tenantId,
+          });
+
+          index++;
+        }
 
         await R.pipe(
           await Replicache.scan(tx, deliveryOptionsTableName),

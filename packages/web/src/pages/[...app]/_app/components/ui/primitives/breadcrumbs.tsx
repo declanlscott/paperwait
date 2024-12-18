@@ -12,11 +12,10 @@ import {
 } from "~/styles/components/primitives/breadcrumbs";
 
 import type { ComponentProps } from "react";
+import type { BreadcrumbsProps as AriaBreadcrumbsProps } from "react-aria-components";
 
-export interface BreadcrumbsProps<TItem extends object>
-  extends ComponentProps<typeof AriaBreadcrumbs> {
-  items: Iterable<TItem> | undefined;
-}
+export type BreadcrumbsProps<TItem extends object> =
+  AriaBreadcrumbsProps<TItem> & ComponentProps<typeof AriaBreadcrumbs>;
 export const Breadcrumbs = <TItem extends object>({
   className,
   ...props

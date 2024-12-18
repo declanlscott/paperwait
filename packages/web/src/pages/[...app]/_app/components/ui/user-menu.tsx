@@ -5,7 +5,6 @@ import {
 import { Utils } from "@printworks/core/utils/client";
 import { Building2, LogOut } from "lucide-react";
 
-import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import {
   Avatar,
   AvatarFallback,
@@ -20,16 +19,14 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
-import { useAuthenticated, useLogout } from "~/app/lib/hooks/auth";
 import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useUser } from "~/app/lib/hooks/user";
 import { userMenuTriggerButtonStyles } from "~/styles/components/user-menu";
 
 export function UserMenu() {
-  const { user } = useAuthenticated();
+  const user = useUser();
 
   const tenant = useQuery(queryFactory.tenant());
-
-  const logout = useLogout();
 
   return (
     <MenuTrigger>
@@ -65,10 +62,9 @@ export function UserMenu() {
                   <span className="text-muted-foreground text-xs leading-none">
                     {tenant?.slug}
 
-                    <EnforceRbac roles={["administrator"]}>
-                      {" "}
-                      ({tenant?.status})
-                    </EnforceRbac>
+                    {user.profile.role === "administrator" ? (
+                      <> ({tenant?.status})</>
+                    ) : null}
                   </span>
                 </div>
               </div>
@@ -98,11 +94,11 @@ export function UserMenu() {
           <MenuSeparator />
 
           <MenuSection>
-            <MenuItem onAction={logout}>
+            {/* <MenuItem onAction={logout}>
               <LogOut className="text-destructive mr-2 size-4" />
 
               <span className="text-destructive">Logout</span>
-            </MenuItem>
+            </MenuItem> */}
           </MenuSection>
         </Menu>
       </MenuPopover>

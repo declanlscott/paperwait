@@ -252,9 +252,6 @@ importers:
       '@tanstack/router-vite-plugin':
         specifier: ^1.91.1
         version: 1.91.1(vite@6.0.3(@types/node@22.10.2)(jiti@1.21.6)(tsx@4.19.2)(yaml@2.6.1))
-      '@tanstack/valibot-form-adapter':
-        specifier: ^0.40.4
-        version: 0.40.4(valibot@1.0.0-beta.8(typescript@5.7.2))
       astro:
         specifier: ^5.0.9
         version: 5.0.9(@types/node@22.10.2)(jiti@1.21.6)(rollup@4.28.1)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.6.1)
@@ -3452,11 +3449,6 @@ packages:
   '@tanstack/table-core@8.20.5':
     resolution: {integrity: sha512-P9dF7XbibHph2PFRz8gfBKEXEY/HJPOhym8CHmjF8y3q5mWpKx9xtZapXQUWCgkqvsK0R46Azuz+VaxD4Xl+Tg==}
     engines: {node: '>=12'}
-
-  '@tanstack/valibot-form-adapter@0.40.4':
-    resolution: {integrity: sha512-jcDsDYIltoyKAvDtJKf5hSHdhD5sqRY1ZO7JrSChBOCGl+MpQ8cSvmVKNHeoOoN0LeR4mfCsutxq+e1gAyUD5A==}
-    peerDependencies:
-      valibot: ^1.0.0 || ^1.0.0-beta.4 || ^1.0.0-rc
 
   '@tanstack/virtual-file-routes@1.87.6':
     resolution: {integrity: sha512-PTpeM8SHL7AJM0pJOacFvHribbUODS51qe9NsMqku4mogh6BWObY1EeVmeGnp9o3VngAEsf+rJMs2zqIVz3WFA==}
@@ -11267,11 +11259,6 @@ snapshots:
   '@tanstack/store@0.6.0': {}
 
   '@tanstack/table-core@8.20.5': {}
-
-  '@tanstack/valibot-form-adapter@0.40.4(valibot@1.0.0-beta.8(typescript@5.7.2))':
-    dependencies:
-      '@tanstack/form-core': 0.40.4
-      valibot: 1.0.0-beta.8(typescript@5.7.2)
 
   '@tanstack/virtual-file-routes@1.87.6': {}
 

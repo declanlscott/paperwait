@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { mutationRbac } from "@printworks/core/replicache/shared";
 import { roomStatuses } from "@printworks/core/rooms/shared";
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import {
@@ -19,8 +18,8 @@ import {
   View,
 } from "lucide-react";
 
+import { EnforceAbac } from "~/app/components/ui/access-control";
 import { DeleteRoomDialog } from "~/app/components/ui/delete-room-dialog";
-import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Badge } from "~/app/components/ui/primitives/badge";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
@@ -55,7 +54,8 @@ import {
   TableRow,
 } from "~/app/components/ui/primitives/table";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
-import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useReplicache } from "~/app/lib/hooks/replicache";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { Product } from "@printworks/core/products/sql";
@@ -300,13 +300,13 @@ interface RoomStatusSelectProps {
 function RoomStatusSelect(props: RoomStatusSelectProps) {
   const status = props.room.status;
 
-  const { updateRoom } = useMutator();
+  const { updateRoom } = useReplicache().client.mutate;
 
   const mutate = async (status: Room["status"]) =>
     await updateRoom({
       id: props.room.id,
       status,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date(),
     });
 
   return (
@@ -347,7 +347,7 @@ interface RoomActionsMenuProps {
 function RoomActionsMenu(props: RoomActionsMenuProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(() => false);
 
-  const { restoreRoom } = useMutator();
+  const { restoreRoom } = useReplicache().client.mutate;
 
   return (
     <MenuTrigger>
@@ -380,7 +380,7 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
             </MenuItem>
 
             {props.room.deletedAt ? (
-              <EnforceRbac roles={mutationRbac.restoreRoom}>
+              <EnforceAbac resource="rooms" action="update" input={[]}>
                 <MenuSeparator />
 
                 <MenuSection>
@@ -392,9 +392,9 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
                     Restore
                   </MenuItem>
                 </MenuSection>
-              </EnforceRbac>
+              </EnforceAbac>
             ) : (
-              <EnforceRbac roles={mutationRbac.deleteRoom}>
+              <EnforceAbac resource="rooms" action="delete" input={[]}>
                 <MenuSeparator />
 
                 <MenuSection>
@@ -406,7 +406,7 @@ function RoomActionsMenu(props: RoomActionsMenuProps) {
                     Delete
                   </MenuItem>
                 </MenuSection>
-              </EnforceRbac>
+              </EnforceAbac>
             )}
           </MenuSection>
         </Menu>

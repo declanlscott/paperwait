@@ -25,12 +25,11 @@ import type { Comment } from "../comments/sql";
 import type { Order } from "../orders/sql";
 import type { UserRole } from "../users/shared";
 import type { User, UserWithProfile } from "../users/sql";
-import type { SyncedTableName } from "../utils/tables";
 import type { AnyError, CustomError, InferCustomError } from "../utils/types";
 import type { Action, Resource } from "./shared";
 
 export namespace AccessControl {
-  type PermissionsFactory = Record<
+  export type PermissionsFactory = Record<
     UserRole,
     Record<
       Resource,
@@ -47,7 +46,7 @@ export namespace AccessControl {
     >
   >;
 
-  const permissionsFactory = {
+  export const permissionsFactory = {
     administrator: {
       [announcementsTableName]: {
         create: true,
@@ -653,7 +652,7 @@ export namespace AccessControl {
   } as const satisfies PermissionsFactory;
 
   export async function check<
-    TResource extends SyncedTableName,
+    TResource extends Resource,
     TAction extends Action,
     TPermission extends
       (typeof permissionsFactory)[UserRole][TResource][TAction],
@@ -682,7 +681,7 @@ export namespace AccessControl {
   }
 
   export async function enforce<
-    TResource extends SyncedTableName,
+    TResource extends Resource,
     TAction extends Action,
     TPermission extends
       (typeof permissionsFactory)[UserRole][TResource][TAction],

@@ -39,7 +39,7 @@ import { labelStyles } from "~/styles/components/primitives/field";
 import type { ComponentProps } from "react";
 import type { ErrorRouteComponent } from "@tanstack/react-router";
 
-const routeId = "/_authenticated/settings/integrations";
+const routeId = "/_authenticated/settings/services";
 
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>

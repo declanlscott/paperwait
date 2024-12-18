@@ -80,6 +80,10 @@ export const workflowStatusTypes = [
   "Completed",
 ] as const;
 export type WorkflowStatusType = (typeof workflowStatusTypes)[number];
+export type PostReviewWorkflowStatusType = Exclude<
+  WorkflowStatusType,
+  "Review"
+>;
 
 export const defaultWorkflow = [
   {
@@ -124,42 +128,43 @@ export const workflowStatusSchema = v.object({
   tenantId: nanoIdSchema,
 });
 
-export const workflowMutationNames = ["setWorkflow"] as const;
-
-export const setWorkflowMutationArgsSchema = v.object({
-  workflow: v.pipe(
-    v.array(
-      v.object({
-        ...v.omit(workflowStatusSchema, ["index", "roomId", "tenantId", "type"])
-          .entries,
-        type: v.picklist(
-          workflowStatusTypes.filter((type) => type !== "Review"),
-        ),
-      }),
-    ),
-    v.check(
-      (input) => isUniqueByKey("id", input),
-      "Workflow status names must be unique",
-    ),
-    v.check(
-      (workflow) =>
-        R.pipe(
-          workflow,
-          R.conditional(
-            [R.isEmpty, () => true],
-            R.conditional.defaultCase(() =>
-              R.pipe(
-                workflow,
-                R.filter((status) => status.type === "New"),
-                R.length(),
-                R.isDeepEqual(1),
-              ),
+export const workflowSchema = v.pipe(
+  v.array(
+    v.object({
+      ...v.omit(workflowStatusSchema, ["index", "roomId", "tenantId", "type"])
+        .entries,
+      type: v.picklist(workflowStatusTypes.filter((type) => type !== "Review")),
+    }),
+  ),
+  v.check(
+    (input) => isUniqueByKey("id", input),
+    "Workflow status names must be unique",
+  ),
+  v.check(
+    (workflow) =>
+      R.pipe(
+        workflow,
+        R.conditional(
+          [R.isEmpty, () => true],
+          R.conditional.defaultCase(() =>
+            R.pipe(
+              workflow,
+              R.filter((status) => status.type === "New"),
+              R.length(),
+              R.isDeepEqual(1),
             ),
           ),
         ),
-      "Workflow must have exactly one status of type 'New'",
-    ),
+      ),
+    "Workflow must have exactly one status of type 'New'",
   ),
+);
+export type Workflow = v.InferOutput<typeof workflowSchema>;
+
+export const workflowMutationNames = ["setWorkflow"] as const;
+
+export const setWorkflowMutationArgsSchema = v.object({
+  workflow: workflowSchema,
   roomId: nanoIdSchema,
 });
 
@@ -179,15 +184,18 @@ export const deliveryOptionSchema = v.object({
   tenantId: nanoIdSchema,
 });
 
+export const deliveryOptionsSchema = v.pipe(
+  v.array(v.omit(deliveryOptionSchema, ["index", "roomId", "tenantId"])),
+  v.check(
+    (input) => isUniqueByKey("id", input),
+    "Delivery option names must be unique",
+  ),
+);
+export type DeliveryOptions = v.InferOutput<typeof deliveryOptionsSchema>;
+
 export const deliveryOptionsMutationNames = ["setDeliveryOptions"] as const;
 
 export const setDeliveryOptionsMutationArgsSchema = v.object({
-  options: v.pipe(
-    v.array(v.omit(deliveryOptionSchema, ["index", "roomId", "tenantId"])),
-    v.check(
-      (input) => isUniqueByKey("id", input),
-      "Delivery option names must be unique",
-    ),
-  ),
+  options: deliveryOptionsSchema,
   roomId: nanoIdSchema,
 });

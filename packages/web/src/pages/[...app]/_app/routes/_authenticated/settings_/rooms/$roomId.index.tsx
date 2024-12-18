@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 import { roomStatuses } from "@printworks/core/rooms/shared";
-import { ApplicationError } from "@printworks/core/utils/errors";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Delete, HousePlus, Lock, LockOpen, Pencil, Save } from "lucide-react";
 
+import { EnforceAbac } from "~/app/components/ui/access-control";
 import { DeleteRoomDialog } from "~/app/components/ui/delete-room-dialog";
-import { EnforceRbac } from "~/app/components/ui/enforce-rbac";
 import { Markdown } from "~/app/components/ui/markdown";
 import { Button } from "~/app/components/ui/primitives/button";
 import {
@@ -26,13 +25,15 @@ import {
 } from "~/app/components/ui/primitives/select";
 import { Input, TextArea } from "~/app/components/ui/primitives/text-field";
 import { Toggle } from "~/app/components/ui/primitives/toggle";
-import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useReplicache } from "~/app/lib/hooks/replicache";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
+import { inputStyles } from "~/styles/components/primitives/text-field";
 
 import type { RoomStatus } from "@printworks/core/rooms/shared";
 
-const routeId = "/_authenticated/settings/rooms/$roomId/";
+const routeId = "/_authenticated/settings_/rooms/$roomId/";
 
 export const Route = createFileRoute(routeId)({
   beforeLoad: ({ context }) =>
@@ -54,9 +55,7 @@ function Component() {
     <div className="grid gap-6">
       <RoomCard />
 
-      <EnforceRbac roles={["administrator"]}>
-        <DangerZoneCard />
-      </EnforceRbac>
+      <DangerZoneCard />
     </div>
   );
 }
@@ -70,16 +69,16 @@ function RoomCard() {
   });
 
   const [isLocked, setIsLocked] = useState(() => true);
-  const [name, setName] = useState(() => room?.name);
+  const [name, setName] = useState(() => room.name);
 
-  const { updateRoom } = useMutator();
+  const { updateRoom } = useReplicache().client.mutate;
 
   async function mutateName() {
-    if (room && name && name !== room.name)
+    if (name !== room.name)
       await updateRoom({
         id: room.id,
         name,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       });
   }
 
@@ -88,38 +87,47 @@ function RoomCard() {
       <CardHeader className="flex-row justify-between gap-4 space-y-0">
         <CardTitle>Room</CardTitle>
 
-        {room?.deletedAt ? null : (
-          <Toggle onPress={() => setIsLocked((isLocked) => !isLocked)}>
-            {({ isHovered }) =>
-              isLocked ? (
-                isHovered ? (
-                  <LockOpen className="size-5" />
-                ) : (
+        <EnforceAbac resource="rooms" action="update" input={[]}>
+          {room.deletedAt ? null : (
+            <Toggle onPress={() => setIsLocked((isLocked) => !isLocked)}>
+              {({ isHovered }) =>
+                isLocked ? (
+                  isHovered ? (
+                    <LockOpen className="size-5" />
+                  ) : (
+                    <Lock className="size-5" />
+                  )
+                ) : isHovered ? (
                   <Lock className="size-5" />
+                ) : (
+                  <LockOpen className="size-5" />
                 )
-              ) : isHovered ? (
-                <Lock className="size-5" />
-              ) : (
-                <LockOpen className="size-5" />
-              )
-            }
-          </Toggle>
-        )}
+              }
+            </Toggle>
+          )}
+        </EnforceAbac>
       </CardHeader>
 
       <CardContent className="space-y-4">
         <AriaTextField>
           <Label>Name</Label>
 
-          <Input
-            disabled={isLocked}
-            value={name ?? ""}
-            onChange={(e) => setName(e.target.value)}
-            onBlur={mutateName}
-          />
+          <EnforceAbac
+            resource="rooms"
+            action="update"
+            input={[]}
+            unauthorized={<span className={inputStyles()}>{name}</span>}
+          >
+            <Input
+              disabled={isLocked}
+              value={name ?? ""}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={mutateName}
+            />
+          </EnforceAbac>
         </AriaTextField>
 
-        <RoomStatusSelect />
+        <RoomStatus />
 
         <RoomDetails isLocked={isLocked} />
       </CardContent>
@@ -127,7 +135,7 @@ function RoomCard() {
   );
 }
 
-function RoomStatusSelect() {
+function RoomStatus() {
   const { roomId } = Route.useParams();
   const { initialRoom } = Route.useLoaderData();
 
@@ -135,14 +143,14 @@ function RoomStatusSelect() {
     defaultData: initialRoom,
   });
 
-  const { updateRoom } = useMutator();
+  const { updateRoom } = useReplicache().client.mutate;
 
   async function mutate(status: RoomStatus) {
-    if (room && status !== room.status)
+    if (status !== room.status)
       await updateRoom({
         id: room.id,
         status,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       });
   }
 
@@ -151,34 +159,36 @@ function RoomStatusSelect() {
       <div>
         <span className={labelStyles()}>Status</span>
 
-        <CardDescription>{`The room status is currently "${room?.status ?? ""}".`}</CardDescription>
+        <CardDescription>{`The room status is currently "${room.status}".`}</CardDescription>
       </div>
 
-      <Select
-        aria-label="status"
-        selectedKey={room?.status}
-        onSelectionChange={onSelectionChange(roomStatuses, mutate)}
-        isDisabled={!!room?.deletedAt}
-      >
-        <Button>
-          <Pencil className="mr-2 size-5" />
-          Change Status
-        </Button>
+      <EnforceAbac resource="rooms" action="update" input={[]}>
+        <Select
+          aria-label="status"
+          selectedKey={room.status}
+          onSelectionChange={onSelectionChange(roomStatuses, mutate)}
+          isDisabled={!!room.deletedAt}
+        >
+          <Button>
+            <Pencil className="mr-2 size-5" />
+            Change Status
+          </Button>
 
-        <SelectPopover>
-          <SelectListBox items={roomStatuses.map(collectionItem)}>
-            {(item) => (
-              <SelectItem
-                id={item.name}
-                textValue={item.name}
-                className="capitalize"
-              >
-                {item.name}
-              </SelectItem>
-            )}
-          </SelectListBox>
-        </SelectPopover>
-      </Select>
+          <SelectPopover>
+            <SelectListBox items={roomStatuses.map(collectionItem)}>
+              {(item) => (
+                <SelectItem
+                  id={item.name}
+                  textValue={item.name}
+                  className="capitalize"
+                >
+                  {item.name}
+                </SelectItem>
+              )}
+            </SelectListBox>
+          </SelectPopover>
+        </Select>
+      </EnforceAbac>
     </div>
   );
 }
@@ -194,19 +204,19 @@ function RoomDetails(props: RoomDetailsProps) {
     defaultData: initialRoom,
   });
 
-  const [details, setDetails] = useState(() => room?.details);
+  const [details, setDetails] = useState(() => room.details);
   const [isEditing, setIsEditing] = useState(() => false);
 
-  const markdown = props.isLocked ? room?.details : details;
+  const markdown = props.isLocked ? room.details : details;
 
-  const { updateRoom } = useMutator();
+  const { updateRoom } = useReplicache().client.mutate;
 
   const saveDetails = async () => {
     if (room && details !== room.details)
       await updateRoom({
         id: room.id,
         details,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       });
   };
 
@@ -222,40 +232,59 @@ function RoomDetails(props: RoomDetailsProps) {
           </CardDescription>
         </div>
 
-        <div className="flex gap-2">
-          <Toggle onPress={() => setIsEditing((toggle) => !toggle)}>
-            <Pencil className="size-5" />
-          </Toggle>
+        <EnforceAbac resource="rooms" action="update" input={[]}>
+          <div className="flex gap-2">
+            <Toggle onPress={() => setIsEditing((toggle) => !toggle)}>
+              <Pencil className="size-5" />
+            </Toggle>
 
-          <Button
-            isDisabled={
-              props.isLocked || room?.details === details || !!room?.deletedAt
-            }
-            onPress={saveDetails}
-          >
-            <Save className="mr-2 size-5" />
-            Save
-          </Button>
-        </div>
+            <Button
+              isDisabled={
+                props.isLocked || room.details === details || !!room.deletedAt
+              }
+              onPress={saveDetails}
+            >
+              <Save className="mr-2 size-5" />
+              Save
+            </Button>
+          </div>
+        </EnforceAbac>
       </div>
 
-      {isEditing ? (
-        <TextArea
-          disabled={props.isLocked}
-          value={details ?? ""}
-          onChange={(e) => setDetails(e.target.value)}
-        />
-      ) : (
-        <Card className="bg-muted/20 p-4">
-          {markdown ? (
-            <Markdown>{markdown}</Markdown>
-          ) : (
-            <CardDescription>
-              There are no details for this room.
-            </CardDescription>
-          )}
-        </Card>
-      )}
+      <EnforceAbac
+        resource="rooms"
+        action="update"
+        input={[]}
+        unauthorized={
+          <Card className="bg-muted/20 p-4">
+            {markdown ? (
+              <Markdown>{markdown}</Markdown>
+            ) : (
+              <CardDescription>
+                There are no details for this room.
+              </CardDescription>
+            )}
+          </Card>
+        }
+      >
+        {isEditing ? (
+          <TextArea
+            disabled={props.isLocked}
+            value={details ?? ""}
+            onChange={(e) => setDetails(e.target.value)}
+          />
+        ) : (
+          <Card className="bg-muted/20 p-4">
+            {markdown ? (
+              <Markdown>{markdown}</Markdown>
+            ) : (
+              <CardDescription>
+                There are no details for this room.
+              </CardDescription>
+            )}
+          </Card>
+        )}
+      </EnforceAbac>
     </>
   );
 }
@@ -275,7 +304,15 @@ function DangerZoneCard() {
       </CardHeader>
 
       <CardContent className="grid gap-6">
-        {room?.deletedAt ? <RestoreRoom /> : <DeleteRoom />}
+        {room.deletedAt ? (
+          <EnforceAbac resource="rooms" action="update" input={[]}>
+            <RestoreRoom />
+          </EnforceAbac>
+        ) : (
+          <EnforceAbac resource="rooms" action="delete" input={[]}>
+            <DeleteRoom />
+          </EnforceAbac>
+        )}
       </CardContent>
     </Card>
   );
@@ -307,7 +344,7 @@ function DeleteRoom() {
 function RestoreRoom() {
   const { roomId } = Route.useParams();
 
-  const { restoreRoom } = useMutator();
+  const { restoreRoom } = useReplicache().client.mutate;
 
   return (
     <div className="flex justify-between gap-4">

@@ -13,9 +13,9 @@ import { initialLoginSearchParams } from "~/app/lib/schemas";
 import type { PropsWithChildren } from "react";
 import type { AppRouter } from "~/app/types";
 
-interface ReplicacheProviderProps extends PropsWithChildren {
+type ReplicacheProviderProps = PropsWithChildren<{
   router: AppRouter;
-}
+}>;
 
 export function ReplicacheProvider(props: ReplicacheProviderProps) {
   const actor = useActor();

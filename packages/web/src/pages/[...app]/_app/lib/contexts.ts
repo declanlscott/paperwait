@@ -21,7 +21,7 @@ export type AuthActions = {
   authenticateRoute: (from: string) => Extract<Actor, { type: "user" }>;
   authorizeRoute: <
     TRouteId extends AuthenticatedEagerRouteId,
-    TPermission extends (typeof routePermissions)[TRouteId][UserRole],
+    TPermission extends (typeof routePermissions)[UserRole][TRouteId],
   >(
     tx: ReadTransaction,
     userId: User["id"],
