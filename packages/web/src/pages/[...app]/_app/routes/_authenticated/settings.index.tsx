@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TextField as AriaTextField } from "react-aria-components";
 import { tenantStatuses } from "@printworks/core/tenants/shared";
-import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Lock, LockOpen, Pencil, UserRoundX } from "lucide-react";
 
 import { EnforceAbac } from "~/app/components/ui/access-control";
@@ -31,8 +31,8 @@ import {
 } from "~/app/components/ui/primitives/select";
 import { Input } from "~/app/components/ui/primitives/text-field";
 import { Toggle } from "~/app/components/ui/primitives/toggle";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { useMutator } from "~/app/lib/hooks/data";
+import { useTenant } from "~/app/lib/hooks/tenant";
 import { useUser } from "~/app/lib/hooks/user";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
@@ -49,8 +49,6 @@ export const Route = createFileRoute(routeId)({
   component: Component,
 });
 
-const authenticatedRouteApi = getRouteApi("/_authenticated");
-
 function Component() {
   return (
     <div className="grid gap-6">
@@ -64,43 +62,35 @@ function Component() {
 }
 
 function OrganizationCard() {
-  const { initialTenant } = authenticatedRouteApi.useLoaderData();
-
-  const tenant = useQuery(queryFactory.tenant(), {
-    defaultData: initialTenant,
-  });
+  const tenant = useTenant();
 
   const [isLocked, setIsLocked] = useState(() => true);
 
-  const [fullName, setFullName] = useState(() => tenant?.name);
-  const [shortName, setShortName] = useState(() => tenant?.slug);
+  const [fullName, setFullName] = useState(() => tenant.name);
+  const [shortName, setShortName] = useState(() => tenant.slug);
 
-  const { updateTenant } = useReplicache().client.mutate;
+  const { updateTenant } = useMutator();
 
   async function mutateName() {
-    if (tenant && fullName) {
-      const name = fullName.trim();
-      if (name === tenant.name) return;
+    const name = fullName.trim();
+    if (name === tenant.name) return;
 
-      await updateTenant({
-        id: tenant.id,
-        name: fullName,
-        updatedAt: new Date(),
-      });
-    }
+    await updateTenant({
+      id: tenant.id,
+      name: fullName,
+      updatedAt: new Date(),
+    });
   }
 
   async function mutateSlug() {
-    if (tenant && shortName) {
-      const slug = shortName.trim();
-      if (slug === tenant.slug) return;
+    const slug = shortName.trim();
+    if (slug === tenant.slug) return;
 
-      await updateTenant({
-        id: tenant.id,
-        slug,
-        updatedAt: new Date(),
-      });
-    }
+    await updateTenant({
+      id: tenant.id,
+      slug,
+      updatedAt: new Date(),
+    });
   }
 
   return (
@@ -201,13 +191,9 @@ function DeleteAccount() {
 }
 
 function TenantStatusSelect() {
-  const { initialTenant } = authenticatedRouteApi.useLoaderData();
+  const tenant = useTenant();
 
-  const tenant = useQuery(queryFactory.tenant(), {
-    defaultData: initialTenant,
-  });
-
-  const { updateTenant } = useReplicache().client.mutate;
+  const { updateTenant } = useMutator();
 
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(
     () => false,
@@ -215,19 +201,17 @@ function TenantStatusSelect() {
 
   const [confirmationText, setConfirmationText] = useState(() => "");
 
-  const isConfirmed = confirmationText === tenant?.name;
+  const isConfirmed = confirmationText === tenant.name;
 
   async function mutate(status: TenantStatus) {
-    if (tenant) {
-      if (status === "initializing") return;
-      if (status === tenant.status) return;
+    if (status === "initializing") return;
+    if (status === tenant.status) return;
 
-      await updateTenant({
-        id: tenant.id,
-        status,
-        updatedAt: new Date(),
-      });
-    }
+    await updateTenant({
+      id: tenant.id,
+      status,
+      updatedAt: new Date(),
+    });
   }
 
   return (
@@ -235,16 +219,16 @@ function TenantStatusSelect() {
       <div>
         <span className={labelStyles()}>Status</span>
 
-        <CardDescription>{`This organization is currently "${tenant?.status ?? ""}".`}</CardDescription>
+        <CardDescription>{`This organization is currently "${tenant.status}".`}</CardDescription>
       </div>
 
       <Select
         aria-label="status"
-        selectedKey={tenant?.status}
+        selectedKey={tenant.status}
         onSelectionChange={onSelectionChange(tenantStatuses, (status) => {
           if (status === "active") return mutate("active");
 
-          if (status === "suspended" && tenant?.status !== "suspended")
+          if (status === "suspended" && tenant.status !== "suspended")
             return setIsConfirmationDialogOpen(true);
         })}
       >
@@ -281,7 +265,7 @@ function TenantStatusSelect() {
           {({ close }) => (
             <>
               <DialogHeader>
-                <DialogTitle>Suspend "{tenant?.name}"?</DialogTitle>
+                <DialogTitle>Suspend "{tenant.name}"?</DialogTitle>
 
                 <p className="text-muted-foreground text-sm">
                   Are you sure you want to continue? This action may be
@@ -299,7 +283,7 @@ function TenantStatusSelect() {
                   <Label>Full Name</Label>
 
                   <Input
-                    placeholder={tenant?.name}
+                    placeholder={tenant.name}
                     value={confirmationText}
                     onChange={(e) => setConfirmationText(e.target.value)}
                   />

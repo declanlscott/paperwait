@@ -13,7 +13,7 @@ import {
 
 import type { Product } from "@printworks/core/products/sql";
 import type { Room } from "@printworks/core/rooms/sql";
-import type { AppLink, AppLinksFactory } from "~/app/types";
+import type { AppLink, AppLinks } from "~/app/types";
 
 const dashboardLink = {
   name: "Dashboard",
@@ -118,7 +118,7 @@ const imagesSettingsLink = {
   icon: <Image />,
 } satisfies AppLink;
 
-export const linksFactory = {
+export const links = {
   mainNav: () => ({
     administrator: [dashboardLink, productsLinks, usersLink, settingsLink],
     operator: [dashboardLink, productsLinks, usersLink, settingsLink],
@@ -158,4 +158,4 @@ export const linksFactory = {
     manager: [],
     customer: [],
   }),
-} satisfies AppLinksFactory;
+} satisfies AppLinks;

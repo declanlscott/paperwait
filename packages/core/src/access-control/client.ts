@@ -29,7 +29,7 @@ import type { AnyError, CustomError, InferCustomError } from "../utils/types";
 import type { Action, Resource } from "./shared";
 
 export namespace AccessControl {
-  export type PermissionsFactory = Record<
+  export type Permissions = Record<
     UserRole,
     Record<
       Resource,
@@ -46,7 +46,7 @@ export namespace AccessControl {
     >
   >;
 
-  export const permissionsFactory = {
+  export const permissions = {
     administrator: {
       [announcementsTableName]: {
         create: true,
@@ -649,13 +649,12 @@ export namespace AccessControl {
         delete: false,
       },
     },
-  } as const satisfies PermissionsFactory;
+  } as const satisfies Permissions;
 
   export async function check<
     TResource extends Resource,
     TAction extends Action,
-    TPermission extends
-      (typeof permissionsFactory)[UserRole][TResource][TAction],
+    TPermission extends (typeof permissions)[UserRole][TResource][TAction],
   >(
     tx: WriteTransaction,
     user: DeepReadonlyObject<UserWithProfile>,
@@ -669,9 +668,9 @@ export namespace AccessControl {
       ? TInput
       : Array<never>
   ) {
-    const permission = (permissionsFactory as PermissionsFactory)[
-      user.profile.role
-    ][resource][action];
+    const permission = (permissions as Permissions)[user.profile.role][
+      resource
+    ][action];
 
     return new Promise<boolean>((resolve) => {
       if (typeof permission === "boolean") return resolve(permission);
@@ -683,8 +682,7 @@ export namespace AccessControl {
   export async function enforce<
     TResource extends Resource,
     TAction extends Action,
-    TPermission extends
-      (typeof permissionsFactory)[UserRole][TResource][TAction],
+    TPermission extends (typeof permissions)[UserRole][TResource][TAction],
     TMaybeError extends AnyError | undefined,
   >(
     args: Parameters<typeof check<TResource, TAction, TPermission>>,

@@ -8,12 +8,7 @@ import { ssmClient } from "~/api/middleware/aws";
 export default new Hono()
   .put(
     "/server/tailnet-uri",
-    vValidator(
-      "json",
-      v.object({
-        tailnetUri: v.pipe(v.string(), v.url()),
-      }),
-    ),
+    vValidator("json", v.object({ tailnetUri: v.pipe(v.string(), v.url()) })),
     ssmClient("SetTailnetPapercutServerUri"),
     async (c) => {
       await Papercut.setTailnetServerUri(c.req.valid("json").tailnetUri);

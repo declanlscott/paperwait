@@ -49,7 +49,7 @@ import {
   SelectTrigger,
 } from "~/app/components/ui/primitives/select";
 import { Input } from "~/app/components/ui/primitives/text-field";
-import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { query, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem } from "~/app/lib/ui";
 import { cardStyles } from "~/styles/components/primitives/card";
 
@@ -64,8 +64,8 @@ export const Route = createFileRoute(routeId)({
     ),
   loader: async ({ context, params }) => {
     const [initialDeliveryOptions, initialWorkflow] = await Promise.all([
-      context.replicache.query(queryFactory.deliveryOptions(params.roomId)),
-      context.replicache.query(queryFactory.workflow(params.roomId)),
+      context.replicache.query(query.deliveryOptions(params.roomId)),
+      context.replicache.query(query.workflow(params.roomId)),
     ]);
 
     return { initialDeliveryOptions, initialWorkflow };
@@ -86,7 +86,7 @@ function Component() {
 function WorkflowCard() {
   const roomId = Route.useParams().roomId;
 
-  const workflow = useQuery(queryFactory.workflow(roomId), {
+  const workflow = useQuery(query.workflow(roomId), {
     defaultData: Route.useLoaderData().initialWorkflow,
   });
 
@@ -414,7 +414,7 @@ function WorkflowCard() {
 function DeliveryOptionsCard() {
   const { roomId } = Route.useParams();
 
-  const deliveryOptions = useQuery(queryFactory.deliveryOptions(roomId), {
+  const deliveryOptions = useQuery(query.deliveryOptions(roomId), {
     defaultData: Route.useLoaderData().initialDeliveryOptions,
   });
 

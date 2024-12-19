@@ -1,26 +1,29 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { AuthenticatedLayout } from '~/app/layouts/authenticated'
-import { queryFactory } from '~/app/lib/hooks/data'
-import { initialLoginSearchParams } from '~/app/lib/schemas'
+import { AuthenticatedLayout } from "~/app/layouts/authenticated";
+import { query } from "~/app/lib/hooks/data";
+import { initialLoginSearchParams } from "~/app/lib/schemas";
 
-export const Route = createFileRoute('/_authenticated')({
+export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
-    const actor = context.auth.authenticateRoute(location.href)
+    const actor = context.auth.authenticateRoute(location.href);
 
-    if (context.replicache.status !== 'ready')
+    if (context.replicache.status !== "ready")
       throw redirect({
-        to: '/login',
+        to: "/login",
         search: { redirect: location.href, ...initialLoginSearchParams },
-      })
+      });
 
-    return { actor, replicache: context.replicache.client }
+    return { actor, replicache: context.replicache.client };
   },
   loader: async ({ context }) => {
-    const initialTenant = await context.replicache.query(queryFactory.tenant())
-    const initialRooms = await context.replicache.query(queryFactory.rooms())
+    const [initialTenant, initialRooms, initialUser] = await Promise.all([
+      context.replicache.query(query.tenant(context.actor.properties.tenantId)),
+      context.replicache.query(query.rooms()),
+      context.replicache.query(query.user(context.actor.properties.id)),
+    ]);
 
-    return { initialTenant, initialRooms }
+    return { initialTenant, initialRooms, initialUser };
   },
   component: AuthenticatedLayout,
-})
+});

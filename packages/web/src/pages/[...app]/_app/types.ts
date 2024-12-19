@@ -4,7 +4,7 @@ import type { Room } from "@printworks/core/rooms/sql";
 import type { UserRole } from "@printworks/core/users/shared";
 import type { EndsWith, StartsWith } from "@printworks/core/utils/types";
 import type { RankingInfo } from "@tanstack/match-sorter-utils";
-import type { MutationOptions } from "@tanstack/react-query";
+import type { MutationOptions as _MutationOptions } from "@tanstack/react-query";
 import type {
   createRouter,
   NavigateOptions,
@@ -81,19 +81,20 @@ export type CommandBarPage =
       to: StartsWith<"/settings/rooms/$roomId/products/$productId", RoutePath>;
     };
 
-export type QueryFactory = Record<
+export type Query = Record<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (...args: Array<any>) => (tx: ReadTransaction) => Promise<any>
 >;
 
-export type QueryData<TQuerier extends QueryFactory[keyof QueryFactory]> =
-  Awaited<ReturnType<ReturnType<TQuerier>>>;
+export type QueryData<TQuerier extends Query[keyof Query]> = Awaited<
+  ReturnType<ReturnType<TQuerier>>
+>;
 
-export type MutationOptionsFactory = Record<
+export type MutationOptions = Record<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  () => MutationOptions<any, any, any, any>
+  () => _MutationOptions<any, any, any, any>
 >;
 
 export type ResolvedAppLink = {
@@ -107,7 +108,7 @@ export type AppLink =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | ((...args: Array<any>) => ResolvedAppLink);
 
-export type AppLinksFactory = Record<
+export type AppLinks = Record<
   string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (...args: Array<any>) => Record<UserRole, Array<AppLink>>

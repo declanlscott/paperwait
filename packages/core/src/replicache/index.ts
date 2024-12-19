@@ -15,7 +15,7 @@ import { ReplicacheError } from "../utils/errors";
 import { fn } from "../utils/shared";
 import { syncedTables } from "../utils/tables";
 import { buildCvr, diffCvr, isCvrDiffEmpty } from "./client-view-record";
-import { authoritativeMutatorFactory, dataFactory } from "./data";
+import { authoritativeMutator, dataFactory } from "./data";
 import {
   genericMutationSchema,
   isSerialized,
@@ -242,7 +242,7 @@ export namespace Replicache {
 
               // 6: Read all id/version pairs from the database that should be in the client view
               const metadata = R.uniqueBy(
-                await AccessControl.syncedTableResourceMetadataFactory[
+                await AccessControl.syncedTableResourceMetadata[
                   useUser().profile.role
                 ][name](),
                 R.prop("id"),
@@ -507,7 +507,7 @@ export namespace Replicache {
 
                 // 10(i): Business logic
                 // 10(i)(a): xmin column is automatically updated by Postgres on any affected rows
-                await authoritativeMutatorFactory[mutation.name](
+                await authoritativeMutator[mutation.name](
                   deserialize(mutation.args),
                 );
               } catch (e) {

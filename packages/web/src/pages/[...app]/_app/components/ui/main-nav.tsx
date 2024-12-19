@@ -30,11 +30,11 @@ import {
 import { UserMenu } from "~/app/components/ui/user-menu";
 import { selectedRoomIdAtom } from "~/app/lib/atoms";
 import { useCommandBarActions } from "~/app/lib/hooks/command-bar";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { query, useQuery } from "~/app/lib/hooks/data";
 import { useIsSyncing } from "~/app/lib/hooks/replicache";
 import { useSlot } from "~/app/lib/hooks/slot";
 import { useUser } from "~/app/lib/hooks/user";
-import { linksFactory } from "~/app/lib/links";
+import { links } from "~/app/lib/links";
 import { linkStyles, logoStyles } from "~/styles/components/main-nav";
 
 import type { ComponentProps } from "react";
@@ -72,10 +72,8 @@ export function MainNav() {
 function RoomSelector() {
   const [selectedRoomId, setSelectedRoomId] = useAtom(selectedRoomIdAtom);
 
-  const { initialRooms } = authenticatedRouteApi.useLoaderData();
-
-  const rooms = useQuery(queryFactory.rooms(), {
-    defaultData: initialRooms,
+  const rooms = useQuery(query.rooms(), {
+    defaultData: authenticatedRouteApi.useLoaderData().initialRooms,
     onData: (rooms) => {
       if (selectedRoomId && !rooms.some((room) => room.id === selectedRoomId))
         setSelectedRoomId(null);
@@ -134,7 +132,7 @@ function NavList() {
 
   return (
     <ul className="flex items-center">
-      {linksFactory.mainNav()[user.profile.role].map((link) => (
+      {links.mainNav()[user.profile.role].map((link) => (
         <li key={link.name}>
           <TooltipTrigger>
             <Link href={link.props.href} className="flex items-center gap-2">

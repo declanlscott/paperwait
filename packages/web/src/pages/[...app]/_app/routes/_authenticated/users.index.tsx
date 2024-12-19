@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { userRoles } from "@printworks/core/users/shared";
 import { Utils } from "@printworks/core/utils/client";
 import { createFileRoute } from "@tanstack/react-router";
@@ -65,9 +65,8 @@ import {
 } from "~/app/components/ui/primitives/table";
 import { Input } from "~/app/components/ui/primitives/text-field";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
-import { useReplicache } from "~/app/lib/hooks/replicache";
-import { useManager, useUser } from "~/app/lib/hooks/user";
+import { query, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { useUser } from "~/app/lib/hooks/user";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { UserRole } from "@printworks/core/users/shared";
@@ -87,7 +86,7 @@ export const Route = createFileRoute(routeId)({
       context.auth.authorizeRoute(tx, context.actor.properties.id, routeId),
     ),
   loader: async ({ context }) => {
-    const initialUsers = await context.replicache.query(queryFactory.users());
+    const initialUsers = await context.replicache.query(query.users());
 
     return { initialUsers };
   },
@@ -172,7 +171,7 @@ const columns = [
 function UsersCard() {
   const { initialUsers } = Route.useLoaderData();
 
-  const data = useQuery(queryFactory.users(), { defaultData: initialUsers });
+  const data = useQuery(query.users(), { defaultData: initialUsers });
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState(() => "");
@@ -199,18 +198,6 @@ function UsersCard() {
       columnVisibility,
     },
   });
-
-  const user = useUser();
-
-  const shouldShowColumn = useCallback(
-    (columnId: string) => {
-      if (columnId === "actions")
-        return enforceRbac(user, ["administrator", "operator", "manager"]);
-
-      return true;
-    },
-    [user],
-  );
 
   return (
     <Card>
@@ -268,18 +255,16 @@ function UsersCard() {
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) =>
-                      shouldShowColumn(header.id) ? (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      ) : null,
-                    )}
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 ))}
               </TableHeader>
@@ -293,18 +278,14 @@ function UsersCard() {
                         row.original.deletedAt ? "opacity-50" : "opacity-100"
                       }
                     >
-                      {row
-                        .getVisibleCells()
-                        .map((cell) =>
-                          shouldShowColumn(cell.column.id) ? (
-                            <TableCell key={cell.id}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </TableCell>
-                          ) : null,
-                        )}
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   ))
                 ) : (
@@ -354,10 +335,9 @@ interface UserRoleCellProps {
 function UserRoleCell(props: UserRoleCellProps) {
   const role = props.user.profile.role;
 
-  const { updateUserProfileRole } = useReplicache().client.mutate;
+  const { updateUserProfileRole } = useMutator();
 
-  const user = useUser();
-  const isSelf = user.id === props.user.id;
+  const isSelf = useUser().id === props.user.id;
 
   const mutate = async (role: UserRole) =>
     await updateUserProfileRole({
@@ -408,7 +388,7 @@ interface UserActionsMenuProps {
 function UserActionsMenu(props: UserActionsMenuProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(() => false);
 
-  const { restoreUserProfile } = useReplicache().client.mutate;
+  const { restoreUserProfile } = useMutator();
 
   return (
     <MenuTrigger>
@@ -424,6 +404,12 @@ function UserActionsMenu(props: UserActionsMenuProps) {
             <EnforceRouteAbac
               routeId="/_authenticated/users/$userId"
               input={[props.user.id]}
+              unauthorized={
+                <MenuItem isDisabled>
+                  <Activity className="mr-2 size-4" />
+                  Activity
+                </MenuItem>
+              }
             >
               <MenuItem
                 href={{
@@ -438,7 +424,23 @@ function UserActionsMenu(props: UserActionsMenuProps) {
           </MenuSection>
 
           {props.user.deletedAt ? (
-            <EnforceRbac roles={mutationRbac.restoreUserProfile}>
+            <EnforceAbac
+              resource="users"
+              action="update"
+              input={[]}
+              unauthorized={
+                <>
+                  <MenuSeparator />
+
+                  <MenuSection>
+                    <MenuItem className="text-green-600" isDisabled>
+                      <UserRoundCheck className="mr-2 size-4" />
+                      Restore
+                    </MenuItem>
+                  </MenuSection>
+                </>
+              }
+            >
               <MenuSeparator />
 
               <MenuSection>
@@ -450,9 +452,25 @@ function UserActionsMenu(props: UserActionsMenuProps) {
                   Restore
                 </MenuItem>
               </MenuSection>
-            </EnforceRbac>
+            </EnforceAbac>
           ) : (
-            <EnforceRbac roles={mutationRbac.deleteUserProfile}>
+            <EnforceAbac
+              resource="users"
+              action="delete"
+              input={[props.user.id]}
+              unauthorized={
+                <>
+                  <MenuSeparator />
+
+                  <MenuSection>
+                    <MenuItem className="text-destructive" isDisabled>
+                      <UserRoundX className="mr-2 size-4" />
+                      Delete
+                    </MenuItem>
+                  </MenuSection>
+                </>
+              }
+            >
               <MenuSeparator />
 
               <MenuSection>
@@ -464,18 +482,20 @@ function UserActionsMenu(props: UserActionsMenuProps) {
                   Delete
                 </MenuItem>
               </MenuSection>
-            </EnforceRbac>
+            </EnforceAbac>
           )}
         </Menu>
       </MenuPopover>
 
-      <DeleteUserDialog
-        userId={props.user.id}
-        dialogOverlayProps={{
-          isOpen: isDeleteDialogOpen,
-          onOpenChange: setIsDeleteDialogOpen,
-        }}
-      />
+      <EnforceAbac resource="users" action="delete" input={[props.user.id]}>
+        <DeleteUserDialog
+          userId={props.user.id}
+          dialogOverlayProps={{
+            isOpen: isDeleteDialogOpen,
+            onOpenChange: setIsDeleteDialogOpen,
+          }}
+        />
+      </EnforceAbac>
     </MenuTrigger>
   );
 }

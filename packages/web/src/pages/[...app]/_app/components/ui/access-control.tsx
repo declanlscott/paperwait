@@ -21,7 +21,7 @@ export type EnforceAbacProps<
   TResource extends Resource,
   TAction extends Action,
   TPermission extends
-    (typeof AccessControl.permissionsFactory)[UserRole][TResource][TAction],
+    (typeof AccessControl.permissions)[UserRole][TResource][TAction],
 > = PropsWithChildren<{
   resource: TResource;
   action: TAction;
@@ -39,7 +39,7 @@ export function EnforceAbac<
   TResource extends Resource,
   TAction extends Action,
   TPermission extends
-    (typeof AccessControl.permissionsFactory)[UserRole][TResource][TAction],
+    (typeof AccessControl.permissions)[UserRole][TResource][TAction],
 >({
   resource,
   action,

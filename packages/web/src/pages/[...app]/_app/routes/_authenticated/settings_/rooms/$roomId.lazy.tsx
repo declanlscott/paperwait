@@ -10,9 +10,9 @@ import {
   BreadcrumbSeparator,
 } from "~/app/components/ui/primitives/breadcrumbs";
 import { SettingsLayout } from "~/app/layouts/settings";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { query, useQuery } from "~/app/lib/hooks/data";
 import { useUser } from "~/app/lib/hooks/user";
-import { linksFactory } from "~/app/lib/links";
+import { links } from "~/app/lib/links";
 import { buttonStyles } from "~/styles/components/primitives/button";
 
 export const Route = createLazyFileRoute(
@@ -21,7 +21,7 @@ export const Route = createLazyFileRoute(
 
 function Component() {
   const { roomId } = Route.useParams();
-  const room = useQuery(queryFactory.room(roomId));
+  const room = useQuery(query.room(roomId));
 
   const user = useUser();
 
@@ -62,7 +62,7 @@ function Component() {
           </Breadcrumbs>
         </>
       }
-      links={linksFactory.roomSettings(roomId)[user.profile.role]}
+      links={links.roomSettings(roomId)[user.profile.role]}
     />
   );
 }

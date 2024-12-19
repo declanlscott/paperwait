@@ -7,7 +7,7 @@ import { CommandBarProvider } from "~/app/components/providers/command-bar";
 import { MainNav } from "~/app/components/ui/main-nav";
 import { Button } from "~/app/components/ui/primitives/button";
 import { useAuthenticated } from "~/app/lib/hooks/auth";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { query, useQuery } from "~/app/lib/hooks/data";
 import { useRealtime } from "~/app/lib/hooks/realtime";
 
 import type { PropsWithChildren } from "react";
@@ -34,7 +34,7 @@ function RealtimeWrapper(props: PropsWithChildren) {
   useRealtime({ channel: formatChannel("tenant", user.tenantId) });
   useRealtime({ channel: formatChannel("user", user.id) });
 
-  useQuery(queryFactory.user(user.id), {
+  useQuery(query.user(user.id), {
     onData: (u) => {
       if (u && u.profile.role !== user.profile.role)
         toast(

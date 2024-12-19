@@ -54,8 +54,7 @@ import {
   TableRow,
 } from "~/app/components/ui/primitives/table";
 import { fuzzyFilter } from "~/app/lib/fuzzy";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { query, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 
 import type { Product } from "@printworks/core/products/sql";
@@ -75,9 +74,7 @@ export const Route = createFileRoute(routeId)({
       context.auth.authorizeRoute(tx, context.actor.properties.id, routeId),
     ),
   loader: async ({ context }) => {
-    const initialProducts = await context.replicache.query(
-      queryFactory.products(),
-    );
+    const initialProducts = await context.replicache.query(query.products());
 
     return { initialProducts };
   },
@@ -94,8 +91,8 @@ function RoomsCard() {
   const { initialRooms } = authenticatedRouteApi.useLoaderData();
   const { initialProducts } = Route.useLoaderData();
 
-  const rooms = useQuery(queryFactory.rooms(), { defaultData: initialRooms });
-  const products = useQuery(queryFactory.products(), {
+  const rooms = useQuery(query.rooms(), { defaultData: initialRooms });
+  const products = useQuery(query.products(), {
     defaultData: initialProducts,
   });
 
@@ -300,7 +297,7 @@ interface RoomStatusSelectProps {
 function RoomStatusSelect(props: RoomStatusSelectProps) {
   const status = props.room.status;
 
-  const { updateRoom } = useReplicache().client.mutate;
+  const { updateRoom } = useMutator();
 
   const mutate = async (status: Room["status"]) =>
     await updateRoom({
@@ -347,7 +344,7 @@ interface RoomActionsMenuProps {
 function RoomActionsMenu(props: RoomActionsMenuProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(() => false);
 
-  const { restoreRoom } = useReplicache().client.mutate;
+  const { restoreRoom } = useMutator();
 
   return (
     <MenuTrigger>

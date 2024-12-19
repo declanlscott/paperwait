@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { queryFactory } from "~/app/lib/hooks/data";
+import { query } from "~/app/lib/hooks/data";
 
 const routeId = "/_authenticated/settings_/rooms/$roomId_/products/$productId/";
 
@@ -11,8 +11,8 @@ export const Route = createFileRoute(routeId)({
     ),
   loader: async ({ context, params }) => {
     const [initialRoom, initialProduct] = await Promise.all([
-      context.replicache.query(queryFactory.room(params.roomId)),
-      context.replicache.query(queryFactory.product(params.productId)),
+      context.replicache.query(query.room(params.roomId)),
+      context.replicache.query(query.product(params.productId)),
     ]);
 
     return {

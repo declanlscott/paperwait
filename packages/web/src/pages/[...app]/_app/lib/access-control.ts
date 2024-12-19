@@ -1,4 +1,4 @@
-import { queryFactory } from "~/app/lib/hooks/data";
+import { query } from "~/app/lib/hooks/data";
 
 import type { UserRole } from "@printworks/core/users/shared";
 import type { User, UserWithProfile } from "@printworks/core/users/sql";
@@ -68,7 +68,7 @@ export const routePermissions = {
       manager,
       userId: User["id"],
     ) => {
-      const getManagedCustomerIds = queryFactory.managedCustomerIds(manager.id);
+      const getManagedCustomerIds = query.managedCustomerIds(manager.id);
 
       return getManagedCustomerIds(tx).then((customerIds) =>
         customerIds.includes(userId),

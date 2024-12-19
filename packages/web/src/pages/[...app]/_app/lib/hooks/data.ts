@@ -13,6 +13,7 @@ import {
 } from "@printworks/core/rooms/shared";
 import { tenantsTableName } from "@printworks/core/tenants/shared";
 import { usersTableName } from "@printworks/core/users/shared";
+import { HttpError } from "@printworks/core/utils/errors";
 import * as R from "remeda";
 
 import { useApi } from "~/app/lib/hooks/api";
@@ -22,14 +23,15 @@ import type { BillingAccount } from "@printworks/core/billing-accounts/sql";
 import type { Product } from "@printworks/core/products/sql";
 import type { DeliveryOptions, Workflow } from "@printworks/core/rooms/shared";
 import type { Room } from "@printworks/core/rooms/sql";
+import type { Tenant } from "@printworks/core/tenants/sql";
 import type { User } from "@printworks/core/users/sql";
-import type { MutationOptionsFactory, QueryFactory } from "~/app/types";
+import type { MutationOptions, Query } from "~/app/types";
 
 export const useQuery = <TData, TDefaultData = undefined>(
   ...args: Parameters<typeof useSubscribe<TData, TDefaultData>>
 ) => useSubscribe(...args);
 
-export const queryFactory = {
+export const query = {
   billingAccounts: () => (tx) => Replicache.scan(tx, billingAccountsTableName),
   billingAccount: (accountId: BillingAccount["id"]) => (tx) =>
     Replicache.get(tx, billingAccountsTableName, accountId),
@@ -89,8 +91,8 @@ export const queryFactory = {
   products: () => (tx) => Replicache.scan(tx, productsTableName),
   product: (productId: Product["id"]) => (tx) =>
     Replicache.get(tx, productsTableName, productId),
-  tenant: () => async (tx) =>
-    Replicache.scan(tx, tenantsTableName).then((tenants) => tenants.at(0)),
+  tenant: (tenantId: Tenant["id"]) => (tx) =>
+    Replicache.get(tx, tenantsTableName, tenantId),
   rooms: () => (tx) => Replicache.scan(tx, roomsTableName),
   room: (roomId: Room["id"]) => (tx) =>
     Replicache.get(tx, roomsTableName, roomId),
@@ -116,15 +118,50 @@ export const queryFactory = {
         }, [] as Workflow),
       ),
     ),
-} satisfies QueryFactory;
+} satisfies Query;
 
 export const useMutator = () => useReplicache().client.mutate;
 
-export function useMutationOptionsFactory() {
+export function useMutationOptions() {
   const api = useApi();
 
-  // TODO
-  const factory = useMemo(() => ({}) satisfies MutationOptionsFactory, [api]);
-
-  return factory;
+  return useMemo(
+    () =>
+      ({
+        papercutServerTailnetUri: () => ({
+          mutationKey: ["services", "papercut", "server", "tailnet-uri"],
+          mutationFn: async ({ tailnetUri }: { tailnetUri: string }) => {
+            const res = await api.services.papercut.server["tailnet-uri"].$put({
+              json: { tailnetUri },
+            });
+            if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+          },
+        }),
+        papercutServerAuthToken: () => ({
+          mutationKey: ["services", "papercut", "server", "auth-token"],
+          mutationFn: async ({ authToken }: { authToken: string }) => {
+            const res = await api.services.papercut.server["auth-token"].$put({
+              json: { authToken },
+            });
+            if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+          },
+        }),
+        tailscaleOauthClient: () => ({
+          mutationKey: ["services", "tailscale", "oauth-client"],
+          mutationFn: async ({
+            id,
+            secret,
+          }: {
+            id: string;
+            secret: string;
+          }) => {
+            const res = await api.services.tailscale["oauth-client"].$put({
+              json: { id, secret },
+            });
+            if (!res.ok) throw new HttpError.Error(res.statusText, res.status);
+          },
+        }),
+      }) satisfies MutationOptions,
+    [api],
+  );
 }

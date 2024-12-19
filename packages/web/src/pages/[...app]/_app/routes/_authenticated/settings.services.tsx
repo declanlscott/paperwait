@@ -3,7 +3,6 @@ import { ApplicationError } from "@printworks/core/utils/errors";
 import { useForm } from "@tanstack/react-form";
 import { useIsMutating, useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { valibotValidator } from "@tanstack/valibot-form-adapter";
 import {
   Eye,
   EyeOff,
@@ -33,7 +32,7 @@ import {
 import { Label } from "~/app/components/ui/primitives/field";
 import { Input } from "~/app/components/ui/primitives/text-field";
 import { Toggle } from "~/app/components/ui/primitives/toggle";
-import { useMutationOptionsFactory } from "~/app/lib/hooks/data";
+import { useMutationOptions } from "~/app/lib/hooks/data";
 import { labelStyles } from "~/styles/components/primitives/field";
 
 import type { ComponentProps } from "react";
@@ -59,7 +58,7 @@ function Component() {
 }
 
 function PapercutCard() {
-  const { papercutCredentials } = useMutationOptionsFactory();
+  const { papercutCredentials } = useMutationOptions();
 
   const isConfiguring =
     useIsMutating({
@@ -129,7 +128,7 @@ function PapercutCard() {
 }
 
 function ConfigureCredentials() {
-  const { papercutCredentials } = useMutationOptionsFactory();
+  const { papercutCredentials } = useMutationOptions();
 
   const { mutate } = useMutation({
     ...papercutCredentials(),
@@ -258,7 +257,7 @@ function ConfigureCredentials() {
 }
 
 function HealthCheckPapercut() {
-  const { healthCheckPapercut } = useMutationOptionsFactory();
+  const { healthCheckPapercut } = useMutationOptions();
 
   const { mutate, isPending } = useMutation({
     ...healthCheckPapercut(),
@@ -282,7 +281,7 @@ function HealthCheckPapercut() {
 }
 
 function SyncAccounts() {
-  const { syncPapercutAccounts } = useMutationOptionsFactory();
+  const { syncPapercutAccounts } = useMutationOptions();
 
   const { mutate, isPending } = useMutation({
     ...syncPapercutAccounts(),

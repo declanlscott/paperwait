@@ -19,14 +19,13 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "~/app/components/ui/primitives/menu";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
+import { useTenant } from "~/app/lib/hooks/tenant";
 import { useUser } from "~/app/lib/hooks/user";
 import { userMenuTriggerButtonStyles } from "~/styles/components/user-menu";
 
 export function UserMenu() {
+  const tenant = useTenant();
   const user = useUser();
-
-  const tenant = useQuery(queryFactory.tenant());
 
   return (
     <MenuTrigger>
@@ -56,14 +55,14 @@ export function UserMenu() {
 
                 <div className="flex flex-col space-y-1">
                   <span className="text-sm font-medium leading-none">
-                    {tenant?.name}
+                    {tenant.name}
                   </span>
 
                   <span className="text-muted-foreground text-xs leading-none">
-                    {tenant?.slug}
+                    {tenant.slug}
 
                     {user.profile.role === "administrator" ? (
-                      <> ({tenant?.status})</>
+                      <> ({tenant.status})</>
                     ) : null}
                   </span>
                 </div>

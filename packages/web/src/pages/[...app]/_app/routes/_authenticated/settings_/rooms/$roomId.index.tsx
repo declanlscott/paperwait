@@ -25,8 +25,7 @@ import {
 } from "~/app/components/ui/primitives/select";
 import { Input, TextArea } from "~/app/components/ui/primitives/text-field";
 import { Toggle } from "~/app/components/ui/primitives/toggle";
-import { queryFactory, useQuery } from "~/app/lib/hooks/data";
-import { useReplicache } from "~/app/lib/hooks/replicache";
+import { query, useMutator, useQuery } from "~/app/lib/hooks/data";
 import { collectionItem, onSelectionChange } from "~/app/lib/ui";
 import { labelStyles } from "~/styles/components/primitives/field";
 import { inputStyles } from "~/styles/components/primitives/text-field";
@@ -42,7 +41,7 @@ export const Route = createFileRoute(routeId)({
     ),
   loader: async ({ context, params }) => {
     const initialRoom = await context.replicache.query(
-      queryFactory.room(params.roomId),
+      query.room(params.roomId),
     );
 
     return { initialRoom };
@@ -64,14 +63,12 @@ function RoomCard() {
   const { roomId } = Route.useParams();
   const { initialRoom } = Route.useLoaderData();
 
-  const room = useQuery(queryFactory.room(roomId), {
-    defaultData: initialRoom,
-  });
+  const room = useQuery(query.room(roomId), { defaultData: initialRoom });
 
   const [isLocked, setIsLocked] = useState(() => true);
   const [name, setName] = useState(() => room.name);
 
-  const { updateRoom } = useReplicache().client.mutate;
+  const { updateRoom } = useMutator();
 
   async function mutateName() {
     if (name !== room.name)
@@ -139,11 +136,11 @@ function RoomStatus() {
   const { roomId } = Route.useParams();
   const { initialRoom } = Route.useLoaderData();
 
-  const room = useQuery(queryFactory.room(roomId), {
+  const room = useQuery(query.room(roomId), {
     defaultData: initialRoom,
   });
 
-  const { updateRoom } = useReplicache().client.mutate;
+  const { updateRoom } = useMutator();
 
   async function mutate(status: RoomStatus) {
     if (status !== room.status)
@@ -200,7 +197,7 @@ function RoomDetails(props: RoomDetailsProps) {
   const { roomId } = Route.useParams();
   const { initialRoom } = Route.useLoaderData();
 
-  const room = useQuery(queryFactory.room(roomId), {
+  const room = useQuery(query.room(roomId), {
     defaultData: initialRoom,
   });
 
@@ -209,7 +206,7 @@ function RoomDetails(props: RoomDetailsProps) {
 
   const markdown = props.isLocked ? room.details : details;
 
-  const { updateRoom } = useReplicache().client.mutate;
+  const { updateRoom } = useMutator();
 
   const saveDetails = async () => {
     if (room && details !== room.details)
@@ -293,7 +290,7 @@ function DangerZoneCard() {
   const { roomId } = Route.useParams();
   const { initialRoom } = Route.useLoaderData();
 
-  const room = useQuery(queryFactory.room(roomId), {
+  const room = useQuery(query.room(roomId), {
     defaultData: initialRoom,
   });
 
@@ -344,7 +341,7 @@ function DeleteRoom() {
 function RestoreRoom() {
   const { roomId } = Route.useParams();
 
-  const { restoreRoom } = useReplicache().client.mutate;
+  const { restoreRoom } = useMutator();
 
   return (
     <div className="flex justify-between gap-4">

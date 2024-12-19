@@ -24,8 +24,8 @@ import {
   useCommandBar,
   useCommandBarActions,
 } from "~/app/lib/hooks/command-bar";
-import { queryFactory, useMutator, useQuery } from "~/app/lib/hooks/data";
-import { linksFactory } from "~/app/lib/links";
+import { query, useMutator, useQuery } from "~/app/lib/hooks/data";
+import { links } from "~/app/lib/links";
 
 import type { Room } from "@printworks/core/rooms/sql";
 import type { ToOptions } from "@tanstack/react-router";
@@ -100,8 +100,8 @@ function HomeCommand(_props: HomeCommandProps) {
 
   const logout = useLogout();
 
-  const rooms = useQuery(queryFactory.rooms());
-  const users = useQuery(queryFactory.users());
+  const rooms = useQuery(query.rooms());
+  const users = useQuery(query.users());
 
   const handleNavigation = async (to: ToOptions) =>
     navigate(to).then(() => state.close());
@@ -121,7 +121,7 @@ function HomeCommand(_props: HomeCommandProps) {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Navigation">
-          {linksFactory.mainNav()[user.profile.role].map((link) => (
+          {links.mainNav()[user.profile.role].map((link) => (
             <CommandItem
               key={link.name}
               onSelect={() => handleNavigation(link.props.href)}
@@ -183,7 +183,7 @@ function HomeCommand(_props: HomeCommandProps) {
 
                     if (enforceRbac(user, ["manager"])) {
                       const customerIds = await replicache.query(
-                        queryFactory.managedCustomerIds(user.id),
+                        query.managedCustomerIds(user.id),
                       );
 
                       if (customerIds.includes(u.id))
@@ -208,7 +208,7 @@ function HomeCommand(_props: HomeCommandProps) {
         <CommandSeparator />
 
         <CommandGroup heading="Scope">
-          {linksFactory.settings()[user.profile.role].map((link) => (
+          {links.settings()[user.profile.role].map((link) => (
             <CommandItem
               key={`settings-${link.name}`}
               onSelect={() => handleNavigation(link.props.href)}
@@ -223,7 +223,7 @@ function HomeCommand(_props: HomeCommandProps) {
             </CommandItem>
           ))}
 
-          {linksFactory.roomSettings("")[user.profile.role].map((link) => (
+          {links.roomSettings("")[user.profile.role].map((link) => (
             <CommandItem
               key={`room-settings-${link.name}`}
               onSelect={() =>
@@ -243,27 +243,25 @@ function HomeCommand(_props: HomeCommandProps) {
             </CommandItem>
           ))}
 
-          {linksFactory
-            .productSettings("", "")
-            [user.profile.role].map((link) => (
-              <CommandItem
-                key={`product-settings-${link.name}`}
-                onSelect={() =>
-                  pushPage({
-                    type: "product-settings-select-room",
-                    to: link.props.href.to,
-                  })
-                }
-                keywords={["scope", "product settings"]}
-              >
-                <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
+          {links.productSettings("", "")[user.profile.role].map((link) => (
+            <CommandItem
+              key={`product-settings-${link.name}`}
+              onSelect={() =>
+                pushPage({
+                  type: "product-settings-select-room",
+                  to: link.props.href.to,
+                })
+              }
+              keywords={["scope", "product settings"]}
+            >
+              <div className="mr-2 [&>svg]:size-5">{link.icon}</div>
 
-                <p>
-                  Jump to <span className="font-medium">Product Settings</span>{" "}
-                  {link.name}
-                </p>
-              </CommandItem>
-            ))}
+              <p>
+                Jump to <span className="font-medium">Product Settings</span>{" "}
+                {link.name}
+              </p>
+            </CommandItem>
+          ))}
         </CommandGroup>
       </CommandList>
     </>
@@ -281,7 +279,7 @@ function RoomCommand(props: RoomCommandProps) {
 
   const { updateRoom } = useMutator();
 
-  const room = useQuery(queryFactory.room(props.roomId));
+  const room = useQuery(query.room(props.roomId));
 
   function selectRoom() {
     setSelectedRoomId(props.roomId);
@@ -362,7 +360,7 @@ function RoomSettingsSelectRoomCommand(
   const { input } = useCommandBar();
   const { setInput, popPage } = useCommandBarActions();
 
-  const rooms = useQuery(queryFactory.rooms());
+  const rooms = useQuery(query.rooms());
 
   const navigate = useNavigate();
 
@@ -409,7 +407,7 @@ function ProductSettingsSelectRoomCommand(
   const { input } = useCommandBar();
   const { setInput, popPage, pushPage } = useCommandBarActions();
 
-  const rooms = useQuery(queryFactory.rooms());
+  const rooms = useQuery(query.rooms());
 
   return (
     <>
@@ -457,7 +455,7 @@ function ProductSettingsSelectProductCommand(
   const { input } = useCommandBar();
   const { setInput, popPage } = useCommandBarActions();
 
-  const products = useQuery(queryFactory.products(), {
+  const products = useQuery(query.products(), {
     onData: (products) =>
       products.filter((product) => product.roomId === props.roomId),
   });

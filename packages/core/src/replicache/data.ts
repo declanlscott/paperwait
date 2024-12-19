@@ -54,7 +54,7 @@ export type TableMetadata = [
   Array<Metadata<TableByName<TableName>>>,
 ];
 
-export type DataFactory = {
+export type Data = {
   [TName in SyncedTableName]: (
     ids: Array<TableByName<TName>["$inferSelect"]["id"]>,
   ) => Promise<Array<TableByName<TName>["$inferSelect"]>>;
@@ -76,7 +76,7 @@ export const dataFactory = {
   [tenantsTableName]: Tenants.read,
   [usersTableName]: Users.read,
   [workflowStatusesTableName]: Rooms.readWorkflow,
-} satisfies DataFactory;
+} satisfies Data;
 
 export type TablePatchData<TTable extends SyncedTable> = {
   puts: Array<TTable["$inferSelect"]>;
@@ -88,16 +88,13 @@ export type TableData = [
   TablePatchData<TableByName<SyncedTableName>>,
 ];
 
-export type AuthoritativeMutator = <TSchema extends v.GenericSchema>(
+export type AuthoritativeMutatorFn = <TSchema extends v.GenericSchema>(
   args: v.InferOutput<TSchema>,
 ) => Promise<void>;
 
-export type AuthoritativeMutatorFactory = Record<
-  MutationName,
-  AuthoritativeMutator
->;
+export type AuthoritativeMutator = Record<MutationName, AuthoritativeMutatorFn>;
 
-export const authoritativeMutatorFactory = {
+export const authoritativeMutator = {
   createAnnouncement: Announcements.create,
   updateAnnouncement: Announcements.update,
   deleteAnnouncement: Announcements.delete_,
@@ -127,4 +124,4 @@ export const authoritativeMutatorFactory = {
   deleteUserProfile: Users.deleteProfile,
   restoreUserProfile: Users.restoreProfile,
   setWorkflow: Rooms.setWorkflow,
-} satisfies AuthoritativeMutatorFactory;
+} satisfies AuthoritativeMutator;
