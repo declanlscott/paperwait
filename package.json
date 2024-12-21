@@ -8,14 +8,14 @@
     "format:write": "prettier --write ."
   },
   "dependencies": {
-    "@aws-sdk/client-dsql": "^3.714.0",
-    "@openauthjs/openauth": "^0.2.4",
+    "@aws-sdk/client-dsql": "^3.716.0",
+    "@openauthjs/openauth": "^0.2.5",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.38.2",
     "hono": "^4.6.14",
     "remeda": "^2.18.0",
     "replicache": "^15.0.1",
-    "sst": "^3.4.18",
+    "sst": "^3.4.27",
     "superjson": "^2.2.2",
     "valibot": "beta"
   },
